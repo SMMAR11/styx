@@ -1,0 +1,73 @@
+{% extends './main.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12">
+		<form action="{% url 'creer_dossier' %}" method="post" name="form_creer_dossier" class="c-theme alert-user">
+			{% csrf_token %}
+			<fieldset>
+				<legend>Créer un dossier</legend>
+				<div class="form-content">
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zs_int_doss }}</div>
+						<div class="col-sm-6">{{ f1.zs_descr_doss }}</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">
+							<div class="field-wrapper">
+								<p>Ce dossier est-il lié à un autre dossier ?</p>
+								<label class="radio-inline c-police">
+									<input type="radio" name="rb_doss_ass" value="1" data-toggle="modal" data-target="#fm_choisir_dossier_associe">Oui
+								</label>
+								<label class="radio-inline c-police">
+									<input type="radio" name="rb_doss_ass" value="0" checked>Non
+								</label>
+							</div>
+						</div>
+						<div class="col-sm-6">{{ f1.za_doss_ass }}</div>
+					</div>
+					{{ f1.zl_moa }}
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zld_progr }}</div>
+						<div class="col-sm-2">{{ f1.zld_axe }}</div>
+						<div class="col-sm-2">{{ f1.zld_ss_axe }}</div>
+						<div class="col-sm-2">{{ f1.zld_act }}</div>
+					</div>
+					<div id="za_form_pgre" style="display: none;">
+						<div class="row">
+							<div class="col-sm-6">{{ f1.zs_quant_objs_pgre }}</div>
+							<div class="col-sm-3">{{ f1.zs_quant_real_pgre }}</div>
+							<div class="col-sm-3">{{ f1.zl_unit }}</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-6">{{ f1.cbsm_riv }}</div>
+							<div class="col-sm-6">{{ f1.zl_port }}</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zld_type_doss }}</div>
+						<div class="col-sm-6">{{ f1.zl_nat_doss }}</div>
+					</div>
+					{{ f1.zl_techn }}
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zs_mont_ht_doss }}</div>
+						<div class="col-sm-6">{{ f1.zs_mont_ttc_doss }}</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zl_av }}</div>
+						<div class="col-sm-6">{{ f1.zd_dt_delib_moa_doss }}</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zl_av_cp }}</div>
+						<div class="col-sm-6">{{ f1.zd_dt_av_cp_doss }}</div>
+					</div>
+					{{ f1.zu_chem_dds_doss }}
+					{{ f1.zs_comm_doss }}
+				</div>
+				<button type="submit" class="center-block btn bt-vert" data-target="#fm_creer_dossier">Valider</button>
+			</fieldset>
+		</form>						
+	</div>
+</div>
+{% endblock content %}

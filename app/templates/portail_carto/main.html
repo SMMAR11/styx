@@ -1,0 +1,19 @@
+{% extends './main.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-sm-6 saut-sm">
+		<a href="#" class="thumbnail to-unfocus">
+			<img src="{% static './images/pictos/portail_carto/ajouter.jpg' %}" class="vignette-md"/>
+			<div class="caption">Créer un objet géographique</div>
+		</a>
+	</div>
+	<div class="col-sm-6">
+		<a href="#" class="thumbnail to-unfocus">
+			<img src="{% static './images/pictos/portail_carto/consulter.jpg' %}" class="vignette-md"/>
+			<div class="caption">Consulter un objet géographique</div>
+		</a>
+	</div>
+</div>
+{% endblock content %}

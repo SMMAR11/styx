@@ -1,0 +1,25 @@
+{% extends './main.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-sm-4 saut-sm">
+		<a href="{% url 'selectionner_dossiers' %}" class="thumbnail to-unfocus">
+			<img src="{% static './images/pictos/realisation_etats/selectionner_dossiers.png' %}" class="vignette-md"/>
+			<div class="caption">En sélectionnant des dossiers</div>
+		</a>
+	</div>
+	<div class="col-sm-4 saut-sm">
+		<a href="#" class="thumbnail to-unfocus">
+			<img src="{% static './images/pictos/realisation_etats/cumuler_dossiers.jpg' %}" class="vignette-md"/>
+			<div class="caption">En cumulant des dossiers</div>
+		</a>
+	</div>
+	<div class="col-sm-4">
+		<a href="#" class="thumbnail to-unfocus">
+			<img src="{% static './images/pictos/realisation_etats/selectionner_prestations.jpg' %}" class="vignette-md"/>
+			<div class="caption">En sélectionnant des prestations</div>
+		</a>
+	</div>
+</div>
+{% endblock content %}

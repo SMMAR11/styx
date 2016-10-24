@@ -1,0 +1,135 @@
+/* Cartographie */
+div#map
+{
+	width: 100%;
+	height: 500px;
+}
+
+/* Formulaires */
+form fieldset
+{
+	border: solid 2px;
+	padding-top: 15px;
+	padding-right: 30px;
+	padding-bottom: 20px;
+	padding-left: 15px;
+}
+
+form fieldset legend
+{
+	font-size: 24px;
+	font-weight: bold;
+	padding: 0 15px;
+}
+
+.za_erreur > ul.errorlist
+{
+	list-style: none;
+	font-weight: bold;
+	
+}
+
+.za_erreur > ul.errorlist li
+{
+	margin-left: -40px;
+	margin-bottom: -14.4px;
+	font-size: 12px;
+}
+
+/* Loaders */
+.spin
+{
+	-moz-animation: spin-for-mozilla .5s infinite linear;
+	-webkit-animation: spin-for-chrome .5s infinite linear;
+	-animation: spin .5s infinite linear;
+}
+
+@-moz-keyframes spin-for-mozilla
+{
+	from
+	{
+		-moz-transform: rotate(0deg);
+	}
+	to
+	{
+		-moz-transform: rotate(360deg);
+	}
+}
+
+@-webkit-keyframes spin-for-chrome
+{
+	from
+	{
+		-webkit-transform: rotate(0deg);
+	}
+	to
+	{
+		-webkit-transform: rotate(360deg);
+	}
+}
+
+@keyframes spin
+{
+	from
+	{
+		transform: scale(1) rotate(0deg);
+	}
+	to
+	{
+		transform: scale(1) rotate(360deg);
+	}
+}
+
+/* Photos */
+#tab_consulter_photos img:hover
+{
+	cursor: pointer;
+	opacity: 0.5;
+}
+
+/* Sous-menu du navigateur */
+.dropdown-thumbnail
+{
+	display: block;
+	padding: 20px 15px;
+	background-color: #FFF;
+	border: 1px solid #CCC;
+	-webkit-transition: border .2s ease-in-out;
+	-o-transition: border .2s ease-in-out;
+	transition: border .2s ease-in-out;
+}
+
+.dropdown-thumbnail img
+{
+	display: block;
+	margin-right: auto;
+	margin-left: auto;
+	max-width: 100%;
+}
+
+a.dropdown-thumbnail:hover,
+a.dropdown-thumbnail:focus,
+a.dropdown-thumbnail:active
+{
+	border-color: #2C5A8E;
+	text-decoration: none;
+}
+
+@media (max-width: 767px)
+{
+	.navbar-nav > li > .dropdown-menu
+	{
+		margin-bottom: -7px;
+	}
+}
+
+/* Tableaux */
+table.table > thead > tr > th
+{
+	font-size: 12px;
+}
+
+table.table
+{
+	margin-bottom: 5px;
+}

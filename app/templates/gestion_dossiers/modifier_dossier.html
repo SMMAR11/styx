@@ -1,0 +1,81 @@
+{% extends './main.html' %}
+{% load static %}
+
+{% block content %}
+<div class="icon-link pull-right">
+	<div><span class="bt-precedent"></span></div>
+	<div><a href="{% url 'consulter_dossier' le_dossier.id_doss %}">Revenir au dossier</a></div>
+</div>
+<br />
+<div class="row">
+	<div class="col-md-12">
+		<form action="{% url 'modifier_dossier' le_dossier.id_doss %}?action=modifier-caracteristiques" method="post" name="form_modifier_dossier" class="c-theme alert-user">
+			{% csrf_token %}
+			<fieldset>
+				<legend>Modifier un dossier</legend>
+				<div class="form-content">
+					{{ f1.za_num_doss }}
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zs_int_doss }}</div>
+						<div class="col-sm-6">{{ f1.zs_descr_doss }}</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">{{ f1.za_doss_ass }}</div>
+						<div class="vertical-align-icon-link">
+							<div class="col-sm-3 col-xs-6">
+								<div class="icon-link">
+									<div><span class="bt-modifier"></span></div>
+									<div><span data-toggle="modal" data-target="#fm_choisir_dossier_associe">Modifier</span></div>
+								</div>
+							</div>
+							<div class="col-sm-3 col-xs-6">
+								<div class="icon-link">
+									<div><span class="bt-supprimer"></span></div>
+									<div><span id="bt_supprimer_dossier_associe">Supprimer</span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					{{ f1.zl_moa }}
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zld_progr }}</div>
+						<div class="col-sm-2">{{ f1.zld_axe }}</div>
+						<div class="col-sm-2">{{ f1.zld_ss_axe }}</div>
+						<div class="col-sm-2">{{ f1.zld_act }}</div>
+					</div>
+					{% if le_dossier.id_progr.int_progr == 'PGRE' %}
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zs_quant_objs_pgre }}</div>
+						<div class="col-sm-3">{{ f1.zs_quant_real_pgre }}</div>
+						<div class="col-sm-3">{{ f1.zl_unit }}</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">{{ f1.cbsm_riv }}</div>
+						<div class="col-sm-6">{{ f1.zl_port }}</div>
+					</div>
+					{% endif %}
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zld_type_doss }}</div>
+						<div class="col-sm-6">{{ f1.zl_nat_doss }}</div>
+					</div>
+					{{ f1.zl_techn }}
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zs_mont_ht_doss }}</div>
+						<div class="col-sm-6">{{ f1.zs_mont_ttc_doss }}</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zl_av_cp }}</div>
+						<div class="col-sm-6">{{ f1.zd_dt_av_cp_doss }}</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zl_av }}</div>
+						<div class="col-sm-6">{{ f1.zd_dt_delib_moa_doss }}</div>
+					</div>
+					{{ f1.zs_comm_doss }}
+				</div>
+				<button type="submit" class="center-block btn bt-vert" data-target="#fm_modifier_dossier">Valider</button>
+			</fieldset>
+		</form>						
+	</div>
+</div>
+{% endblock content %}

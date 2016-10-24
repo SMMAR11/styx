@@ -1,0 +1,82 @@
+{% extends './gabarit.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-4 saut-md">
+		<form name="form_selectionner_dossiers" method="post" action="{% url 'selectionner_dossiers' %}" class="c-theme">
+			{% csrf_token %}
+			<fieldset>
+				<legend>Réaliser un état sur les dossiers</legend>
+				<div class="form-content">
+					{{ f1.cbsm_moa }}
+					{{ f1.zld_progr }}
+					{{ f1.zld_axe }}
+					{{ f1.zld_ss_axe }}
+					{{ f1.zld_act }}
+					{{ f1.zl_nat_doss }}
+					<div class="row">
+						<div class="col-md-12">
+							<label>Période de délibération au maître d'ouvrage</label>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-6">{{ f1.zd_dt_delib_moa_doss_tr_deb }}</div>
+						<div class="col-md-6">{{ f1.zd_dt_delib_moa_doss_tr_fin }}</div>
+					</div>
+					{{ f1.zl_av_cp }}
+					<div class="row">
+						<div class="col-md-12">
+							<label>Montant HT du dossier compris entre</label>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-6">{{ f1.zs_mont_ht_doss_min }}</div>
+						<div class="col-md-6">{{ f1.zs_mont_ht_doss_max }}</div>
+					</div>
+					<div class="field-wrapper">
+						{{ f1.cb_doss_dep_non_sold }}
+						{{ f1.cb_doss_ddv_non_sold }}
+					</div>
+					{{ f1.zl_org_fin }}
+					{{ f1.zl_org_prest }}
+					<div class="field-wrapper c-orange">
+						{{ f1.cb_int_doss_ass }}
+						{{ f1.cb_ajout_select_exist }}
+					</div>
+				</div>
+				<button type="submit" class="center-block btn bt-vert">Valider</button>
+			</fieldset>
+		</form>
+	</div>
+	<div class="col-md-8">
+		<div style="overflow: auto;">
+			<table class="table display" id="tab_selectionner_dossiers">
+				<thead>
+					<tr>
+						<th>Numéro du dossier</th>
+						<th>Intitulé du dossier</th>
+						<th>Maître d'ouvrage</th>
+						<th>Date de délibération au MOA</th>
+						<th>Programme</th>
+						<th>Nature du dossier</th>
+						<th>Montant HT du dossier (en €)</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+		<br />
+		<div class="icon-link">
+			<div><span class="bt-csv"></span></div>
+			<div><a href="{% url 'exporter_csv_selectionner_dossiers_non_complet' %}">Export non-complet au format CSV</a></div>
+		</div>
+		<br />
+		<div class="icon-link">
+			<div><span class="bt-csv"></span></div>
+			<div><a href="{% url 'exporter_csv_selectionner_dossiers_complet' %}">Export complet au format CSV</a></div>
+		</div>
+	</div>
+</div>
+{% endblock content %}

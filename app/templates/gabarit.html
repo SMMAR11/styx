@@ -1,0 +1,123 @@
+{% load static %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="author" content="MAYSONA"/>
+		<title>STYX 2.0 - {{ title }}</title>
+		<!-- J'inclus le fichier nécessaire au bon fonctionnement de Bootstrap. -->
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/bootstrap/css/bootstrap.css' %}">
+		<!-- J'inclus les feuilles de styles des bibliothèques utilisées. -->
+		<link rel="stylesheet" href="{% static './vendors/bootstrap-datepicker-master/css/bootstrap-datepicker.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/DataTables/css/jquery.dataTables.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet/leaflet.css' %}">
+		<!-- J'inclus les feuilles de styles du modèle de l'application. -->
+		<link rel="stylesheet" type="text/css" href="{% static './css/templates/base.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './css/templates/app.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './css/classes.css' %}">
+		<!-- J'inclus la feuille de style de l'application. -->
+		<link rel="stylesheet" type="text/css" href="{% static './css/styles.css' %}">
+	</head>
+	<body style="background-color: white;">
+		<div id="loader_page" class="text-center">
+			<span class="glyphicon glyphicon-refresh spin"></span>
+			<br />
+			Chargement de la page
+		</div>
+		<div class="container-fluid" style="display: none;">
+			<div class="row" id="header">
+				<img src="{% static './images/logos/styx.png' %}"/>
+			</div>
+			<div class="row" id="menu_principal">
+				<nav class="navbar navbar-default">
+					<div class="navbar-header">
+						{% if request.session.utilisateur %}
+						<button type="button" class="navbar-toggle collapsed to-unfocus" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+							<span class="sr-only">Toggle navigation</span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+						</button>
+						{% endif %}
+						<a class="navbar-brand glyphicon glyphicon-home to-unfocus alert-user" href="{% url 'index' %}"></a>
+					</div>
+					<div id="navbar" class="navbar-collapse collapse">
+						{% if request.session.utilisateur %}
+						<ul class="nav navbar-nav">
+							<li><a href="{% url 'portail_carto' %}" class="to-unfocus alert-user">Portail cartographique</a></li>
+							<li><a href="{% url 'gestion_dossiers' %}" class="to-unfocus alert-user">Gestion des dossiers</a></li>
+							<li><a href="{% url 'realisation_etats' %}" class="to-unfocus alert-user">Réalisation d'états</a></li>
+						</ul>
+						<ul class="nav navbar-nav navbar-right">
+							<li class="dropdown">
+								<a data-toggle="dropdown" class="dropdown-toggle glyphicon glyphicon-user to-unfocus" href="#"></a>
+								<span class="dropdown-menu" style="min-width: 300px; background-color: #EBF0F7; border-top: solid 1px #CCC; border-bottom: solid 1px #CCC;">
+									<p class="text-center c-theme-fonce b">{{ request.session.utilisateur.pren_util }} {{ request.session.utilisateur.n_util }}</p>
+									<br />
+									<div class="row">
+										<div class="col-xs-6">
+											<a href="{% url 'consulter_compte' %}" class="dropdown-thumbnail to-unfocus">
+												<img src="{% static './images/pictos/autres/options.png' %}" class="vignette-xs">
+											</a>
+										</div>
+										<div class="col-xs-6">
+											<a href="{% url 'deconnecter' %}" class="dropdown-thumbnail to-unfocus">
+												<img src="{% static './images/pictos/autres/deconnecter.png' %}" class="vignette-xs">
+											</a>
+										</div>
+									</div>
+								</span>
+							</li>
+						</ul>
+						{% endif %}
+					</div>
+				</nav>
+			</div>
+			<div id="content">
+				{% block content %}{% endblock content %}
+			</div>
+			<div class="row" id="pre-footer"></div>
+			<div class="row" id="footer">
+				<div class="col-md-5 colonne-footer">
+					<a href="http://www.smmar.org/" target="blank" class="to-unfocus">
+						<img src="{% static './images/logos/smmar.png' %}"/>
+					</a>
+				</div>
+				<div class="col-md-7 colonne-footer">
+					<a href="http://www.regionlrmp.fr/" target="blank" class="to-unfocus">
+						<img src="{% static './images/logos/europe.jpg' %}"/>
+						<img src="{% static './images/logos/ue.jpg' %}"/>
+						<img src="{% static './images/logos/region_occitanie.jpg' %}"/>
+					</a>
+					<a href="http://www.gouvernement.fr/" target="blank" class="to-unfocus">
+						<img src="{% static './images/logos/etat.jpg' %}"/>
+					</a>
+					<a href="http://www.eaurmc.fr/" target="blank" class="to-unfocus">
+						<img src="{% static './images/logos/aermc.jpg' %}"/>
+					</a>
+					<a href="http://www.iut-perpignan.fr/formations-iut-perpignan/statistique-et-traitement-informatique-des-donnees/iut-stid-perpignan.html" target="blank" class="to-unfocus">
+						<img src="{% static './images/logos/iut_stid.jpg' %}"/>
+					</a>
+				</div>
+			</div>
+			{% for une_fm in les_fm %}
+				{{ une_fm }}
+			{% endfor %}
+		</div>
+		<!-- J'inclus les fichiers nécessaires au bon fonctionnement de Bootstrap. -->
+		<script type="text/javascript" src="{% static './vendors/bootstrap/js/jquery.js' %}"></script>
+		<script type="text/javascript" src="{% static './vendors/bootstrap/js/bootstrap.js' %}"></script>
+		<!-- J'inclus les scripts des bibliothèques utilisées. -->
+		<script type="text/javascript" src="{% static './vendors/bootstrap-datepicker-master/js/bootstrap-datepicker.js' %}"></script>
+		<script type="text/javascript" src="{% static './vendors/bootstrap-datepicker-master/locales/bootstrap-datepicker.fr.min.js' %}"></script>
+		<script type="text/javascript" src="{% static './vendors/DataTables/js/jquery.dataTables.js' %}"></script>
+		<script type="text/javascript" src="{% static './vendors/leaflet/leaflet-src.js' %}"></script>
+		<!-- J'inclus mes scripts JavaScript. -->
+		<script type="text/javascript" src="{% static './js/initialisations.js' %}"></script>
+		<script type="text/javascript" src="{% static './js/fonctions.js' %}"></script>
+		<script type="text/javascript" src="{% static './js/scripts.js' %}"></script>
+		<script type="text/javascript" src="{% static './js/scripts_carto.js' %}"></script>
+	</body>
+</html>

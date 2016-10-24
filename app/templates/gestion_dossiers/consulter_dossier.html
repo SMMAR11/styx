@@ -1,0 +1,333 @@
+{% extends './gabarit.html' %}
+{% load static %}
+
+{% block content %}
+<div class="icon-link pull-right">
+	<div><span class="bt-precedent"></span></div>
+	<div><a href="{% url 'choisir_dossier' %}">Revenir à la liste des dossiers</a></div>
+</div>
+<br />
+<div class="row">
+	<div class="col-md-12">
+		<p class="h1 c-theme text-center">Consulter un dossier</p>
+		<br />
+		<ul class="nav nav-tabs" id="menu_dossier">
+			<li><a href="#ong_caracteristiques" data-toggle="tab">Caractéristiques</a></li>
+			{% if le_dossier.id_av.int_av != 'En projet' %}
+			<li><a href="#ong_financements" data-toggle="tab">Plan de financement</a></li>
+			<li><a href="#ong_prestations" data-toggle="tab">Prestations</a></li>
+			<li><a href="#ong_factures" data-toggle="tab">Factures</a></li>
+			<li><a href="#ong_demandes_versements" data-toggle="tab">Demandes de versement</a></li>
+			<li><a href="#ong_reglementations" data-toggle="tab">Réglementations</a></li>
+			{% endif %}
+			<li><a href="#ong_photos" data-toggle="tab">Photos</a></li>
+		</ul>
+		<div class="tab-content">
+			<div id="ong_caracteristiques" class="tab-pane fade">
+				<div class="row">
+					<div class="col-md-9">
+						{{ les_attributs_dossier.num_doss }}
+						<div class="row">
+							<div class="col-xs-6">{{ les_attributs_dossier.int_doss }}</div>
+							<div class="col-xs-6">{{ les_attributs_dossier.descr_doss }}</div>
+						</div>
+						<div class="attribute-wrapper">
+							<label class="c-theme">Dossier(s) associé(s)</label>
+							{% if nb_dossiers_famille > 0 %}
+							<div style="overflow: auto">
+								<table class="table display" id="tab_consulter_dossiers_associes">
+									<thead>
+										<tr>
+											<th>Numéro du dossier</th>
+											<th>Intitulé du dossier</th>
+											<th>Maître d'ouvrage</th>
+											<th>Date de délibération au MOA</th>
+											<th>Programme</th>
+											<th>Nature du dossier</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for un_dossier_famille in les_dossiers_famille %}
+										<tr{% if le_dossier.id_doss_ass.id_doss == un_dossier_famille.id_doss %} style="background-color: #F8B862;"{% endif %}>
+											<td class="b">{{ un_dossier_famille.num_doss }}</td>
+											<td>{{ un_dossier_famille.int_doss }}</td>
+											<td>{{ un_dossier_famille.n_moa }}</td>
+											<td>{{ un_dossier_famille.dt_delib_moa_doss }}</td>
+											<td>{{ un_dossier_famille.int_progr }}</td>
+											<td>{{ un_dossier_famille.int_nat_doss }}</td>
+											<td><a href="{% url 'consulter_dossier' un_dossier_famille.id_doss %}" class="bt-consulter pull-right"></a></td>
+										</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+							{% else %}
+							<input class="form-control" value="" type="text" readonly>
+							{% endif %}
+						</div>
+						{{ les_attributs_dossier.n_org }}
+						<div class="row">
+							<div class="col-xs-6">{{ les_attributs_dossier.int_progr }}</div>
+							<div class="col-xs-2">{{ les_attributs_dossier.id_axe }}</div>
+							<div class="col-xs-2">{{ les_attributs_dossier.id_ss_axe }}</div>
+							<div class="col-xs-2">{{ les_attributs_dossier.id_act }}</div>
+						</div>
+						{% if le_dossier.id_progr.int_progr == 'PGRE' %}
+						<div class="row">
+							<div class="col-xs-6">{{ les_attributs_dossier.quant_objs_pgre }}</div>
+							<div class="col-xs-3">{{ les_attributs_dossier.quant_real_pgre }}</div>
+							<div class="col-xs-3">{{ les_attributs_dossier.int_unit }}</div>
+						</div>
+						<div class="row">
+							<div class="col-xs-6">{{ les_attributs_dossier.n_riv }}</div>
+							<div class="col-xs-6">{{ les_attributs_dossier.int_port }}</div>
+						</div>
+						{% endif %}
+						<div class="row">
+							<div class="col-xs-6">{{ les_attributs_dossier.int_type_doss }}</div>
+							<div class="col-xs-6">{{ les_attributs_dossier.int_nat_doss }}</div>
+						</div>
+						{{ les_attributs_dossier.techn }}
+						<div class="row">
+							<div class="col-xs-6">{{ les_attributs_dossier.mont_ht_doss }}</div>
+							<div class="col-xs-6">{{ les_attributs_dossier.mont_ttc_doss }}</div>
+						</div>
+						<div class="row">
+							<div class="col-xs-6">{{ les_attributs_dossier.int_av_cp }}</div>
+							<div class="col-xs-6">{{ les_attributs_dossier.dt_av_cp_doss }}</div>
+						</div>
+						<div class="row">
+							<div class="col-xs-6">{{ les_attributs_dossier.int_av }}</div>
+							<div class="col-xs-6">{{ les_attributs_dossier.dt_delib_moa_doss }}</div>
+						</div>
+						{% if le_dossier.chem_dds_doss != None %}
+						<div class="icon-link">
+							<div><span class="bt-pdf"></span></div>
+							<div><a href="{{ MEDIA_URL }}{{ le_dossier.chem_dds_doss }}" target="blank">Consulter le fichier de l'arrêté</a></div>
+						</div>
+						<br />
+						<br />
+						{% endif %}
+						{{ les_attributs_dossier.comm_doss }}
+					</div>
+					<div class="col-md-3">
+						<div class="icon-link">
+							<div><span class="bt-carto"></span></div>
+							<div><a href="{% url 'consulter_carto' le_dossier.id_doss %}">Gérer/consulter l'objet géographique sur la carte</a></div>
+						</div>
+						<br />
+						<br />
+						<div class="icon-link">
+							<div><span class="bt-modifier"></span></div>
+							<div><a href="{% url 'modifier_dossier' le_dossier.id_doss %}">Modifier</a></div>
+						</div>
+						<br />
+						<div class="icon-link">
+							<div><span class="bt-supprimer"></span></div>
+							<div><span action="{% url 'consulter_dossier' le_dossier.id_doss %}?action=supprimer-dossier" id="bt_supprimer_dossier">Supprimer le dossier</span></div>
+						</div>		
+					</div>
+				</div>
+			</div>
+			{% if le_dossier.id_av.int_av != 'En projet' %}
+			<div id="ong_financements" class="tab-pane fade">
+				<div class="row">
+					<div class="col-md-12">
+						<p class="h1 c-theme text-center">Montage financier</p>
+						<br />
+						<div class="icon-link pull-right">
+							<div><span class="bt-ajouter"></span></div>
+							<div><span>Ajouter un organisme financier</span></div>
+						</div>
+						<br />
+						<div style="overflow: auto;">
+							<table class="table display" id="tab_consulter_plan_financement">
+								<thead>
+									<tr>
+										<th>Organisme financier</th>
+										<th>Montant (en €)</th>
+										<th>%</th>
+										<th>Date de début d'éligibilité</th>
+										<th>Date de fin d'éligibilité</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for un_financement in les_financements %}
+										<tr>
+											<td>{{ un_financement.n_org }}</td>
+											<td>{{ un_financement.mont_subv }}</td>
+											<td>{{ un_financement.pourc_elig }}</td>
+											<td>{{ un_financement.dt_deb_elig }}</td>
+											<td>{{ un_financement.dt_fin_elig }}</td>
+											<td><a href="#" class="bt-consulter block pull-right"></td>
+										</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="ong_prestations" class="tab-pane fade">
+				<div class="row">
+					<div class="col-md-12">
+						<p class="h1 c-theme text-center">Liste des prestations</p>
+						<br />
+						<div class="icon-link pull-right">
+							<div><span class="bt-ajouter"></span></div>
+							<div><span data-toggle="modal" data-target="#fm_ajouter_prestation">Ajouter une prestation</span></div>
+						</div>
+						<br />
+						<div style="overflow: auto;">
+							<table class="table display" id="tab_consulter_prestations">
+								<thead>
+									<tr>
+										<th>Entreprise</th>
+										<th>Montant (en €)</th>
+										<th>Date de notification</th>
+										<th>Nature de la prestation</th>
+										<th>Reste à payer (en €)</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for une_prestation in les_prestations %}
+										<tr>
+											<td>{{ une_prestation.n_org }}</td>
+											<td>{{ une_prestation.mont_tot_prest }}</td>
+											<td>{{ une_prestation.dt_notif_prest }}</td>
+											<td>{{ une_prestation.int_nat_prest }}</td>
+											<td>{{ une_prestation.rap }}</td>
+											<td><a href="#" class="bt-consulter block pull-right"></td>
+										</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="ong_factures" class="tab-pane fade">
+				<div class="row">
+					<div class="col-md-12">
+						<p class="h1 c-theme text-center">Liste des factures</p>
+						<br />
+						<div class="icon-link pull-right">
+							<div><span class="bt-ajouter"></span></div>
+							<div><span data-toggle="modal" data-target="#fm_ajouter_facture">Ajouter une facture</span></div>
+						</div>
+						<br />
+						<div style="overflow: auto;">
+							<table class="table display" id="tab_consulter_factures">
+								<thead>
+									<tr>
+										<th>Prestation</th>
+										<th>Date de mise en paiement</th>
+										<th>Montant (en €)</th>
+										<th>Intitulé</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for une_facture in les_factures %}
+										<tr>
+											<td>{{ une_facture.prest }}</td>
+											<td>{{ une_facture.dt_mep_fact }}</td>
+											<td>{{ une_facture.mont_fact }}</td>
+											<td>{{ une_facture.int_fact }}</td>
+											<td><a href="#" class="bt-consulter block pull-right"></td>
+										</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="ong_demandes_versements" class="tab-pane fade">
+				<div class="row">
+					<div class="col-md-12">
+						<p class="h1 c-theme text-center">Liste des demandes de versement</p>
+						<br />
+						<div class="icon-link pull-right">
+							<div><span class="bt-ajouter"></span></div>
+							<div><span>Ajouter une demande de versement</span></div>
+						</div>
+						<br />
+						<div style="overflow: auto;">
+							<table class="table display" id="tab_consulter_demandes_versement">
+								<thead>
+									<tr>
+										<th>Organisme financier</th>
+										<th>Intitulé</th>
+										<th>Montant demandé</th>
+										<th>Date de demande de versement</th>
+										<th>Date de réception</th>
+										<th>Montant restant à demander</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% endif %}
+			<div id="ong_reglementations" class="tab-pane fade">
+				<div class="row">
+					<div class="col-md-12">
+						<p class="h1 c-theme text-center">Liste des arrêtés</p>
+						<br />
+						{{ contenu_reglementations | safe }}
+						<form method="post" action="{% url 'modifier_dossier' le_dossier.id_doss %}?action=modifier-reglementations" class="c-theme" name="form_modifier_dossier">
+							{% csrf_token %}
+							{{ f1.zs_comm_regl_doss }}
+							<button type="submit" class="center-block btn bt-vert to-unfocus" data-target="#fm_modifier_dossier">Mettre à jour le commentaire</button>
+						</form>
+					</div>
+				</div>
+			</div>
+			<div id="ong_photos" class="tab-pane fade">
+				<div class="row">
+					<div class="col-md-12">
+						<p class="h1 c-theme text-center">Liste des photos</p>
+						<br />
+						<div class="icon-link pull-right">
+							<div><span class="bt-ajouter"></span></div>
+							<div><span data-toggle="modal" data-target="#fm_ajouter_photo">Ajouter une photo</span></div>
+						</div>
+						<br />
+						<div style="overflow: auto;">
+							<table class="table display" id="tab_consulter_photos">
+								<thead>
+									<tr>
+										<th>Visualisation</th>
+										<th>Intitulé</th>
+										<th>Période de la prise de vue</th>
+										<th>Date de la prise de vue</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for une_photo in les_photos %}
+									<tr>
+										<td><img src="{{ une_photo.chem_ph }}" width="100" data-target="#fm_afficher_photo" action="{% url 'consulter_dossier' le_dossier.id_doss %}?action=afficher-photo&photo={{ une_photo.id_ph }}"></td>
+										<td>{{ une_photo.int_ph }}</td>
+										<td>{{ une_photo.int_ppv_ph }}</td>
+										<td>{{ une_photo.dt_pv_ph }}</td>
+										<td><span class="bt-supprimer block pointer pull-right" data-target="#fm_supprimer_photo" action="{% url 'consulter_dossier' le_dossier.id_doss %}?action=supprimer-photo&photo={{ une_photo.id_ph }}"></span></td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}
