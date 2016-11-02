@@ -1,4 +1,4 @@
-{% extends './gabarit.html' %}
+{% extends 'gabarit.html' %}
 {% load static %}
 
 {% block content %}
@@ -9,7 +9,7 @@
 			<fieldset style="padding-bottom: 0;">
 				<legend>Choisir un dossier</legend>
 				<div class="form-content">
-					{{ f1.zl_moa }}
+					{{ f1.zl_org_moa }}
 					{{ f1.zld_progr }}
 					<div class="row">
 						<div class="col-sm-4">{{ f1.zld_axe }}</div>
@@ -17,31 +17,31 @@
 						<div class="col-sm-4">{{ f1.zld_act }}</div>
 					</div>
 					{{ f1.zl_nat_doss }}
-					{{ f1.zl_annee_delib_moa_doss }}
+					{{ f1.zl_ann_delib_moa_doss }}
 				</div>
 			</fieldset>
 		</form>
 	</div>
 	<div class="col-md-8">
 		<div style="overflow: auto;">
-			<table class="table display" id="tab_choisir_dossier">
+			<table class="display table" id="tab_choisir_dossier">
 				<thead>
 					<tr>
-						<th>Numéro du dossier</th>
-						<th>Intitulé du dossier</th>
+						<th>N° du dossier</th>
+						<th>Intitulé</th>
 						<th>Maître d'ouvrage</th>
-						<th>Date de délibération au MOA</th>
+						<th>Date de délibération au maître d'ouvrage</th>
 						<th></th>
 					</tr>
 				</thead>
 				<tbody>
-					{% for un_dossier in les_dossiers %}
+					{% for un_doss in les_doss %}
 					<tr>
-						<td class="b">{{ un_dossier.num_doss }}</td>
-						<td>{{ un_dossier.int_doss }}</td>
-						<td>{{ un_dossier.n_moa }}</td>
-						<td>{{ un_dossier.dt_delib_moa_doss }}</td>
-						<td><a href="{% url 'consulter_dossier' un_dossier.id_doss %}" class="bt-consulter pull-right"></a></td>
+						<td class="b">{{ un_doss.num_doss }}</td>
+						<td>{{ un_doss.int_doss }}</td>
+						<td>{{ un_doss.n_moa }}</td>
+						<td>{{ un_doss.dt_delib_moa_doss }}</td>
+						<td><a href="{% url 'consulter_dossier' un_doss.id_doss %}" class="bt-consulter pull-right" title="Consulter le dossier"></a></td>
 					</tr>
 					{% endfor %}					
 				</tbody>

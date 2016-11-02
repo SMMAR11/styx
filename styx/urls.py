@@ -8,19 +8,56 @@ urlpatterns = [
 	url(r'^index.html$', session.index, name = 'index'),
 	url(r'^deconnecter.html$', session.deconnecter, name = 'deconnecter'),
     url(r'^modules/gestion-compte/consulter-compte/$', session.consulter_compte, name = 'consulter_compte'),
+
     url(r'^modules/portail-cartographique/$', portail_carto.index, name = 'portail_carto'),
+
 	url(r'^modules/gestion-dossiers/$', gestion_dossiers.index, name = 'gestion_dossiers'),
 	url(r'^modules/gestion-dossiers/creer-dossier/$', gestion_dossiers.creer_dossier, name = 'creer_dossier'),
-    url(r'^modules/gestion-dossiers/modifier-dossier/([0-9]+)/$', gestion_dossiers.modifier_dossier, name = 'modifier_dossier'),
+    url(
+        r'^modules/gestion-dossiers/modifier-dossier/([0-9]+)/$',
+        gestion_dossiers.modifier_dossier,
+        name = 'modifier_dossier'
+    ),
+    url(
+        r'^modules/gestion-dossiers/supprimer-dossier/([0-9]+)/$',
+        gestion_dossiers.supprimer_dossier,
+        name = 'supprimer_dossier'
+    ),
     url(r'^modules/gestion-dossiers/choisir-dossier/$', gestion_dossiers.choisir_dossier, name = 'choisir_dossier'),
-    url(r'^modules/gestion-dossiers/consulter-dossier/([0-9]+)/$', gestion_dossiers.consulter_dossier, name = 'consulter_dossier'),
-    url(r'^modules/gestion-dossiers/supprimer-dossier/([0-9]+)/$', gestion_dossiers.supprimer_dossier, name = 'supprimer_dossier'),
-    url(r'^modules/gestion-dossiers/consulter-cartographie/([0-9]+)/$', portail_carto.consulter_carto, name = 'consulter_carto'),
+    url(
+        r'^modules/gestion-dossiers/consulter-dossier/([0-9]+)/$',
+        gestion_dossiers.consulter_dossier,
+        name = 'consulter_dossier'
+    ),
+    url(
+        r'^modules/gestion-dossiers/consulter-cartographie/([0-9]+)/$',
+        portail_carto.consulter_carto,
+        name = 'consulter_carto'
+    ),
+    url(
+        r'^modules/gestion-dossiers/ajouter-arrete/([0-9]+)/([0-9]+)/$',
+        gestion_dossiers.ajouter_arrete,
+        name = 'ajouter_arrete'
+    ),
+    url(
+        r'^modules/gestion-dossiers/modifier-arrete/([0-9]+)/([0-9]+)/$',
+        gestion_dossiers.modifier_arrete,
+        name = 'modifier_arrete'
+    ),
+     url(
+        r'^modules/gestion-dossiers/supprimer-arrete/$',
+        gestion_dossiers.supprimer_arrete,
+        name = 'supprimer_arrete'
+    ),
     url(r'^modules/gestion-dossiers/ajouter-photo/$', gestion_dossiers.ajouter_photo, name = 'ajouter_photo'),
     url(r'^modules/gestion-dossiers/supprimer-photo/$', gestion_dossiers.supprimer_photo, name = 'supprimer_photo'),
-
+    
     url(r'^modules/realisation-etats/$', realisation_etats.index, name = 'realisation_etats'),
-    url(r'^modules/realisation-etats/selectionner-dossiers/$', realisation_etats.selectionner_dossiers, name = 'selectionner_dossiers'),
+    url(
+        r'^modules/realisation-etats/selectionner-dossiers/$',
+        realisation_etats.selectionner_dossiers,
+        name = 'selectionner_dossiers'
+    ),
     url(
         r'^modules/realisation-etats/selectionner-dossiers/exporter-csv-non-complet/$',
         realisation_etats.exporter_csv_selectionner_dossiers, { 'p_complet' : False },
@@ -32,7 +69,7 @@ urlpatterns = [
         name = 'exporter_csv_selectionner_dossiers_complet'
     ),
 
-    url(r'^retourner-onglet-actif.html$', autres.retourner_onglet_actif)
+    url(r'^retourner-onglet-actif.html$', autres.retourner_onglet_actif, name = 'retourner_onglet_actif')
 ]
 
 # Je modifie les templates relatifs aux codes HTTP.

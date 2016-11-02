@@ -1,10 +1,10 @@
-{% extends './main.html' %}
+{% extends 'main.html' %}
 {% load static %}
 
 {% block content %}
 <div class="row">
 	<div class="col-md-12">
-		<form action="{% url 'creer_dossier' %}" method="post" name="form_creer_dossier" class="c-theme alert-user">
+		<form action="{% url 'creer_dossier' %}" method="post" name="form_creer_dossier" class="alert-user c-theme">
 			{% csrf_token %}
 			<fieldset>
 				<legend>Créer un dossier</legend>
@@ -17,17 +17,17 @@
 						<div class="col-sm-6">
 							<div class="field-wrapper">
 								<p>Ce dossier est-il lié à un autre dossier ?</p>
-								<label class="radio-inline c-police">
+								<label class="c-police radio-inline">
 									<input type="radio" name="rb_doss_ass" value="1" data-toggle="modal" data-target="#fm_choisir_dossier_associe">Oui
 								</label>
-								<label class="radio-inline c-police">
+								<label class="c-police radio-inline">
 									<input type="radio" name="rb_doss_ass" value="0" checked>Non
 								</label>
 							</div>
 						</div>
 						<div class="col-sm-6">{{ f1.za_doss_ass }}</div>
 					</div>
-					{{ f1.zl_moa }}
+					{{ f1.zl_org_moa }}
 					<div class="row">
 						<div class="col-sm-6">{{ f1.zld_progr }}</div>
 						<div class="col-sm-2">{{ f1.zld_axe }}</div>
@@ -65,7 +65,7 @@
 					{{ f1.zu_chem_dds_doss }}
 					{{ f1.zs_comm_doss }}
 				</div>
-				<button type="submit" class="center-block btn bt-vert" data-target="#fm_creer_dossier">Valider</button>
+				<button type="submit" class="bt-vert btn center-block" data-target="#fm_creer_dossier">Valider</button>
 			</fieldset>
 		</form>						
 	</div>

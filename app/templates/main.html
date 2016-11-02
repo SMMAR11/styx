@@ -1,8 +1,8 @@
-{% extends './gabarit.html' %}
+{% extends 'gabarit.html' %}
 {% load static %}
 
 {% block content %}
-{% if request.session.utilisateur %}
+{% if request.session.util %}
 <div class="row">
 	<div class="col-md-4 saut-md">
 		<a href="{% url 'portail_carto' %}" class="thumbnail to-unfocus">
@@ -31,12 +31,12 @@
 			<fieldset>
 				<legend>Identification</legend>
 				<div class="form-content">
-					{{ f1.zs_pseudo }}
-					{{ f1.zs_mdp }}
-					<button type="submit" class="center-block btn bt-vert to-unfocus" data-target="#fm_identification">Valider</button>
+					{{ f1.zs_pseudo_util }}
+					{{ f1.zs_mdp_util }}
+					<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_identification">Valider</button>
 					<div class="c-police text-center">
 						Oubli de votre mot de passe
-						<button class="btn bt-orange to-unfocus to-block" style="border-radius: 50%; margin-left: 5px;" data-toggle="modal" data-target="#fm_oublier_mdp">?</button>
+						<button class="bt-orange btn to-block to-unfocus" style="border-radius: 50%; margin-left: 5px;" data-toggle="modal" data-target="#fm_oublier_mdp">?</button>
 					</div>
 				</div>
 			</fieldset>

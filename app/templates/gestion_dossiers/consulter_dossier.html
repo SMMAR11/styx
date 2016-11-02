@@ -1,19 +1,23 @@
-{% extends './gabarit.html' %}
+{% extends 'gabarit.html' %}
 {% load static %}
 
 {% block content %}
-<div class="icon-link pull-right">
-	<div><span class="bt-precedent"></span></div>
-	<div><a href="{% url 'choisir_dossier' %}">Revenir à la liste des dossiers</a></div>
+<div class="row">
+	<div class="col-md-12">
+		<div class="icon-link pull-right">
+			<div><span class="bt-precedent"></span></div>
+			<div><a href="{% url 'choisir_dossier' %}">Revenir à la liste des dossiers</a></div>
+		</div>
+	</div>
 </div>
 <br />
 <div class="row">
 	<div class="col-md-12">
-		<p class="h1 c-theme text-center">Consulter un dossier</p>
+		<div class="main-title">Consulter un dossier</div>
 		<br />
 		<ul class="nav nav-tabs" id="menu_dossier">
 			<li><a href="#ong_caracteristiques" data-toggle="tab">Caractéristiques</a></li>
-			{% if le_dossier.id_av.int_av != 'En projet' %}
+			{% if le_doss.id_av.int_av != 'En projet' %}
 			<li><a href="#ong_financements" data-toggle="tab">Plan de financement</a></li>
 			<li><a href="#ong_prestations" data-toggle="tab">Prestations</a></li>
 			<li><a href="#ong_factures" data-toggle="tab">Factures</a></li>
@@ -23,204 +27,172 @@
 			<li><a href="#ong_photos" data-toggle="tab">Photos</a></li>
 		</ul>
 		<div class="tab-content">
-			<div id="ong_caracteristiques" class="tab-pane fade">
+			<div id="ong_caracteristiques" class="fade tab-pane">
 				<div class="row">
 					<div class="col-md-9">
-						{{ les_attributs_dossier.num_doss }}
+						{{ les_attr_doss.num_doss }}
 						<div class="row">
-							<div class="col-xs-6">{{ les_attributs_dossier.int_doss }}</div>
-							<div class="col-xs-6">{{ les_attributs_dossier.descr_doss }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.int_doss }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.descr_doss }}</div>
 						</div>
 						<div class="attribute-wrapper">
 							<label class="c-theme">Dossier(s) associé(s)</label>
-							{% if nb_dossiers_famille > 0 %}
 							<div style="overflow: auto">
-								<table class="table display" id="tab_consulter_dossiers_associes">
+								<table class="display table" id="tab_consulter_dossiers_associes">
 									<thead>
 										<tr>
-											<th>Numéro du dossier</th>
-											<th>Intitulé du dossier</th>
+											<th>N° du dossier</th>
+											<th>Intitulé</th>
 											<th>Maître d'ouvrage</th>
-											<th>Date de délibération au MOA</th>
+											<th>Date de délibération au maître d'ouvrage</th>
 											<th>Programme</th>
 											<th>Nature du dossier</th>
 											<th></th>
 										</tr>
 									</thead>
 									<tbody>
-										{% for un_dossier_famille in les_dossiers_famille %}
-										<tr{% if le_dossier.id_doss_ass.id_doss == un_dossier_famille.id_doss %} style="background-color: #F8B862;"{% endif %}>
-											<td class="b">{{ un_dossier_famille.num_doss }}</td>
-											<td>{{ un_dossier_famille.int_doss }}</td>
-											<td>{{ un_dossier_famille.n_moa }}</td>
-											<td>{{ un_dossier_famille.dt_delib_moa_doss }}</td>
-											<td>{{ un_dossier_famille.int_progr }}</td>
-											<td>{{ un_dossier_famille.int_nat_doss }}</td>
-											<td><a href="{% url 'consulter_dossier' un_dossier_famille.id_doss %}" class="bt-consulter pull-right"></a></td>
+										{% for un_doss_fam in les_doss_fam %}
+										<tr{% if un_doss_fam.est_ass == True %} style="background-color: #F8B862;"{% endif %}>
+											<td class="b">{{ un_doss_fam.num_doss }}</td>
+											<td>{{ un_doss_fam.int_doss }}</td>
+											<td>{{ un_doss_fam.n_moa }}</td>
+											<td>{{ un_doss_fam.dt_delib_moa_doss }}</td>
+											<td>{{ un_doss_fam.int_progr }}</td>
+											<td>{{ un_doss_fam.int_nat_doss }}</td>
+											<td><a href="{% url 'consulter_dossier' un_doss_fam.id_doss %}" class="bt-consulter pull-right"></a></td>
 										</tr>
 										{% endfor %}
 									</tbody>
 								</table>
 							</div>
-							{% else %}
-							<input class="form-control" value="" type="text" readonly>
-							{% endif %}
 						</div>
-						{{ les_attributs_dossier.n_org }}
+						{{ les_attr_doss.n_org }}
 						<div class="row">
-							<div class="col-xs-6">{{ les_attributs_dossier.int_progr }}</div>
-							<div class="col-xs-2">{{ les_attributs_dossier.id_axe }}</div>
-							<div class="col-xs-2">{{ les_attributs_dossier.id_ss_axe }}</div>
-							<div class="col-xs-2">{{ les_attributs_dossier.id_act }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.int_progr }}</div>
+							<div class="col-xs-2">{{ les_attr_doss.id_axe }}</div>
+							<div class="col-xs-2">{{ les_attr_doss.id_ss_axe }}</div>
+							<div class="col-xs-2">{{ les_attr_doss.id_act }}</div>
 						</div>
-						{% if le_dossier.id_progr.int_progr == 'PGRE' %}
+						{% if le_doss.id_progr.int_progr == 'PGRE' %}
 						<div class="row">
-							<div class="col-xs-6">{{ les_attributs_dossier.quant_objs_pgre }}</div>
-							<div class="col-xs-3">{{ les_attributs_dossier.quant_real_pgre }}</div>
-							<div class="col-xs-3">{{ les_attributs_dossier.int_unit }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.quant_objs_pgre }}</div>
+							<div class="col-xs-3">{{ les_attr_doss.quant_real_pgre }}</div>
+							<div class="col-xs-3">{{ les_attr_doss.int_unit }}</div>
 						</div>
 						<div class="row">
-							<div class="col-xs-6">{{ les_attributs_dossier.n_riv }}</div>
-							<div class="col-xs-6">{{ les_attributs_dossier.int_port }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.n_riv }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.int_port }}</div>
 						</div>
 						{% endif %}
 						<div class="row">
-							<div class="col-xs-6">{{ les_attributs_dossier.int_type_doss }}</div>
-							<div class="col-xs-6">{{ les_attributs_dossier.int_nat_doss }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.int_type_doss }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.int_nat_doss }}</div>
 						</div>
-						{{ les_attributs_dossier.techn }}
+						{{ les_attr_doss.techn }}
 						<div class="row">
-							<div class="col-xs-6">{{ les_attributs_dossier.mont_ht_doss }}</div>
-							<div class="col-xs-6">{{ les_attributs_dossier.mont_ttc_doss }}</div>
-						</div>
-						<div class="row">
-							<div class="col-xs-6">{{ les_attributs_dossier.int_av_cp }}</div>
-							<div class="col-xs-6">{{ les_attributs_dossier.dt_av_cp_doss }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.mont_ht_doss }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.mont_ttc_doss }}</div>
 						</div>
 						<div class="row">
-							<div class="col-xs-6">{{ les_attributs_dossier.int_av }}</div>
-							<div class="col-xs-6">{{ les_attributs_dossier.dt_delib_moa_doss }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.int_av }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.dt_delib_moa_doss }}</div>
 						</div>
-						{% if le_dossier.chem_dds_doss != None %}
+						<div class="row">
+							<div class="col-xs-6">{{ les_attr_doss.int_av_cp }}</div>
+							<div class="col-xs-6">{{ les_attr_doss.dt_av_cp_doss }}</div>
+						</div>
+						{% if le_doss.chem_dds_doss != None %}
 						<div class="icon-link">
 							<div><span class="bt-pdf"></span></div>
-							<div><a href="{{ MEDIA_URL }}{{ le_dossier.chem_dds_doss }}" target="blank">Consulter le fichier de l'arrêté</a></div>
+							<div><a href="{{ MEDIA_URL }}{{ le_doss.chem_dds_doss }}" target="blank">Consulter le fichier de l'arrêté</a></div>
 						</div>
 						<br />
 						<br />
 						{% endif %}
-						{{ les_attributs_dossier.comm_doss }}
+						{{ les_attr_doss.comm_doss }}
 					</div>
 					<div class="col-md-3">
 						<div class="icon-link">
 							<div><span class="bt-carto"></span></div>
-							<div><a href="{% url 'consulter_carto' le_dossier.id_doss %}">Gérer/consulter l'objet géographique sur la carte</a></div>
+							<div><a href="{% url 'consulter_carto' le_doss.id_doss %}">Gérer/consulter l'objet géographique sur la carte</a></div>
 						</div>
 						<br />
 						<br />
 						<div class="icon-link">
 							<div><span class="bt-modifier"></span></div>
-							<div><a href="{% url 'modifier_dossier' le_dossier.id_doss %}">Modifier</a></div>
+							<div><a href="{% url 'modifier_dossier' le_doss.id_doss %}">Modifier</a></div>
 						</div>
 						<br />
 						<div class="icon-link">
 							<div><span class="bt-supprimer"></span></div>
-							<div><span action="{% url 'consulter_dossier' le_dossier.id_doss %}?action=supprimer-dossier" id="bt_supprimer_dossier">Supprimer le dossier</span></div>
+							<div><span action="{% url 'consulter_dossier' le_doss.id_doss %}?action=supprimer-dossier" id="bt_supprimer_dossier">Supprimer le dossier</span></div>
 						</div>		
 					</div>
 				</div>
 			</div>
-			{% if le_dossier.id_av.int_av != 'En projet' %}
+			{% if le_doss.id_av.int_av != 'En projet' %}
 			<div id="ong_financements" class="tab-pane fade">
 				<div class="row">
 					<div class="col-md-12">
-						<p class="h1 c-theme text-center">Montage financier</p>
-						<br />
 						<div class="icon-link pull-right">
 							<div><span class="bt-ajouter"></span></div>
-							<div><span>Ajouter un organisme financier</span></div>
+							<div><span data-toggle="modal" data-target="#fm_ajouter_financement">Ajouter un organisme financier</span></div>
 						</div>
 						<br />
 						<div style="overflow: auto;">
-							<table class="table display" id="tab_consulter_plan_financement">
+							<table class="display table" id="tab_consulter_plan_financement">
 								<thead>
 									<tr>
 										<th>Organisme financier</th>
-										<th>Montant (en €)</th>
+										<th>Montant HT de participation (en €)</th>
 										<th>%</th>
 										<th>Date de début d'éligibilité</th>
 										<th>Date de fin d'éligibilité</th>
 										<th></th>
 									</tr>
 								</thead>
-								<tbody>
-									{% for un_financement in les_financements %}
-										<tr>
-											<td>{{ un_financement.n_org }}</td>
-											<td>{{ un_financement.mont_subv }}</td>
-											<td>{{ un_financement.pourc_elig }}</td>
-											<td>{{ un_financement.dt_deb_elig }}</td>
-											<td>{{ un_financement.dt_fin_elig }}</td>
-											<td><a href="#" class="bt-consulter block pull-right"></td>
-										</tr>
-									{% endfor %}
-								</tbody>
+								<tbody></tbody>
 							</table>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div id="ong_prestations" class="tab-pane fade">
+			<div id="ong_prestations" class="fade tab-pane">
 				<div class="row">
 					<div class="col-md-12">
-						<p class="h1 c-theme text-center">Liste des prestations</p>
-						<br />
 						<div class="icon-link pull-right">
 							<div><span class="bt-ajouter"></span></div>
 							<div><span data-toggle="modal" data-target="#fm_ajouter_prestation">Ajouter une prestation</span></div>
 						</div>
 						<br />
 						<div style="overflow: auto;">
-							<table class="table display" id="tab_consulter_prestations">
+							<table class="display table" id="tab_consulter_prestations">
 								<thead>
 									<tr>
 										<th>Entreprise</th>
-										<th>Montant (en €)</th>
+										<th>Montant HT (en €)</th>
 										<th>Date de notification</th>
 										<th>Nature de la prestation</th>
-										<th>Reste à payer (en €)</th>
+										<th>Reste à payer HT (en €)</th>
 										<th></th>
 									</tr>
 								</thead>
-								<tbody>
-									{% for une_prestation in les_prestations %}
-										<tr>
-											<td>{{ une_prestation.n_org }}</td>
-											<td>{{ une_prestation.mont_tot_prest }}</td>
-											<td>{{ une_prestation.dt_notif_prest }}</td>
-											<td>{{ une_prestation.int_nat_prest }}</td>
-											<td>{{ une_prestation.rap }}</td>
-											<td><a href="#" class="bt-consulter block pull-right"></td>
-										</tr>
-									{% endfor %}
-								</tbody>
+								<tbody></tbody>
 							</table>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div id="ong_factures" class="tab-pane fade">
+			<div id="ong_factures" class="fade tab-pane">
 				<div class="row">
 					<div class="col-md-12">
-						<p class="h1 c-theme text-center">Liste des factures</p>
-						<br />
 						<div class="icon-link pull-right">
 							<div><span class="bt-ajouter"></span></div>
 							<div><span data-toggle="modal" data-target="#fm_ajouter_facture">Ajouter une facture</span></div>
 						</div>
 						<br />
 						<div style="overflow: auto;">
-							<table class="table display" id="tab_consulter_factures">
+							<table class="display table" id="tab_consulter_factures">
 								<thead>
 									<tr>
 										<th>Prestation</th>
@@ -230,34 +202,22 @@
 										<th></th>
 									</tr>
 								</thead>
-								<tbody>
-									{% for une_facture in les_factures %}
-										<tr>
-											<td>{{ une_facture.prest }}</td>
-											<td>{{ une_facture.dt_mep_fact }}</td>
-											<td>{{ une_facture.mont_fact }}</td>
-											<td>{{ une_facture.int_fact }}</td>
-											<td><a href="#" class="bt-consulter block pull-right"></td>
-										</tr>
-									{% endfor %}
-								</tbody>
+								<tbody></tbody>
 							</table>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div id="ong_demandes_versements" class="tab-pane fade">
+			<div id="ong_demandes_versements" class="fade tab-pane">
 				<div class="row">
 					<div class="col-md-12">
-						<p class="h1 c-theme text-center">Liste des demandes de versement</p>
-						<br />
 						<div class="icon-link pull-right">
 							<div><span class="bt-ajouter"></span></div>
 							<div><span>Ajouter une demande de versement</span></div>
 						</div>
 						<br />
 						<div style="overflow: auto;">
-							<table class="table display" id="tab_consulter_demandes_versement">
+							<table class="display table" id="tab_consulter_demandes_versement">
 								<thead>
 									<tr>
 										<th>Organisme financier</th>
@@ -276,32 +236,28 @@
 				</div>
 			</div>
 			{% endif %}
-			<div id="ong_reglementations" class="tab-pane fade">
+			<div id="ong_reglementations" class="fade tab-pane">
 				<div class="row">
 					<div class="col-md-12">
-						<p class="h1 c-theme text-center">Liste des arrêtés</p>
-						<br />
-						{{ contenu_reglementations | safe }}
-						<form method="post" action="{% url 'modifier_dossier' le_dossier.id_doss %}?action=modifier-reglementations" class="c-theme" name="form_modifier_dossier">
+						{{ les_arr | safe }}
+						<form method="post" action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-reglementations" class="c-theme" name="form_modifier_dossier">
 							{% csrf_token %}
 							{{ f1.zs_comm_regl_doss }}
-							<button type="submit" class="center-block btn bt-vert to-unfocus" data-target="#fm_modifier_dossier">Mettre à jour le commentaire</button>
+							<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_modifier_dossier">Mettre à jour le commentaire</button>
 						</form>
 					</div>
 				</div>
 			</div>
-			<div id="ong_photos" class="tab-pane fade">
+			<div id="ong_photos" class="fade tab-pane">
 				<div class="row">
 					<div class="col-md-12">
-						<p class="h1 c-theme text-center">Liste des photos</p>
-						<br />
 						<div class="icon-link pull-right">
 							<div><span class="bt-ajouter"></span></div>
 							<div><span data-toggle="modal" data-target="#fm_ajouter_photo">Ajouter une photo</span></div>
 						</div>
 						<br />
 						<div style="overflow: auto;">
-							<table class="table display" id="tab_consulter_photos">
+							<table class="display table" id="tab_consulter_photos">
 								<thead>
 									<tr>
 										<th>Visualisation</th>
@@ -312,13 +268,13 @@
 									</tr>
 								</thead>
 								<tbody>
-									{% for une_photo in les_photos %}
+									{% for une_ph in les_ph %}
 									<tr>
-										<td><img src="{{ une_photo.chem_ph }}" width="100" data-target="#fm_afficher_photo" action="{% url 'consulter_dossier' le_dossier.id_doss %}?action=afficher-photo&photo={{ une_photo.id_ph }}"></td>
-										<td>{{ une_photo.int_ph }}</td>
-										<td>{{ une_photo.int_ppv_ph }}</td>
-										<td>{{ une_photo.dt_pv_ph }}</td>
-										<td><span class="bt-supprimer block pointer pull-right" data-target="#fm_supprimer_photo" action="{% url 'consulter_dossier' le_dossier.id_doss %}?action=supprimer-photo&photo={{ une_photo.id_ph }}"></span></td>
+										<td><img src="{{ MEDIA_URL }}{{ une_ph.chem_ph }}" width="100" data-target="#fm_afficher_photo" action="{% url 'consulter_dossier' le_doss.id_doss %}?action=afficher-photo&photo={{ une_ph.id_ph }}"></td>
+										<td>{{ une_ph.int_ph }}</td>
+										<td>{{ une_ph.int_ppv_ph }}</td>
+										<td>{{ une_ph.dt_pv_ph }}</td>
+										<td><span class="block bt-supprimer pointer pull-right" data-target="#fm_supprimer_photo" action="{% url 'consulter_dossier' le_doss.id_doss %}?action=supprimer-photo&photo={{ une_ph.id_ph }}" title="Supprimer la photo"></span></td>
 									</tr>
 									{% endfor %}
 								</tbody>

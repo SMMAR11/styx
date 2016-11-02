@@ -14,8 +14,10 @@ function act_datatable(e, p_form, p_datatable, p_styles = function(){}, p_prefix
 	{
 		type : 'post',
 		url : p_form.attr('action') + '?action=filtrer-dossiers',
-		data : serial_array(p_form),
+		data : recup_post(p_form),
 		dataType : 'json',
+		processData : false,
+		contentType : false,
 		beforeSend : function()
 		{
 			// J'informe l'utilisateur qu'une requête AJAX se prépare.
@@ -37,16 +39,16 @@ function act_datatable(e, p_form, p_datatable, p_styles = function(){}, p_prefix
 				for (var i = 0; i < data['success'].length; i ++)
 				{
 					// Je déclare un tableau vierge qui contiendra les données d'une ligne de la datatable actualisée.
-					var ligne = [];
+					var lg = [];
 
 					for (var j = 0; j < data['success'][i].length; j ++)
 					{
 						// J'empile le tableau déclaré précédemment (cellule par cellule).
-						ligne.push(data['success'][i][j]);
+						lg.push(data['success'][i][j]);
 					}
 
 					// J'ajoute une ligne à la datatable (ligne visible).
-					p_datatable.row.add(ligne).draw(true);
+					p_datatable.row.add(lg).draw(true);
 				}
 
 				// Je mets en forme la datatable (on imite la mise en forme initiale généralement).
@@ -75,11 +77,11 @@ function act_datatable(e, p_form, p_datatable, p_styles = function(){}, p_prefix
 		},
 		error : function(xhr, ajaxOptions, thrownError)
 		{
-			var erreur = xhr.status + ' ' + thrownError;
-			erreur += '\n';
-			erreur += CONTACT_ADMIN;
+			var err = xhr.status + ' ' + thrownError;
+			err += '\n';
+			err += CONTACT_ADMIN;
 			
-			alert(erreur);
+			alert(err);
 		},
 		complete : function()
 		{
@@ -120,11 +122,11 @@ function aff_html_ds_fm(e, p_suffixe)
 		},
 		error : function(xhr, ajaxOptions, thrownError)
 		{
-			var erreur = xhr.status + ' ' + thrownError;
-			erreur += '\n';
-			erreur += CONTACT_ADMIN;
+			var err = xhr.status + ' ' + thrownError;
+			err += '\n';
+			err += CONTACT_ADMIN;
 			
-			alert(erreur);
+			alert(err);
 		},
 		complete : function()
 		{
@@ -149,12 +151,12 @@ function aff_loader_ajax(p_affichage)
 		});
 
 		// J'initialise le message.
-		var message = '<span class="glyphicon glyphicon-refresh spin"></span>';
-		message += '<br />';
-		message += 'Veuillez patienter...';
+		var mess = '<span class="glyphicon glyphicon-refresh spin"></span>';
+		mess += '<br />';
+		mess += 'Veuillez patienter...';
 
 		// J'insère le message dans le bloc.
-		div.append(message);
+		div.append(mess);
 
 		// J'affiche le bloc.
 		div.insertAfter('.container-fluid');
@@ -173,10 +175,10 @@ function aff_loader_ajax(p_affichage)
 function ajout_doss_ass(e)
 {
 	// Je récupère le numéro du dossier choisi.
-	var numero_dossier = $(e.currentTarget).parent().parent().find($('td:first-child')).text();
+	var num_doss = $(e.currentTarget).parent().parent().find($('td:first-child')).text();
 
 	// Je transmets le numéro du dossier associé choisi au formulaire principal.
-	$('input[name$="za_doss_ass"]').val(numero_dossier);
+	$('input[name$="za_doss_ass"]').val(num_doss);
 
 	// Je ferme la fenêtre modale relative au choix d'un dossier associé.
 	$('#fm_choisir_dossier_associe').modal('hide');
@@ -368,11 +370,11 @@ function alim_liste(e, p_tab_params)
 			},
 			error : function(xhr, ajaxOptions, thrownError)
 			{
-				var erreur = xhr.status + ' ' + thrownError;
-				erreur += '\n';
-				erreur += CONTACT_ADMIN;
+				var err = xhr.status + ' ' + thrownError;
+				err += '\n';
+				err += CONTACT_ADMIN;
 				
-				alert(erreur);
+				alert(err);
 			},
 			complete : function()
 			{
@@ -387,6 +389,34 @@ function alim_liste(e, p_tab_params)
 		desaff_liste(tab_listes['effacer']);
 	}
 }
+
+/**
+ * Cette procédure permet d'afficher le montant total d'une subvention selon deux paramètres : le montant éligible et
+ * le pourcentage éligible.
+ * p_type : HT ou TTC ?
+ */
+function calc_mont_tot(p_type)
+{
+	// Je récupère le montant et le pourcentage éligibles.
+	var mont_elig = $('input[name$="zs_mont_' + p_type + '_elig_fin"]').val();
+	var pourc_elig = $('input[name$="zs_pourc_elig"]').val();
+
+	// J'initialise le montant total.
+	var mont_tot = '';
+
+	if (isNaN(mont_elig) == false && isNaN(pourc_elig) == false)
+	{
+		if (mont_elig != '' && pourc_elig != '')
+		{
+			//Je calcule le montant total (arrondi au centième).
+			mont_tot = mont_elig * (pourc_elig / 100);
+			mont_tot = Math.round(mont_tot * 100) / 100;
+		}
+	}
+
+	// J'affiche le montant total.
+	$('input[name$="zs_mont_' + p_type + '_tot_subv"]').val(mont_tot);
+};
 
 /**
  * Cette procédure permet de gérer une liste de cases à cocher.
@@ -458,6 +488,29 @@ function init_datatable(p_tab_html, p_tab_indices, p_extension = false)
 }
 
 /**
+ * Cette fonction prépare les données "POST".
+ * p_form : Formulaire
+ */
+function recup_post(p_form)
+{
+	var temp_formdata = new FormData(p_form.get(0));
+	var formdata = new FormData();
+
+	for (var i of temp_formdata.entries())
+	{
+		var cle = i[0];
+		var valeur = i[1];
+
+		var split = cle.split('-');
+		var nouvelle_cle = split[split.length - 1];
+
+		formdata.append(nouvelle_cle, valeur);
+	}
+
+	return formdata;
+}
+
+/**
  * Cette procédure permet de retirer le style d'erreur aux contrôles soumis à une erreur.
  * p_form : Formulaire dont on doit retirer le style d'erreur aux contrôles soumis à une erreur.
  */
@@ -477,10 +530,10 @@ function ret_errs(p_form)
 function ret_pref(e)
 {
 	// J'obtiens le nom du contrôle.
-	var nom_controle = e.target.getAttribute('name');
+	var nom_contr = e.target.getAttribute('name');
 
 	// J'effectue un découpage du nom du contrôle afin de récupérer le préfixe de celui-ci s'il existe.
-	var split = nom_controle.split('-');
+	var split = nom_contr.split('-');
 
 	// J'initialise la valeur du préfixe.
 	var prefixe = '';
@@ -516,79 +569,6 @@ function select_cont(p_controle)
 	}
 
 	return reponse;
-}
-
-/**
- * Cette fonction imite la méthode serializeArray() sauf qu'elle retire le préfixe de chacun des éléments du tableau 
- * "POST".
- * p_form : Formulaire "POST"
- */
-function serial_array(p_form)
-{
-	// J'utilise la méthode serializeArray().
-	var tab_post = p_form.serializeArray();
-
-	// Je déclare et j'empile le tableau des cases à cocher cochées.
-	var tab_cb_cochees = new Array();
-	p_form.each(function()
-	{
-		// J'initialise le tableau des champs du formulaire.
-		var tab_form = $(this)[0];
-
-		for (var i = 0; i < tab_form.length; i ++)
-		{
-			if (tab_form[i].type == 'checkbox')
-			{
-				// Je stocke la valeur de certaines propriétés de la case à cocher courante.
-				var id = tab_form[i].id;
-				var nom = tab_form[i].name;
-				var valeur = tab_form[i].value;
-
-				if ($('#' + id).is(':checked') == true)
-				{
-					if (tab_cb_cochees[nom] == undefined)
-					{
-						tab_cb_cochees[nom] = valeur;
-					}
-					else
-					{
-						// Je déclare un tableau qui permet de stocker temporairement plusieurs valeurs en cas que 
-						// plusieurs éléments possèdent la même clé.
-						var temp = new Array();
-
-						// J'empile le tableau des valeurs déjà existantes pour une même clé.
-						for (var j = 0; j < tab_cb_cochees[nom].length; j ++)
-						{
-							temp.push(tab_cb_cochees[nom][j]);
-						}
-
-						// Je rajoute la dernière valeur pour la clé déjà existante.
-						temp.push(valeur);
-
-						tab_cb_cochees[nom] = temp;
-					}
-				}
-			}
-		}
-	});
-
-	// Je fusionne le tableau des cases à cocher avec celui où sont stockées les données "POST".
-	tab_post = tab_post.concat(tab_cb_cochees);
-
-	for (var i = 0; i < tab_post.length; i ++)
-	{
-		var cle = tab_post[i]['name'];
-		var split = cle.split('-');
-		var nouvelle_cle = split[split.length - 1];
-
-		// Je renomme la clé sans le préfixe.
-		if (nouvelle_cle != cle)
-		{
-			tab_post[i].name = nouvelle_cle;
-		}
-	}
-
-	return tab_post;
 }
 
 /**
@@ -641,11 +621,11 @@ function suppr(e)
 		},
 		error : function(xhr, ajaxOptions, thrownError)
 		{
-			var erreur = xhr.status + ' ' + thrownError;
-			erreur += '\n';
-			erreur += CONTACT_ADMIN;
+			var err = xhr.status + ' ' + thrownError;
+			err += '\n';
+			err += CONTACT_ADMIN;
 			
-			alert(erreur);
+			alert(err);
 		},
 		complete : function()
 		{
@@ -677,8 +657,10 @@ function trait_form(e, p_prefixe = '')
 	{
 		type : 'post',
 		url : obj_form.attr('action'),
-		data : serial_array(obj_form),
+		data : recup_post(obj_form),
 		dataType : 'json',
+		processData : false,
+		contentType : false,
 		beforeSend : function()
 		{
 			// J'informe l'utilisateur qu'une requête AJAX se prépare.
@@ -734,11 +716,11 @@ function trait_form(e, p_prefixe = '')
 		},
 		error : function(xhr, ajaxOptions, thrownError)
 		{
-			var erreur = xhr.status + ' ' + thrownError;
-			erreur += '\n';
-			erreur += CONTACT_ADMIN;
+			var err = xhr.status + ' ' + thrownError;
+			err += '\n';
+			err += CONTACT_ADMIN;
 			
-			alert(erreur);
+			alert(err);
 		},
 		complete : function()
 		{

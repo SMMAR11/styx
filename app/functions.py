@@ -1,22 +1,17 @@
+#!/usr/bin/env python
+#-*- coding: utf-8
+
+''' Imports '''
 from app.constants import *
-from app.forms import gestion_dossiers
-from app.models import *
 from datetime import date
-from django.db.models import Q, Sum
-from django.template.context_processors import csrf
-from django.template.defaultfilters import safe
-from functools import reduce
-import hashlib
-import operator
-import string
 
 '''
-Cette fonction retourne le gabarit d'affichage d'un message de confirmation de suppression d'un élément de la base de
-données.
-p_url : URL de la vue permettant la suppression d'un élément de la base de données.
+Cette fonction retourne un message de confirmation de suppression d'un élément.
+p_vue : Vue supprimant un objet
 Retourne une chaîne de caractères
 '''
-def aff_mess_suppr(p_url) :
+def aff_mess_suppr(p_vue) :
+
 	return '''
 	<div class="row">
 		<div class="col-xs-6 text-center">
@@ -26,7 +21,7 @@ def aff_mess_suppr(p_url) :
 			<button class="btn bt-vert to-unfocus" data-dismiss="modal">Non</button>
 		</div>
 	</div>
-	'''.format(p_url)
+	'''.format(p_vue)
 
 '''
 Cette fonction permet de générer des données concernant les axes, les sous-axes, les actions et les types de dossiers.
@@ -34,76 +29,70 @@ request : Objet requête
 '''
 def alim_liste(request) :
 
+	''' Imports '''
+	from app.functions import index_alpha
+	from app.models import TAction, TAxe, TSousAxe, TTypeDossier
+
 	# J'initialise la valeur des paramètres "GET".
-	v_programme = -1
+	v_progr = -1
 	v_axe = -1
-	v_sous_axe = -1
+	v_ss_axe = -1
 
 	# Je déclare des tableaux.
 	tab_axes = []
-	tab_sous_axes = []
-	tab_actions = []
-	tab_types = []
+	tab_ss_axes = []
+	tab_act = []
+	tab_types_doss = []
 
-	# Je vérifie le renseignement du paramètre "programme".
 	if 'programme' in request.GET :
 		
-		# Je récupère la valeur du paramètre.
-		v_programme = request.GET['programme']
+		# Je récupère la valeur du paramètre "GET".
+		v_progr = request.GET['programme']
 
 		# Je récupère la liste des axes relatifs à un programme.
-		les_axes = TAxe.objects.filter(id_progr = v_programme)
+		les_axes = TAxe.objects.filter(id_progr = v_progr)
 
 		# J'empile le tableau des axes.
 		for un_axe in les_axes :
 			tab_axes.append([un_axe.id_axe, un_axe.id_axe])
 
 		# Je récupère la liste des types de dossiers relatifs à un programme.
-		les_types = TTypeDossier.objects.filter(id_progr = v_programme)
+		les_types_doss = TTypeDossier.objects.filter(id_progr = v_progr)
 
 		# J'empile le tableau des types de dossiers.
-		for un_type in les_types :
-			tab_types.append([un_type.id_type_doss, un_type.int_type_doss])
+		for un_type_doss in les_types_doss :
+			tab_types_doss.append([un_type_doss.id_type_doss, un_type_doss.int_type_doss])
 
-	# Je vérifie le renseignement du paramètre "axe".
 	if 'axe' in request.GET :
 
-		# Je récupère la valeur du paramètre.
+		# Je récupère la valeur du paramètre "GET".
 		v_axe = request.GET['axe']
 		
 		# Je récupère la liste des sous-axes relatifs à un programme et un axe.
-		les_sous_axes = TSousAxe.objects.filter(id_progr = v_programme, id_axe = v_axe)
+		les_ss_axes = TSousAxe.objects.filter(id_progr = v_progr, id_axe = v_axe)
 
 		# J'empile le tableau des sous-axes.
-		for un_sous_axe in les_sous_axes :
-			tab_sous_axes.append([un_sous_axe.id_ss_axe, un_sous_axe.id_ss_axe])
+		for un_ss_axe in les_ss_axes :
+			tab_ss_axes.append([un_ss_axe.id_ss_axe, un_ss_axe.id_ss_axe])
 
-	# Je vérifie le renseignement du paramètre "sous_axe".
 	if 'sous_axe' in request.GET :
 
 		# Je récupère la valeur du paramètre.
-		v_sous_axe = request.GET['sous_axe']
+		v_ss_axe = request.GET['sous_axe']
 
 		# Je récupère la liste des actions relatives à un programme, un axe et un sous-axe.
-		les_actions = TAction.objects.filter(
-			id_progr = v_programme, 
-			id_axe = v_axe, 
-			id_ss_axe = v_sous_axe
-		)
+		les_act = TAction.objects.filter(id_progr = v_progr, id_axe = v_axe, id_ss_axe = v_ss_axe)
 
 		# J'empile le tableau des actions.
-		for une_action in les_actions :
-			tab_actions.append([une_action.id_act, index_alpha(une_action.id_act)])
+		for une_act in les_act :
+			tab_act.append([une_act.id_act, index_alpha(une_act.id_act)])
 
-	# J'initialise les données retournées par la requête "GET" dans un tableau.
-	tab_get = {
+	return {
 		'axe' : tab_axes,
-		'ss_axe' : tab_sous_axes,
-		'act' : tab_actions,
-		'type_doss' : tab_types
+		'ss_axe' : tab_ss_axes,
+		'act' : tab_act,
+		'type_doss' : tab_types_doss
 	}
-
-	return tab_get
 
 '''
 Cette fonction retourne une date sous un autre format.
@@ -117,18 +106,12 @@ def chang_form_dt(p_valeur, p_format = 'AAAA-MM-JJ') :
 
 	if p_valeur is not None :
 
-		# J'initialise un tableau contenant les informations de la date.
-		tab_date = p_valeur.split('/')
+		# Je sépare les parties de la date.
+		tab_dt = p_valeur.split('/')
 
 		if p_format == 'AAAA-MM-JJ' :
-
-			# Je définis le séparateur ainsi que les données à concaténer avec le séparateur défini.
 			glue = '-'
-			pieces = (
-				tab_date[2],
-				tab_date[1],
-				tab_date[0]
-			)
+			pieces = (tab_dt[2], tab_dt[1], tab_dt[0])
 
 		# Je mets en forme la date.
 		reponse = glue.join(pieces)
@@ -154,6 +137,9 @@ Retourne une chaîne de caractères
 '''
 def crypt_val(p_valeur) :
 
+	''' Imports '''
+	import hashlib
+
 	# Je crypte la valeur selon la méthode de hashage SHA1 si la valeur renseignée n'est pas nulle.
 	if p_valeur is not None :
 		p_valeur = hashlib.sha1(p_valeur.encode()).hexdigest()
@@ -161,76 +147,79 @@ def crypt_val(p_valeur) :
 	return p_valeur
 
 '''
-Cette fonction renvoie une liste de dossiers filtrés afin d'actualiser une datatable.
+Cette fonction renvoie un ensemble de dossiers filtrés en vue d'actualiser une datatable.
 request : Objet requête
 '''
 def filtr_doss(request) :
 
+	''' Imports '''
+	from app.functions import init_post, integer
+	from app.models import TDossier, TRegroupementMoa
+	from django.db.models import Q
+	from functools import reduce
+	import operator
+
 	# Je récupère les données du formulaire.
-	v_moa = integer(init_post(request.POST, 'zl_moa'))
-	v_programme = integer(init_post(request.POST, 'zld_progr'))
+	v_org_moa = integer(init_post(request.POST, 'zl_org_moa'))
+	v_progr = integer(init_post(request.POST, 'zld_progr'))
 	v_axe = integer(init_post(request.POST, 'zld_axe'))
-	v_sous_axe = integer(init_post(request.POST, 'zld_ss_axe'))
-	v_action = integer(init_post(request.POST, 'zld_act'))
-	v_nature_dossier = integer(init_post(request.POST, 'zl_nat_doss'))
-	v_annee_deliberation_moa_dossier = integer(init_post(request.POST, 'zl_annee_delib_moa_doss'))
+	v_ss_axe = integer(init_post(request.POST, 'zld_ss_axe'))
+	v_act = integer(init_post(request.POST, 'zld_act'))
+	v_nat_doss = integer(init_post(request.POST, 'zl_nat_doss'))
+	v_ann_delib_moa_doss = integer(init_post(request.POST, 'zl_ann_delib_moa_doss'))
 
-	# Je déclare des tableaux d'arguments.
-	args = []
-	kwargs = {}
+	# Je déclare des tableaux qui stockeront les conditions de la requête SQL.
+	tab_or = []
+	tab_and = {}
 
-	# J'empile les tableaux d'arguments.
-	if v_moa > -1 :
+	# J'empile les tableaux des conditions.
+	if v_org_moa > -1 :
 
-		# J'empile le tableau des arguments ayant la clause "OR". Lorsque je choisis un maître d'ouvrage, je regarde
-		# dans la table t_regroupement_moa si le maître d'ouvrage choisi correspond à une filiation avec des anciens
-		# maîtres d'ouvrages. Dans le cas positif, je cherche les dossiers du groupe de maîtres d'ouvrages.
-		les_moa_anciens = TRegroupementMoa.objects.filter(id_org_moa_fil = v_moa)
-		for un_moa_ancien in les_moa_anciens :
-			args.append(Q(**{ 'id_org_moa' : un_moa_ancien.id_org_moa_anc }))
+		for un_couple_moa in TRegroupementMoa.objects.filter(id_org_moa_fil = v_org_moa) :
+			tab_or.append(Q(**{ 'id_org_moa' : un_couple_moa.id_org_moa_anc }))
 		
-		if len(args) > 0 :
-			args.append(Q(**{ 'id_org_moa' : v_moa }))
+		if len(tab_or) > 0 :
+			tab_or.append(Q(**{ 'id_org_moa' : v_org_moa }))
 		else :
-			kwargs['id_org_moa'] = v_moa
+			tab_and['id_org_moa'] = v_org_moa
 
-	if v_programme > -1 :
-		kwargs['id_progr'] = v_programme
+	if v_progr > -1 :
+		tab_and['id_progr'] = v_progr
 
 	if v_axe > -1 :
-		kwargs['id_axe'] = v_axe
+		tab_and['id_axe'] = v_axe
 
-	if v_sous_axe > -1 :
-		kwargs['id_ss_axe'] = v_sous_axe
+	if v_ss_axe > -1 :
+		tab_and['id_ss_axe'] = v_ss_axe
 
-	if v_action > -1 :
-		kwargs['id_act'] = v_action
+	if v_act > -1 :
+		tab_and['id_act'] = v_act
 
-	if v_nature_dossier > -1 :
-		kwargs['id_nat_doss'] = v_nature_dossier
+	if v_nat_doss > -1 :
+		tab_and['id_nat_doss'] = v_nat_doss
 
-	if v_annee_deliberation_moa_dossier > -1 :
-		kwargs['dt_delib_moa_doss__year'] = v_annee_deliberation_moa_dossier
+	if v_ann_delib_moa_doss > -1 :
+		tab_and['dt_delib_moa_doss__year'] = v_ann_delib_moa_doss
 
 	# Je stocke dans un tableau les dossiers filtrés.
-	if len(args) > 0 :
-		les_dossiers = TDossier.objects.filter(reduce(operator.or_, args), **kwargs)
+	if len(tab_or) > 0 :
+		les_doss = TDossier.objects.filter(reduce(operator.or_, tab_or), **tab_and)
 	else :
-		les_dossiers = TDossier.objects.filter(**kwargs)
+		les_doss = TDossier.objects.filter(**tab_and)
 
 	# Je trie les dossiers filtrés.
-	les_dossiers = les_dossiers.order_by('-dt_delib_moa_doss', 'num_doss')
+	les_doss = les_doss.order_by('-dt_delib_moa_doss', 'num_doss')
 
-	return les_dossiers
+	return les_doss
 
 '''
-Cette fonction convertit une chaîne représentant un nombre entier sous forme de décimal en une chaîne représentant un 
+Cette fonction convertit une chaîne représentant un nombre entier sous forme de décimal en une chaîne représentant un
 nombre entier sous forme de nombre entier.
 p_valeur : Chaîne à convertir
-p_zeros_ns : Nombre de zéros significatifs à rajouter
+p_montant : Dois-je générer une chaîne de caractères prenant la forme d'un montant ?
 Retourne une chaîne de caractères
 '''
-def float_to_int(p_valeur, p_zeros_ns = 1) :
+def float_to_int(p_valeur, p_montant = True) :
 
 	reponse = p_valeur
 
@@ -239,57 +228,63 @@ def float_to_int(p_valeur, p_zeros_ns = 1) :
 		# Je transforme le nombre en chaîne de caractères.
 		str_valeur = str(p_valeur)
 
-		# Je vérifie si la chaîne de caractères se termine par ".0" afin de retirer la partie décimale inutile.
+		# Je vérifie si la chaîne de caractères se termine par ".0" afin de retirer la partie décimale inutile si 
+		# besoin.
 		if str_valeur.endswith('.0') :
 			reponse = str_valeur[:-2]
 		else :
+			reponse = str_valeur
 
-			# J'ajoute un zéro à la fin du montant si la partie décimale ne comporte qu'un seul chiffre.
-			if '.' in str_valeur[len(str_valeur) - 2] :
-				reponse = str_valeur + '0' * p_zeros_ns
-			else :
-				reponse = str_valeur
+			# J'ajoute un zéro à la fin de la chaîne de caractères si la partie décimale ne comporte qu'un seul 
+			# chiffre.
+			if '.' in str_valeur[len(str_valeur) - 2] and p_montant == True :
+				reponse = str_valeur + '0'
 				
 	return reponse
 
 '''
-Cette fonction retourne le gabarit d'affichage de la procédure de choix d'un dossier associé.
+Cette fonction retourne le tableau HTML des dossiers filtrés.
 request : Objet requête
-p_url : URL qui traite le formulaire de filtrage
+p_vue : Vue qui traite le formulaire de filtrage
 '''
-def gen_tabl_chois_doss(request, p_url) :
+def gen_tabl_chois_doss(request, p_vue) :
 
-	# Je déclare un objet "formulaire" permettant une future manipulation des champs.
-	f = gestion_dossiers.ChoisirDossier(prefix = 'ChoisirDossier')
+	''' Imports '''
+	from app.forms.gestion_dossiers import ChoisirDossier
+	from app.functions import conv_none, init_form, reecr_dt
+	from app.models import TDossier
+	from django.template.context_processors import csrf
 
-	# J'initialise l'affichage des champs du formulaire de choix d'un dossier associé.
-	tab_champs_f = init_form(f)
+	# J'instancie un objet "formulaire".
+	f = ChoisirDossier(prefix = 'ChoisirDossier')
 
-	# Je stocke dans un tableau tous les dossiers référencés dans la base de données.
-	les_dossiers = TDossier.objects.all().order_by('num_doss')
+	# J'initialise les champs du formulaire de filtrage des dossiers.
+	tab_f = init_form(f) 
 
-	# Je parcours chaque dossier afin de générer pour chacun d'entre eux une ligne du futur tableau HTML des
-	# dossiers.
-	contenu_tab_html_dossiers = ''
-	for un_dossier in les_dossiers :
+	# Je récupère dans un tableau l'ensemble des lignes du tableau HTML des dossiers filtrés.
+	tab_lg = []
+	for un_doss in TDossier.objects.order_by('num_doss') :
 
-		# Je créé une ligne du futur tableau HTML des dossiers.
-		contenu_tab_html_dossiers += '''
+		# J'initialise une ligne du tableau HTML des dossiers filtrés.
+		lg = '''
 		<tr>
 			<td class="b">{0}</td>
 			<td>{1}</td>
 			<td>{2}</td>
 			<td>{3}</td>
 			<td>
-				<span class="bt-choisir pointer pull-right" onclick="ajout_doss_ass(event)"></span>
+				<span class="bt-choisir pointer pull-right" onclick="ajout_doss_ass(event)" title="Choisir le dossier"></span>
 			</td>
 		</tr>
 		'''.format(
-			conv_none(un_dossier.num_doss),
-			conv_none(un_dossier.int_doss),
-			conv_none(un_dossier.id_org_moa.id_org_moa.n_org),
-			conv_none(reecr_dt(un_dossier.dt_delib_moa_doss))
+			conv_none(un_doss.num_doss),
+			conv_none(un_doss.int_doss),
+			conv_none(un_doss.id_org_moa.id_org_moa.n_org),
+			conv_none(reecr_dt(un_doss.dt_delib_moa_doss))
 		)
+
+		# J'ajoute la ligne du tableau HTML des dossiers filtrés.
+		tab_lg.append(lg)
 
 	return '''
 	<form name="form_ajouter_dossier_associe" method="post" action="{0}" class="c-theme">
@@ -315,13 +310,13 @@ def gen_tabl_chois_doss(request, p_url) :
 	</form>				
 	<br />
 	<div style="overflow: auto;">
-		<table class="table display" id="tab_ajouter_dossier_associe">
+		<table class="display table" id="tab_ajouter_dossier_associe">
 			<thead>
 				<tr>
-					<th>Numéro du dossier</th>
-					<th>Intitulé du dossier</th>
-					<th>MOA</th>
-					<th>Date de délibération au MOA</th>
+					<th>N° du dossier</th>
+					<th>Intitulé</th>
+					<th>Maître d'ouvrage</th>
+					<th>Date de délibération au maître d'ouvrage</th>
 					<th></th>
 				</tr>
 			</thead>
@@ -329,16 +324,16 @@ def gen_tabl_chois_doss(request, p_url) :
 		</table>
 	</div>
 	'''.format(
-		p_url,
+		p_vue,
 		(csrf(request)['csrf_token']),
-		tab_champs_f['zl_moa'],
-		tab_champs_f['zld_progr'],
-		tab_champs_f['zld_axe'],
-		tab_champs_f['zld_ss_axe'],
-		tab_champs_f['zld_act'],
-		tab_champs_f['zl_nat_doss'],
-		tab_champs_f['zl_annee_delib_moa_doss'],
-		contenu_tab_html_dossiers
+		tab_f['zl_org_moa'],
+		tab_f['zld_progr'],
+		tab_f['zld_axe'],
+		tab_f['zld_ss_axe'],
+		tab_f['zld_act'],
+		tab_f['zl_nat_doss'],
+		tab_f['zl_ann_delib_moa_doss'],
+		'\n'.join(tab_lg)
 	)
 
 '''
@@ -348,19 +343,25 @@ Retourne un caractère
 '''
 def index_alpha(p_valeur) :
 
-	# Je déclare le tableau relatif à l'alphabet.
-	tab_alphabet = list(string.ascii_lowercase)
+	''' Imports '''
+	import string
 
-	return tab_alphabet[p_valeur - 1]
+	# Je déclare le tableau relatif à l'alphabet.
+	tab_alpha = list(string.ascii_lowercase)
+
+	return tab_alpha[p_valeur - 1]
 
 ''' 
-Cette fonction retourne le gabarit d'affichage d'une fenêtre modale.
+Cette fonction retourne une fenêtre modale.
 p_suffixe : Suffixe utilisé pour reconnaître chaque élément de la fenêtre modale
 p_header : En-tête de la fenêtre modale
 p_body : Corps de la fenêtre modale
-Retourne la fenêtre modale
+Retourne une fenêtre modale
 '''
 def init_fm(p_suffixe, p_header, p_body = '') :
+
+	''' Imports '''
+	from django.template.defaultfilters import safe
 
 	# J'initialise le contenu HTML de la fenêtre modale.
 	contenu = '''
@@ -385,13 +386,16 @@ def init_fm(p_suffixe, p_header, p_body = '') :
 	return safe(contenu)
 
 ''' 
-Cette fonction retourne le gabarit d'affichage de chaque champ d'un formulaire.
+Cette fonction retourne les champs d'un formulaire.
 p_form : Formulaire à traiter
 Retourne un tableau associatif
 '''
 def init_form(p_form) :
 
-	# Je déclare le tableau qui contiendra le gabarit d'affichage de chaque champ du formulaire traité.
+	''' Imports '''
+	from django.template.defaultfilters import safe
+
+	# Je déclare le tableau qui contiendra les champs d'un formulaire
 	tab_champs = {}
 	
 	for un_champ in p_form :
@@ -405,15 +409,15 @@ def init_form(p_form) :
 			autre_gabarit = True
 			contenu = '''
 			<div class="field-wrapper">
-				<label>{label}</label>
+				<label>{0}</label>
 				<div class="input-file-container">
-					{champ}
+					{1}
 					<span class="input-file-trigger">Parcourir</span>
 					<p class="file-return"></p>
 				</div>
 				<span class="za_erreur"></span>
 			</div>
-			'''.format(label = un_champ.label, champ = un_champ)
+			'''.format(un_champ.label, un_champ)
 
 		# Je traite le cas où le champ en cours est une case à cocher.
 		if un_champ.name.startswith('cb_') == True :
@@ -421,11 +425,11 @@ def init_form(p_form) :
 			contenu = '''
 			<div>
 				<div class="checkbox">
-					<label>{champ}{label}</label>
+					<label>{0}{1}</label>
 				</div>
 				<span class="za_erreur"></span>
 			</div>
-			'''.format(champ = un_champ, label = un_champ.label)
+			'''.format(un_champ, un_champ.label)
 
 		# Je traite le cas où le champ en cours est une case à cocher multiple.
 		if un_champ.name.startswith('cbsm_') == True :
@@ -434,9 +438,9 @@ def init_form(p_form) :
 			# J'initialise l'indice de départ du sommet du tableau des options.
 			sommet = -1
 
-			# Je déclare deux chaînes de caractères vides qui s'implémenteront selon la valeur du sommet.
-			rangee_gauche = ''
-			rangee_droite = ''
+			# Je déclare deux tableaux qui s'empileront selon la valeur du sommet.
+			tab_rng_g = []
+			tab_rng_d = ['']
 
 			# Je parcours chaque élément du tableau des options.
 			for un_element in un_champ :
@@ -446,96 +450,95 @@ def init_form(p_form) :
 
 				contenu_option = '''
 				<div class="checkbox c-police" style="margin-top: 0;">
-					{champ}
+					{0}
 				</div>
-				'''.format(champ = un_element)
+				'''.format(un_element)
 
-				# Je stocke l'option dans l'une des deux rangées (selon la valeur du modulo du sommet).
+				# Je stocke l'option dans l'un des deux tableaux.
 				if sommet % 2 == 0 :
-					rangee_gauche += contenu_option
+					tab_rng_g.append(contenu_option)
 				else :
-					rangee_droite += contenu_option		
+					tab_rng_d.append(contenu_option)	
 
 			contenu = '''
 			<div class="field-wrapper">
-				<label>{label}</label>
+				<label>{0}</label>
 				<div class="row">
-					<div class="col-xs-6">{gauche}</div>
-					<div class="col-xs-6">{droite}</div>
+					<div class="col-xs-6">{1}</div>
+					<div class="col-xs-6">{2}</div>
 				</div>
 				<span class="za_erreur"></span>
 			</div>
-			'''.format(label = un_champ.label, gauche = rangee_gauche, droite = rangee_droite)
+			'''.format(un_champ.label, '\n'.join(tab_rng_g), '\n'.join(tab_rng_d))
 
 		# Je traite le cas classique si le champ en cours ne demande pas un gabarit d'affichage spécifique.
 		if autre_gabarit == False :
 			if un_champ.label != '' :
 				contenu = '''
 				<div class="field-wrapper">
-					<label>{label}</label>
-					{champ}
+					<label>{0}</label>
+					{1}
 					<span class="za_erreur"></span>
 				</div>
-				'''.format(label = un_champ.label, champ = un_champ)
+				'''.format(un_champ.label, un_champ)
 			else :
 				contenu = '''
 				<div class="field-wrapper">
-					{champ}
+					{0}
 					<span class="za_erreur"></span>
 				</div>
-				'''.format(champ = un_champ)
+				'''.format(un_champ)
 
-		# J'affecte le contenu HTML du champ au tableau des gabarits d'affichage des champs du formulaire.
 		tab_champs[un_champ.name] = safe(contenu)
 
 	return tab_champs
 
 ''' 
-Cette fonction retourne le gabarit d'affichage de chaque attribut de consultation.
+Cette fonction retourne les attributs de consultation.
 p_tab : Tableau de données à traiter
 Retourne un tableau associatif
 '''
 def init_pg_cons(p_tab) :
 
-	# Je déclare le tableau qui contiendra le gabarit d'affichage de chaque attribut.
-	tab_attributs = {}
+	''' Imports '''
+	from django.template.defaultfilters import safe
+
+	# Je déclare le tableau qui contiendra chaque attribut de consultation.
+	tab_attr = {}
 
 	for cle, valeur in p_tab.items() :
 
-		# J'initialise le gabarit d'affichage.
+		# J'initialise l'attribut.
 		if 'textarea' in valeur and valeur['textarea'] == True :
 			contenu = '''
 			<div class="attribute-wrapper">
-				<label class="c-theme">{label}</label>
-				<textarea class="form-control" rows="5" readonly>{valeur}</textarea>
+				<label class="c-theme">{0}</label>
+				<textarea class="form-control" rows="5" readonly>{1}</textarea>
 			</div>
-			'''.format(label = valeur['label'], valeur = valeur['value'])
+			'''.format(valeur['label'], valeur['value'])
 		else :
 			contenu = '''
 			<div class="attribute-wrapper">
-				<label class="c-theme">{label}</label>
-				<input class="form-control" value="{valeur}" type="text" readonly>
+				<label class="c-theme">{0}</label>
+				<input class="form-control" value="{1}" type="text" readonly>
 			</div>
-			'''.format(label = valeur['label'], valeur = valeur['value'])
+			'''.format(valeur['label'], valeur['value'])
 
-		# J'affecte le contenu HTML du champ au tableau des gabarits d'affichage des champs du formulaire.
-		tab_attributs[cle] = safe(contenu)
+		tab_attr[cle] = safe(contenu)
 
-	return tab_attributs
+	return tab_attr
 
 '''
 Cette fonction renvoie la valeur d'un élément d'un tableau "POST" selon l'existence ou non de cet élément dans le
 tableau "POST".
 p_tab : Tableau "POST"
-p_cle : Clé de l'élément existant ou non du tableau "POST"
+p_cle : Clé de l'élément
 Retourne un nombre
 '''
 def init_post(p_tab, p_cle) :
 
 	reponse = -1
 
-	# Je vérifie l'existence de la clé dans le tableau "POST" afin de mettre à jour la valeur de l'élément du tableau
-	# "POST" à une clé donnée.
 	if p_cle in p_tab :
 		reponse = p_tab[p_cle]
 
@@ -548,7 +551,7 @@ p_borne_max : Borne maximale
 Retourne une liste d'années
 '''
 def init_tab_annees(p_borne_min = 1999, p_borne_max = date.today().year + 1) :
-	
+
 	# Je déclare le tableau des années.
 	tab_annees = []
 
@@ -558,6 +561,11 @@ def init_tab_annees(p_borne_min = 1999, p_borne_max = date.today().year + 1) :
 
 	return tab_annees
 
+def init_val_aggr(p_valeur) :
+	if p_valeur is None :
+		p_valeur = 0
+	return p_valeur
+
 '''
 Cette fonction essaie de convertir une valeur en un nombre. Si la valeur est une chaîne de caractères, alors le nombre
 retourné sera -1.
@@ -566,7 +574,6 @@ Retourne un nombre entier
 '''
 def integer(p_valeur) :
 
-	# J'initialise la valeur qui sera retournée par la fonction.
 	reponse = -1
 
 	# Je tente de convertir la valeur en un nombre entier.
@@ -578,7 +585,7 @@ def integer(p_valeur) :
 	return reponse
 
 ''' 
-Cette fonction nettoie la valeur d'une variable pour lui assigner une valeur nulle dans différents cas de figure.
+Cette fonction nettoie la valeur d'une variable pour lui assigner une valeur nulle dans différents cas de figures.
 p_valeur : Valeur à nettoyer
 p_est_zl : La valeur à nettoyer est-elle issue d'une liste déroulante ?
 Retourne soit une chaîne de caractères, soit un entier, soit une valeur nulle
@@ -642,21 +649,21 @@ Retourne le contenu d'une datatable (sans doublons) sous forme d'une liste
 def suppr_doubl_dtable(p_tab) :
 
 	# Je déclare et j'empile le tableau des lignes de la datatable.
-	tab_lignes = []
+	tab_lg = []
 	for i in range(0, len(p_tab)) :
 		for j in range(0, len(p_tab[i])) :
-			tab_lignes.append(p_tab[i][j])
+			tab_lg.append(p_tab[i][j])
 
 	# J'initialise un ensemble vide qui par la suite aidera à la recherche des tuples en doublons.
 	tab_tuples = set()
 
-	# Je déclare un tableau de tuples vide.
+	# Je déclare un tableau de tuples vierge.
 	tab = []
 	
-	for une_ligne in tab_lignes :
+	for une_lg in tab_lg :
 
-		# J'initialise le tuple de la ligne courante.
-		un_tuple = tuple(une_ligne)
+		# Je stocke le tuple de la ligne courante.
+		un_tuple = tuple(une_lg)
 
 		if un_tuple not in tab_tuples :
 
@@ -667,6 +674,23 @@ def suppr_doubl_dtable(p_tab) :
 			tab_tuples.add(un_tuple)
 
 	return tab
+
+'''
+Cette procédure permet d'uploader un fichier.
+p_fich : Fichier à uploader
+p_chem_fich : Destination du fichier à uploader
+'''
+def upload_fich(p_fich, p_chem_fich) :
+
+	''' Imports '''
+	from styx.settings import MEDIA_ROOT
+
+	# Je stocke le chemin de destination du fichier à uploader.
+	chem_fich = '{0}\{1}'.format(MEDIA_ROOT, p_chem_fich)
+
+	with open(chem_fich, 'wb+') as fich :
+		for c in p_fich.chunks() :
+			fich.write(c)
 
 '''
 Cette procédure renvoie une erreur si l'option par défaut d'une liste déroulante est choisie (dépendante ou non d'une 

@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+#-*- coding: utf-8
+
 CHAMP_REQUIS = '<span class="required"></span>'
 ERREUR_ADMIN = 'Veuillez contacter votre administrateur.'
 MESSAGES = {

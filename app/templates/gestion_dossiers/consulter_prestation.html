@@ -1,0 +1,99 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block content %}
+<div class="icon-link pull-right">
+	<div><span class="bt-precedent"></span></div>
+	<div><a href="#">Revenir au dossier</a></div>
+</div>
+<br />
+<div class="row">
+	<div class="col-md-12">
+		<p class="h1 c-theme text-center">Consulter une prestation</p>
+		<br />
+		{{ les_attributs_prestation.num_doss }}
+		<div class="row">
+			<div class="col-xs-6">{{ les_attributs_prestation.n_org_prest }}</div>
+			<div class="col-xs-6">{{ les_attributs_prestation.int_prest }}</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-6">{{ les_attributs_prestation.mont_ht_tot_prest }}</div>
+			<div class="col-xs-6">{{ les_attributs_prestation.mont_ttc_tot_prest }}</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-6">{{ les_attributs_prestation.dt_notif_prest }}</div>
+			<div class="col-xs-6">{{ les_attributs_prestation.dt_fin_prest }}</div>
+		</div>
+		{{ les_attributs_prestation.int_nat_prest }}
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-6">
+		<p class="c-theme">Liste des dossiers reliés à la prestation</p>
+		<div style="overflow: auto;" class="attribute-wrapper">
+			<table class="table display" id="tab_dossiers_prestation">
+				<thead>
+					<tr>
+						<th>N° du dossier</th>
+						<th>Intitulé</th>
+						<th>Montant HT (en €)</th>
+						<th>Montant TTC (en €)</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for un_dossier_prestation in les_dossiers_prestation %}
+					<tr>
+						<td class="b">{{ un_dossier_prestation.num_doss }}</td>
+						<td>{{ un_dossier_prestation.int_doss }}</td>
+						<td>{{ un_dossier_prestation.mont_ht_prest }}</td>
+						<td>{{ un_dossier_prestation.mont_ttc_prest }}</td>
+						<td><a href="{% url 'consulter_dossier' un_dossier_prestation.id_doss %}" class="bt-consulter pull-right"></a></td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div class="col-md-6">
+		<p class="c-theme">Liste des avenants</p>
+		<div style="overflow: auto;" class="attribute-wrapper">
+			<table class="table display" id="tab_consulter_avenants">
+				<thead>
+					<tr>
+						<th>N° de l'avenant</th>
+						<th>Intitulé</th>
+						<th>Montant HT (en €)</th>
+						<th>Montant TTC (en €)</th>
+						<th>Date de fin</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for un_avenant in les_avenants %}
+					<tr>
+						<td>{{ un_avenant.num_aven }}</td>
+						<td>{{ un_avenant.int_aven }}</td>
+						<td>{{ un_avenant.mont_ht_aven }}</td>
+						<td>{{ un_avenant.mont_ttc_aven }}</td>
+						<td>{{ un_avenant.dt_aven }}</td>
+						<td><a href="#" class="bt-consulter pull-right"></a></td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		{% if la_prestation.chem_pj_prest != None %}
+		<div class="icon-link attribute-wrapper">
+			<div><span class="bt-pdf"></span></div>
+			<div><a href="{{ MEDIA_URL }}{{ la_prestation.chem_pj_prest }}" target="blank">Consulter le fichier scanné de la prestation</a></div>
+		</div>
+		{% endif %}
+		{{ les_attributs_prestation.comm_prest }}
+	</div>
+</div>
+{% endblock content %}

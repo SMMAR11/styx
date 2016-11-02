@@ -1,18 +1,22 @@
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+#!/usr/bin/env python
+#-*- coding: utf-8
 
 '''
-Cette vue permet d'afficher le template relatif à la page interdisant l'accès à une URL.
+Cette vue permet d'afficher le template relatif à une erreur 403.
 request : Objet requête
 '''
 def handler_403(request) :
 
+	''' Imports '''
+	from django.shortcuts import render_to_response
+	from django.template import RequestContext
+
 	reponse = render_to_response(
 		'./autres/handlers/403.html',
-		{
-			'title' : 'Erreur 403'
-		},
-		context_instance = RequestContext(request)
+		RequestContext(
+			request,
+			{ 'title' : 'Erreur 403' },
+		)
 	)
 
 	reponse.status_code = 403
@@ -20,17 +24,21 @@ def handler_403(request) :
 	return reponse
 
 '''
-Cette vue permet d'afficher le template relatif à la page informant que l'URL saisie est inexistante.
+Cette vue permet d'afficher le template relatif à une erreur 404.
 request : Objet requête
 '''
 def handler_404(request) :
 
+	''' Imports '''
+	from django.shortcuts import render_to_response
+	from django.template import RequestContext
+
 	reponse = render_to_response(
 		'./autres/handlers/404.html',
-		{
-			'title' : 'Erreur 404'
-		},
-		context_instance = RequestContext(request)
+		RequestContext(
+			request,
+			{ 'title' : 'Erreur 404' },
+		)
 	)
 
 	reponse.status_code = 404

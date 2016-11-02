@@ -1,0 +1,31 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block content %}
+<div class="icon-link pull-right">
+	<div><span class="bt-precedent"></span></div>
+	<div><a href="{% url 'consulter_dossier' le_dossier.id_doss %}" onclick="alert_util(event)">Revenir au dossier</a></div>
+</div>
+<br />
+<div class="row">
+	<div class="col-md-12">
+		<form action="{% url 'modifier_arrete' le_dossier.id_doss l_arrete.id_type_decl %}" method="post" name="form_modifier_arrete" class="c-theme alert-user">
+			{% csrf_token %}
+			<fieldset>
+				<legend>Modifier un arrêté</legend>
+				<div class="form-content">
+					<div class="row">
+						<div class="col-xs-6">{{ f1.za_num_doss }}</div>
+						<div class="col-xs-6">{{ f1.za_int_type_decl }}</div>
+					</div>
+					{{ f1.zl_type_av_arr }}
+					{{ f1.zs_num_arr }}
+					{{ f1.zd_dt_sign_arr }}
+					{{ f1.zd_dt_lim_encl_trav_arr }}
+				</div>
+				<button type="submit" class="center-block btn bt-vert" data-target="#fm_modifier_arrete">Valider</button>
+			</fieldset>
+		</form>						
+	</div>
+</div>
+{% endblock content %}

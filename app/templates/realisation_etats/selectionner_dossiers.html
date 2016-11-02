@@ -9,7 +9,7 @@
 			<fieldset>
 				<legend>Réaliser un état sur les dossiers</legend>
 				<div class="form-content">
-					{{ f1.cbsm_moa }}
+					{{ f1.cbsm_org_moa }}
 					{{ f1.zld_progr }}
 					{{ f1.zld_axe }}
 					{{ f1.zld_ss_axe }}
@@ -21,8 +21,8 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-6">{{ f1.zd_dt_delib_moa_doss_tr_deb }}</div>
-						<div class="col-md-6">{{ f1.zd_dt_delib_moa_doss_tr_fin }}</div>
+						<div class="col-md-6">{{ f1.zd_dt_deb_delib_moa_doss }}</div>
+						<div class="col-md-6">{{ f1.zd_dt_fin_delib_moa_doss }}</div>
 					</div>
 					{{ f1.zl_av_cp }}
 					<div class="row">
@@ -35,32 +35,32 @@
 						<div class="col-md-6">{{ f1.zs_mont_ht_doss_max }}</div>
 					</div>
 					<div class="field-wrapper">
-						{{ f1.cb_doss_dep_non_sold }}
-						{{ f1.cb_doss_ddv_non_sold }}
+						{{ f1.cb_doss_dep_nn_sold }}
+						{{ f1.cb_doss_ddv_nn_sold }}
 					</div>
 					{{ f1.zl_org_fin }}
 					{{ f1.zl_org_prest }}
-					<div class="field-wrapper c-orange">
+					<div class="c-orange field-wrapper">
 						{{ f1.cb_int_doss_ass }}
 						{{ f1.cb_ajout_select_exist }}
 					</div>
 				</div>
-				<button type="submit" class="center-block btn bt-vert">Valider</button>
+				<button type="submit" class="bt-vert btn center-block">Valider</button>
 			</fieldset>
 		</form>
 	</div>
 	<div class="col-md-8">
 		<div style="overflow: auto;">
-			<table class="table display" id="tab_selectionner_dossiers">
+			<table class="display table" id="tab_selectionner_dossiers">
 				<thead>
 					<tr>
-						<th>Numéro du dossier</th>
-						<th>Intitulé du dossier</th>
+						<th>N° du dossier</th>
+						<th>Intitulé</th>
 						<th>Maître d'ouvrage</th>
-						<th>Date de délibération au MOA</th>
+						<th>Date de délibération au maître d'ouvrage</th>
 						<th>Programme</th>
-						<th>Nature du dossier</th>
-						<th>Montant HT du dossier (en €)</th>
+						<th>Nature</th>
+						<th>Montant HT (en €)</th>
 						<th></th>
 					</tr>
 				</thead>

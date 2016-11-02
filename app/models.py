@@ -128,7 +128,7 @@ class TAction(models.Model):
     mont_ttc_act = models.FloatField(blank=True, null=True)
     id_progr = models.ForeignKey('TProgramme', models.DO_NOTHING, db_column='id_progr', primary_key=True)
     id_axe = models.ForeignKey('TAxe', models.DO_NOTHING, db_column='id_axe', primary_key=True)
-    id_ss_axe = models.ForeignKey('TSousAxe', models.DO_NOTHING, db_column='id_ss_axe', primary_key=True)
+    id_ss_axe = models.ForeignKey('TSousAxe', models.DO_NOTHING, db_column='id_ss_axe')
 
     class Meta:
         managed = False
@@ -153,7 +153,7 @@ class TArretesDossier(models.Model):
 
 class TAvancement(models.Model):
     id_av = models.AutoField(primary_key=True)
-    int_av = models.CharField(max_length=255, blank=True, null=True)
+    int_av = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -163,9 +163,9 @@ class TAvancement(models.Model):
 class TAvenant(models.Model):
     id_aven = models.AutoField(primary_key=True)
     dt_aven = models.DateField(blank=True, null=True)
-    int_aven = models.CharField(max_length=255, blank=True, null=True)
-    mont_ht_aven = models.FloatField(blank=True, null=True)
-    mont_ttc_aven = models.FloatField(blank=True, null=True)
+    int_aven = models.CharField(max_length=255)
+    mont_ht_aven = models.FloatField()
+    mont_ttc_aven = models.FloatField()
     id_prest = models.ForeignKey('TPrestation', models.DO_NOTHING, db_column='id_prest')
 
     class Meta:
@@ -175,7 +175,7 @@ class TAvenant(models.Model):
 
 class TAvisCp(models.Model):
     id_av_cp = models.AutoField(primary_key=True)
-    int_av_cp = models.CharField(max_length=255, blank=True, null=True)
+    int_av_cp = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -195,8 +195,8 @@ class TAxe(models.Model):
 
 class TCommune(models.Model):
     num_comm = models.CharField(primary_key=True, max_length=5)
-    cp_comm = models.TextField(blank=True, null=True)
-    n_comm = models.CharField(max_length=255, blank=True, null=True)
+    cp_comm = models.TextField()
+    n_comm = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -205,7 +205,7 @@ class TCommune(models.Model):
 
 class TDepartement(models.Model):
     num_dep = models.CharField(primary_key=True, max_length=3)
-    n_dep = models.CharField(max_length=255, blank=True, null=True)
+    n_dep = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -220,12 +220,12 @@ class TDossier(models.Model):
     descr_doss = models.CharField(max_length=255, blank=True, null=True)
     dt_av_cp_doss = models.DateField(blank=True, null=True)
     dt_delib_moa_doss = models.DateField(blank=True, null=True)
-    dt_int_doss = models.DateField(blank=True, null=True)
+    dt_int_doss = models.DateField()
     geom_doss = models.TextField(blank=True, null=True)
-    int_doss = models.CharField(max_length=255, blank=True, null=True)
-    mont_ht_doss = models.FloatField(blank=True, null=True)
-    mont_ttc_doss = models.FloatField(blank=True, null=True)
-    num_doss = models.CharField(max_length=255, blank=True, null=True)
+    int_doss = models.CharField(max_length=255)
+    mont_ht_doss = models.FloatField()
+    mont_ttc_doss = models.FloatField()
+    num_doss = models.CharField(max_length=255)
     id_act = models.IntegerField(blank=True, null=True)
     id_ss_axe = models.IntegerField(blank=True, null=True)
     id_axe = models.IntegerField(blank=True, null=True)
@@ -245,11 +245,11 @@ class TDossier(models.Model):
 
 
 class TDroit(models.Model):
-    id_org_moa = models.ForeignKey('TMoa', models.DO_NOTHING, db_column='id_org_moa')
-    id_progr = models.ForeignKey('TProgramme', models.DO_NOTHING, db_column='id_progr')
-    id_util = models.ForeignKey('TUtilisateur', models.DO_NOTHING, db_column='id_util')
-    en_ecr = models.IntegerField(blank=True, null=True)
-    en_lect = models.IntegerField(blank=True, null=True)
+    id_org_moa = models.ForeignKey('TMoa', models.DO_NOTHING, db_column='id_org_moa', primary_key=True)
+    id_progr = models.ForeignKey('TProgramme', models.DO_NOTHING, db_column='id_progr', primary_key=True)
+    id_util = models.ForeignKey('TUtilisateur', models.DO_NOTHING, db_column='id_util', primary_key=True)
+    en_ecr = models.IntegerField()
+    en_lect = models.IntegerField()
 
     class Meta:
         managed = False
@@ -263,9 +263,9 @@ class TFacture(models.Model):
     comm_fact = models.CharField(max_length=255, blank=True, null=True)
     dt_mep_fact = models.DateField(blank=True, null=True)
     dt_rec_fact = models.DateField(blank=True, null=True)
-    int_fact = models.CharField(max_length=255, blank=True, null=True)
-    mont_ht_fact = models.FloatField(blank=True, null=True)
-    mont_ttc_fact = models.FloatField(blank=True, null=True)
+    int_fact = models.CharField(max_length=255)
+    mont_ht_fact = models.FloatField()
+    mont_ttc_fact = models.FloatField()
     num_bord = models.CharField(max_length=255, blank=True, null=True)
     num_mandat = models.CharField(max_length=255, blank=True, null=True)
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column='id_doss')
@@ -288,19 +288,18 @@ class TFinancement(models.Model):
     id_fin = models.AutoField(primary_key=True)
     chem_pj_fin = models.CharField(max_length=255, blank=True, null=True)
     comm_fin = models.CharField(max_length=255, blank=True, null=True)
-    dt_deb_elig = models.DateField(blank=True, null=True)
-    dt_lim_deb_oper = models.DateField(blank=True, null=True)
-    dt_lim_prem_ac = models.DateField(blank=True, null=True)
-    duree_pror = models.IntegerField(blank=True, null=True)
-    duree_valid = models.IntegerField(blank=True, null=True)
-    int_fin = models.CharField(max_length=255, blank=True, null=True)
-    mont_ht_elig_fin = models.FloatField(blank=True, null=True)
-    mont_ht_tot_subv = models.FloatField(blank=True, null=True)
-    mont_ttc_elig_fin = models.FloatField(blank=True, null=True)
-    mont_ttc_tot_subv = models.FloatField(blank=True, null=True)
-    pourc_elig = models.FloatField(blank=True, null=True)
-    pourc_fact = models.FloatField(blank=True, null=True)
-    pourc_real = models.FloatField(blank=True, null=True)
+    dt_deb_elig_fin = models.DateField(blank=True, null=True)
+    dt_lim_deb_oper_fin = models.DateField(blank=True, null=True)
+    dt_lim_prem_ac_fin = models.DateField(blank=True, null=True)
+    duree_pror_fin = models.IntegerField(blank=True, null=True)
+    duree_valid_fin = models.IntegerField()
+    int_fin = models.CharField(max_length=255)
+    mont_ht_elig_fin = models.FloatField()
+    mont_ht_tot_subv_fin = models.FloatField()
+    mont_ttc_elig_fin = models.FloatField()
+    mont_ttc_tot_subv_fin = models.FloatField()
+    pourc_elig_fin = models.FloatField()
+    pourc_real_fin = models.FloatField(blank=True, null=True)
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column='id_doss')
     id_org_fin = models.ForeignKey('TFinanceur', models.DO_NOTHING, db_column='id_org_fin')
     id_paiem_prem_ac = models.ForeignKey('TPaiementPremierAcompte', models.DO_NOTHING, db_column='id_paiem_prem_ac')
@@ -320,8 +319,8 @@ class TFinanceur(models.Model):
 
 class TMoa(models.Model):
     id_org_moa = models.ForeignKey('TOrganisme', models.DO_NOTHING, db_column='id_org_moa', primary_key=True)
-    dim_org_moa = models.CharField(max_length=255, blank=True, null=True)
-    en_act = models.IntegerField(blank=True, null=True)
+    dim_org_moa = models.CharField(max_length=255)
+    en_act = models.IntegerField()
 
     class Meta:
         managed = False
@@ -330,7 +329,7 @@ class TMoa(models.Model):
 
 class TNatureDossier(models.Model):
     id_nat_doss = models.AutoField(primary_key=True)
-    int_nat_doss = models.CharField(max_length=255, blank=True, null=True)
+    int_nat_doss = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -339,7 +338,7 @@ class TNatureDossier(models.Model):
 
 class TNaturePrestation(models.Model):
     id_nat_prest = models.AutoField(primary_key=True)
-    int_nat_prest = models.CharField(max_length=255, blank=True, null=True)
+    int_nat_prest = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -348,14 +347,14 @@ class TNaturePrestation(models.Model):
 
 class TOrganisme(models.Model):
     id_org = models.AutoField(primary_key=True)
-    adr_org = models.CharField(max_length=255, blank=True, null=True)
+    adr_org = models.CharField(max_length=255)
     bp_org = models.CharField(max_length=255, blank=True, null=True)
     comm_org = models.CharField(max_length=255, blank=True, null=True)
     compl_adr_org = models.CharField(max_length=255, blank=True, null=True)
     cont_org = models.CharField(max_length=255, blank=True, null=True)
     courr_org = models.CharField(max_length=255, blank=True, null=True)
-    cp_org = models.CharField(max_length=5, blank=True, null=True)
-    n_org = models.CharField(max_length=255, blank=True, null=True)
+    cp_org = models.CharField(max_length=5)
+    n_org = models.CharField(max_length=255)
     port_org = models.CharField(max_length=10, blank=True, null=True)
     siret_org = models.CharField(max_length=14, blank=True, null=True)
     site_web_org = models.CharField(max_length=255, blank=True, null=True)
@@ -368,18 +367,18 @@ class TOrganisme(models.Model):
 
 
 class TPaiement(models.Model):
-    id_fact = models.ForeignKey(TFacture, models.DO_NOTHING, db_column='id_fact')
-    id_fin = models.ForeignKey(TFinancement, models.DO_NOTHING, db_column='id_fin')
-    id_type_vers = models.ForeignKey('TTypeVersement', models.DO_NOTHING, db_column='id_type_vers')
+    id_fact = models.ForeignKey(TFacture, models.DO_NOTHING, db_column='id_fact', primary_key=True)
+    id_fin = models.ForeignKey(TFinancement, models.DO_NOTHING, db_column='id_fin', primary_key=True)
+    id_type_vers = models.ForeignKey('TTypeVersement', models.DO_NOTHING, db_column='id_type_vers', primary_key=True)
     chem_pj_paiem = models.CharField(max_length=255, blank=True, null=True)
     comm_dem_vers = models.CharField(max_length=255, blank=True, null=True)
     dt_dem_vers = models.DateField(blank=True, null=True)
     dt_vers_paiem = models.DateField(blank=True, null=True)
-    int_dem_vers = models.CharField(max_length=255, blank=True, null=True)
-    mont_ht_dem_vers = models.FloatField(blank=True, null=True)
-    mont_ht_verse = models.FloatField(blank=True, null=True)
-    mont_ttc_dem_vers = models.FloatField(blank=True, null=True)
-    mont_ttc_verse = models.FloatField(blank=True, null=True)
+    int_dem_vers = models.CharField(max_length=255)
+    mont_ht_dem_vers = models.FloatField()
+    mont_ht_verse = models.FloatField()
+    mont_ttc_dem_vers = models.FloatField()
+    mont_ttc_verse = models.FloatField()
 
     class Meta:
         managed = False
@@ -389,7 +388,7 @@ class TPaiement(models.Model):
 
 class TPaiementPremierAcompte(models.Model):
     id_paiem_prem_ac = models.AutoField(primary_key=True)
-    int_paiem_prem_ac = models.CharField(max_length=255, blank=True, null=True)
+    int_paiem_prem_ac = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -398,7 +397,7 @@ class TPaiementPremierAcompte(models.Model):
 
 class TPeriodePriseVuePhoto(models.Model):
     id_ppv_ph = models.AutoField(primary_key=True)
-    int_ppv_ph = models.CharField(max_length=255, blank=True, null=True)
+    int_ppv_ph = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -419,12 +418,12 @@ class TPgre(models.Model):
 
 class TPhoto(models.Model):
     id_ph = models.AutoField(primary_key=True)
-    chem_ph = models.CharField(max_length=255, blank=True, null=True)
+    chem_ph = models.CharField(max_length=255)
     descr_ph = models.CharField(max_length=255, blank=True, null=True)
     dt_pv_ph = models.DateField(blank=True, null=True)
     geom_ph = models.TextField(blank=True, null=True)
-    int_ph = models.CharField(max_length=255, blank=True, null=True)
-    num_ph = models.CharField(max_length=255, blank=True, null=True)
+    int_ph = models.CharField(max_length=255)
+    num_ph = models.CharField(max_length=255, null=True)
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column='id_doss')
     id_ppv_ph = models.ForeignKey(TPeriodePriseVuePhoto, models.DO_NOTHING, db_column='id_ppv_ph')
 
@@ -435,7 +434,7 @@ class TPhoto(models.Model):
 
 class TPortee(models.Model):
     id_port = models.AutoField(primary_key=True)
-    int_port = models.CharField(max_length=255, blank=True, null=True)
+    int_port = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -457,9 +456,9 @@ class TPrestation(models.Model):
     comm_prest = models.CharField(max_length=255, blank=True, null=True)
     dt_fin_prest = models.DateField(blank=True, null=True)
     dt_notif_prest = models.DateField(blank=True, null=True)
-    int_prest = models.CharField(max_length=255, blank=True, null=True)
-    mont_ht_tot_prest = models.FloatField(blank=True, null=True)
-    mont_ttc_tot_prest = models.FloatField(blank=True, null=True)
+    int_prest = models.CharField(max_length=255)
+    mont_ht_tot_prest = models.FloatField()
+    mont_ttc_tot_prest = models.FloatField()
     id_nat_prest = models.ForeignKey(TNaturePrestation, models.DO_NOTHING, db_column='id_nat_prest')
     id_org_prest = models.ForeignKey(TPrestataire, models.DO_NOTHING, db_column='id_org_prest')
 
@@ -471,8 +470,8 @@ class TPrestation(models.Model):
 class TPrestationsDossier(models.Model):
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column='id_doss', primary_key=True)
     id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING, db_column='id_prest', primary_key=True)
-    mont_ht_prest = models.FloatField(blank=True, null=True)
-    mont_ttc_prest = models.FloatField(blank=True, null=True)
+    mont_ht_prest = models.FloatField()
+    mont_ttc_prest = models.FloatField()
 
     class Meta:
         managed = False
@@ -482,9 +481,9 @@ class TPrestationsDossier(models.Model):
 
 class TProgramme(models.Model):
     id_progr = models.AutoField(primary_key=True)
-    dim_progr = models.CharField(max_length=255, blank=True, null=True)
-    int_progr = models.CharField(max_length=255, blank=True, null=True)
-    seq_progr = models.IntegerField(blank=True, null=True)
+    dim_progr = models.CharField(max_length=255)
+    int_progr = models.CharField(max_length=255)
+    seq_progr = models.IntegerField()
 
     class Meta:
         managed = False
@@ -503,7 +502,7 @@ class TRegroupementMoa(models.Model):
 
 class TRiviere(models.Model):
     id_riv = models.AutoField(primary_key=True)
-    n_riv = models.CharField(max_length=255, blank=True, null=True)
+    n_riv = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -537,9 +536,9 @@ class TSousAxe(models.Model):
 
 class TTechnicien(models.Model):
     id_techn = models.AutoField(primary_key=True)
-    en_act = models.IntegerField(blank=True, null=True)
-    n_techn = models.CharField(max_length=255, blank=True, null=True)
-    pren_techn = models.CharField(max_length=255, blank=True, null=True)
+    en_act = models.IntegerField()
+    n_techn = models.CharField(max_length=255)
+    pren_techn = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -548,7 +547,7 @@ class TTechnicien(models.Model):
 
 class TTypeAvancementArrete(models.Model):
     id_type_av_arr = models.AutoField(primary_key=True)
-    int_type_av_arr = models.CharField(max_length=255, blank=True, null=True)
+    int_type_av_arr = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -557,7 +556,7 @@ class TTypeAvancementArrete(models.Model):
 
 class TTypeDeclaration(models.Model):
     id_type_decl = models.AutoField(primary_key=True)
-    int_type_decl = models.CharField(max_length=255, blank=True, null=True)
+    int_type_decl = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -566,7 +565,7 @@ class TTypeDeclaration(models.Model):
 
 class TTypeDossier(models.Model):
     id_type_doss = models.AutoField(primary_key=True)
-    int_type_doss = models.CharField(max_length=255, blank=True, null=True)
+    int_type_doss = models.CharField(max_length=255)
     id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, db_column='id_progr')
 
     class Meta:
@@ -576,7 +575,7 @@ class TTypeDossier(models.Model):
 
 class TTypeVersement(models.Model):
     id_type_vers = models.AutoField(primary_key=True)
-    int_type_vers = models.CharField(max_length=255, blank=True, null=True)
+    int_type_vers = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -585,7 +584,7 @@ class TTypeVersement(models.Model):
 
 class TUnite(models.Model):
     id_unit = models.AutoField(primary_key=True)
-    int_unit = models.CharField(max_length=255, blank=True, null=True)
+    int_unit = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -594,13 +593,13 @@ class TUnite(models.Model):
 
 class TUtilisateur(models.Model):
     id_util = models.AutoField(primary_key=True)
-    courr_util = models.CharField(max_length=255, blank=True, null=True)
+    courr_util = models.CharField(max_length=255)
     jet_util = models.CharField(max_length=40, blank=True, null=True)
-    mdp_util = models.CharField(max_length=40, blank=True, null=True)
-    n_util = models.CharField(max_length=255, blank=True, null=True)
+    mdp_util = models.CharField(max_length=40)
+    n_util = models.CharField(max_length=255)
     port_util = models.CharField(max_length=10, blank=True, null=True)
-    pren_util = models.CharField(max_length=255, blank=True, null=True)
-    pseudo_util = models.CharField(max_length=255, blank=True, null=True)
+    pren_util = models.CharField(max_length=255)
+    pseudo_util = models.CharField(max_length=255)
     tel_util = models.CharField(max_length=10, blank=True, null=True)
     id_org = models.ForeignKey(TOrganisme, models.DO_NOTHING, db_column='id_org')
 

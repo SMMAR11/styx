@@ -111,7 +111,7 @@
 	height: 20px;
 }
 
-.bt-ajouter_acteur
+.bt-ajouter-acteur
 {
 	background-image: url('../images/pictos/boutons/ajouter_acteur.png');
 	background-size: 20px;
@@ -304,7 +304,7 @@
 	.vertical-align-icon-link
 	{
 		padding-top: 0;
-		padding-bottom: 40px;
+		padding-bottom: 20px;
 	}
 }
 
@@ -345,6 +345,18 @@
 .vignette-md
 {
 	max-height: 180px;
+}
+
+/* Mise en page */
+.main-title
+{
+	background-color: #94C054;
+	color: #FFF;
+	border-style: double;
+	font-size: 24px;
+	font-weight: bold;
+	padding: 5px 15px;
+	text-align: center;
 }
 
 /* Styles de police */

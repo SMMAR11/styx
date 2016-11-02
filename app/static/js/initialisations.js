@@ -14,6 +14,7 @@ $(document).ready(function()
 	{
 		'ajouter_dossier_associe' : init_datatable($('#tab_ajouter_dossier_associe'), [4], true),
 		'choisir_dossier' : init_datatable($('#tab_choisir_dossier'), [4], true),
+		'consulter_avenants' : init_datatable($('#tab_consulter_avenants'), [5]),
 		'consulter_demandes_versement' : init_datatable($('#tab_consulter_demandes_versement'), [6]),
 		'consulter_dossiers_associes' : init_datatable($('#tab_consulter_dossiers_associes'), [6]),
 		'consulter_factures' : init_datatable($('#tab_consulter_factures'), [4]),
@@ -86,12 +87,12 @@ $(document).ready(function()
 		$.ajax(
 		{
 			type : 'post',
-			url : '/retourner-onglet-actif.html',
+			url : URL_MENU_DOSS,
 			dataType : 'html',
 			success : function(data)
 			{
 				$('#menu_dossier').find('a[href="' + data + '"]').parent().addClass('active');
-				$(data).addClass('in active');
+				$(data).addClass('active in');
 			}	
 		});
 	}

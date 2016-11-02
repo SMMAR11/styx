@@ -1,6 +1,7 @@
-from app.decorators import *
-from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse
+#!/usr/bin/env python
+#-*- coding: utf-8
+
+''' Imports '''
 from django.views.decorators.csrf import csrf_exempt
 
 '''
@@ -10,12 +11,16 @@ request : Objet requête
 @csrf_exempt
 def retourner_onglet_actif(request) :
 
+	''' Imports '''
+	from django.core.exceptions import PermissionDenied
+	from django.http import HttpResponse
+	
 	reponse = '#ong_caracteristiques'
 
 	if request.method == 'POST' :
-		if 'menu_dossier' in request.session :
-			reponse = request.session['menu_dossier']
-			del request.session['menu_dossier']
+		if 'menu_doss' in request.session :
+			reponse = request.session['menu_doss']
+			del request.session['menu_doss']
 	else :
 		raise PermissionDenied
 

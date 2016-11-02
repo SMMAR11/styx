@@ -15,14 +15,6 @@ $('.to-unfocus').click(function()
 	$(this).blur();
 });
 
-$(document).keydown(function(e)
-{
-	if (e.keyCode == 116)
-	{
-		//alert_util(e);
-	}
-})
-
 /**
  * Ce script permet le traitement lié à l'identification.
  * e : Variable objet JavaScript
@@ -62,21 +54,21 @@ $('select[id$="zl_av"]').change(function(e)
 	if (isNaN($(this).val()) == false)
 	{
 		// Je récupère l'intitulé de l'état d'avancement sélectionné.
-		var intitule_avancement = $('#id_' + prefixe + 'zl_av option:selected').text();
+		var int_av = $('#id_' + prefixe + 'zl_av option:selected').text();
 		
 		// Je stocke l'objet lié à la date de délibération au maître d'ouvrage.
-		var obj_date_deliberation_moa = $('#id_' + prefixe + 'zd_dt_delib_moa_doss');
+		var obj_dt_delib_moa_doss = $('#id_' + prefixe + 'zd_dt_delib_moa_doss');
 
-		if (intitule_avancement == 'En projet')
+		if (int_av == 'En projet')
 		{
 			// Je grise le champ relatif à la date de délibération au maître d'ouvrage d'un dossier.
-			obj_date_deliberation_moa.val('');
-			obj_date_deliberation_moa.attr('disabled', true);
+			obj_dt_delib_moa_doss.val('');
+			obj_dt_delib_moa_doss.attr('disabled', true);
 		}
 		else
 		{
 			// Je dégrise le champ relatif à la date de délibération au maître d'ouvrage d'un dossier.
-			obj_date_deliberation_moa.removeAttr('disabled');
+			obj_dt_delib_moa_doss.removeAttr('disabled');
 		}
 	}
 });
@@ -177,10 +169,10 @@ $('input[name="rb_doss_ass"]').change(function()
 $('#id_CreerDossier-zld_progr').change(function(e)
 {
 	// Je récupère l'intitulé du programme sélectionné.
-	var intitule_programme = $('#id_CreerDossier-zld_progr option:selected').text();
+	var int_progr = $('#id_CreerDossier-zld_progr option:selected').text();
 
 	// Je gère l'affichage du module PGRE.
-	if (intitule_programme == 'PGRE')
+	if (int_progr == 'PGRE')
 	{
 		$('#za_form_pgre').show();
 	}
@@ -338,7 +330,99 @@ $('form[name="form_selectionner_dossiers"]').submit(function(e)
  * Ce script permet de gérer la valeur de chaque case à cocher liées au maître d'ouvrage lors du renseignement du
  * formulaire de réalisation d'un état en sélectionnant des dossiers.
  */
-$('input[name="cbsm_moa"]').change(function(e)
+$('input[name="cbsm_org_moa"]').change(function(e)
 {
-	ger_coch_cbsm(e, $('input[name="cbsm_moa"]'));
+	ger_coch_cbsm(e, $('input[name="cbsm_org_moa"]'));
+});
+
+/**
+ * Ce script permet le traitement d'une requête d'insertion d'un financement dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_ajouter_financement"]').submit(function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire d'insertion d'un financement.
+	trait_form(e, 'AjouterFinancement-');
+});
+
+/**
+ * Ces 3 scripts permettent le calcul du montant HT et/ou TTC total d'une subvention.
+ */
+$('input[name$="zs_mont_ht_elig_fin"]').on('input', function()
+{
+	calc_mont_tot('ht');
+});
+
+$('input[name$="zs_mont_ttc_elig_fin"]').on('input', function()
+{
+	calc_mont_tot('ttc');
+});
+
+$('input[name$="zs_pourc_elig"]').on('input', function()
+{
+	calc_mont_tot('ht');
+	calc_mont_tot('ttc');
+});
+
+/**
+ * Ce script permet le traitement d'une requête d'insertion d'un arrêté dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_ajouter_arrete"]').submit(function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire d'insertion d'un arrêté.
+	trait_form(e, 'AjouterArrete-');
+});
+
+/**
+ * Ce script permet d'afficher la demande de confirmation de suppression d'un arrêté.
+ * e : Variable objet JavaScript
+ */
+$('#ong_reglementations').find('.bt_supprimer_arrete').click(function(e)
+{
+	aff_html_ds_fm(e, 'supprimer_arrete');
+});
+
+/**
+ * Ce script permet le traitement d'une requête de modification d'un arrêté dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_modifier_arrete"]').submit(function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire de modification d'un arrêté.
+	trait_form(e, 'ModifierArrete-');
+});
+
+/**
+ * Ce script permet le traitement d'une requête d'insertion d'une prestation dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_ajouter_prestation"]').submit(function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire d'insertion d'une prestation.
+	trait_form(e, 'AjouterPrestation-');
+});
+
+$('#id_AjouterPrestation-cb_prest_exist').change(function()
+{
+	if ($(this).is(':checked'))
+	{
+		$('#za_prestation_nouvelle').hide();
+	}
+	else
+	{
+		$('#za_prestation_nouvelle').show();
+	}
 });
