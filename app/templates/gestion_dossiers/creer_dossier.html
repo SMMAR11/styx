@@ -4,7 +4,7 @@
 {% block content %}
 <div class="row">
 	<div class="col-md-12">
-		<form action="{% url 'creer_dossier' %}" method="post" name="form_creer_dossier" class="alert-user c-theme">
+		<form action="{% url 'creer_dossier' %}" method="post" name="form_creer_dossier" class="alert-user c-theme" enctype="multipart/form-data">
 			{% csrf_token %}
 			<fieldset>
 				<legend>Créer un dossier</legend>

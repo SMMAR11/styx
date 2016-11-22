@@ -399,7 +399,7 @@ function calc_mont_tot(p_type)
 {
 	// Je récupère le montant et le pourcentage éligibles.
 	var mont_elig = $('input[name$="zs_mont_' + p_type + '_elig_fin"]').val();
-	var pourc_elig = $('input[name$="zs_pourc_elig"]').val();
+	var pourc_elig = $('input[name$="zs_pourc_elig_fin"]').val();
 
 	// J'initialise le montant total.
 	var mont_tot = '';
@@ -415,7 +415,7 @@ function calc_mont_tot(p_type)
 	}
 
 	// J'affiche le montant total.
-	$('input[name$="zs_mont_' + p_type + '_tot_subv"]').val(mont_tot);
+	$('input[name$="zs_mont_' + p_type + '_tot_subv_fin"]').val(mont_tot);
 };
 
 /**
@@ -708,6 +708,12 @@ function trait_form(e, p_prefixe = '')
 					// J'affiche l'erreur.
 					span.append(ul);
 					ul.append(li);
+
+					// Je rends invisible le message d'erreur si son libellé est "None" (cas exceptionnel).
+					if (data[i][0] == 'None')
+					{
+						li.css('visibility', 'hidden');
+					}
 
 					// Je mets en forme le contrôle à l'indice i.
 					ajout_err($('#id_' + p_prefixe + i));

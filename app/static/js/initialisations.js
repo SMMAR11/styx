@@ -17,10 +17,10 @@ $(document).ready(function()
 		'consulter_avenants' : init_datatable($('#tab_consulter_avenants'), [5]),
 		'consulter_demandes_versement' : init_datatable($('#tab_consulter_demandes_versement'), [6]),
 		'consulter_dossiers_associes' : init_datatable($('#tab_consulter_dossiers_associes'), [6]),
-		'consulter_factures' : init_datatable($('#tab_consulter_factures'), [4]),
+		'consulter_factures' : init_datatable($('#tab_consulter_factures'), [5]),
 		'consulter_photos' : init_datatable($('#tab_consulter_photos'), [0, 4]),
-		'consulter_plan_financement' : init_datatable($('#tab_consulter_plan_financement'), [5]),
-		'consulter_prestations' : init_datatable($('#tab_consulter_prestations'), [5]),
+		'consulter_financements' : init_datatable($('#tab_consulter_financements'), [6]),
+		'consulter_prestations' : init_datatable($('#tab_consulter_prestations'), [7]),
 		'selectionner_dossiers' : init_datatable($('#tab_selectionner_dossiers'), [7], true)
 	}
 
@@ -100,6 +100,31 @@ $(document).ready(function()
 	{
 
 	}
+
+	// Je désigne le fichier uploadé dans le cas d'une modification.
+	$('.file-return').each(function()
+	{
+		// Je pointe vers l'objet "input".
+		var obj_contr = $(this).prev().prev();
+
+		// Je récupère le chemin du fichier uploadé.
+		var chem_fich = obj_contr.attr('title');
+
+		if (chem_fich != undefined)
+		{
+			// Je définis l'identifiant du bouton "Retirer".
+			var id_span = obj_contr.attr('id').split('_');
+			id_span[1] = id_span[1].slice(0, id_span[1].length - 2) + 'bt';
+			id_span = id_span.join('_');
+
+			// Je mets en forme le bouton "Retirer".
+			var span = $('<span/>', { 'id' : id_span, html : 'Retirer' });
+
+			// J'affiche le chemin du fichier uploadé ainsi que le bouton "Retirer".
+			$(this).html(chem_fich + ' ');
+			$(this).append(span);
+		}
+	});
 });
 
 /**

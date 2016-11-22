@@ -140,20 +140,34 @@
 						</div>
 						<br />
 						<div style="overflow: auto;">
-							<table class="display table" id="tab_consulter_plan_financement">
+							<table class="display table" id="tab_consulter_financements">
 								<thead>
 									<tr>
 										<th>Organisme financier</th>
 										<th>Montant HT de participation (en €)</th>
-										<th>%</th>
+										<th>Montant TTC de participation (en €)</th>
+										<th>Assiette éligible (en %)</th>
 										<th>Date de début d'éligibilité</th>
 										<th>Date de fin d'éligibilité</th>
 										<th></th>
 									</tr>
 								</thead>
-								<tbody></tbody>
+								<tbody>
+									{% for un_fin in les_fin %}
+									<tr>
+										<td>{{ un_fin.n_org }}</td>
+										<td>{{ un_fin.mont_ht_tot_subv_fin }}</td>
+										<td>{{ un_fin.mont_ttc_tot_subv_fin }}</td>
+										<td>{{ un_fin.pourc_elig_fin }}</td>
+										<td>{{ un_fin.dt_deb_elig_fin }}</td>
+										<td>{{ un_fin.dt_fin_elig_fin }}</td>
+										<td><a href="#" class="block bt-consulter pull-right"></td>
+									</tr>
+									{% endfor %}
+								</tbody>
 							</table>
 						</div>
+						<p class="b c-attention text-center"><span class="u">Restes à financer :</span> {{ mont_ht_raf }} € HT / {{ mont_ttc_raf }} € TTC</p>
 					</div>
 				</div>
 			</div>
@@ -171,15 +185,31 @@
 									<tr>
 										<th>Entreprise</th>
 										<th>Montant HT (en €)</th>
+										<th>Montant TTC (en €)</th>
 										<th>Date de notification</th>
 										<th>Nature de la prestation</th>
 										<th>Reste à payer HT (en €)</th>
+										<th>Reste à payer TTC (en €)</th>
 										<th></th>
 									</tr>
 								</thead>
-								<tbody></tbody>
+								<tbody>
+									{% for une_prest_doss in les_prest_doss %}
+										<tr>
+											<td>{{ une_prest_doss.n_org }}</td>
+											<td>{{ une_prest_doss.mont_ht_prest }}</td>
+											<td>{{ une_prest_doss.mont_ttc_prest }}</td>
+											<td>{{ une_prest_doss.dt_notif_prest }}</td>
+											<td>{{ une_prest_doss.int_nat_prest }}</td>
+											<td>{{ une_prest_doss.mont_ht_rap }}</td>
+											<td>{{ une_prest_doss.mont_ttc_rap }}</td>
+											<td><a href="#" class="block bt-consulter pull-right"></td>
+										</tr>
+									{% endfor %}
+								</tbody>
 							</table>
 						</div>
+						<p class="b c-attention text-center"><span class="u">Restes à utiliser :</span> {{ mont_ht_rau }} € HT / {{ mont_ttc_rau }} € TTC</p>
 					</div>
 				</div>
 			</div>
@@ -197,7 +227,8 @@
 									<tr>
 										<th>Prestation</th>
 										<th>Date de mise en paiement</th>
-										<th>Montant (en €)</th>
+										<th>Montant HT (en €)</th>
+										<th>Montant TTC (en €)</th>
 										<th>Intitulé</th>
 										<th></th>
 									</tr>
@@ -270,11 +301,14 @@
 								<tbody>
 									{% for une_ph in les_ph %}
 									<tr>
-										<td><img src="{{ MEDIA_URL }}{{ une_ph.chem_ph }}" width="100" data-target="#fm_afficher_photo" action="{% url 'consulter_dossier' le_doss.id_doss %}?action=afficher-photo&photo={{ une_ph.id_ph }}"></td>
+										<td><img src="{{ MEDIA_URL }}{{ une_ph.chem_ph }}" width="100" data-target="#fm_afficher_photo" action="{% url 'consulter_dossier' le_doss.id_doss %}?action=afficher-photo&photo={{ une_ph.id_ph }}" title="Consulter la photo"></td>
 										<td>{{ une_ph.int_ph }}</td>
 										<td>{{ une_ph.int_ppv_ph }}</td>
 										<td>{{ une_ph.dt_pv_ph }}</td>
-										<td><span class="block bt-supprimer pointer pull-right" data-target="#fm_supprimer_photo" action="{% url 'consulter_dossier' le_doss.id_doss %}?action=supprimer-photo&photo={{ une_ph.id_ph }}" title="Supprimer la photo"></span></td>
+										<td>
+											<span class="block bt-supprimer pointer pull-right" data-target="#fm_supprimer_photo" action="{% url 'consulter_dossier' le_doss.id_doss %}?action=supprimer-photo&photo={{ une_ph.id_ph }}" title="Supprimer la photo"></span>
+											<a href="{% url 'modifier_photo' une_ph.id_ph %}" class="block bt-modifier pull-right" title="Modifier la photo" style="margin-right: 5px;"></a>
+										</td>
 									</tr>
 									{% endfor %}
 								</tbody>

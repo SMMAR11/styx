@@ -291,6 +291,19 @@ $('form[name="form_ajouter_photo"]').submit(function(e)
 });
 
 /**
+ * Ce script permet le traitement d'une requête de modification d'une photo dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_modifier_photo"]').submit(function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire de modification d'une photo.
+	trait_form(e, 'ModifierPhoto-');
+});
+
+/**
  * Ce script permet d'afficher la demande de confirmation de suppression d'une photo.
  * e : Variable objet JavaScript
  */
@@ -361,7 +374,7 @@ $('input[name$="zs_mont_ttc_elig_fin"]').on('input', function()
 	calc_mont_tot('ttc');
 });
 
-$('input[name$="zs_pourc_elig"]').on('input', function()
+$('input[name$="zs_pourc_elig_fin"]').on('input', function()
 {
 	calc_mont_tot('ht');
 	calc_mont_tot('ttc');
@@ -415,14 +428,35 @@ $('form[name="form_ajouter_prestation"]').submit(function(e)
 	trait_form(e, 'AjouterPrestation-');
 });
 
-$('#id_AjouterPrestation-cb_prest_exist').change(function()
+/**
+ * Ce script permet la gestion de l'affichage du formulaire d'insertion d'une prestation.
+ */
+$('input[name="rb_prest_exist"]').change(function()
 {
-	if ($(this).is(':checked'))
+	if ($(this).val() == 1)
 	{
-		$('#za_prestation_nouvelle').hide();
+		$('#za_prest_nvelle').hide();
 	}
 	else
 	{
-		$('#za_prestation_nouvelle').show();
+		$('#za_prest_nvelle').show();
 	}
+});
+
+/**
+ * Ce script permet la "suppression" d'un fichier uploadé.
+ */
+$('.file-return').on('click', 'span', function()
+{
+	// Je récupère l'identifiant de la zone d'affichage du fichier uploadé.
+	var id = $(this).attr('id').split('_');
+	id[1] = id[1].slice(0, id[1].length - 2) + 'za';
+	id = id.join('_');
+
+	// Je retire le chemin du fichier uploadé.
+	$('#' + id).val('');
+
+	// Je réinitialise la zone d'upload.
+	$(this).parent().prev().prev().removeAttr('title');
+	$(this).parent().empty();
 });

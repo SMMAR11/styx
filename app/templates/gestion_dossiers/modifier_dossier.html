@@ -9,7 +9,7 @@
 <br />
 <div class="row">
 	<div class="col-md-12">
-		<form action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-caracteristiques" method="post" name="form_modifier_dossier" class="alert-user c-theme">
+		<form action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-caracteristiques" method="post" name="form_modifier_dossier" class="alert-user c-theme" enctype="multipart/form-data">
 			{% csrf_token %}
 			<fieldset>
 				<legend>Modifier un dossier</legend>
@@ -69,6 +69,8 @@
 						<div class="col-sm-6">{{ f1.zl_av }}</div>
 						<div class="col-sm-6">{{ f1.zd_dt_delib_moa_doss }}</div>
 					</div>
+					{{ f1.zu_chem_dds_doss }}
+					{{ f1.za_chem_dds_doss }}
 					{{ f1.zs_comm_doss }}
 				</div>
 				<button type="submit" class="bt-vert btn center-block" data-target="#fm_modifier_dossier">Valider</button>

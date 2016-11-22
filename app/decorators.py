@@ -2,27 +2,6 @@
 #-*- coding: utf-8
 
 '''
-Ce décorateur vérifie si l'accès à une page est autorisé.
-'''
-def verif_acces(view_func) :
-
-	''' Imports '''
-	from functools import wraps
-
-	def _decorator(request, *args, **kwargs) :
-
-		''' Imports '''
-		from django.core.exceptions import PermissionDenied
-
-		# Je regarde l'état de la session.
-		if 'util' in request.session :
-			return view_func(request, *args, **kwargs)
-		else :
-			raise PermissionDenied
-
-	return wraps(view_func)(_decorator)
-
-'''
 Ce décorateur nettoie un formulaire lors d'un rechargement de page.
 '''
 def nett_form(view_func) :
@@ -49,5 +28,26 @@ def nett_form(view_func) :
 			return redirect(request.path)
 		else :
 			return view_func(request, *args, **kwargs)
+
+	return wraps(view_func)(_decorator)
+
+'''
+Ce décorateur vérifie si l'accès à une page est autorisé.
+'''
+def verif_acces(view_func) :
+
+	''' Imports '''
+	from functools import wraps
+
+	def _decorator(request, *args, **kwargs) :
+
+		''' Imports '''
+		from django.core.exceptions import PermissionDenied
+
+		# Je regarde l'état de la session.
+		if request.user.is_authenticated() :
+			return view_func(request, *args, **kwargs)
+		else :
+			raise PermissionDenied
 
 	return wraps(view_func)(_decorator)

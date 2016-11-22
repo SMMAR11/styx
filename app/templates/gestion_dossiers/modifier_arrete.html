@@ -4,12 +4,12 @@
 {% block content %}
 <div class="icon-link pull-right">
 	<div><span class="bt-precedent"></span></div>
-	<div><a href="{% url 'consulter_dossier' le_dossier.id_doss %}" onclick="alert_util(event)">Revenir au dossier</a></div>
+	<div><a href="{% url 'consulter_dossier' le_doss.id_doss %}" onclick="alert_util(event)">Revenir au dossier</a></div>
 </div>
 <br />
 <div class="row">
 	<div class="col-md-12">
-		<form action="{% url 'modifier_arrete' le_dossier.id_doss l_arrete.id_type_decl %}" method="post" name="form_modifier_arrete" class="c-theme alert-user">
+		<form action="{% url 'modifier_arrete' le_doss.id_doss l_arr.id_type_decl %}" method="post" name="form_modifier_arrete" class="alert-user c-theme" enctype="multipart/form-data">
 			{% csrf_token %}
 			<fieldset>
 				<legend>Modifier un arrêté</legend>
@@ -22,8 +22,10 @@
 					{{ f1.zs_num_arr }}
 					{{ f1.zd_dt_sign_arr }}
 					{{ f1.zd_dt_lim_encl_trav_arr }}
+					{{ f1.zu_chem_pj_arr }}
+					{{ f1.za_chem_pj_arr }}
 				</div>
-				<button type="submit" class="center-block btn bt-vert" data-target="#fm_modifier_arrete">Valider</button>
+				<button type="submit" class="bt-vert btn center-block" data-target="#fm_modifier_arrete">Valider</button>
 			</fieldset>
 		</form>						
 	</div>

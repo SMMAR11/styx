@@ -101,6 +101,17 @@
 	font-style: normal;
 }
 
+.file-return span
+{
+	color: #FF0921;
+}
+
+.file-return span:hover
+{
+	cursor: pointer;
+	text-decoration: underline;
+}
+
 /* Boutons sous forme de pictogramme */
 .bt-ajouter
 {
@@ -278,6 +289,11 @@
 .form-content
 {
 	padding-left: 15px;
+}
+
+.subform-content
+{
+	padding-left: 5px;
 }
 
 .invalide

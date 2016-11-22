@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-{% if request.session.util %}
+{% if user.is_authenticated %}
 <div class="row">
 	<div class="col-md-4 saut-md">
 		<a href="{% url 'portail_carto' %}" class="thumbnail to-unfocus">

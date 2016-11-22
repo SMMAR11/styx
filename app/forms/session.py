@@ -23,34 +23,23 @@ class Identifier(forms.Form) :
 	def clean(self) :
 
 		''' Imports '''
-		from app.functions import crypt_val
-		from app.models import TUtilisateur
+		from app.functions import nett_val
+		from django.contrib.auth import authenticate
 
 		# Je récupère les données utiles du formulaire pré-valide.
 		cleaned_data = super(Identifier, self).clean()
-		v_pseudo_util = cleaned_data.get('zs_pseudo_util')
-		v_mdp_util = crypt_val(cleaned_data.get('zs_mdp_util'))
+		v_pseudo_util = nett_val(cleaned_data.get('zs_pseudo_util'))
+		v_mdp_util = nett_val(cleaned_data.get('zs_mdp_util'))
 
-		# Je déclare des booléens me permettant de jauger l'état de l'identification.
-		pseudo_trouve = False
-		mdp_trouve = False
+		if v_pseudo_util is not None and v_mdp_util is not None :
 
-		# Je stocke dans un tableau tous les utilisateurs référencés dans la base de données.
-		les_util = TUtilisateur.objects.all()
+			# Je vérifie l'existence d'un objet TUtilisateur.
+			obj_util = authenticate(username = v_pseudo_util, password = v_mdp_util)
 
-		# Je parcours chaque utilisateur afin de vérifier si l'identification est possible ou non.
-		for un_util in les_util :
-			if v_pseudo_util == un_util.pseudo_util :
-				pseudo_trouve = True
-				if v_mdp_util == un_util.mdp_util :
-					mdp_trouve = True
-
-		# Je définis les messages d'erreurs.
-		if pseudo_trouve == True :
-			if mdp_trouve == False :
-				self.add_error('zs_mdp_util', 'Veuillez saisir le bon mot de passe lié à ce compte.')
-		else :
-			self.add_error('zs_pseudo_util', 'Aucun compte n\'est lié à ce courriel.')
+			# Je renvoie une erreur si aucun objet TUtilisateur n'a
+			if obj_util is None :
+				self.add_error('zs_pseudo_util', None)
+				self.add_error('zs_mdp_util', 'Les identifiants rentrés sont incorrects.')
 
 class OublierMotDePasse(forms.Form) :
 

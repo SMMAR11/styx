@@ -112,18 +112,20 @@ class GererDossier(forms.Form) :
 	zu_chem_dds_doss = forms.FileField(
 		label = 'Fichier scanné du DDS',
 		required = False,
-		widget = forms.FileInput(attrs = {'class' : 'input-file'})
+		widget = forms.FileInput(attrs = { 'class' : 'input-file' })
+	)
+
+	za_chem_dds_doss = forms.CharField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True, 'type' : 'hidden' })
 	)
 
 	zs_comm_doss = forms.CharField(
 		label = 'Commentaire',
 		required = False,
 		validators = [valid_cdc],
-		widget = forms.Textarea(attrs = {
-			'class' : 'form-control',
-			'maxlength' : 255,
-			'rows' : 5
-		})
+		widget = forms.Textarea(attrs = { 'class' : 'form-control', 'maxlength' : 255, 'rows' : 5 })
 	)
 
 	# Je définis les champs PGRE du formulaire.
@@ -179,6 +181,7 @@ class GererDossier(forms.Form) :
 		from app.models import TTechnicien
 		from app.models import TTypeDossier
 		from app.models import TUnite
+		from styx.settings import MEDIA_URL
 
 		# Je déclare les arguments.
 		k_doss = kwargs.pop('k_doss', None)
@@ -217,9 +220,9 @@ class GererDossier(forms.Form) :
 
 			self.fields['zl_org_moa'].initial = obj_doss.id_org_moa.id_org_moa.id_org
 			self.fields['zld_progr'].initial = obj_doss.id_progr.id_progr
-			self.fields['zld_axe'].initial = obj_doss.id_axe
-			self.fields['zld_ss_axe'].initial = obj_doss.id_ss_axe
-			self.fields['zld_act'].initial = obj_doss.id_act
+			self.fields['zld_axe'].initial = obj_doss.num_axe
+			self.fields['zld_ss_axe'].initial = obj_doss.num_ss_axe
+			self.fields['zld_act'].initial = obj_doss.num_act
 			self.fields['zld_type_doss'].initial = obj_doss.id_type_doss.id_type_doss
 			self.fields['zl_nat_doss'].initial = obj_doss.id_nat_doss.id_nat_doss
 			self.fields['zl_techn'].initial = obj_doss.id_techn.id_techn
@@ -231,10 +234,15 @@ class GererDossier(forms.Form) :
 			self.fields['zd_dt_av_cp_doss'].initial = reecr_dt(obj_doss.dt_av_cp_doss)
 			self.fields['zs_comm_doss'].initial = obj_doss.comm_doss
 
+			# J'initialise l'attribut "title" de la zone d'upload du fichier de DDS du dossier.
+			if obj_doss.chem_dds_doss is not None :
+				self.fields['zu_chem_dds_doss'].widget.attrs['title'] = MEDIA_URL + obj_doss.chem_dds_doss
+				self.fields['za_chem_dds_doss'].initial = MEDIA_URL + obj_doss.chem_dds_doss
+
 			# Je vérifie l'existence d'un objet TPgre.
 			obj_doss_pgre = None
 			try :
-				obj_doss_pgre = TPgre.objects.get(id_pgre = obj_doss.id_doss)
+				obj_doss_pgre = TPgre.objects.get(id_pgre = k_doss)
 			except :
 				pass
 
@@ -278,8 +286,8 @@ class GererDossier(forms.Form) :
 		if obj_doss is not None :
 			p_org_moa = int(obj_doss.id_org_moa.id_org_moa.id_org)
 			p_progr = int(obj_doss.id_progr.id_progr)
-			p_axe = integer(obj_doss.id_axe)
-			p_ss_axe = integer(obj_doss.id_ss_axe)
+			p_axe = integer(obj_doss.num_axe)
+			p_ss_axe = integer(obj_doss.num_ss_axe)
 		else :
 			p_org_moa = -1
 			p_progr = -1
@@ -300,7 +308,7 @@ class GererDossier(forms.Form) :
 			# Je traite le cas où j'ajoute un dossier. Dans ce cas, je renseigne les maîtres d'ouvrages en activité.
 			les_org_moa = list(OPTION_INITIALE)
 			les_org_moa.extend(
-				[(i.id_org_moa.id_org, i.id_org_moa.n_org) for i in TMoa.objects.filter(en_act = 1).order_by(
+				[(i.id_org_moa.id_org, i.id_org_moa.n_org) for i in TMoa.objects.filter(en_act = True).order_by(
 					'id_org_moa__n_org'
 				)]
 			)
@@ -323,7 +331,7 @@ class GererDossier(forms.Form) :
 		self.fields['zld_progr'].choices = les_progr
 
 		# J'alimente la liste déroulante des axes.
-		les_axes = list([(i.id_axe, i.id_axe) for i in TAxe.objects.filter(id_progr = p_progr).order_by('id_axe')])
+		les_axes = list([(i.num_axe, i.num_axe) for i in TAxe.objects.filter(id_progr = p_progr).order_by('num_axe')])
 
 		# Je gère la valeur de l'option par défaut.
 		if len(les_axes) > 0 :
@@ -342,9 +350,9 @@ class GererDossier(forms.Form) :
 		self.fields['zld_axe'].choices = les_axes
 
 		# J'alimente la liste déroulante des sous-axes.
-		les_ss_axes = list([(i.id_ss_axe, i.id_ss_axe) for i in TSousAxe.objects.filter(
-			id_progr = p_progr, id_axe = p_axe
-		).order_by('id_ss_axe')])
+		les_ss_axes = list([(i.num_ss_axe, i.num_ss_axe) for i in TSousAxe.objects.filter(
+			id_axe = '{0}_{1}'.format(p_progr, p_axe)
+		).order_by('num_ss_axe')])
 
 		# Je gère la valeur de l'option par défaut.
 		if len(les_ss_axes) > 0 :
@@ -363,9 +371,9 @@ class GererDossier(forms.Form) :
 		self.fields['zld_ss_axe'].choices = les_ss_axes
 
 		# J'alimente la liste déroulante des actions.
-		les_act = list([(i.id_act, i.id_act) for i in TAction.objects.all().filter(
-			id_progr = p_progr, id_axe = p_axe, id_ss_axe = p_ss_axe
-		).order_by('id_act')])
+		les_act = list([(i.num_act, i.num_act) for i in TAction.objects.filter(
+			id_ss_axe = '{0}_{1}_{2}'.format(p_progr, p_axe, p_ss_axe)
+		).order_by('num_act')])
 
 		# Je gère la valeur de l'option par défaut.
 		if len(les_act) > 0 :
@@ -450,6 +458,7 @@ class GererDossier(forms.Form) :
 		v_av_cp = cleaned_data.get('zl_av_cp')
 		v_av = cleaned_data.get('zl_av')
 		v_dt_delib_moa_doss = nett_val(cleaned_data.get('zd_dt_delib_moa_doss'))
+		v_obj_dds_doss = nett_val(cleaned_data.get('zu_chem_dds_doss'))
 		v_quant_objs_pgre = nett_val(cleaned_data.get('zs_quant_objs_pgre'))
 		v_quant_real_pgre = nett_val(cleaned_data.get('zs_quant_real_pgre'))
 		v_unit = integer(cleaned_data.get('zl_unit'))
@@ -502,6 +511,11 @@ class GererDossier(forms.Form) :
 			if v_num_doss == v_doss_ass :
 				self.add_error('za_doss_ass', 'Veuillez choisir un autre dossier associé.')
 
+		# Je vérifie l'extension du fichier de DDS du dossier.
+		if v_obj_dds_doss is not None :
+			if v_obj_dds_doss.name.endswith('.pdf') == False :
+				self.add_error('zu_chem_dds_doss', 'Veuillez choisir un fichier au format PDF.')
+
 class GererDossier_Reglementation(forms.Form) :
 
 	''' Imports '''
@@ -512,11 +526,7 @@ class GererDossier_Reglementation(forms.Form) :
 		label = 'Commentaire',
 		required = False,
 		validators = [valid_cdc],
-		widget = forms.Textarea(attrs = {
-			'class' : 'form-control',
-			'maxlength' : 255,
-			'rows' : 5
-		})
+		widget = forms.Textarea(attrs = { 'class' : 'form-control', 'maxlength' : 255, 'rows' : 5 })
 	)
 
 	def __init__(self, *args, **kwargs) :
@@ -660,17 +670,26 @@ class GererPhoto(forms.Form) :
 
 	zu_chem_ph = forms.FileField(
 		label = 'Photo',
-		widget = forms.FileInput(attrs = {'class' : 'input-file'})
+		widget = forms.FileInput(attrs = { 'class' : 'input-file' })
+	)
+
+	za_chem_ph = forms.CharField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True, 'type' : 'hidden' })
 	)
 
 	def __init__(self, *args, **kwargs) :
 
 		''' Imports '''
+		from app.functions import reecr_dt
 		from app.models import TDossier, TPeriodePriseVuePhoto, TPhoto
+		from styx.settings import MEDIA_URL
 
 		# Je déclare les éléments du tableau des arguments.
 		k_doss = kwargs.pop('k_doss', None)
 		k_ph = kwargs.pop('k_ph', None)
+		k_modif = kwargs.pop('k_modif', False)
 
 		super(GererPhoto, self).__init__(*args, **kwargs)
 
@@ -699,9 +718,24 @@ class GererPhoto(forms.Form) :
 		if obj_doss is not None :
 			self.fields['za_num_doss'].initial = obj_doss.num_doss
 
+		if obj_ph is not None :
+			self.fields['za_num_doss'].initial = obj_ph.id_doss.num_doss
+			self.fields['zs_int_ph'].initial = obj_ph.int_ph
+			self.fields['zs_descr_ph'].initial = obj_ph.descr_ph
+			self.fields['zl_ppv_ph'].initial = obj_ph.id_ppv_ph.id_ppv_ph
+			self.fields['zd_dt_pv_ph'].initial = reecr_dt(obj_ph.dt_pv_ph)
+
+			# J'initialise l'attribut "title" de la zone d'upload de la photo.
+			if obj_ph.chem_ph is not None :
+				self.fields['zu_chem_ph'].widget.attrs['title'] = MEDIA_URL + obj_ph.chem_ph
+				self.fields['za_chem_ph'].initial = MEDIA_URL + obj_ph.chem_ph
+
+		if k_modif == True :
+			self.fields['zu_chem_ph'].required = False
+
 		# J'alimente la liste déroulante des périodes de prise de vue d'une photo.
 		les_ppv_ph = list(OPTION_INITIALE)
-		les_ppv_ph.extend([(i.id_ppv_ph, i.int_ppv_ph) for i in TPeriodePriseVuePhoto.objects.all().order_by(
+		les_ppv_ph.extend([(i.id_ppv_ph, i.int_ppv_ph) for i in TPeriodePriseVuePhoto.objects.order_by(
 			'int_ppv_ph')]
 		)
 		self.fields['zl_ppv_ph'].choices = les_ppv_ph
@@ -717,6 +751,7 @@ class GererPhoto(forms.Form) :
 		v_num_doss = cleaned_data.get('za_num_doss')
 		v_ppv_ph = cleaned_data.get('zl_ppv_ph')
 		v_obj_ph = nett_val(cleaned_data.get('zu_chem_ph'))
+		v_ph = nett_val(cleaned_data.get('za_chem_ph'))
 
 		# Je vérifie l'existence d'un objet TDossier.
 		try :
@@ -730,13 +765,20 @@ class GererPhoto(forms.Form) :
 		if v_obj_ph is not None :
 
 			# Je vérifie l'extension du fichier image.
-			if v_obj_ph.name.endswith('.jpg') == False :
-				self.add_error('zu_chem_ph', 'Veuillez choisir un fichier au format JPG.')
+			if v_obj_ph.name.endswith(('.bmp', '.gif', '.jpg', '.jpeg', '.png')) == False :
+				self.add_error('zu_chem_ph', 'Les formats autorisés sont BMP, GIF, JPG, JPEG et PNG.')
 
 			# Je vérifie le poids du fichier image.
 			POIDS_IMG_MO = 3
 			if v_obj_ph.size > 1048576 * POIDS_IMG_MO :
 				self.add_error('zu_chem_ph', 'Veuillez choisir un fichier de moins de {0} Mo.'.format(POIDS_IMG_MO))
+
+		else :
+			if v_ph is None :
+
+				# Je vérifie le renseignement du fichier image dans le cas d'une modification. Je demande le 
+				# renseignement du champ si et seulement si j'ai appuyé sur le bouton "Retirer".
+				self.add_error('zu_chem_ph', MESSAGES['required'])
 
 class GererArrete(forms.Form) :
 
@@ -779,7 +821,13 @@ class GererArrete(forms.Form) :
 
 	zu_chem_pj_arr = forms.FileField(
 		label = 'Fichier scanné de l\'arrêté',
-		widget = forms.FileInput(attrs = {'class' : 'input-file'})
+		widget = forms.FileInput(attrs = { 'class' : 'input-file' })
+	)
+
+	za_chem_pj_arr = forms.CharField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True, 'type' : 'hidden' })
 	)
 
 	def __init__(self, *args, **kwargs) :
@@ -787,10 +835,12 @@ class GererArrete(forms.Form) :
 		''' Imports '''
 		from app.functions import reecr_dt
 		from app.models import TArretesDossier, TDossier, TTypeAvancementArrete, TTypeDeclaration
+		from styx.settings import MEDIA_URL
 
 		# Je déclare les éléments du tableau des arguments.
 		k_doss = kwargs.pop('k_doss', None)
 		k_arr = kwargs.pop('k_arr', None)
+		k_modif = kwargs.pop('k_modif', False)
 
 		super(GererArrete, self).__init__(*args, **kwargs)
 
@@ -833,6 +883,14 @@ class GererArrete(forms.Form) :
 			self.fields['zd_dt_sign_arr'].initial = reecr_dt(obj_arr_doss.dt_sign_arr)
 			self.fields['zd_dt_lim_encl_trav_arr'].initial = reecr_dt(obj_arr_doss.dt_lim_encl_trav_arr)
 
+			# J'initialise l'attribut "title" de la zone d'upload du fichier scanné de l'arrêté.
+			if obj_arr_doss.chem_pj_arr is not None :
+				self.fields['zu_chem_pj_arr'].widget.attrs['title'] = MEDIA_URL + obj_arr_doss.chem_pj_arr
+				self.fields['za_chem_pj_arr'].initial = MEDIA_URL + obj_arr_doss.chem_pj_arr
+
+		if k_modif == True :
+			self.fields['zu_chem_pj_arr'].required = False
+
 		# J'alimente la liste déroulante des types d'avancements d'un arrêté.
 		les_type_av_arr = list(OPTION_INITIALE)
 		les_type_av_arr.extend([(i.id_type_av_arr, i.int_type_av_arr) for i in TTypeAvancementArrete.objects.order_by(
@@ -849,11 +907,424 @@ class GererArrete(forms.Form) :
 		cleaned_data = super(GererArrete, self).clean()
 		v_type_av_arr = cleaned_data.get('zl_type_av_arr')
 		v_obj_arr = nett_val(cleaned_data.get('zu_chem_pj_arr'))
+		v_arr = nett_val(cleaned_data.get('za_chem_pj_arr'))
 
 		# Je vérifie la valeur de chaque liste déroulante obligatoire du formulaire.
 		v_type_av_arr = valid_zl(self, 'zl_type_av_arr', v_type_av_arr)
 
-		# Je vérifie l'extension du fichier de l'arrêté.
 		if v_obj_arr is not None :
+
+			# Je vérifie l'extension du fichier de l'arrêté.
 			if v_obj_arr.name.endswith('.pdf') == False :
 				self.add_error('zu_chem_pj_arr', 'Veuillez choisir un fichier au format PDF.')
+
+		else :
+			if v_arr is None :
+
+				# Je vérifie le renseignement du fichier scanné de l'arrêté dans le cas d'une modification. Je demande
+				# le renseignement du champ si et seulement si j'ai appuyé sur le bouton "Retirer".
+				self.add_error('zu_chem_pj_arr', MESSAGES['required'])
+
+class GererFinancement(forms.Form) :
+
+	''' Imports '''
+	from app.validators import valid_cdc, valid_int, valid_mont, valid_pourc
+
+	# Je définis les champs du formulaire.
+	za_num_doss = forms.CharField(
+		label = 'Numéro du dossier',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
+	)
+
+	zl_org_fin = forms.ChoiceField(
+		label = 'Organisme financeur',
+		widget = forms.Select(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_int_fin = forms.CharField(
+		label = 'Intitulé du financement',
+		validators = [valid_cdc],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
+	)
+
+	zs_mont_ht_elig_fin = forms.CharField(
+		label = 'Montant HT de l\'assiette éligible de la subvention',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_mont_ttc_elig_fin = forms.CharField(
+		label = 'Montant TTC de l\'assiette éligible de la subvention',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_pourc_elig_fin = forms.CharField(
+		label = 'Pourcentage de l\'assiette éligible',
+		validators = [valid_pourc],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_mont_ht_tot_subv_fin = forms.CharField(
+		label = 'Montant HT total de la subvention',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_mont_ttc_tot_subv_fin = forms.CharField(
+		label = 'Montant TTC total de la subvention',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zd_dt_deb_elig_fin = forms.DateField(
+		label = 'Date de début d\'éligibilité',
+		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
+	)
+
+	zs_duree_valid_fin = forms.CharField(
+		label = 'Durée de validité (en mois)',
+		validators = [valid_int],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
+	)
+
+	zs_duree_pror_fin = forms.CharField(
+		label = 'Durée de la prorogation (en mois)',
+		required = False,
+		validators = [valid_int],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
+	)
+
+	zd_dt_lim_deb_oper_fin = forms.DateField(
+		label = 'Date limite du début de l\'opération',
+		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
+	)
+
+	zd_dt_lim_prem_ac_fin = forms.DateField(
+		label = 'Date limite du premier acompte',
+		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
+	)
+
+	zl_paiem_prem_ac = forms.ChoiceField(
+		label = 'Premier acompte payé en fonction de',
+		widget = forms.Select(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_pourc_real_fin = forms.CharField(
+		label = 'Pourcentage de réalisation des travaux',
+		required = False,
+		validators = [valid_pourc],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zu_chem_pj_fin = forms.FileField(
+		label = 'Fichier PDF de l\'arrêté de subvention',
+		required = False,
+		widget = forms.FileInput(attrs = { 'class' : 'input-file' })
+	)
+
+	zs_comm_fin = forms.CharField(
+		label = 'Commentaire',
+		required = False,
+		validators = [valid_cdc],
+		widget = forms.Textarea(attrs = {'class' : 'form-control', 'maxlength' : 255, 'rows' : 5 })
+	)
+
+	def __init__(self, *args, **kwargs) :
+
+		''' Imports '''
+		from app.models import TDossier, TFinanceur, TPaiementPremierAcompte
+
+		# Je déclare les éléments du tableau des arguments.
+		k_doss = kwargs.pop('k_doss', None)
+		k_fin = kwargs.pop('k_fin', None)
+
+		super(GererFinancement, self).__init__(*args, **kwargs)
+
+		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
+		# personnalisés à chaque champ.
+		for cle, valeur in self.fields.items() :
+			self.fields[cle].error_messages = MESSAGES
+			if self.fields[cle].required == True :
+				self.fields[cle].label += CHAMP_REQUIS
+
+		# Je vérifie l'existence d'un objet TDossier.
+		obj_doss = None
+		try :
+			obj_doss = TDossier.objects.get(id_doss = k_doss)
+		except :
+			pass
+
+		# Je définis la valeur initiale du formulaire.
+		if obj_doss is not None :
+			self.fields['za_num_doss'].initial = obj_doss.num_doss
+
+		# J'alimente la liste déroulante des financeurs.
+		les_org_fin = list(OPTION_INITIALE)
+		les_org_fin.extend([(i.id_org_fin.id_org, i.id_org_fin.n_org) for i in TFinanceur.objects.order_by(
+			'id_org_fin__n_org')
+		])
+		self.fields['zl_org_fin'].choices = les_org_fin
+
+		# J'alimente la liste déroulante des types de paiements du premier acompte.
+		les_paiem_prem_ac = list(OPTION_INITIALE)
+		les_paiem_prem_ac.extend([(i.id_paiem_prem_ac, i.int_paiem_prem_ac)
+			for i in TPaiementPremierAcompte.objects.order_by('int_paiem_prem_ac')]
+		)
+		self.fields['zl_paiem_prem_ac'].choices = les_paiem_prem_ac
+
+	def clean(self) :
+
+		''' Imports '''
+		from app.functions import float_to_int, nett_val, valid_zl
+		from app.models import TDossier, TFinancement
+		from app.sql_views import VSuiviDossier
+
+		# Je récupère certaines données du formulaire pré-valide.
+		cleaned_data = super(GererFinancement, self).clean()
+		v_num_doss = cleaned_data.get('za_num_doss')
+		v_org_fin = cleaned_data.get('zl_org_fin')
+		v_mont_ht_elig_fin = cleaned_data.get('zs_mont_ht_elig_fin')
+		v_mont_ttc_elig_fin = cleaned_data.get('zs_mont_ttc_elig_fin')
+		v_pourc_elig_fin = cleaned_data.get('zs_pourc_elig_fin')
+		v_mont_ht_tot_subv_fin = cleaned_data.get('zs_mont_ht_tot_subv_fin')
+		v_mont_ttc_tot_subv_fin = cleaned_data.get('zs_mont_ttc_tot_subv_fin')
+		v_paiem_prem_ac = cleaned_data.get('zl_paiem_prem_ac')
+		v_obj_fin = nett_val(cleaned_data.get('zu_chem_pj_fin'))
+
+		# Je vérifie la valeur de chaque liste déroulante obligatoire du formulaire.
+		v_org_fin = valid_zl(self, 'zl_org_fin', v_org_fin)
+		v_paiem_prem_ac = valid_zl(self, 'zl_paiem_prem_ac', v_paiem_prem_ac)
+
+		# Je vérifie l'existence d'un objet TDossier.
+		obj_doss = None
+		try :
+			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
+		except :
+			self.add_error('za_num_doss', MESSAGES['invalid'])
+
+		if obj_doss is not None :
+
+			# Je récupère les restes à financer.
+			obj_suivi_doss = VSuiviDossier.objects.get(id_doss = obj_doss.id_doss)
+			v_mont_ht_raf = obj_suivi_doss.mont_ht_raf
+			v_mont_ttc_raf = obj_suivi_doss.mont_ttc_raf
+
+			# Je gère la contrainte suivante : le montant éligible doit être inférieur ou égal à la différence du montant
+			# du dossier et de la somme des montants éligibles.
+			if v_mont_ht_elig_fin is not None :
+				if float(v_mont_ht_elig_fin) > float(v_mont_ht_raf) :
+					self.add_error(
+						'zs_mont_ht_elig_fin',
+						'Veuillez saisir un montant HT inférieur ou égal à {0} €.'.format(float_to_int(v_mont_ht_raf))
+					)
+
+			if v_mont_ttc_elig_fin is not None :
+				if float(v_mont_ttc_elig_fin) > float(v_mont_ttc_raf) :
+					self.add_error(
+						'zs_mont_ttc_elig_fin',
+						'Veuillez saisir un montant TTC inférieur ou égal à {0} €.'.format(float_to_int(v_mont_ttc_raf))
+					)
+
+			# Je gère la contrainte suivante : le montant de la subvention ne peut être supérieur au montant éligible.
+			if v_pourc_elig_fin is not None :
+				if float(v_mont_ht_tot_subv_fin) > float(v_mont_ht_elig_fin) :
+					self.add_error(
+						'zs_mont_ht_tot_subv_fin',
+						'Le montant HT total de la subvention ne peut être supérieur au montant HT éligible.'
+					)
+
+				if float(v_mont_ttc_tot_subv_fin) > float(v_mont_ttc_elig_fin) :
+					self.add_error(
+						'zs_mont_ttc_tot_subv_fin',
+						'Le montant TTC total de la subvention ne peut être supérieur au montant TTC éligible.'
+					)
+
+			# Je vérifie que le financeur sélectionné ne participe pas déjà au montage financier.
+			if v_org_fin > 0 :
+				try :
+					TFinancement.objects.get(id_doss = obj_doss.id_doss, id_org_fin = v_org_fin)
+					self.add_error(
+						'zl_org_fin',
+						'Le financeur participe déjà au montage financier.'
+					)
+				except :
+					pass
+
+			# Je vérifie l'extension du fichier de l'arrêté.
+			if v_obj_fin is not None :
+				if v_obj_fin.name.endswith('.pdf') == False :
+					self.add_error('zu_chem_pj_fin', 'Veuillez choisir un fichier au format PDF.')
+
+class GererPrestation(forms.Form) :
+
+	''' Imports '''
+	from app.validators import valid_cdc, valid_mont, valid_siret
+
+	# Je définis les champs du formulaire.
+	za_num_doss = forms.CharField(
+		label = 'Numéro du dossier',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
+	)
+
+	zs_siret_org_prest = forms.CharField(
+		label = 'Numéro SIRET du prestataire',
+		validators = [valid_siret],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 14 })
+	)
+
+	zs_int_prest = forms.CharField(
+		label = 'Intitulé de la prestation',
+		validators = [valid_cdc],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
+	)
+
+	zs_mont_ht_tot_prest = forms.CharField(
+		label = 'Montant HT total de la prestation',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_mont_ttc_tot_prest = forms.CharField(
+		label = 'Montant TTC total de la prestation',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zd_dt_notif_prest = forms.DateField(
+		label = 'Date de notification de la prestation',
+		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
+	)
+
+	zd_dt_fin_prest = forms.DateField(
+		label = 'Date de fin de la prestation',
+		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
+	)
+
+	za_mont_ht_raf = forms.CharField(
+		label = 'Montant HT restant à facturer',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
+	)
+
+	za_mont_ttc_raf = forms.CharField(
+		label = 'Montant TTC restant à facturer',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
+	)
+
+	zl_nat_prest = forms.ChoiceField(
+		label = 'Nature de la prestation',
+		widget = forms.Select(attrs = { 'class' : 'form-control' })
+	)
+
+	zu_chem_pj_prest = forms.FileField(
+		label = 'Fichier PDF de la prestation',
+		required = False,
+		widget = forms.FileInput(attrs = { 'class' : 'input-file' })
+	)
+
+	zs_comm_prest = forms.CharField(
+		label = 'Commentaire',
+		required = False,
+		validators = [valid_cdc],
+		widget = forms.Textarea(attrs = {
+			'class' : 'form-control',
+			'maxlength' : 255,
+			'rows' : 5
+		})
+	)
+
+	def __init__(self, *args, **kwargs) :
+
+		''' Imports '''
+		from app.models import TDossier, TNaturePrestation
+
+		# Je déclare les éléments du tableau des arguments.
+		k_doss = kwargs.pop('k_doss', None)
+
+		super(GererPrestation, self).__init__(*args, **kwargs)
+
+		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
+		# personnalisés à chaque champ.
+		for cle, valeur in self.fields.items() :
+			self.fields[cle].error_messages = MESSAGES
+			if self.fields[cle].required == True :
+				self.fields[cle].label += CHAMP_REQUIS
+
+		# Je vérifie l'existence d'un objet TDossier.
+		obj_doss = None
+		try :
+			obj_doss = TDossier.objects.get(id_doss = k_doss)
+		except :
+			pass
+
+		# Je définis la valeur initiale du formulaire.
+		if obj_doss is not None :
+			self.fields['za_num_doss'].initial = obj_doss.num_doss
+
+		# J'alimente la liste déroulante des natures de prestations.
+		les_nat_prest = list(OPTION_INITIALE)
+		les_nat_prest.extend([(i.id_nat_prest, i.int_nat_prest) for i in TNaturePrestation.objects.all().order_by(
+			'int_nat_prest')
+		])
+		self.fields['zl_nat_prest'].choices = les_nat_prest
+
+	def clean(self) :
+
+		''' Imports '''
+		from app.functions import float_to_int, valid_zl
+		from app.models import TDossier, TPrestataire
+		from app.sql_views import VSuiviDossier
+
+		# Je récupère certaines données du formulaire pré-valide.
+		cleaned_data = super(GererPrestation, self).clean()
+		v_num_doss = cleaned_data.get('za_num_doss')
+		v_siret_org_prest = cleaned_data.get('zs_siret_org_prest')
+		v_mont_ht_tot_prest = cleaned_data.get('zs_mont_ht_tot_prest')
+		v_mont_ttc_tot_prest = cleaned_data.get('zs_mont_ttc_tot_prest')
+		v_nat_prest = cleaned_data.get('zl_nat_prest')
+
+		# Je vérifie la valeur de chaque liste déroulante obligatoire du formulaire.
+		v_nat_prest = valid_zl(self, 'zl_nat_prest', v_nat_prest)
+
+		# Je vérifie l'existence d'un objet TDossier.
+		obj_doss = None
+		try :
+			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
+		except :
+			self.add_error('za_num_doss', MESSAGES['invalid'])
+
+		if obj_doss is not None :
+
+			# Je récupère les restes à utiliser.
+			obj_suivi_doss = VSuiviDossier.objects.get(id_doss = obj_doss.id_doss)
+			v_mont_ht_rau = obj_suivi_doss.mont_ht_rau
+			v_mont_ttc_rau = obj_suivi_doss.mont_ttc_rau
+
+			# Je renvoie une erreur si le numéro SIRET saisi appartient à aucun objet TPrestataire.
+			try :
+				TPrestataire.objects.get(siret_org_prest = v_siret_org_prest)
+			except :
+				self.add_error(
+					'zs_siret_org_prest',
+					'Le numéro SIRET appartient à aucun prestataire.'
+				)
+
+			# Je gère la contrainte suivante : le montant total de la prestation doit être inférieur ou égal au reste 
+			# à utiliser du dossier.
+			if v_mont_ht_tot_prest is not None :
+				if float(v_mont_ht_tot_prest) > float(v_mont_ht_rau) :
+					self.add_error(
+						'zs_mont_ht_tot_prest',
+						'Veuillez saisir un montant HT inférieur ou égal à {0} €.'.format(float_to_int(v_mont_ht_rau))
+					)
+
+			if v_mont_ttc_tot_prest is not None :
+				if float(v_mont_ttc_tot_prest) > float(v_mont_ttc_rau) :
+					self.add_error(
+						'zs_mont_ttc_tot_prest',
+						'Veuillez saisir un montant TTC inférieur ou égal à {0} €.'.format(float_to_int(v_mont_ttc_rau))
+					)

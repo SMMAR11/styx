@@ -14,7 +14,7 @@ def index(request) :
 	''' Imports '''
 	from app.forms.session import Identifier, OublierMotDePasse
 	from app.functions import init_fm, init_form
-	from app.models import TUtilisateur
+	from django.contrib.auth import authenticate, login
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import render
@@ -45,7 +45,7 @@ def index(request) :
 
 		# Je déclare un tableau de fenêtres modales qui varie selon l'état de la session. De plus, j'initialise la
 		# valeur de la balise <title/>.
-		if 'util' in request.session :
+		if request.user.is_authenticated() :
 			tab_fm = []
 			title = 'Accueil'
 		else :
@@ -82,13 +82,8 @@ def index(request) :
 					v_pseudo_util = cleaned_data['zs_pseudo_util']
 					v_mdp_util = cleaned_data['zs_mdp_util']
 
-					# Je récupère les données attributaires d'un objet TUtilisateur (utilisateur connecté).
-					obj_util = TUtilisateur.objects.get(pseudo_util = v_pseudo_util)
-
 					# Je déclare la session.
-					request.session['util'] = {
-						'id_util' : obj_util.id_util, 'n_util' : obj_util.n_util, 'pren_util' : obj_util.pren_util
-					}
+					login(request, authenticate(username = v_pseudo_util, password = v_mdp_util))
 
 					# J'affiche le message de succès.
 					reponse = HttpResponse(
@@ -136,10 +131,10 @@ def index(request) :
 Cette vue permet d'afficher la page principale dès la fermeture de la session active.
 request : Objet requête
 '''
-@verif_acces
 def deconnecter(request) :
 
 	''' Imports '''
+	from django.contrib.auth import logout
 	from django.http import HttpResponse
 	from django.shortcuts import redirect
 
@@ -147,10 +142,12 @@ def deconnecter(request) :
 
 	if request.method == 'GET' :
 
-		# Je vide les variables de session si la session est active.
-		if 'util' in request.session :
-			for une_cle in list(request.session.keys()) :
-				del request.session[une_cle]
+		# Je vide les variables de session avant la fermeture de la session.
+		for une_cle in list(request.session.keys()) :
+			del request.session[une_cle]
+
+		# Je ferme la session.
+		logout(request)
 
 		# Je suis redirigé vers la page principale.
 		reponse = redirect('index')

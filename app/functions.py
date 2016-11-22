@@ -8,11 +8,13 @@ from datetime import date
 '''
 Cette fonction retourne un message de confirmation de suppression d'un élément.
 p_vue : Vue supprimant un objet
+p_mess : Message d'alerte
 Retourne une chaîne de caractères
 '''
-def aff_mess_suppr(p_vue) :
+def aff_mess_suppr(p_vue, p_mess = '') :
 
-	return '''
+	# Je mets en forme les lignes du contenu de la fenêtre modale de demande de confirmation d'une suppression.
+	row_princ = '''
 	<div class="row">
 		<div class="col-xs-6 text-center">
 			<a href="{0}" class="btn bt-vert to-unfocus" onclick="suppr(event)">Oui</a>
@@ -22,6 +24,26 @@ def aff_mess_suppr(p_vue) :
 		</div>
 	</div>
 	'''.format(p_vue)
+
+	row_sec = '''
+	<div class="row">
+		<div class="col-xs-12 text-center">
+			<span class="b c-attention">
+				<span class="u">Attention :</span> {0}
+			</span>
+		</div>
+	</div>
+	'''.format(p_mess)
+
+	# J'initialise les élements du tableau des lignes.
+	tab_rows = [row_princ]
+	if p_mess != '' :
+		tab_rows.append(row_sec)
+
+	# J'inverse les éléments du tableau des lignes afin d'avoir le message d'alerte au début.
+	tab_rows.reverse()
+
+	return '<br />'.join(tab_rows)
 
 '''
 Cette fonction permet de générer des données concernant les axes, les sous-axes, les actions et les types de dossiers.
@@ -50,11 +72,11 @@ def alim_liste(request) :
 		v_progr = request.GET['programme']
 
 		# Je récupère la liste des axes relatifs à un programme.
-		les_axes = TAxe.objects.filter(id_progr = v_progr)
+		les_axes = TAxe.objects.filter(id_progr = v_progr).order_by('num_axe')
 
 		# J'empile le tableau des axes.
 		for un_axe in les_axes :
-			tab_axes.append([un_axe.id_axe, un_axe.id_axe])
+			tab_axes.append([un_axe.num_axe, un_axe.num_axe])
 
 		# Je récupère la liste des types de dossiers relatifs à un programme.
 		les_types_doss = TTypeDossier.objects.filter(id_progr = v_progr)
@@ -69,11 +91,11 @@ def alim_liste(request) :
 		v_axe = request.GET['axe']
 		
 		# Je récupère la liste des sous-axes relatifs à un programme et un axe.
-		les_ss_axes = TSousAxe.objects.filter(id_progr = v_progr, id_axe = v_axe)
+		les_ss_axes = TSousAxe.objects.filter(id_axe = '{0}_{1}'.format(v_progr, v_axe)).order_by('num_ss_axe')
 
 		# J'empile le tableau des sous-axes.
 		for un_ss_axe in les_ss_axes :
-			tab_ss_axes.append([un_ss_axe.id_ss_axe, un_ss_axe.id_ss_axe])
+			tab_ss_axes.append([un_ss_axe.num_ss_axe, un_ss_axe.num_ss_axe])
 
 	if 'sous_axe' in request.GET :
 
@@ -81,11 +103,13 @@ def alim_liste(request) :
 		v_ss_axe = request.GET['sous_axe']
 
 		# Je récupère la liste des actions relatives à un programme, un axe et un sous-axe.
-		les_act = TAction.objects.filter(id_progr = v_progr, id_axe = v_axe, id_ss_axe = v_ss_axe)
+		les_act = TAction.objects.filter(id_ss_axe = '{0}_{1}_{2}'.format(v_progr, v_axe, v_ss_axe)).order_by(
+			'num_act'
+		)
 
 		# J'empile le tableau des actions.
 		for une_act in les_act :
-			tab_act.append([une_act.id_act, index_alpha(une_act.id_act)])
+			tab_act.append([une_act.num_act, index_alpha(une_act.num_act)])
 
 	return {
 		'axe' : tab_axes,
@@ -187,13 +211,13 @@ def filtr_doss(request) :
 		tab_and['id_progr'] = v_progr
 
 	if v_axe > -1 :
-		tab_and['id_axe'] = v_axe
+		tab_and['num_axe'] = v_axe
 
 	if v_ss_axe > -1 :
-		tab_and['id_ss_axe'] = v_ss_axe
+		tab_and['num_ss_axe'] = v_ss_axe
 
 	if v_act > -1 :
-		tab_and['id_act'] = v_act
+		tab_and['num_act'] = v_act
 
 	if v_nat_doss > -1 :
 		tab_and['id_nat_doss'] = v_nat_doss
@@ -606,7 +630,7 @@ Cette fonction transforme un nombre décimal en un pourcentage.
 p_valeur : Nombre décimal à convertir
 Retourne un pourcentage
 '''
-def obt_pourcentage(p_valeur) :
+def obt_pourc(p_valeur) :
 
 	reponse = p_valeur
 

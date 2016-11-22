@@ -90,7 +90,7 @@ def selectionner_dossiers(request) :
 
 				axe_valide = False
 				try :
-					TAxe.objects.get(id_progr = post_progr, id_axe = post_axe)
+					TAxe.objects.get(id_progr = post_progr, num_axe = post_axe)
 					axe_valide = True
 				except :
 					if post_axe == 'D' or post_axe == 'DBP' :
@@ -103,7 +103,7 @@ def selectionner_dossiers(request) :
 
 				ss_axe_valide = False
 				try :
-					TSousAxe.objects.get(id_progr = post_progr, id_axe = post_axe, id_ss_axe = post_ss_axe)
+					TSousAxe.objects.get(id_axe = '{0}_{1}'.format(post_progr, post_axe), num_ss_axe = post_ss_axe)
 					ss_axe_valide = True
 				except :
 					if post_ss_axe == 'D' or post_ss_axe == 'DBP' :
@@ -116,7 +116,9 @@ def selectionner_dossiers(request) :
 
 				act_valide = False
 				try :
-					TAction.objects.get(id_progr = post_progr, id_axe = post_axe, id_ss_axe = post_ss_axe, id_act = post_act)
+					TAction.objects.get(
+						id_ss_axe = '{0}_{1}_{2}'.format(post_progr, post_axe, post_ss_axe), num_act = post_act
+					)
 					act_valide = True
 				except :
 					if post_act == 'D' or post_act == 'DBP' :
@@ -166,13 +168,13 @@ def selectionner_dossiers(request) :
 						tab_and['id_progr'] = v_progr
 
 					if v_axe > -1 :
-						tab_and['id_axe'] = v_axe
+						tab_and['num_axe'] = v_axe
 
 					if v_ss_axe > -1 :
-						tab_and['id_ss_axe'] = v_ss_axe
+						tab_and['num_ss_axe'] = v_ss_axe
 
 					if v_act > -1 :
-						tab_and['id_act'] = v_act
+						tab_and['num_act'] = v_act
 
 					if v_nat_doss > -1 :
 						tab_and['id_nat_doss'] = v_nat_doss
@@ -293,7 +295,7 @@ def exporter_csv_selectionner_dossiers(request, p_complet) :
 	if request.method == 'GET' :
 
 		# J'initialise le nom du fichier CSV ainsi que le chemin de destination.
-		n_fich = crypt_val('{0}-{1}'.format(request.session['util']['id_util'], time.strftime('%d%m%Y%H%M%S')))
+		n_fich = crypt_val('{0}-{1}'.format(request.user.id, time.strftime('%d%m%Y%H%M%S')))
 		chem_fich = '{0}/temp/{1}.csv'.format(MEDIA_ROOT, n_fich)
 
 		# J'ouvre le fichier CSV.
@@ -352,9 +354,9 @@ def exporter_csv_selectionner_dossiers(request, p_complet) :
 							conv_none(obj_doss.num_doss),
 							conv_none(obj_doss.id_nat_doss.int_nat_doss),
 							conv_none(obj_doss.id_type_doss.int_type_doss),
-							conv_none(obj_doss.id_act),
-							conv_none(obj_doss.id_ss_axe),
-							conv_none(obj_doss.id_axe),
+							conv_none(obj_doss.num_act),
+							conv_none(obj_doss.num_ss_axe),
+							conv_none(obj_doss.num_axe),
 							conv_none(obj_doss.id_progr.int_progr),
 							conv_none(obj_doss.id_av_cp.int_av_cp),
 							'{0} {1}'.format(conv_none(obj_doss.id_techn.n_techn), conv_none(obj_doss.id_techn.pren_techn)),

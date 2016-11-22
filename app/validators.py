@@ -63,8 +63,8 @@ def valid_mont(p_valeur) :
 		# Je tente de convertir le montant saisi en nombre décimal.
 		p_valeur = float(p_valeur)
 
-		# Je vérifie si le montant saisi est positif.
-		if p_valeur > 0 :
+		# Je vérifie si le montant saisi est positif ou nul.
+		if p_valeur >= 0 :
 
 			# Je transforme le montant saisi en un tableau de caractères.
 			str_valeur = str(p_valeur)
