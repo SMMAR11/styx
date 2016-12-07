@@ -2,11 +2,9 @@
 {% load static %}
 
 {% block content %}
-<div class="icon-link pull-right">
-	<div><span class="bt-precedent"></span></div>
-	<div><a href="{% url 'consulter_dossier' le_doss.id_doss %}">Revenir au dossier</a></div>
+<div class="right">
+	<a href="{% url 'consulter_dossier' le_doss.id_doss %}" onclick="alert_util(event)" class="bt-precedent icon-link">Revenir au dossier</a>
 </div>
-<br />
 <div class="row">
 	<div class="col-md-12">
 		<form action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-caracteristiques" method="post" name="form_modifier_dossier" class="alert-user c-theme" enctype="multipart/form-data">
@@ -16,22 +14,12 @@
 				<div class="form-content">
 					{{ f1.za_num_doss }}
 					<div class="row">
-						<div class="col-sm-6">{{ f1.zs_int_doss }}</div>
-						<div class="col-sm-6">{{ f1.zs_descr_doss }}</div>
-					</div>
-					<div class="row">
 						<div class="col-sm-6">{{ f1.za_doss_ass }}</div>
-						<div class="col-sm-3 col-xs-6">
-							<div class="icon-link vertical-align-icon-link">
-								<div><span class="bt-modifier"></span></div>
-								<div><span data-toggle="modal" data-target="#fm_choisir_dossier_associe">Modifier</span></div>
-							</div>
+						<div class="col-sm-3 col-xs-6 text-center vertical-align-icon-link">
+							<span class="bt-modifier icon-link" data-toggle="modal" data-target="#fm_choisir_dossier_associe">Modifier</span>
 						</div>
-						<div class="col-sm-3 col-xs-6">
-							<div class="icon-link vertical-align-icon-link">
-								<div><span class="bt-supprimer"></span></div>
-								<div><span id="bt_supprimer_dossier_associe">Supprimer</span></div>
-							</div>
+						<div class="col-sm-3 col-xs-6 text-center vertical-align-icon-link">
+							<span class="bt-supprimer icon-link" id="bt_supprimer_dossier_associe">Supprimer</span>
 						</div>
 					</div>
 					{{ f1.zl_org_moa }}
@@ -53,8 +41,12 @@
 					</div>
 					{% endif %}
 					<div class="row">
-						<div class="col-sm-6">{{ f1.zld_type_doss }}</div>
 						<div class="col-sm-6">{{ f1.zl_nat_doss }}</div>
+						<div class="col-sm-6">{{ f1.zld_type_doss }}</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">{{ f1.zs_terr_doss }}</div>
+						<div class="col-sm-6">{{ f1.zs_ld_doss }}</div>
 					</div>
 					{{ f1.zl_techn }}
 					<div class="row">
@@ -74,6 +66,14 @@
 					{{ f1.zs_comm_doss }}
 				</div>
 				<button type="submit" class="bt-vert btn center-block" data-target="#fm_modifier_dossier">Valider</button>
+				<br />
+				<div class="b c-attention text-center" style="font-size: 12px;">
+					**
+					<br />
+					La date de délibération au maître d'ouvrage doit être renseignée lorsque l'état d'avancement choisi est différent de "En projet".
+					<br />
+					La date de l'avis du comité de programmation doit être renseignée lorsque l'avis du comité de programmation est différent de "En attente" ou de "Sans objet".
+				</div>
 			</fieldset>
 		</form>						
 	</div>

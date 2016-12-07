@@ -50,6 +50,13 @@ fieldset.subfieldset legend.sublegend
 	font-size: 12px;
 }
 
+.za_erreur_groupee
+{
+	font-weight: bold;
+	color: #FF0921;
+	font-size: 12px;
+}
+
 /* Loaders */
 .spin
 {
@@ -154,9 +161,4 @@ a.dropdown-thumbnail:active
 table.table > thead > tr > th
 {
 	font-size: 12px;
-}
-
-table.table
-{
-	margin-bottom: 5px;
 }

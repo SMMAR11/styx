@@ -13,7 +13,7 @@ function act_datatable(e, p_form, p_datatable, p_styles = function(){}, p_prefix
 	$.ajax(
 	{
 		type : 'post',
-		url : p_form.attr('action') + '?action=filtrer-dossiers',
+		url : p_form.attr('action'),
 		data : recup_post(p_form),
 		dataType : 'json',
 		processData : false,
@@ -59,16 +59,23 @@ function act_datatable(e, p_form, p_datatable, p_styles = function(){}, p_prefix
 				// Je parcours chaque contrôle soumis à une erreur.
 				for (var i in data)
 				{
-					// Je pointe vers la zone d'erreur relative au contrôle à l'indice i.
-					var span = select_cont($('#id_' + p_prefixe + i)).find('.za_erreur');
+					try
+					{
+						// Je pointe vers la zone d'erreur relative au contrôle à l'indice i.
+						var span = select_cont($('#id_' + p_prefixe + i)).find('.za_erreur');
 
-					// Je prépare l'erreur.
-					var ul = $('<ul/>', { 'class' : 'errorlist c-attention' });
-					var li = $('<li/>', { html : data[i][0] });
+						// Je prépare l'erreur.
+						var ul = $('<ul/>', { 'class' : 'errorlist c-attention' });
+						var li = $('<li/>', { html : data[i][0] });
 
-					// J'affiche l'erreur.
-					span.append(ul);
-					ul.append(li);
+						// J'affiche l'erreur.
+						span.append(ul);
+						ul.append(li);
+					}
+					catch (e)
+					{
+						
+					}
 
 					// Je mets en forme le contrôle à l'indice i.
 					ajout_err($('#id_' + p_prefixe + i));
@@ -167,22 +174,6 @@ function aff_loader_ajax(p_affichage)
 		$('div#loader_ajax').remove();
 	}
 }
-
-/**
- * Cette procédure permet de transmettre un numéro de dossier associé au formulaire de création d'un dossier.
- * e : Variable objet JavaScript
- */
-function ajout_doss_ass(e)
-{
-	// Je récupère le numéro du dossier choisi.
-	var num_doss = $(e.currentTarget).parent().parent().find($('td:first-child')).text();
-
-	// Je transmets le numéro du dossier associé choisi au formulaire principal.
-	$('input[name$="za_doss_ass"]').val(num_doss);
-
-	// Je ferme la fenêtre modale relative au choix d'un dossier associé.
-	$('#fm_choisir_dossier_associe').modal('hide');
-};
 
 /**
  * Cette procédure permet à l'utilisateur de visualiser les contrôles soumis à une erreur.
@@ -389,34 +380,6 @@ function alim_liste(e, p_tab_params)
 		desaff_liste(tab_listes['effacer']);
 	}
 }
-
-/**
- * Cette procédure permet d'afficher le montant total d'une subvention selon deux paramètres : le montant éligible et
- * le pourcentage éligible.
- * p_type : HT ou TTC ?
- */
-function calc_mont_tot(p_type)
-{
-	// Je récupère le montant et le pourcentage éligibles.
-	var mont_elig = $('input[name$="zs_mont_' + p_type + '_elig_fin"]').val();
-	var pourc_elig = $('input[name$="zs_pourc_elig_fin"]').val();
-
-	// J'initialise le montant total.
-	var mont_tot = '';
-
-	if (isNaN(mont_elig) == false && isNaN(pourc_elig) == false)
-	{
-		if (mont_elig != '' && pourc_elig != '')
-		{
-			//Je calcule le montant total (arrondi au centième).
-			mont_tot = mont_elig * (pourc_elig / 100);
-			mont_tot = Math.round(mont_tot * 100) / 100;
-		}
-	}
-
-	// J'affiche le montant total.
-	$('input[name$="zs_mont_' + p_type + '_tot_subv_fin"]').val(mont_tot);
-};
 
 /**
  * Cette procédure permet de gérer une liste de cases à cocher.
@@ -679,6 +642,12 @@ function trait_form(e, p_prefixe = '')
 
 			if (data['success'])
 			{
+				// Je ferme une fenêtre modale pour éviter la surcharge de fenêtres modales.
+				if (data['close'])
+				{
+					$('#fm_' + data['close']).modal('hide');
+				}
+
 				// J'affiche le message de succès dans une fenêtre modale.
 				$('#za_' + suffixe).html('<p class="text-center c-attention b">' + data['success'] + '</p>');
 
@@ -695,28 +664,47 @@ function trait_form(e, p_prefixe = '')
 			}
 			else
 			{
-				// Je parcours chaque contrôle soumis à une erreur.
-				for (var i in data)
+				// Je vide la zone d'affichage consacrée aux erreurs groupées d'un formulaire.
+				obj_form.find('.za_erreur_groupee').empty();
+
+				if (data['errors'])
 				{
-					// Je pointe vers la zone d'erreur relative au contrôle à l'indice i.
-					var span = select_cont($('#id_' + p_prefixe + i)).find('.za_erreur');
-
-					// Je prépare l'erreur.
-					var ul = $('<ul/>', { 'class' : 'errorlist c-attention' });
-					var li = $('<li/>', { html : data[i][0] });
-
-					// J'affiche l'erreur.
-					span.append(ul);
-					ul.append(li);
-
-					// Je rends invisible le message d'erreur si son libellé est "None" (cas exceptionnel).
-					if (data[i][0] == 'None')
+					// J'affiche la première erreur du tableau des erreurs groupées afin d'éviter une surcharge de
+					// contenus.
+					obj_form.find('.za_erreur_groupee').append(data['errors'][0]);
+				}
+				else
+				{
+					// Je parcours chaque contrôle soumis à une erreur.
+					for (var i in data)
 					{
-						li.css('visibility', 'hidden');
-					}
+						try
+						{
+							// Je pointe vers la zone d'erreur relative au contrôle à l'indice i.
+							var span = select_cont($('#id_' + p_prefixe + i)).find('.za_erreur');
 
-					// Je mets en forme le contrôle à l'indice i.
-					ajout_err($('#id_' + p_prefixe + i));
+							// Je prépare l'erreur.
+							var ul = $('<ul/>', { 'class' : 'errorlist c-attention' });
+							var li = $('<li/>', { html : data[i][0] });
+
+							// J'affiche l'erreur.
+							span.append(ul);
+							ul.append(li);
+						}
+						catch (e)
+						{
+
+						}
+
+						// Je rends invisible le message d'erreur si son libellé est "None" (cas exceptionnel).
+						if (data[i][0] == 'None')
+						{
+							li.css('visibility', 'hidden');
+						}
+
+						// Je mets en forme le contrôle à l'indice i.
+						ajout_err($('#id_' + p_prefixe + i));
+					}
 				}
 			}
 		},

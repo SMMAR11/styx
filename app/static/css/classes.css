@@ -134,7 +134,7 @@
 .bt-carto
 {
 	background-image: url('../images/pictos/boutons/modifier_carto.png');
-	background-size: 17px;
+	background-size: 20px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
@@ -143,6 +143,15 @@
 .bt-choisir
 {
 	background-image: url('../images/pictos/boutons/choisir.png');
+	background-size: 20px;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 20px;
+}
+
+.bt-choisir-actif
+{
+	background-image: url('../images/pictos/boutons/choisir_actif.png');
 	background-size: 20px;
 	background-repeat: no-repeat;
 	width: 20px;
@@ -205,52 +214,17 @@
 
 .icon-link
 {
-	width: auto;
-	display: inline-block;
-	margin-bottom: -3px;
-}
-
-.icon-link > div
-{
-	float: left;
-}
-
-.icon-link div:first-child
-{
-	width: 25px;
-	height: 20px;
-}
-
-.icon-link div:first-child span
-{
-	display: block;
-}
-
-.icon-link div:last-child
-{
-	width: calc(100% - 25px);
-}
-
-.icon-link div:last-child span,
-.icon-link div:last-child a
-{
+	padding-left: 25px;
 	color: #555;
+	line-height: 22px;
 }
 
-.icon-link div:last-child button
-{
-	color: #555;
-	background-color: transparent;
-	border: none;
-	padding: 0;
-}
-
-.icon-link div:last-child span:hover,
-.icon-link div:last-child a:hover,
-.icon-link div:last-child button:hover
+.icon-link:hover,
+.icon-link:focus
 {
 	cursor: pointer;
 	text-decoration: underline;
+	color: #555;
 }
 
 .pointer:hover,
@@ -330,6 +304,19 @@
 	color: #FF0921;
 }
 
+.memo:before
+{
+	content: ' **';
+	color: #FF0921;
+}
+
+.supplement
+{
+	color: #FF0921;
+	font-size: 12px;
+	font-weight: bold;
+}
+
 /* Disposition de la page */
 @media (max-width: 767px)
 {
@@ -372,6 +359,13 @@
 	font-size: 24px;
 	font-weight: bold;
 	padding: 5px 15px;
+	text-align: center;
+}
+
+.description
+{
+	color: #AAA;
+	font-size: 12px;
 	text-align: center;
 }
 

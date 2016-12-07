@@ -70,6 +70,7 @@ def creer_dossier(request) :
 	from app.models import TSousAxe
 	from app.models import TTechnicien
 	from app.models import TTypeDossier
+	from app.models import TTypesProgrammesTypeDossier
 	from app.models import TUnite
 	from datetime import date
 	from django.core.urlresolvers import reverse
@@ -120,21 +121,27 @@ def creer_dossier(request) :
 					# Je stocke dans un tableau les dossiers filtrés.
 					les_doss_filtr = filtr_doss(request)
 
-					# Je prépare le contenu du tableau HTML des dossiers filtrés.
-					tab_doss_filtr = []
-					for un_doss in les_doss_filtr :
-						tab_doss_filtr.append([
-							conv_none(un_doss.num_doss),
-							conv_none(un_doss.int_doss),
-							conv_none(un_doss.id_org_moa.id_org_moa.n_org),
-							conv_none(reecr_dt(un_doss.dt_delib_moa_doss)),
-							'<span class="bt-choisir pointer pull-right" onclick="ajout_doss_ass(event)" title="Choisir le dossier"></span>'
-						])
+					if les_doss_filtr['status'] == True :
 
-					# Je mets à jour le tableau HTML des dossiers filtrés.
-					reponse = HttpResponse(json.dumps(
-						{ 'success' : tab_doss_filtr }), content_type = 'application/json'
-					)
+						# Je prépare le contenu du tableau HTML des dossiers filtrés.
+						tab_doss_filtr = []
+						for un_doss in les_doss_filtr['data'] :
+							tab_doss_filtr.append([
+								conv_none(un_doss.num_doss),
+								conv_none(un_doss.id_org_moa.id_org_moa.n_org),
+								conv_none(reecr_dt(un_doss.dt_delib_moa_doss)) or 'En projet',
+								'<span class="bt-choisir pointer pull-right" title="Choisir le dossier"></span>'
+							])
+
+						# Je mets à jour le tableau HTML des dossiers filtrés.
+						reponse = HttpResponse(json.dumps(
+							{ 'success' : tab_doss_filtr }), content_type = 'application/json'
+						)
+
+					else :
+
+						# J'affiche les erreurs.
+						reponse = HttpResponse(json.dumps(les_doss_filtr['data']), content_type = 'application/json')
 
 			else :
 
@@ -196,7 +203,10 @@ def creer_dossier(request) :
 
 			type_doss_valide = False
 			try :
-				TTypeDossier.objects.get(id_progr = post_progr, id_type_doss = post_type_doss)
+				TTypesProgrammesTypeDossier.objects.get(
+					id_type_progr = TProgramme.objects.get(id_progr = post_progr).id_type_progr.id_type_progr,
+					id_type_doss = post_type_doss
+				)
 				type_doss_valide = True
 			except :
 				if post_type_doss == 'D' :
@@ -211,16 +221,16 @@ def creer_dossier(request) :
 
 				# Je récupère et nettoie les données du formulaire valide.
 				cleaned_data = f_creer_doss.cleaned_data
-				v_int_doss = nett_val(cleaned_data['zs_int_doss'])
-				v_descr_doss = nett_val(cleaned_data['zs_descr_doss'])
 				v_doss_ass = nett_val(cleaned_data['za_doss_ass'])
 				v_org_moa = nett_val(integer(cleaned_data['zl_org_moa']), True)
 				v_progr = nett_val(integer(cleaned_data['zld_progr']), True) 
 				v_axe = nett_val(integer(cleaned_data['zld_axe']), True)
 				v_ss_axe = nett_val(integer(cleaned_data['zld_ss_axe']), True)
 				v_act = nett_val(integer(cleaned_data['zld_act']), True)
-				v_type_doss = nett_val(integer(cleaned_data['zld_type_doss']), True)
 				v_nat_doss = nett_val(integer(cleaned_data['zl_nat_doss']), True)
+				v_type_doss = nett_val(integer(cleaned_data['zld_type_doss']), True)
+				v_terr_doss = nett_val(cleaned_data['zs_terr_doss'])
+				v_ld_doss = nett_val(cleaned_data['zs_ld_doss'])
 				v_techn = nett_val(integer(cleaned_data['zl_techn']), True)
 				v_mont_ht_doss = nett_val(cleaned_data['zs_mont_ht_doss'])
 				v_mont_ttc_doss = nett_val(cleaned_data['zs_mont_ttc_doss'])
@@ -273,15 +283,15 @@ def creer_dossier(request) :
 
 				# Je remplis les données attributaires du nouvel objet.
 				obj_nv_doss.comm_doss = v_comm_doss
-				obj_nv_doss.descr_doss = v_descr_doss
 				obj_nv_doss.dt_av_cp_doss = v_dt_av_cp_doss
 				obj_nv_doss.dt_delib_moa_doss = v_dt_delib_moa_doss
 				obj_nv_doss.dt_int_doss = date.today()
-				obj_nv_doss.int_doss = v_int_doss
+				obj_nv_doss.ld_doss = v_ld_doss
 				obj_nv_doss.mont_ht_doss = v_mont_ht_doss
 				obj_nv_doss.mont_ttc_doss = v_mont_ttc_doss
-				obj_nv_doss.num_act = v_act
 				obj_nv_doss.num_doss = v_num_doss
+				obj_nv_doss.terr_doss = v_terr_doss
+				obj_nv_doss.num_act = v_act
 				obj_nv_doss.num_axe = v_axe
 				obj_nv_doss.num_ss_axe = v_ss_axe
 				obj_nv_doss.id_progr = TProgramme.objects.get(id_progr = v_progr)
@@ -390,11 +400,11 @@ def creer_dossier(request) :
 				)
 
 				# Je renseigne l'onglet actif après rechargement de la page.
-				request.session['menu_doss'] = '#ong_caracteristiques'
+				request.session['app-nav'] = '#ong_caracteristiques'
 
 			else :
 
-				# J'affiche les erreurs du formulaire.
+				# J'affiche les erreurs.
 				reponse = HttpResponse(json.dumps(f_creer_doss.errors), content_type = 'application/json')
 
 	return reponse
@@ -436,6 +446,7 @@ def modifier_dossier(request, p_doss) :
 	from app.models import TSousAxe
 	from app.models import TTechnicien
 	from app.models import TTypeDossier
+	from app.models import TTypesProgrammesTypeDossier
 	from app.models import TUnite
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -501,27 +512,33 @@ def modifier_dossier(request, p_doss) :
 				# Je stocke dans un tableau les dossiers filtrés.
 				les_doss_filtr = filtr_doss(request)
 
-				# Je prépare le contenu du tableau HTML des dossiers filtrés.
-				tab_doss_filtr = []
-				for un_doss in les_doss_filtr :
-					tab_doss_filtr.append([
-						conv_none(un_doss.num_doss),
-						conv_none(un_doss.int_doss),
-						conv_none(un_doss.id_org_moa.id_org_moa.n_org),
-						conv_none(reecr_dt(un_doss.dt_delib_moa_doss)),
-						'<span class="bt-choisir pointer pull-right" onclick="ajout_doss_ass(event)" title="Choisir le dossier"></span>'
-					])
+				if les_doss_filtr['status'] == True :
 
-				# Je mets à jour le tableau HTML des dossiers filtrés.
-				reponse = HttpResponse(json.dumps(
-					{ 'success' : tab_doss_filtr }), content_type = 'application/json'
-				)
+					# Je prépare le contenu du tableau HTML des dossiers filtrés.
+					tab_doss_filtr = []
+					for un_doss in les_doss_filtr['data'] :
+						tab_doss_filtr.append([
+							conv_none(un_doss.num_doss),
+							conv_none(un_doss.id_org_moa.id_org_moa.n_org),
+							conv_none(reecr_dt(un_doss.dt_delib_moa_doss)) or 'En projet',
+							'<span class="bt-choisir pointer pull-right" title="Choisir le dossier"></span>'
+						])
+
+					# Je mets à jour le tableau HTML des dossiers filtrés.
+					reponse = HttpResponse(json.dumps(
+						{ 'success' : tab_doss_filtr }), content_type = 'application/json'
+					)
+
+				else :
+
+					# J'affiche les erreurs.
+					reponse = HttpResponse(json.dumps(les_doss_filtr['data']), content_type = 'application/json')
 
 			# Je traite le cas où je veux modifier l'onglet "Caractéristiques".
 			elif get_action == 'modifier-caracteristiques' :
 
 				# Je vérifie la validité du formulaire de modification d'un dossier.
-				f_modif_doss = GererDossier(request.POST, request.FILES)
+				f_modif_doss = GererDossier(request.POST, request.FILES, k_modif = True)
 
 				# Je rajoute un choix valide pour certaines listes déroulantes (prévention d'erreurs).
 				post_progr = request.POST.get('zld_progr')
@@ -559,7 +576,8 @@ def modifier_dossier(request, p_doss) :
 				act_valide = False
 				try :
 					TAction.objects.get(
-						id_ss_axe = '{0}_{1}_{2}'.format(post_progr, post_axe, post_ss_axe), num_act = post_act)
+						id_ss_axe = '{0}_{1}_{2}'.format(post_progr, post_axe, post_ss_axe), num_act = post_act
+					)
 					act_valide = True
 				except :
 					if post_act == 'D' :
@@ -572,7 +590,10 @@ def modifier_dossier(request, p_doss) :
 
 				type_doss_valide = False
 				try :
-					TTypeDossier.objects.get(id_progr = post_progr, id_type_doss = post_type_doss)
+					TTypesProgrammesTypeDossier.objects.get(
+						id_type_progr = TProgramme.objects.get(id_progr = post_progr).id_type_progr.id_type_progr,
+						id_type_doss = post_type_doss
+					)
 					type_doss_valide = True
 				except :
 					if post_type_doss == 'D' :
@@ -587,16 +608,16 @@ def modifier_dossier(request, p_doss) :
 
 					# Je récupère et nettoie les données du formulaire valide.
 					cleaned_data = f_modif_doss.cleaned_data
-					v_int_doss = nett_val(cleaned_data['zs_int_doss'])
-					v_descr_doss = nett_val(cleaned_data['zs_descr_doss'])
 					v_doss_ass = nett_val(cleaned_data['za_doss_ass'])
 					v_org_moa = nett_val(integer(cleaned_data['zl_org_moa']), True)
 					v_progr = nett_val(integer(cleaned_data['zld_progr']), True) 
 					v_axe = nett_val(integer(cleaned_data['zld_axe']), True)
 					v_ss_axe = nett_val(integer(cleaned_data['zld_ss_axe']), True)
 					v_act = nett_val(integer(cleaned_data['zld_act']), True)
-					v_type_doss = nett_val(integer(cleaned_data['zld_type_doss']), True)
 					v_nat_doss = nett_val(integer(cleaned_data['zl_nat_doss']), True)
+					v_type_doss = nett_val(integer(cleaned_data['zld_type_doss']), True)
+					v_terr_doss = nett_val(cleaned_data['zs_terr_doss'])
+					v_ld_doss = nett_val(cleaned_data['zs_ld_doss'])
 					v_techn = nett_val(integer(cleaned_data['zl_techn']), True)
 					v_mont_ht_doss = nett_val(cleaned_data['zs_mont_ht_doss'])
 					v_mont_ttc_doss = nett_val(cleaned_data['zs_mont_ttc_doss'])
@@ -688,12 +709,12 @@ def modifier_dossier(request, p_doss) :
 
 					# J'empile le tableau des données attributaires liées à un objet TDossier.
 					tab_champs['comm_doss'] = v_comm_doss
-					tab_champs['descr_doss'] = v_descr_doss
 					tab_champs['dt_av_cp_doss'] = v_dt_av_cp_doss
 					tab_champs['dt_delib_moa_doss'] = v_dt_delib_moa_doss
-					tab_champs['int_doss'] = v_int_doss
+					tab_champs['ld_doss'] = v_ld_doss
 					tab_champs['mont_ht_doss'] = v_mont_ht_doss
 					tab_champs['mont_ttc_doss'] = v_mont_ttc_doss
+					tab_champs['terr_doss'] = v_terr_doss
 					tab_champs['num_act'] = v_act
 					tab_champs['num_ss_axe'] = v_ss_axe
 					tab_champs['num_axe'] = v_axe
@@ -752,8 +773,11 @@ def modifier_dossier(request, p_doss) :
 							)
 
 					# Je supprime les familles vierges.
-					for une_fam in TFamille.objects.exclude(id_fam__in = TDossier.objects.values_list('id_fam')) :
-						une_fam.delete()
+					for une_fam in TFamille.objects.all() :
+						try :
+							une_fam.delete()
+						except :
+							pass
 
 					# J'affiche le message de succès.
 					reponse = HttpResponse(
@@ -765,11 +789,11 @@ def modifier_dossier(request, p_doss) :
 					)
 
 					# Je renseigne l'onglet actif après rechargement de la page.
-					request.session['menu_doss'] = '#ong_caracteristiques'
+					request.session['app-nav'] = '#ong_caracteristiques'
 
 				else :
 
-					# J'affiche les erreurs du formulaire.
+					# J'affiche les erreurs.
 					reponse = HttpResponse(json.dumps(f_modif_doss.errors), content_type = 'application/json')
 
 			# Je traite le cas où je veux modifier l'onglet "Réglementations".
@@ -798,11 +822,11 @@ def modifier_dossier(request, p_doss) :
 					)
 
 					# Je renseigne l'onglet actif après rechargement de la page.
-					request.session['menu_doss'] = '#ong_reglementations'
+					request.session['app-nav'] = '#ong_reglementations'
 
 				else :
 
-					# J'affiche les erreurs du formulaire.
+					# J'affiche les erreurs.
 					reponse = HttpResponse(json.dumps(f_modif_doss.errors), content_type = 'application/json')
 
 		else :
@@ -840,14 +864,17 @@ def supprimer_dossier(request, p_doss) :
 		except :
 			return HttpResponse()
 
-		# Je supprime le répertoire lié à l'objet TDossier.
-		try :
-			shutil.rmtree('{0}/dossiers/{1}'.format(MEDIA_ROOT, obj_doss.num_doss))
-		except :
-			pass
+		# Je stocke le numéro de dossier de l'objet TDossier en cours de suppression.
+		v_num_doss = obj_doss.num_doss
 
 		# Je supprime l'objet TDossier.
 		obj_doss.delete()
+
+		# Je supprime le répertoire lié à l'objet TDossier.
+		try :
+			shutil.rmtree('{0}/dossiers/{1}'.format(MEDIA_ROOT, v_num_doss))
+		except :
+			pass
 
 		# J'affiche le message de succès de la procédure de suppression d'une photo.
 		reponse = HttpResponse(
@@ -886,13 +913,12 @@ def choisir_dossier(request) :
 
 		# Je créé un tableau de dossiers.
 		tab_doss = []
-		for un_doss in TDossier.objects.order_by('-dt_delib_moa_doss', 'num_doss') :
+		for un_doss in TDossier.objects.all() :
 			tab_doss.append({
 				'id_doss' : un_doss.id_doss,
 				'num_doss' : conv_none(un_doss.num_doss),
-				'int_doss' : conv_none(un_doss.int_doss),
 				'n_moa' : conv_none(un_doss.id_org_moa.id_org_moa.n_org),
-				'dt_delib_moa_doss' : conv_none(reecr_dt(un_doss.dt_delib_moa_doss))
+				'dt_delib_moa_doss' : conv_none(reecr_dt(un_doss.dt_delib_moa_doss)) or 'En projet'
 			})
 
 		# J'affiche le template.
@@ -907,7 +933,6 @@ def choisir_dossier(request) :
 		)
 
 	else :
-
 		if 'action' in request.GET :
 
 			# Je traite le cas où je veux filtrer les dossiers.
@@ -916,21 +941,27 @@ def choisir_dossier(request) :
 				# Je stocke dans un tableau les dossiers filtrés.
 				les_doss_filtr = filtr_doss(request)
 
-				# Je prépare le contenu du tableau HTML des dossiers filtrés.
-				tab_doss_filtr = []
-				for un_doss in les_doss_filtr :
-					tab_doss_filtr.append([
-						conv_none(un_doss.num_doss),
-						conv_none(un_doss.int_doss),
-						conv_none(un_doss.id_org_moa.id_org_moa.n_org),
-						conv_none(reecr_dt(un_doss.dt_delib_moa_doss)),
-						'<a href="{0}" class="bt-consulter pull-right" title="Consulter le dossier"></a>'.format(
-							reverse('consulter_dossier', args = [un_doss.id_doss])
-						)
-					])
+				if les_doss_filtr['status'] == True :
 
-				# Je mets à jour le tableau HTML des dossiers filtrés.
-				reponse = HttpResponse(json.dumps({ 'success' : tab_doss_filtr }), content_type = 'application/json')
+					# Je prépare le contenu du tableau HTML des dossiers filtrés.
+					tab_doss_filtr = []
+					for un_doss in les_doss_filtr['data'] :
+						tab_doss_filtr.append([
+							conv_none(un_doss.num_doss),
+							conv_none(un_doss.id_org_moa.id_org_moa.n_org),
+							conv_none(reecr_dt(un_doss.dt_delib_moa_doss)) or 'En projet',
+							'<a href="{0}" class="bt-consulter pull-right" title="Consulter le dossier"></a>'.format(
+								reverse('consulter_dossier', args = [un_doss.id_doss])
+							)
+						])
+
+					# Je mets à jour le tableau HTML des dossiers filtrés.
+					reponse = HttpResponse(json.dumps({ 'success' : tab_doss_filtr }), content_type = 'application/json')
+
+				else :
+
+					# J'affiche les erreurs.
+					reponse = HttpResponse(json.dumps(les_doss_filtr['data']), content_type = 'application/json')
 
 		else :
 
@@ -950,23 +981,32 @@ p_doss : Identifiant du dossier consulté
 def consulter_dossier(request, p_doss) :
 
 	''' Imports '''
+	from app.forms.gestion_dossiers import ChoisirPrestation
+	from app.forms.gestion_dossiers import GererFacture
 	from app.forms.gestion_dossiers import GererFinancement
 	from app.forms.gestion_dossiers import GererDossier_Reglementation
 	from app.forms.gestion_dossiers import GererPhoto
 	from app.forms.gestion_dossiers import GererPrestation
+	from app.forms.gestion_dossiers import RepartirMontantsPrestation
 	from app.functions import aff_mess_suppr
+	from app.functions import calc_interv
 	from app.functions import conv_none
 	from app.functions import float_to_int
 	from app.functions import init_fm
 	from app.functions import init_form
 	from app.functions import init_pg_cons
+	from app.functions import integer
 	from app.functions import obt_pourc
 	from app.functions import reecr_dt
+	from app.functions import valid_mont
 	from app.models import TArretesDossier
+	from app.models import TAvenant
 	from app.models import TDossier
+	from app.models import TFacture
 	from app.models import TPgre
 	from app.models import TPhoto
 	from app.models import TPortee
+	from app.models import TPrestation
 	from app.models import TPrestationsDossier
 	from app.models import TRivieresDossier
 	from app.models import TTypeDeclaration
@@ -979,6 +1019,7 @@ def consulter_dossier(request, p_doss) :
 	from django.shortcuts import get_object_or_404, render
 	from django.template.context_processors import csrf
 	from styx.settings import MEDIA_URL
+	import json
 
 	reponse = HttpResponse()
 
@@ -992,17 +1033,63 @@ def consulter_dossier(request, p_doss) :
 		f_ajout_ph = GererPhoto(prefix = 'AjouterPhoto', k_doss = obj_doss.id_doss)
 		f_ajout_fin = GererFinancement(prefix = 'AjouterFinancement', k_doss = obj_doss.id_doss)
 		f_ajout_prest = GererPrestation(prefix = 'AjouterPrestation', k_doss = obj_doss.id_doss)
+		f_ajout_fact = GererFacture(prefix = 'AjouterFacture', k_doss = obj_doss.id_doss)
+		f_ch_prest = ChoisirPrestation(prefix = 'ChoisirPrestation', k_doss = obj_doss.id_doss)
 
 		# J'initialise les champs de certains formulaires.
 		tab_ajout_ph = init_form(f_ajout_ph)
 		tab_ajout_fin = init_form(f_ajout_fin)
 		tab_ajout_prest = init_form(f_ajout_prest)
+		tab_ajout_fact = init_form(f_ajout_fact)
+		tab_ch_prest = init_form(f_ch_prest)
+
+		# Je récupère l'ensemble des prestations pouvant être reliées avec le dossier courant.
+		les_prest_filtr = TPrestation.objects.filter(
+			tprestationsdossier__id_doss__id_org_moa__id_org_moa = obj_doss.id_org_moa.id_org_moa
+		).exclude(tprestationsdossier__id_doss__id_doss = obj_doss.id_doss).distinct().order_by('int_prest')
+
+		# Je prépare le contenu du tableau HTML des prestations pouvant être reliées avec le dossier courant.
+		tab_lg_prest = []
+		for une_prest in les_prest_filtr :
+
+			# Je récupère l'ensemble des dossiers affectés par la prestation courante.
+			tab_doss_prest = []
+			for un_doss_prest in TPrestationsDossier.objects.filter(id_prest = une_prest.id_prest).order_by(
+				'id_doss__num_doss'
+			) :
+				tab_doss_prest.append(conv_none(un_doss_prest.id_doss.num_doss))
+
+			# J'initialise une ligne du tableau HTML des prestations.
+			lg_prest = '''
+			<tr>
+				<td>{0}</td>
+				<td>{1}</td>
+				<td>{2}</td>
+				<td>{3}</td>
+				<td>{4}</td>
+				<td>{5}</td>
+			</tr>
+			'''.format(
+				conv_none(une_prest.int_prest),
+				conv_none(reecr_dt(une_prest.dt_notif_prest)),
+				conv_none(float_to_int(une_prest.mont_ht_tot_prest)),
+				conv_none(float_to_int(une_prest.mont_ttc_tot_prest)),
+				', '.join(tab_doss_prest),
+				'<span class="bt-choisir pointer pull-right" title="Choisir la prestation" action="{0}?action=repartir-montants&prestation={1}"></span>'.format(
+					reverse('consulter_dossier', args = [obj_doss.id_doss]),
+					une_prest.id_prest
+				)
+			)
+
+			# J'ajoute la ligne du tableau HTML des prestations.
+			tab_lg_prest.append(lg_prest)
 
 		# Je déclare le contenu de certaines fenêtres modales.
 		tab_cont_fm = {
-			'ajouter_financement' : '''
-			<form name="form_ajouter_financement" method="post" action="{0}?dossier={1}" class="c-theme" enctype="multipart/form-data">
-				<input name="csrfmiddlewaretoken" value="{2}" type="hidden">
+			'ajouter_facture' : '''
+			<form name="form_ajouter_facture" method="post" action="{0}" class="c-theme" enctype="multipart/form-data">
+				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
+				{2}
 				{3}
 				{4}
 				{5}
@@ -1016,32 +1103,69 @@ def consulter_dossier(request, p_doss) :
 					<div class="col-sm-6">{10}</div>
 				</div>
 				{11}
+				{12}
+				{13}
+				<button type="submit" class="bt-vert btn center-block to-unfocus">Valider</button>
+			</form>
+			'''.format(
+				reverse('ajouter_facture'),
+				csrf(request)['csrf_token'],
+				tab_ajout_fact['za_num_doss'],
+				tab_ajout_fact['zl_prest'],
+				tab_ajout_fact['zs_num_fact'],
+				tab_ajout_fact['zd_dt_mand_moa_fact'],
+				tab_ajout_fact['zs_mont_ht_fact'],
+				tab_ajout_fact['zs_mont_ttc_fact'],
+				tab_ajout_fact['zd_dt_rec_fact'],
+				tab_ajout_fact['zs_num_mandat'],
+				tab_ajout_fact['zs_num_bord'],
+				tab_ajout_fact['zl_suivi_fact'],
+				tab_ajout_fact['zu_chem_pj_fact'],
+				tab_ajout_fact['zs_comm_fact']
+			),
+			'ajouter_financement' : '''
+			<form name="form_ajouter_financement" method="post" action="{0}" class="c-theme" enctype="multipart/form-data">
+				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
+				{2}
+				{3}
+				{4}
 				<div class="row">
+					<div class="col-sm-6">{5}</div>
+					<div class="col-sm-6">{6}</div>
+				</div>
+				{7}
+				<div class="row">
+					<div class="col-sm-6">{8}</div>
+					<div class="col-sm-6">{9}</div>
+				</div>
+				{10}
+				<div class="row">
+					<div class="col-sm-6">{11}</div>
 					<div class="col-sm-6">{12}</div>
-					<div class="col-sm-6">{13}</div>
 				</div>
 				<div class="row">
+					<div class="col-sm-6">{13}</div>
 					<div class="col-sm-6">{14}</div>
-					<div class="col-sm-6">{15}</div>
 				</div>
-				{16}
+				<div class="row">
+					<div class="col-sm-6">{15}</div>
+					<div class="col-sm-6">{16}</div>
+				</div>
 				{17}
 				{18}
-				{19}
 				<button type="submit" class="bt-vert btn center-block to-unfocus">Valider</button>
 			</form>
 			'''.format(
 				reverse('ajouter_financement'),
-				obj_doss.id_doss,
 				csrf(request)['csrf_token'],
 				tab_ajout_fin['za_num_doss'],
 				tab_ajout_fin['zl_org_fin'],
-				tab_ajout_fin['zs_int_fin'],
+				tab_ajout_fin['zs_num_arr_fin'],
 				tab_ajout_fin['zs_mont_ht_elig_fin'],
 				tab_ajout_fin['zs_mont_ttc_elig_fin'],
 				tab_ajout_fin['zs_pourc_elig_fin'],
-				tab_ajout_fin['zs_mont_ht_tot_subv_fin'],
-				tab_ajout_fin['zs_mont_ttc_tot_subv_fin'],
+				tab_ajout_fin['zs_mont_ht_part_fin'],
+				tab_ajout_fin['zs_mont_ttc_part_fin'],
 				tab_ajout_fin['zd_dt_deb_elig_fin'],
 				tab_ajout_fin['zs_duree_valid_fin'],
 				tab_ajout_fin['zs_duree_pror_fin'],
@@ -1081,7 +1205,7 @@ def consulter_dossier(request, p_doss) :
 			),
 			'ajouter_prestation' : '''
 			<div class="field-wrapper">
-				<p class="c-theme">La prestation est-elle déjà existante ?</p>
+				<p class="c-theme">La prestation est-elle déjà existante dans un autre dossier ?</p>
 				<label class="c-police radio-inline">
 					<input type="radio" name="rb_prest_exist" value="1">Oui
 				</label>
@@ -1090,49 +1214,75 @@ def consulter_dossier(request, p_doss) :
 				</label>
 			</div>
 			<div id="za_prest_nvelle">
-				<form name="form_ajouter_prestation" method="post" action="{0}?dossier={1}" class="c-theme" enctype="multipart/form-data">
-					<input name="csrfmiddlewaretoken" value="{2}" type="hidden">
-					{3}
+				<form name="form_ajouter_prestation" method="post" action="{0}" class="c-theme" enctype="multipart/form-data">
+					<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
+					{2}
 					<div class="row">
 						<div class="col-sm-6">
-							{4}
+							{3}
 						</div>
-						<div class="col-sm-6">
-							<div class="icon-link vertical-align-icon-link">
-								<div><span class="bt-ajouter-acteur"></span></div>
-								<div><span>Ajouter un prestataire</span></div>
-							</div>
+						<div class="col-sm-6 vertical-align-icon-link">
+							<span class="bt-ajouter-acteur icon-link">Ajouter un prestataire</span>
 						</div>
 					</div>
-					{5}
+					{4}
 					<div class="row">
+						<div class="col-sm-6">
+							{5}
+						</div>
 						<div class="col-sm-6">
 							{6}
 						</div>
-						<div class="col-sm-6">
-							{7}
-						</div>
 					</div>
 					<div class="row">
 						<div class="col-sm-6">
-							{8}
+							{7}
 						</div>
 						<div class="col-sm-6">
-							{9}
+							{8}
 						</div>
 					</div>
+					{9}
 					{10}
 					{11}
-					{12}
 					<button type="submit" class="center-block btn bt-vert to-unfocus">Valider</button>
 				</form>	
 			</div>
+			<div id="za_prest_exist" style="display: none;">
+				<form name="form_choisir_prestation" method="post" action="{12}?action=filtrer-prestations" class="c-theme">
+					<input name="csrfmiddlewaretoken" value="{13}" type="hidden">
+					<fieldset style="padding-bottom: 0;">
+						<legend>Rechercher par</legend>
+						<div class="form-content">
+							{14}
+							{15}
+							{16}
+						</div>
+					</fieldset>
+				</form>
+				<br />
+				<p class="c-theme">Choisir une prestation</p>
+				<div style="overflow: auto">
+					<table class="display table" id="tab_choisir_prestation">
+						<thead>
+							<tr>
+								<th>Intitulé</th>
+								<th>Date de notification</th>
+								<th>Montant HT (en €)</th>
+								<th>Montant TTC (en €)</th>
+								<th>Dossiers</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>{17}</tbody>
+					</table>
+				</div>
+			</div>
 			'''.format(
 				reverse('ajouter_prestation'),
-				obj_doss.id_doss,
 				csrf(request)['csrf_token'],
 				tab_ajout_prest['za_num_doss'],
-				tab_ajout_prest['zs_siret_org_prest'],
+				tab_ajout_prest['zsac_siret_org_prest'],
 				tab_ajout_prest['zs_int_prest'],
 				tab_ajout_prest['zs_mont_ht_tot_prest'],
 				tab_ajout_prest['zs_mont_ttc_tot_prest'],
@@ -1141,20 +1291,29 @@ def consulter_dossier(request, p_doss) :
 				tab_ajout_prest['zl_nat_prest'],
 				tab_ajout_prest['zu_chem_pj_prest'],
 				tab_ajout_prest['zs_comm_prest'],
+				reverse('consulter_dossier', args = [obj_doss.id_doss]),
+				csrf(request)['csrf_token'],
+				tab_ch_prest['zl_progr'],
+				tab_ch_prest['zl_org_moa'],
+				tab_ch_prest['zl_org_prest'],
+				'\n'.join(tab_lg_prest)
 			)
 		}
 
 		# Je déclare un tableau de fenêtres modales.
 		tab_fm = [
 			init_fm('afficher_photo', 'Consulter une photo'),
+			init_fm('ajouter_avenant', 'Ajouter un avenant'),
 			init_fm(
 				'ajouter_financement', 
 				'Ajouter un organisme dans le plan de financement', 
 				tab_cont_fm['ajouter_financement']
 			),
 			init_fm('ajouter_photo', 'Ajouter une photo', tab_cont_fm['ajouter_photo']),
-			init_fm('ajouter_prestation', 'Ajouter une prestation', tab_cont_fm['ajouter_prestation']),
+			init_fm('ajouter_facture', 'Ajouter une facture', tab_cont_fm['ajouter_facture']),
+			init_fm('ajouter_prestation', 'Ajouter/relier une prestation', tab_cont_fm['ajouter_prestation']),
 			init_fm('modifier_dossier', 'Modifier un dossier'),
+			init_fm('relier_prestation', 'Relier une prestation'),
 			init_fm('supprimer_arrete', 'Êtes-vous certain de supprimer cet arrêté ?'),
 			init_fm('supprimer_dossier', 'Êtes-vous certain de supprimer ce dossier ?'),
 			init_fm('supprimer_photo', 'Êtes-vous certain de supprimer cette photo ?')
@@ -1206,19 +1365,28 @@ def consulter_dossier(request, p_doss) :
 		# Je prépare la page de consultation des caractéristiques d'un dossier.
 		tab_attr_doss = {
 			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : conv_none(obj_doss.num_doss) },
-			'int_doss' : { 'label' : 'Intitulé du dossier', 'value' : conv_none(obj_doss.int_doss) },
+			'int_doss' :
+			{
+				'label' : 'Intitulé du dossier',
+				'value' : '{0} - {1} - {2} - {3}'.format(
+					obj_doss.id_nat_doss.int_nat_doss,
+					obj_doss.id_type_doss.int_type_doss,
+					obj_doss.terr_doss,
+					obj_doss.ld_doss
+				)
+			},
 			'n_org' : { 'label' : 'Maître d\'ouvrage', 'value' : conv_none(obj_doss.id_org_moa.id_org_moa.n_org) },
 			'int_progr' : { 'label' : 'Programme', 'value' : conv_none(obj_doss.id_progr.int_progr) },
 			'id_axe' : { 'label' : 'Axe', 'value' : conv_none(obj_doss.num_axe) },
 			'id_ss_axe' : { 'label' : 'Sous-axe', 'value' : conv_none(obj_doss.num_ss_axe) },
 			'id_act' : { 'label' : 'Action', 'value' : conv_none(obj_doss.num_act) },
-			'int_type_doss' :
-			{
-				'label' : 'Type du dossier', 'value' : conv_none(obj_doss.id_type_doss.int_type_doss)
-			},
 			'int_nat_doss' :
 			{
 				'label' : 'Nature du dossier', 'value' : conv_none(obj_doss.id_nat_doss.int_nat_doss)
+			},
+			'int_type_doss' :
+			{
+				'label' : 'Type du dossier', 'value' : conv_none(obj_doss.id_type_doss.int_type_doss)
 			},
 			'mont_ht_doss' :
 			{
@@ -1250,11 +1418,6 @@ def consulter_dossier(request, p_doss) :
 				'label' : 'Date de l\'avis du comité de programmation',
 				'value' : conv_none(reecr_dt(obj_doss.dt_av_cp_doss))
 			},
-			'descr_doss' : 
-			{
-				'label' : 'Description du dossier et de ses objectifs',
-				'value' : conv_none(obj_doss.descr_doss)
-			},
 			'comm_doss' : { 'label' : 'Commentaire', 'value' : conv_none(obj_doss.comm_doss), 'textarea' : True },
 			'quant_objs_pgre' : 
 			{
@@ -1271,9 +1434,7 @@ def consulter_dossier(request, p_doss) :
 		}
 
 		# Je récupère les dossiers appartenant à la même famille que le dossier consulté.
-		les_doss_fam = TDossier.objects.filter(id_fam = obj_doss.id_fam.id_fam).exclude(
-			id_doss = obj_doss.id_doss
-		).order_by('-dt_delib_moa_doss', 'num_doss')
+		les_doss_fam = TDossier.objects.filter(id_fam = obj_doss.id_fam.id_fam).exclude(id_doss = obj_doss.id_doss)
 
 		# Je stocke dans un tableau les données mises en forme de chaque dossier de la famille.
 		tab_doss_fam = []
@@ -1297,9 +1458,8 @@ def consulter_dossier(request, p_doss) :
 			tab_doss_fam.append({
 				'id_doss' : un_doss_fam.id_doss,
 				'num_doss' : conv_none(un_doss_fam.num_doss),
-				'int_doss' : conv_none(un_doss_fam.int_doss),
 				'n_moa' : conv_none(un_doss_fam.id_org_moa.id_org_moa.n_org),
-				'dt_delib_moa_doss' : conv_none(reecr_dt(un_doss_fam.dt_delib_moa_doss)),
+				'dt_delib_moa_doss' : conv_none(reecr_dt(un_doss_fam.dt_delib_moa_doss)) or 'En projet',
 				'int_progr' : conv_none(un_doss_fam.id_progr.int_progr),
 				'int_nat_doss' : conv_none(un_doss_fam.id_nat_doss.int_nat_doss),
 				'est_ass' : est_ass
@@ -1312,47 +1472,67 @@ def consulter_dossier(request, p_doss) :
 		# Je stocke les financements du dossier.
 		les_fin = VFinancement.objects.filter(id_doss = obj_doss.id_doss).order_by('id_org_fin__id_org_fin__n_org')
 
-		# Je stocke dans un tableau les données mises en forme de chaque financement d'un dossier.
+		# Je stocke dans un tableau les données mises en forme de chaque financement du dossier.
 		tab_fin = []
 
 		for un_fin in les_fin :
 			tab_fin.append({
 				'id_fin' : un_fin.id_fin,
 				'n_org' : conv_none(un_fin.id_org_fin.id_org_fin.n_org),
-				'mont_ht_tot_subv_fin' : conv_none(float_to_int(un_fin.mont_ht_tot_subv_fin)),
-				'mont_ttc_tot_subv_fin' : conv_none(float_to_int(un_fin.mont_ttc_tot_subv_fin)),
-				'pourc_elig_fin' : conv_none(float_to_int(obt_pourc(un_fin.pourc_elig_fin))),
+				'mont_ht_tot_subv_fin' : conv_none(float_to_int(un_fin.mont_ht_part_fin)),
 				'dt_deb_elig_fin' : conv_none(reecr_dt(un_fin.dt_deb_elig_fin)),
 				'dt_fin_elig_fin' : conv_none(reecr_dt(un_fin.dt_fin_elig_fin))
 			})
 
 		# Je stocke les prestations du dossier.
 		les_prest_doss = TPrestationsDossier.objects.filter(id_doss = obj_doss.id_doss).order_by(
-			'id_prest__id_org_prest__id_org_prest__n_org'
+			'id_prest__id_org_prest__id_org_prest__n_org', '-id_prest__dt_notif_prest'
 		)
 
-		# Je stocke dans un tableau les données mises en forme de chaque prestation d'un dossier.
+		# Je stocke dans un tableau les données mises en forme de chaque prestation du dossier.
 		tab_prest_doss = []
 
 		for une_prest_doss in les_prest_doss :
 
+			# Je récupère les identifiants du dossier et de la prestation courante.
+			v_doss = une_prest_doss.id_doss.id_doss
+			v_prest = une_prest_doss.id_prest.id_prest
+
 			# Je pointe vers l'objet VSuiviPrestationsDossier afin de récupérer les restes à payer.
-			obj_suivi_prest_doss = VSuiviPrestationsDossier.objects.get(
-				id_doss = une_prest_doss.id_doss.id_doss, id_prest = une_prest_doss.id_prest.id_prest
-			)
+			obj_suivi_prest_doss = VSuiviPrestationsDossier.objects.get(id_doss = v_doss, id_prest = v_prest)
 
 			tab_prest_doss.append({
+				'id_prest' : une_prest_doss.id_prest.id_prest,
 				'n_org' : conv_none(une_prest_doss.id_prest.id_org_prest.id_org_prest.n_org),
 				'mont_ht_prest' : conv_none(float_to_int(une_prest_doss.mont_ht_prest)),
-				'mont_ttc_prest' : conv_none(float_to_int(une_prest_doss.mont_ttc_prest)),
-				'dt_notif_prest' : conv_none(reecr_dt(une_prest_doss.id_prest.dt_notif_prest)),
-				'int_nat_prest' : conv_none(une_prest_doss.id_prest.id_nat_prest.int_nat_prest),
-				'mont_ht_rap' : conv_none(float_to_int(obj_suivi_prest_doss.mont_ht_rap)),
-				'mont_ttc_rap' : conv_none(float_to_int(obj_suivi_prest_doss.mont_ttc_rap))
+				'nb_aven' : conv_none(len(TAvenant.objects.filter(id_doss = v_doss, id_prest = v_prest))),
+				'mont_ht_aven_sum' : conv_none(float_to_int(obj_suivi_prest_doss.mont_ht_aven_sum)),
+				'mont_ht_fact_sum' : conv_none(float_to_int(obj_suivi_prest_doss.mont_ht_fact_sum)),
+				'mont_ht_rap' : conv_none(float_to_int(obj_suivi_prest_doss.mont_ht_rap))
+			})
+
+		# Je stocke les factures du dossier.
+		les_fact_doss = TFacture.objects.filter(id_doss = obj_doss.id_doss).order_by(
+			'id_prest__id_org_prest__n_org', '-id_prest__dt_notif_prest'
+		)
+
+		# Je stocke dans un tableau les données mises en forme de chaque facture du dossier.
+		tab_fact_doss = []
+
+		for une_fact_doss in les_fact_doss :
+			tab_fact_doss.append({
+				'id_fact' : une_fact_doss.id_fact,
+				'prest' : '{0} : {1}'.format(
+					conv_none(une_fact_doss.id_prest.id_org_prest.n_org),
+					conv_none(reecr_dt(une_fact_doss.id_prest.dt_notif_prest))
+				),
+				'num_fact' : conv_none(une_fact_doss.num_fact),
+				'dt_mand_moa_fact' : conv_none(reecr_dt(une_fact_doss.dt_mand_moa_fact)),
+				'mont_ht_fact' : conv_none(float_to_int(une_fact_doss.mont_ht_fact)),
 			})
 
 		# Je stocke les différents types de déclarations.
-		les_arr = TTypeDeclaration.objects.order_by('id_type_decl')
+		les_arr = TTypeDeclaration.objects.all()
 
 		# Je parcours les différents types de déclarations afin d'implémenter l'onglet "Réglementations".
 		i = -1
@@ -1413,25 +1593,16 @@ def consulter_dossier(request, p_doss) :
 			if obj_arr is None :
 				opt_dispo = '''
 				<div class="col-xs-6">
-					<div class="icon-link">
-						<div><span class="bt-ajouter"></span></div>
-						<div><a href="{0}">Ajouter</a></div>
-					</div>
+					<a href="{0}" class="bt-ajouter icon-link">Ajouter</a>
 				</div>
 				'''.format(reverse('ajouter_arrete', args = [obj_doss.id_doss, un_arr.id_type_decl]))
 			else :
 				opt_dispo = '''
 				<div class="col-xs-3">
-					<div class="icon-link">
-						<div><span class="bt-modifier"></span></div>
-						<div><a href="{0}">Modifier</a></div>
-					</div>
+					<a href="{0}" class="bt-modifier icon-link">Modifier</a>
 				</div>
 				<div class="col-xs-3">
-					<div class="icon-link">
-						<div><span class="bt-supprimer"></span></div>
-						<div><span class="bt_supprimer_arrete" data-target="#fm_supprimer_arrete" action="{1}?action=supprimer-arrete&dossier={2}&arrete={3}">Supprimer</span></div>
-					</div>
+					<span class="bt-supprimer bt_supprimer_arrete icon-link" data-target="#fm_supprimer_arrete" action="{1}?action=supprimer-arrete&dossier={2}&arrete={3}">Supprimer</span>
 				</div>
 				'''.format(
 						reverse('modifier_arrete', args = [obj_doss.id_doss, un_arr.id_type_decl]),
@@ -1443,10 +1614,7 @@ def consulter_dossier(request, p_doss) :
 				if obj_arr.chem_pj_arr is not None :
 					bt_pdf = '''
 					<div class="col-xs-6">
-						<div class="icon-link">
-							<div><span class="bt-pdf"></span></div>
-							<div><a href="{0}" target="blank">Consulter le fichier de l'arrêté</a></div>
-						</div>
+						<a href="{0}" target="blank" class="bt-pdf icon-link">Consulter le fichier scanné de l'arrêté</a>
 					</div>
 					'''.format(MEDIA_URL + obj_arr.chem_pj_arr)
 
@@ -1489,10 +1657,10 @@ def consulter_dossier(request, p_doss) :
 				</div>
 				'''.format(cont_row)
 
-		# Je récupère les photos d'un dossier.
+		# Je récupère les photos du dossier.
 		les_ph = TPhoto.objects.filter(id_doss = obj_doss.id_doss).order_by('-dt_pv_ph')
 
-		# Je stocke dans un tableau les données mises en forme de chaque photo d'un dossier.
+		# Je stocke dans un tableau les données mises en forme de chaque photo du dossier.
 		tab_ph = []
 		for une_ph in les_ph :
 			tab_ph.append({
@@ -1512,15 +1680,15 @@ def consulter_dossier(request, p_doss) :
 				'le_doss' : obj_doss,
 				'les_attr_doss' : init_pg_cons(tab_attr_doss),
 				'les_doss_fam' : tab_doss_fam,
+				'les_fact_doss' : tab_fact_doss,
 				'les_fin' : tab_fin,
 				'les_fm' : tab_fm,
 				'les_ph' : tab_ph,
 				'les_prest_doss' : tab_prest_doss,
 				'les_arr' : cont_regl,
+				'mont_ht_doss' : float_to_int(obj_doss.mont_ht_doss),
 				'mont_ht_raf' : float_to_int(obj_suivi_doss.mont_ht_raf),
 				'mont_ht_rau' : float_to_int(obj_suivi_doss.mont_ht_rau),
-				'mont_ttc_raf' : float_to_int(obj_suivi_doss.mont_ttc_raf),
-				'mont_ttc_rau' : float_to_int(obj_suivi_doss.mont_ttc_rau),
 				'title' : 'Consulter un dossier'
 			}
 		)
@@ -1542,10 +1710,10 @@ def consulter_dossier(request, p_doss) :
 			if get_action == 'supprimer-photo' and 'photo' in request.GET :
 
 				# Je prépare la réponse AJAX.
-				contenu = aff_mess_suppr('{0}?photo={1}'.format(
+				reponse = HttpResponse(aff_mess_suppr('{0}?photo={1}'.format(
 					reverse('supprimer_photo'),
 					request.GET['photo']
-				))
+				)))
 
 			# Je traite le cas où je veux afficher une photo.
 			if get_action == 'afficher-photo' and 'photo' in request.GET :
@@ -1577,56 +1745,415 @@ def consulter_dossier(request, p_doss) :
 				tab_attr_ph = init_pg_cons(tab_attr_ph)
 
 				# Je prépare la réponse AJAX.
-				contenu = '''
-				<fieldset class="c-theme subfieldset" style="padding-bottom : 0;">
-					<legend class="sublegend">Visualisation</legend>
-					<div class="attribute-wrapper text-center">
-						<img src="{0}" id="img_consulter_photo"/>
-					</div>
-				</fieldset>
-				<fieldset class="c-theme subfieldset" style="padding-bottom : 0; margin-bottom : 0;">
-					<legend class="sublegend">Caractéristiques</legend>
-					{1}
-					<div class="row">
-						<div class="col-xs-6">{2}</div>
-						<div class="col-xs-6">{3}</div>
-					</div>
-					<div class="row">
-						<div class="col-xs-6">{4}</div>
-						<div class="col-xs-6">{5}</div>
-					</div>
-				</fieldset>
-				'''.format(
-					MEDIA_URL + obj_ph.chem_ph,
-					tab_attr_ph['num_doss'],
-					tab_attr_ph['int_ph'],
-					tab_attr_ph['descr_ph'],
-					tab_attr_ph['int_ppv_ph'],
-					tab_attr_ph['dt_pv_ph']
+				reponse = HttpResponse(
+					'''
+					<fieldset class="c-theme subfieldset" style="padding-bottom : 0;">
+						<legend class="sublegend">Visualisation</legend>
+						<div class="attribute-wrapper text-center">
+							<img src="{0}" id="img_consulter_photo"/>
+						</div>
+					</fieldset>
+					<fieldset class="c-theme subfieldset" style="padding-bottom : 0; margin-bottom : 0;">
+						<legend class="sublegend">Caractéristiques</legend>
+						{1}
+						<div class="row">
+							<div class="col-xs-6">{2}</div>
+							<div class="col-xs-6">{3}</div>
+						</div>
+						<div class="row">
+							<div class="col-xs-6">{4}</div>
+							<div class="col-xs-6">{5}</div>
+						</div>
+					</fieldset>
+					'''.format(
+						MEDIA_URL + obj_ph.chem_ph,
+						tab_attr_ph['num_doss'],
+						tab_attr_ph['int_ph'],
+						tab_attr_ph['descr_ph'],
+						tab_attr_ph['int_ppv_ph'],
+						tab_attr_ph['dt_pv_ph']
+					)
 				)
 
 			# Je traite le cas où je veux supprimer un dossier.
 			if get_action == 'supprimer-dossier' :
 
 				# Je prépare la réponse AJAX.
-				contenu = aff_mess_suppr(
+				reponse = HttpResponse(aff_mess_suppr(
 					reverse('supprimer_dossier', args = [obj_doss.id_doss]),
 					'''
 					La suppression du dossier entraîne également la suppression des opérations effectuées sur celui-ci.
 					Cette opération est irréversible.
 					'''
-				)
+				))
 
 			# Je traite le cas où je veux délier un arrêté pour un dossier.
 			if get_action == 'supprimer-arrete' and 'dossier' in request.GET and 'arrete' in request.GET :
 
 				# Je prépare la réponse AJAX.
-				contenu = aff_mess_suppr('{0}?dossier={1}&arrete={2}'.format(
+				contenu = reponse = HttpResponse(aff_mess_suppr('{0}?dossier={1}&arrete={2}'.format(
 					reverse('supprimer_arrete'), request.GET['dossier'], request.GET['arrete']
-				))
+				)))
 
-			# Je récupère la réponse AJAX.
-			reponse = HttpResponse(contenu)
+			# Je traite le cas où je veux filtrer les prestations.
+			if get_action == 'filtrer-prestations' :
+
+				# Je vérifie la validité du formulaire de recherche d'une prestation.
+				f_ch_prest = ChoisirPrestation(request.POST, k_doss = obj_doss.id_doss)
+
+				if f_ch_prest.is_valid() :
+
+					# Je récupère et nettoie les données du formulaire valide.
+					cleaned_data = f_ch_prest.cleaned_data
+					v_progr = integer(cleaned_data['zl_progr'])
+					v_org_prest = integer(cleaned_data['zl_org_prest'])
+					v_org_moa = integer(cleaned_data['zl_org_moa'])
+
+					# Je déclare le tableau qui stockera les conditions de la requête SQL.
+					tab_and = {}
+
+					# J'empile les tableaux des conditions.
+					if v_progr > -1 :
+						tab_and['tprestationsdossier__id_doss__id_progr__id_progr'] = v_progr
+
+					if v_org_prest > -1 :
+						tab_and['id_org_prest'] = v_org_prest
+
+					if v_org_moa > -1 :
+						tab_and['tprestationsdossier__id_doss__id_org_moa__id_org_moa'] = v_org_moa
+
+					les_prest_filtr = TPrestation.objects.filter(**tab_and).exclude(
+						tprestationsdossier__id_doss__id_doss = obj_doss.id_doss
+					).distinct().order_by('int_prest')
+
+					# Je prépare le contenu du tableau HTML des prestations filtrées.
+					tab_prest_filtr = []
+					for une_prest in les_prest_filtr :
+
+						tab_doss_prest = []
+						for un_doss_prest in TPrestationsDossier.objects.filter(id_prest = une_prest.id_prest).order_by(
+							'id_doss__num_doss'
+						) :
+							tab_doss_prest.append(conv_none(un_doss_prest.id_doss.num_doss))
+
+						tab_prest_filtr.append([
+							conv_none(une_prest.int_prest),
+							conv_none(reecr_dt(une_prest.dt_notif_prest)),
+							conv_none(float_to_int(une_prest.mont_ht_tot_prest)),
+							conv_none(float_to_int(une_prest.mont_ttc_tot_prest)),
+							', '.join(tab_doss_prest),
+							'<span class="bt-choisir pointer pull-right" title="Choisir la prestation" action="{0}?action=repartir-montants&prestation={1}"></span>'.format(
+								reverse('consulter_dossier', args = [obj_doss.id_doss]),
+								une_prest.id_prest
+							)
+						])
+
+					# Je mets à jour le tableau HTML des dossiers filtrés.
+					reponse = HttpResponse(json.dumps({ 'success' : tab_prest_filtr }), content_type = 'application/json')
+
+				else :
+
+					# J'affiche les erreurs.
+					reponse = HttpResponse(json.dumps(f_ch_prest.errors), content_type = 'application/json')
+
+			# Je traite le cas où je veux répartir les montants d'une prestation.
+			if get_action == 'repartir-montants' :
+
+				if 'prestation' in request.GET :
+
+					# Je retiens le nom du paramètre "GET".
+					get_prest = request.GET['prestation']
+
+					# Je récupère les dossiers affectés à la prestation choisie.
+					les_prest_doss = TPrestationsDossier.objects.filter(id_prest = get_prest).order_by(
+						'id_doss__num_doss'
+					)
+
+					if len(les_prest_doss) > 0 :
+
+						# Je déclare un tableau qui contiendra les lignes du tableau HTML de répartition des montants
+						# de la prestation choisie.
+						tab_lg = []
+
+						for index, une_prest_doss in enumerate(les_prest_doss) :
+
+							# Je stocke l'identifiant du dossier courant ainsi que celui de la prestation courante (c'
+							# est-à-dire de celle qui a été choisie !).
+							id_doss = une_prest_doss.id_doss.id_doss
+							id_prest = une_prest_doss.id_prest.id_prest
+
+							# J'instancie un objet "formulaire".
+							f_rep_mont_prest = RepartirMontantsPrestation(
+								prefix = 'RepartirMontantsPrestation{0}'.format(index), 
+								k_doss = id_doss, 
+								k_prest = id_prest
+							)
+
+							# J'initialise les champs du formulaire.
+							tab_rep_mont_prest = init_form(f_rep_mont_prest)
+
+							# Je pointe vers un objet VSuiviPrestationsDossier.
+							obj_suivi_prest_doss = VSuiviPrestationsDossier.objects.get(
+								id_doss = id_doss, id_prest = id_prest
+							)
+
+							# Je pointe vers un objet VSuiviDossier.
+							obj_suivi_doss = VSuiviDossier.objects.get(id_doss = id_doss)
+
+							# Je mets en forme les lignes du tableau HTML relatives aux dossiers déjà reliés à la
+							# prestation choisie.
+							lg = '''
+							<tr>
+								<td class="b">
+									{0}
+									{1}
+								</td>
+								<td>{2}</td>
+								<td>{3}</td>
+								<td>{4}</td>
+								<td>{5}</td>
+								<td>{6}</td>
+							</tr>
+							'''.format(
+								conv_none(une_prest_doss.id_doss.num_doss),
+								tab_rep_mont_prest['za_doss'],
+								tab_rep_mont_prest['zs_mont_ht_prest_doss'],
+								tab_rep_mont_prest['zs_mont_ttc_prest_doss'],
+								float_to_int(obj_suivi_prest_doss.mont_ht_aven_sum),
+								float_to_int(obj_suivi_prest_doss.mont_ht_fact_sum),
+								float_to_int(obj_suivi_doss.mont_ht_rau)
+							)
+
+							# J'empile le tableau des lignes.
+							tab_lg.append(lg)
+
+						# J'instancie un objet "formulaire".
+						f_rep_mont_prest = RepartirMontantsPrestation(prefix = 'RepartirMontantsPrestation')
+
+						# J'initialise les champs du formulaire.
+						tab_rep_mont_prest = init_form(f_rep_mont_prest)
+
+						# Je pointe vers un objet VSuiviDossier.
+						obj_suivi_doss = VSuiviDossier.objects.get(id_doss = obj_doss.id_doss)
+
+						# Je mets en forme la ligne du tableau HTML relative au dossier en cours de consultation.
+						nvelle_lg = '''
+						<tr style="background-color: #F8B862;">
+							<td class="b">
+								{0}
+								{1}
+							</td>
+							<td>{2}</td>
+							<td>{3}</td>
+							<td>{4}</td>
+							<td>{5}</td>
+							<td>{6}</td>
+						</tr>
+						'''.format(
+							conv_none(obj_doss.num_doss),
+							tab_rep_mont_prest['za_doss'],
+							tab_rep_mont_prest['zs_mont_ht_prest_doss'],
+							tab_rep_mont_prest['zs_mont_ttc_prest_doss'],
+							0,
+							0,
+							float_to_int(obj_suivi_doss.mont_ht_rau)
+						)
+
+						# J'empile le tableau des lignes.
+						tab_lg.append(nvelle_lg)
+
+						reponse = HttpResponse('''
+						<div id="za_tab_montants_prestation" style="padding-top : 15px;">
+							<p class="c-theme">Redistribuer les montants dédiés de cette prestation</p>
+							<form action="{0}?action=relier-prestation&prestation={1}" method="post" name="form_relier_prestation" class="alert-user">
+								<input name="csrfmiddlewaretoken" value="{2}" type="hidden">
+								<div style="overflow: auto">
+									<table class="display table" id="tab_montants_prestation">
+										<thead>
+											<tr>
+												<th>N° du dossier</th>
+												<th>Montant HT sans avenants (en €)</th>
+												<th>Montant TTC sans avenants (en €)</th>
+												<th>Somme HT des avenants (en €)</th>
+												<th>Somme HT des factures émises (en €)</th>
+												<th>Reste à engager HT pour le dossier (en €)</th>
+											</tr>
+										</thead>
+										<tbody>{3}</tbody>
+									</table>
+								</div>
+								<span class="za_erreur_groupee"></span>
+								<br />
+								<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_relier_prestation">Valider</button>
+							</form>
+						</div>
+						'''.format(
+							reverse('consulter_dossier', args = [obj_doss.id_doss]),
+							get_prest,
+							csrf(request)['csrf_token'],
+							'\n'.join(tab_lg)
+						))
+
+			# Je traite le cas où je veux relier une prestation à un dossier.
+			if get_action == 'relier-prestation' :
+
+				if 'prestation' in request.GET :
+
+					# Je vérifie l'existence d'un objet TPrestation.
+					obj_prest = None
+					try :
+						obj_prest = TPrestation.objects.get(id_prest = request.GET['prestation'])
+					except :
+						return HttpResponse()
+
+					# Je récupère les données.
+					v_tab_doss = request.POST.getlist('za_doss')
+					v_tab_mont_ht_prest = request.POST.getlist('zs_mont_ht_prest_doss')
+					v_tab_mont_ttc_prest = request.POST.getlist('zs_mont_ttc_prest_doss')
+
+					# Je déclare deux tableaux : le tableau des lignes du tableau HTML et le tableau des erreurs de
+					# traitement.
+					tab_lg = []
+					tab_err = []
+
+					for i in range(0, len(v_tab_doss)) :
+						
+						# Je vérifie le format des montants saisis.
+						if valid_mont(
+							v_tab_mont_ht_prest[i], False
+						) == True or valid_mont(
+						v_tab_mont_ttc_prest[i], False
+						) == True :
+							tab_err.append('Veuillez vérifier les valeurs renseignées.')
+
+						# J'empile ou je réinitialise le tableau selon la validité de la ligne courante.
+						if len(tab_err) == 0 :
+							tab_lg.append(
+								[v_tab_doss[i], float(v_tab_mont_ht_prest[i]), float(v_tab_mont_ttc_prest[i])]
+							)
+						else :
+							tab_lg = []
+
+					# J'initialise les variables qui vont calculer les sommes des montants HT et TTC après
+					# redistribution.
+					somme_ht = 0
+					somme_ttc = 0
+
+					if len(tab_lg) > 0 :
+						for i in range(0, len(tab_lg)) :
+
+							# Je vérifie l'existence d'un objet VSuiviPrestationsDossier.
+							obj_suivi_prest_doss = None
+							try :
+								obj_suivi_prest_doss = VSuiviPrestationsDossier.objects.get(
+									id_doss = tab_lg[i][0],
+									id_prest = obj_prest.id_prest
+								)
+							except :
+								pass
+
+							if obj_suivi_prest_doss is not None :
+
+								# J'obtiens l'intervalle de valeurs HT et l'intervalle de valeurs TTC disponibles pour le
+								# couple prestation/dossier courant.
+								tab_bornes = calc_interv(obj_suivi_prest_doss.id_doss, obj_suivi_prest_doss.id_prest)
+
+								# Je vérifie que chaque montant est inclu dans son intervalle respectif.
+								if tab_lg[i][1] < tab_bornes['ht']['min'] or tab_lg[i][1] > tab_bornes['ht']['max'] :
+									tab_err.append(
+										'Veuillez vérifier le montant HT renseigné pour le dossier {0}.'.format(
+											TDossier.objects.get(id_doss = obj_suivi_prest_doss.id_doss).num_doss
+										)
+									)
+
+								if tab_lg[i][2] < tab_bornes['ttc']['min'] or tab_lg[i][2] > tab_bornes['ttc']['max'] :
+									tab_err.append(
+										'Veuillez vérifier le montant TTC renseigné pour le dossier {0}.'.format(
+											TDossier.objects.get(id_doss = obj_suivi_prest_doss.id_doss).num_doss
+										)
+									)
+
+							# Je cumule les montants HT et TTC.
+							somme_ht += tab_lg[i][1]
+							somme_ttc += tab_lg[i][2]
+
+						# Je pointe vers un objet VSuiviDossier.
+						obj_suivi_doss = VSuiviDossier.objects.get(id_doss = obj_doss.id_doss)
+
+						# Je vérifie la borne maximale du dossier dont on veut relier la prestation.
+						if tab_lg[len(tab_lg) - 1][1] > obj_suivi_doss.mont_ht_rau :
+							tab_err.append(
+								'Veuillez vérifier le montant HT renseigné pour le dossier {0}.'.format(
+									obj_doss.num_doss
+								)
+							)
+
+						if tab_lg[len(tab_lg) - 1][2] > obj_suivi_doss.mont_ttc_rau :
+							tab_err.append(
+								'Veuillez vérifier le montant TTC renseigné pour le dossier {0}.'.format(
+									obj_doss.num_doss
+								)
+							)
+
+						# Je mets à jour le tableau des lignes en ajoutant l'identifiant du dossier consulté.
+						tab_lg[len(tab_lg) - 1][0] = obj_doss.id_doss
+
+					# Je vérifie que chaque somme de montants après redistribution est égale au montant total respectif
+					# de la prestation.
+					if obj_prest.mont_ht_tot_prest != somme_ht :
+						tab_err.append(
+							'La somme des montants HT n\'est pas égale à {0} €.'.format(
+								float_to_int(obj_prest.mont_ht_tot_prest)
+							)
+						)
+
+					if obj_prest.mont_ttc_tot_prest != somme_ttc :
+						tab_err.append(
+							'La somme des montants TTC n\'est pas égale à {0} €.'.format(
+								float_to_int(obj_prest.mont_ttc_tot_prest)
+							)
+						)
+
+					if len(tab_err) == 0 :
+
+						# Je mets à jour la prestation.
+						for i in range(0, len(tab_lg)) :
+
+							# Je requête sur l'enregistrement courant.
+							qry = TPrestationsDossier.objects.filter(
+								id_doss = tab_lg[i][0], id_prest = obj_prest.id_prest
+							)
+
+							# Je mets à jour l'enregistrement si la requête renvoie un enregistrement, sinon j'en créé
+							# un.
+							if len(qry) > 0 :
+								qry.update(
+									mont_ht_prest = tab_lg[i][1], mont_ttc_prest = tab_lg[i][2]
+								)
+							else :
+								TPrestationsDossier.objects.create(
+									id_doss = obj_doss,
+									id_prest = obj_prest,
+									mont_ht_prest = tab_lg[i][1],
+									mont_ttc_prest = tab_lg[i][2]
+								)
+
+						# J'affiche le message de succès.
+						reponse = HttpResponse(
+							json.dumps({
+								'success' : 'La prestation a été reliée au dossier {0} avec succès.'.format(
+									obj_doss.num_doss
+								),
+								'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss]),
+								'close' : 'ajouter_prestation'
+							}),
+							content_type = 'application/json'
+						)
+
+					else :
+
+						# J'affiche les erreurs.
+						reponse = HttpResponse(json.dumps({ 'errors' : tab_err }), content_type = 'application/json')
 
 	return reponse
 
@@ -1705,7 +2232,7 @@ def ajouter_photo(request) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['menu_doss'] = '#ong_photos'
+			request.session['app-nav'] = '#ong_photos'
 
 		else :
 
@@ -1763,7 +2290,7 @@ def supprimer_photo(request) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['menu_doss'] = '#ong_photos'
+			request.session['app-nav'] = '#ong_photos'
 
 	return reponse
 
@@ -1884,7 +2411,7 @@ def modifier_photo(request, p_ph) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['menu_doss'] = '#ong_photos'
+			request.session['app-nav'] = '#ong_photos'
 
 		else :
 
@@ -2001,11 +2528,11 @@ def ajouter_arrete(request, p_doss, p_arr) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['menu_doss'] = '#ong_reglementations'
+			request.session['app-nav'] = '#ong_reglementations'
 
 		else :
 
-			# J'affiche les erreurs du formulaire.
+			# J'affiche les erreurs.
 			reponse = HttpResponse(json.dumps(f_ajout_arr.errors), content_type = 'application/json')
 			
 	return reponse
@@ -2123,7 +2650,7 @@ def modifier_arrete(request, p_doss, p_arr) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['menu_doss'] = '#ong_reglementations'
+			request.session['app-nav'] = '#ong_reglementations'
 
 		else :
 
@@ -2190,7 +2717,7 @@ def supprimer_arrete(request) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['menu_doss'] = '#ong_reglementations'
+			request.session['app-nav'] = '#ong_reglementations'
 
 	return reponse
 
@@ -2217,93 +2744,96 @@ def ajouter_financement(request) :
 	reponse = HttpResponse()
 
 	if request.method == 'POST' :
-		if 'dossier' in request.GET :
 
-			# Je vérifie l'existence d'un objet TDossier.
-			obj_doss = None
-			try :
-				obj_doss = TDossier.objects.get(id_doss = request.GET['dossier'])
-			except :
-				return HttpResponse()
+		# Je vérifie la validité du formulaire d'ajout d'un financement.
+		f_ajout_fin = GererFinancement(request.POST, request.FILES)
 
-			# Je vérifie la validité du formulaire d'ajout d'un financement.
-			f_ajout_fin = GererFinancement(request.POST, request.FILES)
+		if f_ajout_fin.is_valid() :
 
-			if f_ajout_fin.is_valid() :
+			# Je récupère et nettoie les données du formulaire valide.
+			cleaned_data = f_ajout_fin.cleaned_data
+			v_num_doss = nett_val(cleaned_data['za_num_doss'])
+			v_org_fin = nett_val(integer(cleaned_data['zl_org_fin']), True)
+			v_num_arr_fin = nett_val(cleaned_data['zs_num_arr_fin'])
+			v_mont_ht_elig_fin = nett_val(cleaned_data['zs_mont_ht_elig_fin'])
+			v_mont_ttc_elig_fin = nett_val(cleaned_data['zs_mont_ttc_elig_fin'])
+			v_pourc_elig_fin = nett_val(float(cleaned_data['zs_pourc_elig_fin']) / 100)
+			v_mont_ht_part_fin = nett_val(cleaned_data['zs_mont_ht_part_fin'])
+			v_mont_ttc_part_fin = nett_val(cleaned_data['zs_mont_ttc_part_fin'])
+			v_dt_deb_elig_fin = nett_val(cleaned_data['zd_dt_deb_elig_fin'])
+			v_duree_valid_fin = nett_val(cleaned_data['zs_duree_valid_fin'])
+			v_duree_pror_fin = nett_val(cleaned_data['zs_duree_pror_fin']) or 0
+			v_dt_lim_deb_oper_fin = nett_val(cleaned_data['zd_dt_lim_deb_oper_fin'])
+			v_dt_lim_prem_ac_fin = nett_val(cleaned_data['zd_dt_lim_prem_ac_fin'])
+			v_paiem_prem_ac = nett_val(integer(cleaned_data['zl_paiem_prem_ac']), True)
+			v_pourc_real_fin = nett_val(cleaned_data['zs_pourc_real_fin'])
+			v_obj_fin = nett_val(cleaned_data['zu_chem_pj_fin'])
+			v_comm_fin = nett_val(cleaned_data['zs_comm_fin'])
 
-				# Je récupère et nettoie les données du formulaire valide.
-				cleaned_data = f_ajout_fin.cleaned_data
-				v_org_fin = nett_val(integer(cleaned_data['zl_org_fin']), True)
-				v_int_fin = nett_val(cleaned_data['zs_int_fin'])
-				v_mont_ht_elig_fin = nett_val(cleaned_data['zs_mont_ht_elig_fin'])
-				v_mont_ttc_elig_fin = nett_val(cleaned_data['zs_mont_ttc_elig_fin'])
-				v_pourc_elig_fin = nett_val(float(cleaned_data['zs_pourc_elig_fin']) / 100)
-				v_mont_ht_tot_subv_fin = nett_val(cleaned_data['zs_mont_ht_tot_subv_fin'])
-				v_mont_ttc_tot_subv_fin = nett_val(cleaned_data['zs_mont_ttc_tot_subv_fin'])
-				v_dt_deb_elig_fin = nett_val(cleaned_data['zd_dt_deb_elig_fin'])
-				v_duree_valid_fin = nett_val(cleaned_data['zs_duree_valid_fin'])
-				v_duree_pror_fin = nett_val(cleaned_data['zs_duree_pror_fin']) or 0
-				v_dt_lim_deb_oper_fin = nett_val(cleaned_data['zd_dt_lim_deb_oper_fin'])
-				v_dt_lim_prem_ac_fin = nett_val(cleaned_data['zd_dt_lim_prem_ac_fin'])
-				v_paiem_prem_ac = nett_val(integer(cleaned_data['zl_paiem_prem_ac']), True)
-				v_pourc_real_fin = nett_val(cleaned_data['zs_pourc_real_fin'])
-				v_obj_fin = nett_val(cleaned_data['zu_chem_pj_fin'])
-				v_comm_fin = nett_val(cleaned_data['zs_comm_fin'])
+			# Je pointe vers l'objet TDossier consulté.
+			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
 				
-				if v_pourc_real_fin is not None :
-					v_pourc_real_fin = float(v_pourc_real_fin) / 100
+			if v_pourc_real_fin is not None :
+				v_pourc_real_fin = float(v_pourc_real_fin) / 100
 
-				if v_obj_fin is None :
-					v_chem_pj_fin = None
-				else :
+			# Je vérifie l'existence d'un objet TPaiementPremierAcompte.
+			obj_paiem_prem_ac = None
+			try :
+				obj_paiem_prem_ac = TPaiementPremierAcompte.objects.get(id_paiem_prem_ac = v_paiem_prem_ac)
+			except :
+				pass
 
-					# J'initialise le nom du fichier uploadé ainsi que le chemin de destination.
-					n_fich = crypt_val('{0}-{1}'.format(request.user.id, time.strftime('%d%m%Y%H%M%S')))
-					v_chem_pj_fin = 'dossiers/{0}/plan_de_financement/{1}.pdf'.format(obj_doss.num_doss, n_fich)
-
-					# J'uploade le fichier.
-					upload_fich(v_obj_fin, v_chem_pj_fin)
-
-				# Je remplis les données attributaires du nouvel objet TFinancement.
-				obj_nv_fin = TFinancement(
-					chem_pj_fin = v_chem_pj_fin,
-					comm_fin = v_comm_fin,
-					dt_deb_elig_fin = v_dt_deb_elig_fin,
-					dt_lim_deb_oper_fin = v_dt_lim_deb_oper_fin,
-					dt_lim_prem_ac_fin = v_dt_lim_prem_ac_fin,
-					duree_pror_fin = v_duree_pror_fin,
-					duree_valid_fin = v_duree_valid_fin,
-					int_fin = v_int_fin,
-					mont_ht_elig_fin = v_mont_ht_elig_fin,
-					mont_ttc_elig_fin = v_mont_ttc_elig_fin,
-					mont_ht_tot_subv_fin = v_mont_ht_tot_subv_fin,
-					mont_ttc_tot_subv_fin = v_mont_ttc_tot_subv_fin,
-					pourc_elig_fin = v_pourc_elig_fin,
-					pourc_real_fin = v_pourc_real_fin,
-					id_doss = obj_doss,
-					id_org_fin = TFinanceur.objects.get(id_org_fin = v_org_fin),
-					id_paiem_prem_ac = TPaiementPremierAcompte.objects.get(id_paiem_prem_ac = v_paiem_prem_ac)
-				)
-
-				# Je créé un nouvel objet TFinancement.
-				obj_nv_fin.save()
-
-				# J'affiche le message de succès.
-				reponse = HttpResponse(
-					json.dumps({
-						'success' : 'Le financement a été ajouté avec succès.',
-						'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss])
-					}),
-					content_type = 'application/json'
-				)
-
-				# Je renseigne l'onglet actif après rechargement de la page.
-				request.session['menu_doss'] = '#ong_financements'
-
+			if v_obj_fin is None :
+				v_chem_pj_fin = None
 			else :
 
-				# J'affiche les erreurs du formulaire.
-				reponse = HttpResponse(json.dumps(f_ajout_fin.errors), content_type = 'application/json')
+				# J'initialise le nom du fichier uploadé ainsi que le chemin de destination.
+				n_fich = crypt_val('{0}-{1}'.format(request.user.id, time.strftime('%d%m%Y%H%M%S')))
+				v_chem_pj_fin = 'dossiers/{0}/plan_de_financement/{1}.pdf'.format(obj_doss.num_doss, n_fich)
+
+				# J'uploade le fichier.
+				upload_fich(v_obj_fin, v_chem_pj_fin)
+
+			# Je remplis les données attributaires du nouvel objet TFinancement.
+			obj_nv_fin = TFinancement(
+				chem_pj_fin = v_chem_pj_fin,
+				comm_fin = v_comm_fin,
+				dt_deb_elig_fin = v_dt_deb_elig_fin,
+				dt_lim_deb_oper_fin = v_dt_lim_deb_oper_fin,
+				dt_lim_prem_ac_fin = v_dt_lim_prem_ac_fin,
+				duree_pror_fin = v_duree_pror_fin,
+				duree_valid_fin = v_duree_valid_fin,
+				mont_ht_elig_fin = v_mont_ht_elig_fin,
+				mont_ttc_elig_fin = v_mont_ttc_elig_fin,
+				mont_ht_part_fin = v_mont_ht_part_fin,
+				mont_ttc_part_fin = v_mont_ttc_part_fin,
+				num_arr_fin = v_num_arr_fin,
+				pourc_elig_fin = v_pourc_elig_fin,
+				pourc_real_fin = v_pourc_real_fin,
+				id_doss = obj_doss,
+				id_org_fin = TFinanceur.objects.get(id_org_fin = v_org_fin),
+				id_paiem_prem_ac = obj_paiem_prem_ac
+			)
+
+			# Je créé un nouvel objet TFinancement.
+			obj_nv_fin.save()
+
+			# J'affiche le message de succès.
+			reponse = HttpResponse(
+				json.dumps({
+					'success' : 'Le financement a été ajouté avec succès.',
+					'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss])
+				}),
+				content_type = 'application/json'
+			)
+
+			# Je renseigne l'onglet actif après rechargement de la page.
+			request.session['app-nav'] = '#ong_financements'
+
+		else :
+
+			# J'affiche les erreurs.
+			reponse = HttpResponse(json.dumps(f_ajout_fin.errors), content_type = 'application/json')
 
 	return reponse
 
@@ -2315,7 +2845,6 @@ Gestion des prestations
 Cette vue permet soit de traiter le formulaire d'ajout d'une prestation. 
 request : Objet requête
 '''
-@csrf_exempt
 @verif_acces
 def ajouter_prestation(request) :
 
@@ -2337,83 +2866,429 @@ def ajouter_prestation(request) :
 	reponse = HttpResponse()
 
 	if request.method == 'POST' :
-		if 'dossier' in request.GET :
 
-			# Je vérifie l'existence d'un objet TDossier.
-			obj_doss = None
-			try :
-				obj_doss = TDossier.objects.get(id_doss = request.GET['dossier'])
-			except :
-				return HttpResponse()
+		# Je vérifie la validité du formulaire d'ajout d'une prestation.
+		f_ajout_prest = GererPrestation(request.POST, request.FILES)
 
-			# Je vérifie la validité du formulaire d'ajout d'une prestation.
-			f_ajout_prest = GererPrestation(request.POST, request.FILES)
+		if f_ajout_prest.is_valid() :
 
-			if f_ajout_prest.is_valid() :
+			# Je récupère et nettoie les données du formulaire valide.
+			cleaned_data = f_ajout_prest.cleaned_data
+			v_num_doss = nett_val(cleaned_data['za_num_doss'])
+			v_siret_org_prest = nett_val(cleaned_data['zsac_siret_org_prest'])
+			v_int_prest = nett_val(cleaned_data['zs_int_prest'])
+			v_mont_ht_tot_prest = nett_val(cleaned_data['zs_mont_ht_tot_prest'])
+			v_mont_ttc_tot_prest = nett_val(cleaned_data['zs_mont_ttc_tot_prest'])
+			v_dt_notif_prest = nett_val(cleaned_data['zd_dt_notif_prest'])
+			v_dt_fin_prest = nett_val(cleaned_data['zd_dt_fin_prest'])
+			v_nat_prest = nett_val(integer(cleaned_data['zl_nat_prest']), True)
+			v_obj_prest = nett_val(cleaned_data['zu_chem_pj_prest'])
+			v_comm_prest = nett_val(cleaned_data['zs_comm_prest'])
 
-				# Je récupère et nettoie les données du formulaire valide.
-				cleaned_data = f_ajout_prest.cleaned_data
-				v_num_doss = nett_val(cleaned_data['za_num_doss'])
-				v_siret_org_prest = nett_val(cleaned_data['zs_siret_org_prest'])
-				v_int_prest = nett_val(cleaned_data['zs_int_prest'])
-				v_mont_ht_tot_prest = nett_val(cleaned_data['zs_mont_ht_tot_prest'])
-				v_mont_ttc_tot_prest = nett_val(cleaned_data['zs_mont_ttc_tot_prest'])
-				v_dt_notif_prest = nett_val(cleaned_data['zd_dt_notif_prest'])
-				v_dt_fin_prest = nett_val(cleaned_data['zd_dt_fin_prest'])
-				v_nat_prest = nett_val(integer(cleaned_data['zl_nat_prest']))
-				v_obj_prest = nett_val(cleaned_data['zu_chem_pj_prest'])
-				v_comm_prest = nett_val(cleaned_data['zs_comm_prest'])
+			# Je pointe vers l'objet TDossier consulté.
+			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
 					
-				if v_obj_prest is None :
-					v_chem_pj_prest = None
-				else :
-
-					# J'initialise le nom du fichier uploadé ainsi que le chemin de destination.
-					n_fich = crypt_val('{0}-{1}'.format(request.user.id, time.strftime('%d%m%Y%H%M%S')))
-					v_chem_pj_prest = 'dossiers/{0}/prestations/{1}.pdf'.format(obj_doss.num_doss, n_fich)
-						
-					# J'uploade le fichier.
-					upload_fich(v_obj_prest, v_chem_pj_prest)
-
-				# Je remplis les données attributaires du nouvel objet TPrestation.
-				obj_nvelle_prest = TPrestation(
-					chem_pj_prest = v_chem_pj_prest,
-					comm_prest = v_comm_prest,
-					dt_fin_prest = v_dt_fin_prest,
-					dt_notif_prest = v_dt_notif_prest,
-					int_prest = v_int_prest,
-					mont_ht_tot_prest = v_mont_ht_tot_prest,
-					mont_ttc_tot_prest = v_mont_ttc_tot_prest,
-					id_nat_prest = TNaturePrestation.objects.get(id_nat_prest = v_nat_prest),
-					id_org_prest = TPrestataire.objects.get(siret_org_prest = v_siret_org_prest)
-				)
-
-				# Je créé un nouvel objet TPrestation.
-				obj_nvelle_prest.save()
-
-				# Je fais le lien avec la table t_prestations_dossier.
-				obj_nvelle_prest_doss = TPrestationsDossier.objects.create(
-					id_doss = obj_doss,
-					id_prest = obj_nvelle_prest,
-					mont_ht_prest = v_mont_ht_tot_prest,
-					mont_ttc_prest = v_mont_ttc_tot_prest
-				)
-
-				# J'affiche le message de succès.
-				reponse = HttpResponse(
-					json.dumps({
-						'success' : 'La prestation a été ajoutée avec succès.',
-						'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss])
-					}),
-					content_type = 'application/json'
-				)
-
-				# Je renseigne l'onglet actif après rechargement de la page.
-				request.session['menu_doss'] = '#ong_prestations'
-
+			if v_obj_prest is None :
+				v_chem_pj_prest = None
 			else :
 
-				# J'affiche les erreurs du formulaire.
-				reponse = HttpResponse(json.dumps(f_ajout_prest.errors), content_type = 'application/json')
+				# J'initialise le nom du fichier uploadé ainsi que le chemin de destination.
+				n_fich = crypt_val('{0}-{1}'.format(request.user.id, time.strftime('%d%m%Y%H%M%S')))
+				v_chem_pj_prest = 'dossiers/{0}/prestations/{1}.pdf'.format(obj_doss.num_doss, n_fich)
+					
+				# J'uploade le fichier.
+				upload_fich(v_obj_prest, v_chem_pj_prest)
+
+			# Je remplis les données attributaires du nouvel objet TPrestation.
+			obj_nvelle_prest = TPrestation(
+				chem_pj_prest = v_chem_pj_prest,
+				comm_prest = v_comm_prest,
+				dt_fin_prest = v_dt_fin_prest,
+				dt_notif_prest = v_dt_notif_prest,
+				int_prest = v_int_prest,
+				mont_ht_tot_prest = v_mont_ht_tot_prest,
+				mont_ttc_tot_prest = v_mont_ttc_tot_prest,
+				id_nat_prest = TNaturePrestation.objects.get(id_nat_prest = v_nat_prest),
+				id_org_prest = TPrestataire.objects.get(siret_org_prest = v_siret_org_prest)
+			)
+
+			# Je créé un nouvel objet TPrestation.
+			obj_nvelle_prest.save()
+
+			# Je fais le lien avec la table t_prestations_dossier.
+			obj_nvelle_prest_doss = TPrestationsDossier.objects.create(
+				id_doss = obj_doss,
+				id_prest = obj_nvelle_prest,
+				mont_ht_prest = v_mont_ht_tot_prest,
+				mont_ttc_prest = v_mont_ttc_tot_prest
+			)
+
+			# J'affiche le message de succès.
+			reponse = HttpResponse(
+				json.dumps({
+					'success' : 'La prestation a été ajoutée avec succès.',
+					'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss])
+				}),
+				content_type = 'application/json'
+			)
+
+			# Je renseigne l'onglet actif après rechargement de la page.
+			request.session['app-nav'] = '#ong_prestations'
+
+		else :
+
+			# J'affiche les erreurs.
+			reponse = HttpResponse(json.dumps(f_ajout_prest.errors), content_type = 'application/json')
+
+	return reponse
+
+'''
+Cette vue permet d'afficher la page de consultation d'une prestation. 
+request : Objet requête
+p_prest : Identifiant de la prestation
+'''
+@nett_form
+@verif_acces
+def consulter_prestation(request, p_prest) :
+
+	''' Imports '''
+	from app.forms.gestion_dossiers import GererAvenant, RechercherAvenants
+	from app.functions import conv_none, float_to_int, init_fm, init_form, init_pg_cons, integer, nett_val, reecr_dt
+	from app.models import TAvenant, TDossier, TPrestation, TPrestationsDossier
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404, render
+	from django.template.context_processors import csrf
+	import json
+
+	reponse = HttpResponse()
+
+	if request.method == 'GET' :
+
+		# Je vérifie l'existence d'un objet TPrestation.
+		obj_prest = get_object_or_404(TPrestation, id_prest = p_prest)
+
+		# J'instancie des objets "formulaire".
+		f_ajout_aven = GererAvenant(prefix = 'AjouterAvenant', k_prest = obj_prest.id_prest)
+		f_rech_aven = RechercherAvenants(prefix = 'RechercherAvenants', k_prest = obj_prest.id_prest)
+
+		# J'initialise les champs du formulaire.
+		tab_ajout_aven = init_form(f_ajout_aven)
+
+		# Je déclare le contenu de certaines fenêtres modales.
+		tab_cont_fm = {
+			'ajouter_avenant' : '''
+			<form name="form_ajouter_avenant" method="post" action="{0}?action=ajouter-avenant" class="c-theme">
+				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
+				<div class="row">
+					<div class="col-xs-6">{2}</div>
+					<div class="col-xs-6">{3}</div>
+				</div>
+				{4}
+				{5}
+				<div class="row">
+					<div class="col-sm-6">{6}</div>
+					<div class="col-sm-6">{7}</div>
+				</div>
+				<button type="submit" class="bt-vert btn center-block to-unfocus">Valider</button>
+			</form>
+			'''.format(
+				reverse('consulter_prestation', args = [obj_prest.id_prest]),
+				csrf(request)['csrf_token'],
+				tab_ajout_aven['za_num_doss'],
+				tab_ajout_aven['za_prest'],
+				tab_ajout_aven['zs_int_aven'],
+				tab_ajout_aven['zd_dt_aven'],
+				tab_ajout_aven['zs_mont_ht_aven'],
+				tab_ajout_aven['zs_mont_ttc_aven']
+			)
+		}
+
+		# Je déclare un tableau de fenêtres modales.
+		tab_fm = [
+			init_fm('ajouter_avenant', 'Ajouter un avenant', tab_cont_fm['ajouter_avenant'])
+		]
+
+		# Je prépare la page de consultation des caractéristiques d'une prestation.
+		tab_attr_prest = {
+			'n_org' : { 'label' : 'Prestataire', 'value' : conv_none(obj_prest.id_org_prest.n_org) },
+			'int_prest' : { 'label' : 'Intitulé de la prestation', 'value' : conv_none(obj_prest.int_prest) },
+			'mont_ht_tot_prest' :
+			{
+				'label' : 'Montant HT total de la prestation (en €)',
+				'value' : float_to_int(conv_none(obj_prest.mont_ht_tot_prest))
+			},
+			'mont_ttc_tot_prest' :
+			{
+				'label' : 'Montant TTC total de la prestation (en €)',
+				'value' : float_to_int(conv_none(obj_prest.mont_ttc_tot_prest))
+			},
+			'dt_notif_prest' :
+			{
+				'label' : 'Date de notification de la prestation',
+				'value' : conv_none(reecr_dt(obj_prest.dt_notif_prest))
+			},
+			'dt_fin_prest' :
+			{
+				'label' : 'Date de fin de la prestation',
+				'value' : conv_none(reecr_dt(obj_prest.dt_fin_prest))
+			},
+			'int_nat_prest' : 
+			{
+				'label' : 'Nature de la prestation',
+				'value' : conv_none(obj_prest.id_nat_prest.int_nat_prest)
+			},
+			'comm_prest' : 
+			{ 
+				'label' : 'Commentaire', 'value' : conv_none(obj_prest.comm_prest), 'textarea' : True 
+			}
+		}
+
+		# Je récupère les dossiers reliés à l'objet TPrestation.
+		les_doss_prest = TPrestationsDossier.objects.filter(id_prest = obj_prest.id_prest).order_by(
+			'id_doss__num_doss'
+		)
+
+		# Je stocke dans un tableau les données mises en forme de chaque dossier relié à l'objet TPrestation.
+		tab_doss_prest = []
+		for un_doss_prest in les_doss_prest :
+			tab_doss_prest.append({
+				'id_doss' : un_doss_prest.id_doss.id_doss,
+				'num_doss' : conv_none(un_doss_prest.id_doss.num_doss),
+				'mont_ht_prest' : float_to_int(conv_none(un_doss_prest.mont_ht_prest)),
+			})
+
+		# J'affiche le template.
+		reponse = render(
+			request,
+			'./gestion_dossiers/consulter_prestation.html',
+			{
+				'f1' : init_form(f_rech_aven),
+				'la_prest' : obj_prest,
+				'les_attr_prest' : init_pg_cons(tab_attr_prest),
+				'les_doss_prest' : tab_doss_prest,
+				'les_fm' : tab_fm,
+				'title' : 'Consulter une prestation'
+			}
+		)
+
+	else :
+
+		# Je vérifie l'existence d'un objet TPrestation.
+		obj_prest = None
+		try :
+			obj_prest = TPrestation.objects.get(id_prest = p_prest)
+		except :
+			return HttpResponse()
+
+		if 'action' in request.GET :
+
+			# Je retiens le nom du paramètre "GET".
+			get_action = request.GET['action']
+
+			# Je traite le cas où je dois ajouter un avenant.
+			if get_action == 'ajouter-avenant' :
+
+				# Je vérifie la validité du formulaire d'ajout d'un avenant.
+				f_ajout_aven = GererAvenant(request.POST)
+
+				if f_ajout_aven.is_valid() :
+
+					# Je récupère et nettoie les données du formulaire valide.
+					cleaned_data = f_ajout_aven.cleaned_data
+					v_num_doss = nett_val(cleaned_data['za_num_doss'])
+					v_dt_aven = nett_val(cleaned_data['zd_dt_aven'])
+					v_int_aven = nett_val(cleaned_data['zs_int_aven'])
+					v_mont_ht_aven = nett_val(cleaned_data['zs_mont_ht_aven'])
+					v_mont_ttc_aven = nett_val(cleaned_data['zs_mont_ttc_aven'])
+
+					# Je remplis les données attributaires du nouvel objet TAvenant.
+					obj_nv_aven = TAvenant(
+						dt_aven = v_dt_aven,
+						int_aven = v_int_aven,
+						mont_ht_aven = v_mont_ht_aven,
+						mont_ttc_aven = v_mont_ttc_aven,
+						id_doss = TDossier.objects.get(num_doss = v_num_doss),
+						id_prest = obj_prest
+					)
+
+					# Je créé un nouvel objet TAvenant.
+					obj_nv_aven.save()
+
+					# J'affiche le message de succès.
+					reponse = HttpResponse(
+						json.dumps({
+							'success' : 'L\'avenant a été ajouté avec succès.',
+							'redirect' : reverse('consulter_prestation', args = [obj_prest.id_prest])
+						}),
+						content_type = 'application/json'
+					)
+
+					# Je renseigne l'onglet actif après rechargement de la page.
+					request.session['app-nav'] = '#ong_avenants'
+
+				else :
+
+					# J'affiche les erreurs.
+					reponse = HttpResponse(json.dumps(f_ajout_aven.errors), content_type = 'application/json')
+
+			# Je traite le cas où je dois rechercher les avenants d'un couple prestation/dossier.
+			if get_action == 'rechercher-avenants' :
+
+				# Je vérifie la validité du formulaire de recherche des avenants d'un dossier.
+				f_rech_aven = RechercherAvenants(request.POST, k_prest = obj_prest.id_prest)
+
+				if f_rech_aven.is_valid() :
+
+					# Je récupère et nettoie les données du formulaire valide.
+					cleaned_data = f_rech_aven.cleaned_data
+					v_doss = nett_val(integer(cleaned_data['zl_doss']), True)
+
+					# Je récupère les avenants d'un couple prestation/dossier.
+					les_aven_prest = TAvenant.objects.filter(id_prest = obj_prest.id_prest, id_doss = v_doss).order_by(
+						'dt_aven'
+					)
+
+					# Je prépare le contenu du tableau HTML des avenants d'un couple prestation/dossier.
+					tab_aven_prest = []
+					for index, un_aven_prest in enumerate(les_aven_prest) :
+						tab_aven_prest.append([
+							index + 1,
+							conv_none(un_aven_prest.int_aven),
+							conv_none(reecr_dt(un_aven_prest.dt_aven)),
+							conv_none(float_to_int(un_aven_prest.mont_ht_aven))
+						])
+
+					# Je mets à jour le tableau HTML des avenants d'un couple prestation/dossier.
+					reponse = HttpResponse(
+						json.dumps({ 'success' : tab_aven_prest }), content_type = 'application/json'
+					)
+
+				else :
+
+					# J'affiche les erreurs.
+					reponse = HttpResponse(json.dumps(f_rech_aven.errors), content_type = 'application/json')
+
+	return reponse
+
+'''
+Gestion des factures
+'''
+
+'''
+Cette vue permet soit de traiter le formulaire d'ajout d'une facture.
+request : Objet requête
+'''
+@verif_acces
+def ajouter_facture(request) :
+
+	''' Imports '''
+	from app.forms.gestion_dossiers import GererFacture
+	from app.functions import crypt_val
+	from app.functions import integer
+	from app.functions import nett_val
+	from app.functions import upload_fich
+	from app.models import TDossier, TFacture, TPrestation, TPrestationsDossier
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	import json
+	import time
+
+	reponse = HttpResponse()
+
+	if request.method == 'POST' :
+
+		# Je vérifie la validité du formulaire d'ajout d'une facture.
+		f_ajout_fact = GererFacture(request.POST, request.FILES)
+
+		# Je rajoute un choix valide pour la liste déroulante des prestations d'un dossier (prévention d'erreurs).
+		post_prest = request.POST.get('zl_prest')
+		try :
+			TPrestation.objects.get(id_prest = post_prest)
+			f_ajout_fact.fields['zl_prest'].choices = [(post_prest, post_prest)]
+		except :
+			pass
+
+		if f_ajout_fact.is_valid() :
+
+			# Je récupère et nettoie les données du formulaire valide.
+			cleaned_data = f_ajout_fact.cleaned_data
+			v_num_doss = nett_val(cleaned_data['za_num_doss'])
+			v_prest = nett_val(integer(cleaned_data['zl_prest']), True)
+			v_num_fact = nett_val(cleaned_data['zs_num_fact'])
+			v_dt_mand_moa_fact = nett_val(cleaned_data['zd_dt_mand_moa_fact'])
+			v_mont_ht_fact = nett_val(cleaned_data['zs_mont_ht_fact'])
+			v_mont_ttc_fact = nett_val(cleaned_data['zs_mont_ttc_fact'])
+			v_dt_rec_fact = nett_val(cleaned_data['zd_dt_rec_fact'])
+			v_num_mandat = nett_val(cleaned_data['zs_num_mandat'])
+			v_num_bord = nett_val(cleaned_data['zs_num_bord'])
+			v_suivi_fact = nett_val(integer(cleaned_data['zl_suivi_fact']), True)
+			v_obj_fact = nett_val(cleaned_data['zu_chem_pj_fact'])
+			v_comm_fact = nett_val(cleaned_data['zs_comm_fact'])
+
+			# Je pointe vers l'objet TDossier consulté.
+			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
+
+			# Je pointe vers un objet TPrestationsDossier.
+			obj_prest_doss = TPrestationsDossier.objects.get(id_doss = obj_doss.id_doss, id_prest = v_prest)
+			
+			# J'initialise l'intitulé du suivi de la facture selon deux paramètres : la valeur de la liste déroulante
+			# statique et le séquentiel relatif à la valeur de la liste déroulante statique.
+			if v_suivi_fact == 1 :
+				v_suivi_fact = 'Acompte {0}'.format(obj_prest_doss.seq_ac)
+				obj_prest_doss.seq_ac = int(obj_prest_doss.seq_ac) + 1
+			else :
+				v_suivi_fact = 'Solde {0}'.format(obj_prest_doss.seq_solde)
+				obj_prest_doss.seq_solde = int(obj_prest_doss.seq_solde) + 1
+
+			if v_obj_fact is None :
+				v_chem_pj_fact = None
+			else :
+
+				# J'initialise le nom du fichier uploadé ainsi que le chemin de destination.
+				n_fich = crypt_val('{0}-{1}'.format(request.user.id, time.strftime('%d%m%Y%H%M%S')))
+				v_chem_pj_fact = 'dossiers/{0}/factures/{1}.pdf'.format(obj_doss.num_doss, n_fich)
+
+				# J'uploade le fichier.
+				upload_fich(v_obj_fact, v_chem_pj_fact)
+
+			# Je remplis les données attributaires du nouvel objet TFacture.
+			obj_nvelle_fact = TFacture(
+				chem_pj_fact = v_chem_pj_fact,
+				comm_fact = v_comm_fact,
+				dt_mand_moa_fact = v_dt_mand_moa_fact,
+				dt_rec_fact = v_dt_rec_fact,
+				mont_ht_fact = v_mont_ht_fact,
+				mont_ttc_fact = v_mont_ttc_fact,
+				num_bord = v_num_bord,
+				num_fact = v_num_fact,
+				num_mandat = v_num_mandat,
+				suivi_fact = v_suivi_fact,
+				id_doss = obj_doss,
+				id_prest = TPrestation.objects.get(id_prest = v_prest)
+			)
+
+			# Je créé un nouvel objet TFacture.
+			obj_nvelle_fact.save()
+
+			# Je mets à jour l'objet TPrestationsDossier (séquentiel lié au suivi de la facture saisie).
+			obj_prest_doss.save()
+
+			# J'affiche le message de succès.
+			reponse = HttpResponse(
+				json.dumps({
+					'success' : 'La facture a été ajoutée avec succès.',
+					'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss])
+				}),
+				content_type = 'application/json'
+			)
+
+			# Je renseigne l'onglet actif après rechargement de la page.
+			request.session['app-nav'] = '#ong_factures'
+
+		else :
+
+			# J'affiche les erreurs.
+			reponse = HttpResponse(json.dumps(f_ajout_fact.errors), content_type = 'application/json')
 
 	return reponse

@@ -126,39 +126,33 @@ class SelectionnerDossiers(forms.Form) :
 		super(SelectionnerDossiers, self).__init__(*args, **kwargs)
 
 		# J'alimente la liste déroulante des maîtres d'ouvrages.
-		les_org_moa = list([(i.id_org_moa.id_org, i.id_org_moa.n_org) for i in TMoa.objects.filter(
-			en_act = 1
-		).order_by('id_org_moa__n_org')])
+		les_org_moa = list([(i.id_org_moa.id_org, i.id_org_moa.n_org) for i in TMoa.objects.filter(en_act = 1)])
 		les_org_moa.extend([('T', 'Tous')]);
 		self.fields['cbsm_org_moa'].choices = les_org_moa
 		
 		# J'alimente la liste déroulante des programmes.
 		les_progr = list(OPTION_INITIALE)
-		les_progr.extend([(i.id_progr, i.int_progr) for i in TProgramme.objects.order_by('int_progr')])
+		les_progr.extend([(i.id_progr, i.int_progr) for i in TProgramme.objects.all()])
 		self.fields['zld_progr'].choices = les_progr
 
 		# J'alimente la liste déroulante des natures de dossiers.
 		les_nat_doss = list(OPTION_INITIALE)
-		les_nat_doss.extend([(i.id_nat_doss, i.int_nat_doss) for i in TNatureDossier.objects.order_by('int_nat_doss')])
+		les_nat_doss.extend([(i.id_nat_doss, i.int_nat_doss) for i in TNatureDossier.objects.all()])
 		self.fields['zl_nat_doss'].choices = les_nat_doss
 
 		# J'alimente la liste déroulante des avis du comité de programmation.
 		les_av_cp = list(OPTION_INITIALE)
-		les_av_cp.extend([(i.id_av_cp, i.int_av_cp) for i in TAvisCp.objects.order_by('int_av_cp')])
+		les_av_cp.extend([(i.id_av_cp, i.int_av_cp) for i in TAvisCp.objects.all()])
 		self.fields['zl_av_cp'].choices = les_av_cp
 
 		# J'alimente la liste déroulante des financeurs.
 		les_org_fin = list(OPTION_INITIALE)
-		les_org_fin.extend([(i.id_org_fin, i.id_org_fin.n_org) for i in TFinanceur.objects.order_by(
-			'id_org_fin__n_org')
-		])
+		les_org_fin.extend([(i.id_org_fin, i.id_org_fin.n_org) for i in TFinanceur.objects.all()])
 		self.fields['zl_org_fin'].choices = les_org_fin
 
 		# J'alimente la liste déroulante des prestataires.
 		les_org_prest = list(OPTION_INITIALE)
-		les_org_prest.extend([(i.id_org_prest, i.id_org_prest.n_org) for i in TPrestataire.objects.order_by(
-			'id_org_prest__n_org')
-		])
+		les_org_prest.extend([(i.id_org_prest, i.id_org_prest.n_org) for i in TPrestataire.objects.all()])
 		self.fields['zl_org_prest'].choices = les_org_prest
 
 	def clean(self) :

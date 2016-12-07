@@ -17,12 +17,11 @@ class ANatureDossier(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_nat_doss']
-	ordering = ['int_nat_doss']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_nat_doss'),
 			)
@@ -51,7 +50,6 @@ class ATechnicien(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ('techn', 'en_act')
-	ordering = ['n_techn', 'pren_techn']
 	actions = [en_act, en_inact, admin.actions.delete_selected]
 	list_filter = (
 		('en_act', admin.BooleanFieldListFilter),
@@ -59,7 +57,7 @@ class ATechnicien(admin.ModelAdmin) :
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('n_techn'),
 				('pren_techn'),
@@ -71,35 +69,15 @@ class ATechnicien(admin.ModelAdmin) :
 # J'ajoute la possibilité de gérer les techniciens.
 admin.site.register(TTechnicien, ATechnicien)
 
-class AAvancement(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['int_av']
-	ordering = ['int_av']
-	actions = [admin.actions.delete_selected]
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Caractéristiques', {
-			'fields' : (
-				('int_av'),
-			)
-		}),
-	)
-
-# J'ajoute la possibilité de gérer les états d'avancements.
-admin.site.register(TAvancement, AAvancement)
-
 class AAvisCp(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_av_cp']
-	ordering = ['int_av_cp']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_av_cp'),
 			)
@@ -109,21 +87,98 @@ class AAvisCp(admin.ModelAdmin) :
 # J'ajoute la possibilité de gérer les avis du comité de programmation.
 admin.site.register(TAvisCp, AAvisCp)
 
-class AProgramme(admin.ModelAdmin) :
+class AAvancement(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
-	list_display = ['int_progr']
-	ordering = ['int_progr']
+	list_display = ['int_av']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
-				('int_progr'),
+				('int_av'),
 			)
 		}),
-		('Paramètres', {
+	)
+
+# J'ajoute la possibilité de gérer les états d'avancements.
+admin.site.register(TAvancement, AAvancement)
+
+class ATypeProgramme(admin.ModelAdmin) :
+
+	# Je paramètre les différentes options.
+	list_display = ['int_type_progr']
+	actions = [admin.actions.delete_selected]
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_type_progr'),
+			)
+		}),
+	)
+
+# J'ajoute la possibilité de gérer les types de programmes.
+admin.site.register(TTypeProgramme, ATypeProgramme)
+
+class ATypeDossierInline(admin.TabularInline) :
+
+	model = TTypeDossier.type_progr.through
+	extra = 0
+	verbose_name = ''
+
+class ATypeDossier(admin.ModelAdmin) :
+
+	# Je mets en forme la dernière colonne du tableau.
+	def les_type_progr(self, p_obj) :
+		tab = []
+		for un_obj in p_obj.type_progr.all() :
+			tab.append(un_obj.int_type_progr)
+		return ', '.join(tab)
+	les_type_progr.allow_tags = True
+	les_type_progr.short_description = 'Type(s) de programme(s)'
+
+	# Je paramètre les différentes options.
+	list_display = ['int_type_doss', 'les_type_progr']
+	actions = [admin.actions.delete_selected]
+	inlines = [ATypeDossierInline]
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_type_doss'),
+			)
+		}),
+	)
+
+# J'ajoute la possibilité de gérer les types de dossiers.
+admin.site.register(TTypeDossier, ATypeDossier)
+
+class AProgramme(admin.ModelAdmin) :
+
+	# Je mets en forme la dernière colonne du tableau.
+	def int_type_progr(self, p_obj) :
+		return p_obj.id_type_progr.int_type_progr
+	int_type_progr.allow_tags = True
+	int_type_progr.short_description = 'Type de programme'
+
+	# Je paramètre les différentes options.
+	list_display = ['int_progr', 'int_type_progr']
+	actions = [admin.actions.delete_selected]
+	list_filter = ['id_type_progr']
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_progr'),
+				('id_type_progr')
+			)
+		}),
+		('Options', {
 			'fields' : (
 				('dim_progr'),
 				('seq_progr')
@@ -150,13 +205,12 @@ class AAxe(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ('axe', 'id_progr')
-	ordering = ['id_progr__int_progr', 'num_axe']
 	actions = [admin.actions.delete_selected]
 	list_filter = ['id_progr']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('id_progr'),
 				('num_axe'),
@@ -189,15 +243,16 @@ class ASousAxe(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ('ss_axe', 'int_progr')
-	ordering = ['id_axe__id_progr__int_progr', 'id_ss_axe']
 	actions = [admin.actions.delete_selected]
 	list_filter = ['id_axe__id_progr']
 
+	form = MSousAxe
+
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques générales', {
+		('Informations générales', {
 			'fields' : (
-				('id_axe'),
+				('les_axes'),
 				('num_ss_axe'),
 				('int_ss_axe')
 			)
@@ -214,7 +269,7 @@ class ASousAxe(admin.ModelAdmin) :
 	# J'initialise les champs en lecture seule lors d'une modification.
 	def get_readonly_fields(self, request, obj = None) :
 		if obj :
-			return self.readonly_fields + ('num_ss_axe', 'id_axe')
+			return self.readonly_fields + ('num_ss_axe',)
 		return self.readonly_fields
 
 # J'ajoute la possibilité de gérer les sous-axes.
@@ -237,15 +292,16 @@ class AAction(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ('act', 'int_progr')
-	ordering = ['id_ss_axe__id_axe__id_progr__int_progr', 'id_act']
 	actions = [admin.actions.delete_selected]
 	list_filter = ['id_ss_axe__id_axe__id_progr']
 
+	form = MAction
+
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques générales', {
+		('Informations générales', {
 			'fields' : (
-				('id_ss_axe'),
+				('les_ss_axes'),
 				('num_act'),
 				('int_act')
 			)
@@ -262,66 +318,16 @@ class AAction(admin.ModelAdmin) :
 	# J'initialise les champs en lecture seule lors d'une modification.
 	def get_readonly_fields(self, request, obj = None) :
 		if obj :
-			return self.readonly_fields + ('num_act', 'id_ss_axe')
+			return self.readonly_fields + ('num_act',)
 		return self.readonly_fields
 
 # J'ajoute la possibilité de gérer les actions.
 admin.site.register(TAction, AAction)
 
-class ATypeDossier(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['int_type_doss', 'id_progr']
-	ordering = ['id_progr__int_progr', 'int_type_doss']
-	actions = [admin.actions.delete_selected]
-	list_filter = ['id_progr']
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Caractéristiques', {
-			'fields' : (
-				('id_progr'),
-				('int_type_doss')
-			)
-		}),
-	)
-
-	# J'initialise les champs en lecture seule lors d'une modification.
-	def get_readonly_fields(self, request, obj = None) :
-		if obj :
-			return self.readonly_fields + ('id_progr',)
-		return self.readonly_fields
-
-# J'ajoute la possibilité de gérer les types de dossiers.
-admin.site.register(TTypeDossier, ATypeDossier)
-
-class ACommune(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['num_comm', 'n_comm']
-	ordering = ['num_comm', 'n_comm']
-	actions = [admin.actions.delete_selected]
-	search_fields = ('n_comm',)
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Caractéristiques', {
-			'fields' : (
-				('num_comm'),
-				('n_comm'),
-				('cp_comm')
-			)
-		}),
-	)
-
-# J'ajoute la possibilité de gérer les communes.
-admin.site.register(TCommune, ACommune)
-
 class AUtilisateur(UserAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['username', 'last_name', 'first_name', 'email', 'is_staff', 'last_login']
-	ordering = ['username']
 	actions = [admin.actions.delete_selected]
 	search_fields = ('username',)
 	list_filter = (
@@ -336,12 +342,12 @@ class AUtilisateur(UserAdmin) :
 
 	# Je mets en forme le formulaire de modification.
 	fieldsets = (
-		('Informations personnelles', {
+		('Informations générales', {
 			'fields' : (
 				('last_name'),
 				('first_name'),
 				('email'),
-				('id_org'),
+				('les_org'),
 				('tel_util'),
 				('port_util')
 			)
@@ -363,12 +369,12 @@ class AUtilisateur(UserAdmin) :
 
 	# Je mets en forme le formulaire d'ajout.
 	add_fieldsets = (
-		('Informations personnelles de base', {
+		('Informations générales', {
 			'fields' : (
 				('last_name'),
 				('first_name'),
 				('email'),
-				('id_org')
+				('les_org')
 			)
 		}),
 		('Identifiants', {
@@ -387,16 +393,23 @@ admin.site.register(TUtilisateur, AUtilisateur)
 admin.site.unregister(User)
 admin.site.unregister(Group)
 
+class AMoaInline(admin.TabularInline) :
+
+	model = TMoa.moa.through
+	fk_name = 'id_org_moa_fil'
+	extra = 0
+	verbose_name = ''
+
 class AMoa(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['n_org']
-	ordering = ['n_org']
 	actions = [admin.actions.delete_selected]
+	inlines = [AMoaInline]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('n_org'),
 				('tel_org'),
@@ -410,7 +423,9 @@ class AMoa(admin.ModelAdmin) :
 				('adr_org'),
 				('compl_adr_org'),
 				('cp_org'),
-				('num_comm')
+				('id_comm'),
+				('cedex_org'),
+				('bp_org')
 			)
 		}),
 		('Options', {
@@ -429,40 +444,15 @@ class AMoa(admin.ModelAdmin) :
 # J'ajoute la possibilité de gérer les maîtres d'ouvrages.
 admin.site.register(TMoa, AMoa)
 
-class ARegroupementMoa(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['id_org_moa_fil', 'id_org_moa_anc']
-	ordering = ['id_org_moa_fil__id_org_moa__n_org', 'id_org_moa_anc__id_org_moa__n_org']
-	actions = [admin.actions.delete_selected]
-	list_filter = (
-		('id_org_moa_fil', admin.RelatedOnlyFieldListFilter),
-		('id_org_moa_anc', admin.RelatedOnlyFieldListFilter),
-	)
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Caractéristiques', {
-			'fields' : (
-				('id_org_moa_fil'),
-				('id_org_moa_anc'),
-			)
-		}),
-	)
-
-# J'ajoute la possibilité de gérer les regroupements de maîtres d'ouvrages.
-admin.site.register(TRegroupementMoa, ARegroupementMoa)
-
 class ARiviere(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['n_riv']
-	ordering = ['n_riv']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('n_riv'),
 			)
@@ -476,12 +466,11 @@ class AUnite(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_unit']
-	ordering = ['int_unit']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_unit'),
 			)
@@ -495,12 +484,11 @@ class APortee(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_port']
-	ordering = ['int_port']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_port'),
 			)
@@ -514,12 +502,11 @@ class APeriodePriseVuePhoto(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_ppv_ph']
-	ordering = ['int_ppv_ph']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_ppv_ph'),
 			)
@@ -533,12 +520,11 @@ class ATypeDeclaration(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_type_decl']
-	ordering = ['int_type_decl']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_type_decl'),
 			)
@@ -552,12 +538,11 @@ class ATypeAvancementArrete(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_type_av_arr']
-	ordering = ['int_type_av_arr']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_type_av_arr'),
 			)
@@ -566,26 +551,6 @@ class ATypeAvancementArrete(admin.ModelAdmin) :
 
 # J'ajoute la possibilité de gérer les types d'avancements d'un arrêté.
 admin.site.register(TTypeAvancementArrete, ATypeAvancementArrete)
-
-class ADepartement(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['num_dep', 'n_dep']
-	ordering = ['num_dep']
-	actions = [admin.actions.delete_selected]
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Caractéristiques', {
-			'fields' : (
-				('num_dep'),
-				('n_dep')
-			)
-		}),
-	)
-
-# J'ajoute la possibilité de gérer les départements.
-admin.site.register(TDepartement, ADepartement)
 
 class APrestataire(admin.ModelAdmin) :
 
@@ -596,7 +561,7 @@ class APrestataire(admin.ModelAdmin) :
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('n_org'),
 				('siret_org_prest'),
@@ -611,13 +576,15 @@ class APrestataire(admin.ModelAdmin) :
 				('adr_org'),
 				('compl_adr_org'),
 				('cp_org'),
-				('num_comm')
+				('id_comm'),
+				('cedex_org'),
+				('bp_org')
 			)
 		}),
 		('Autres', {
 			'fields' : (
 				('num_dep'),
-				('comm_org')
+				('comm_org'),
 			)
 		})
 	)
@@ -634,7 +601,7 @@ class AFinanceur(admin.ModelAdmin) :
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('n_org'),
 				('tel_org'),
@@ -648,7 +615,9 @@ class AFinanceur(admin.ModelAdmin) :
 				('adr_org'),
 				('compl_adr_org'),
 				('cp_org'),
-				('num_comm')
+				('id_comm'),
+				('cedex_org'),
+				('bp_org')
 			)
 		}),
 		('Autres', {
@@ -665,12 +634,11 @@ class ANaturePrestation(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_nat_prest']
-	ordering = ['int_nat_prest']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_nat_prest'),
 			)
@@ -684,12 +652,11 @@ class APaiementPremierAcompte(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_paiem_prem_ac']
-	ordering = ['int_paiem_prem_ac']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_paiem_prem_ac'),
 			)
@@ -703,12 +670,11 @@ class ATypeVersement(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.
 	list_display = ['int_type_vers']
-	ordering = ['int_type_vers']
 	actions = [admin.actions.delete_selected]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
-		('Caractéristiques', {
+		('Informations générales', {
 			'fields' : (
 				('int_type_vers'),
 			)

@@ -1,5 +1,6 @@
-/* Constante globale */
+/* Constantes globales */
 const CONTACT_ADMIN = 'Veuillez contacter l\'administrateur de l\'application.';
+const POURC_TVA = 1.2;
 
 /* Variable globale */
 var tab_datatables;
@@ -12,16 +13,18 @@ $(document).ready(function()
 	// J'initialise les datatables de l'application.
 	tab_datatables =
 	{
-		'ajouter_dossier_associe' : init_datatable($('#tab_ajouter_dossier_associe'), [4], true),
-		'choisir_dossier' : init_datatable($('#tab_choisir_dossier'), [4], true),
-		'consulter_avenants' : init_datatable($('#tab_consulter_avenants'), [5]),
+		'ajouter_dossier_associe' : init_datatable($('#tab_ajouter_dossier_associe'), [3]),
+		'choisir_dossier' : init_datatable($('#tab_choisir_dossier'), [3]),
+		'choisir_prestation' : init_datatable($('#tab_choisir_prestation'), [5]),
+		'consulter_avenants' : init_datatable($('#tab_consulter_avenants'), []),
 		'consulter_demandes_versement' : init_datatable($('#tab_consulter_demandes_versement'), [6]),
-		'consulter_dossiers_associes' : init_datatable($('#tab_consulter_dossiers_associes'), [6]),
-		'consulter_factures' : init_datatable($('#tab_consulter_factures'), [5]),
+		'consulter_dossiers_associes' : init_datatable($('#tab_consulter_dossiers_associes'), [5]),
+		'consulter_factures' : init_datatable($('#tab_consulter_factures'), [4]),
 		'consulter_photos' : init_datatable($('#tab_consulter_photos'), [0, 4]),
-		'consulter_financements' : init_datatable($('#tab_consulter_financements'), [6]),
-		'consulter_prestations' : init_datatable($('#tab_consulter_prestations'), [7]),
-		'selectionner_dossiers' : init_datatable($('#tab_selectionner_dossiers'), [7], true)
+		'consulter_financements' : init_datatable($('#tab_consulter_financements'), [4]),
+		'consulter_prestations' : init_datatable($('#tab_consulter_prestations'), [6]),
+		'consulter_dossiers_prestation' : init_datatable($('#tab_dossiers_prestation'), [2]),
+		'selectionner_dossiers' : init_datatable($('#tab_selectionner_dossiers'), [6])
 	}
 
 	// J'initialise les zones de date de l'application.
@@ -87,11 +90,11 @@ $(document).ready(function()
 		$.ajax(
 		{
 			type : 'post',
-			url : URL_MENU_DOSS,
+			url : URL_APP_NAV,
 			dataType : 'html',
 			success : function(data)
 			{
-				$('#menu_dossier').find('a[href="' + data + '"]').parent().addClass('active');
+				$('#app-nav').find('a[href="' + data + '"]').parent().addClass('active');
 				$(data).addClass('active in');
 			}	
 		});

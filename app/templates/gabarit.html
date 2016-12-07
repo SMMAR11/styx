@@ -11,6 +11,7 @@
 		<link rel="stylesheet" type="text/css" href="{% static './vendors/bootstrap/css/bootstrap.css' %}">
 		<!-- J'inclus les feuilles de styles des bibliothèques utilisées. -->
 		<link rel="stylesheet" href="{% static './vendors/bootstrap-datepicker-master/css/bootstrap-datepicker.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/jquery-typeahead-2.7.2/dist/jquery.typeahead.min.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static './vendors/DataTables/css/jquery.dataTables.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet/leaflet.css' %}">
 		<!-- J'inclus les feuilles de styles du modèle de l'application. -->
@@ -112,12 +113,14 @@
 		<!-- J'inclus les scripts des bibliothèques utilisées. -->
 		<script type="text/javascript" src="{% static './vendors/bootstrap-datepicker-master/js/bootstrap-datepicker.js' %}"></script>
 		<script type="text/javascript" src="{% static './vendors/bootstrap-datepicker-master/locales/bootstrap-datepicker.fr.min.js' %}"></script>
+		<script type="text/javascript" src="{% static './vendors/jquery-typeahead-2.7.2/dist/jquery.typeahead.min.js' %}"></script>
 		<script type="text/javascript" src="{% static './vendors/DataTables/js/jquery.dataTables.js' %}"></script>
 		<script type="text/javascript" src="{% static './vendors/leaflet/leaflet-src.js' %}"></script>
 		<!-- J'inclus mes scripts JavaScript. -->
 		<script type="text/javascript">
 
-			const URL_MENU_DOSS = '{% url 'retourner_onglet_actif' %}';
+			const URL_APP_NAV = '{% url 'retourner_onglet_actif' %}';
+			const URL_AUTOCOMPL = '{% url 'autocompleter' %}';
 			
 		</script>
 		<script type="text/javascript" src="{% static './js/initialisations.js' %}"></script>

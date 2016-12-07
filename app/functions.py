@@ -48,12 +48,13 @@ def aff_mess_suppr(p_vue, p_mess = '') :
 '''
 Cette fonction permet de générer des données concernant les axes, les sous-axes, les actions et les types de dossiers.
 request : Objet requête
+Retourne un tableau associatif
 '''
 def alim_liste(request) :
 
 	''' Imports '''
 	from app.functions import index_alpha
-	from app.models import TAction, TAxe, TSousAxe, TTypeDossier
+	from app.models import TAction, TAxe, TProgramme, TSousAxe, TTypesProgrammesTypeDossier
 
 	# J'initialise la valeur des paramètres "GET".
 	v_progr = -1
@@ -72,18 +73,24 @@ def alim_liste(request) :
 		v_progr = request.GET['programme']
 
 		# Je récupère la liste des axes relatifs à un programme.
-		les_axes = TAxe.objects.filter(id_progr = v_progr).order_by('num_axe')
+		les_axes = TAxe.objects.filter(id_progr = v_progr)
 
 		# J'empile le tableau des axes.
 		for un_axe in les_axes :
 			tab_axes.append([un_axe.num_axe, un_axe.num_axe])
 
+		v_type_progr = -1
+		try :
+			v_type_progr = TProgramme.objects.get(id_progr = v_progr).id_type_progr.id_type_progr
+		except :
+			pass
+
 		# Je récupère la liste des types de dossiers relatifs à un programme.
-		les_types_doss = TTypeDossier.objects.filter(id_progr = v_progr)
+		les_types_doss = TTypesProgrammesTypeDossier.objects.filter(id_type_progr = v_type_progr)
 
 		# J'empile le tableau des types de dossiers.
 		for un_type_doss in les_types_doss :
-			tab_types_doss.append([un_type_doss.id_type_doss, un_type_doss.int_type_doss])
+			tab_types_doss.append([un_type_doss.id_type_doss.id_type_doss, un_type_doss.id_type_doss.int_type_doss])
 
 	if 'axe' in request.GET :
 
@@ -91,7 +98,7 @@ def alim_liste(request) :
 		v_axe = request.GET['axe']
 		
 		# Je récupère la liste des sous-axes relatifs à un programme et un axe.
-		les_ss_axes = TSousAxe.objects.filter(id_axe = '{0}_{1}'.format(v_progr, v_axe)).order_by('num_ss_axe')
+		les_ss_axes = TSousAxe.objects.filter(id_axe = '{0}_{1}'.format(v_progr, v_axe))
 
 		# J'empile le tableau des sous-axes.
 		for un_ss_axe in les_ss_axes :
@@ -103,9 +110,7 @@ def alim_liste(request) :
 		v_ss_axe = request.GET['sous_axe']
 
 		# Je récupère la liste des actions relatives à un programme, un axe et un sous-axe.
-		les_act = TAction.objects.filter(id_ss_axe = '{0}_{1}_{2}'.format(v_progr, v_axe, v_ss_axe)).order_by(
-			'num_act'
-		)
+		les_act = TAction.objects.filter(id_ss_axe = '{0}_{1}_{2}'.format(v_progr, v_axe, v_ss_axe))
 
 		# J'empile le tableau des actions.
 		for une_act in les_act :
@@ -116,6 +121,66 @@ def alim_liste(request) :
 		'ss_axe' : tab_ss_axes,
 		'act' : tab_act,
 		'type_doss' : tab_types_doss
+	}
+
+'''
+Cette fonction permet de calculer des intervalles de valeurs afin de redistribuer correctement les montants d'une
+prestation.
+p_doss : Identifiant du dossier à traiter
+p_prest : Identifiant de la prestation à traiter
+Retourne un tableau associatif
+'''
+def calc_interv(p_doss, p_prest) :
+
+	''' Imports '''
+	from app.models import TPrestation
+	from app.sql_views import VSuiviPrestationsDossier
+	from app.sql_views import VSuiviDossier
+
+	# Je pointe vers un objet VSuiviPrestationsDossier.
+	obj_suivi_prest_doss = VSuiviPrestationsDossier.objects.get(id_doss = p_doss, id_prest = p_prest)
+
+	# Je pointe vers un objet VSuiviDossier.
+	obj_suivi_doss = VSuiviDossier.objects.get(id_doss = p_doss)
+
+	# Je définis un tableau de valeurs possibles pour chaque borne HT.
+	tab_bornes_min_ht = sorted([
+		obj_suivi_prest_doss.mont_ht_fact_sum - obj_suivi_prest_doss.mont_ht_aven_sum,
+		obj_suivi_prest_doss.mont_ht_fact_sum
+	])
+
+	tab_bornes_max_ht = sorted([
+		obj_suivi_prest_doss.mont_ht_prest + obj_suivi_doss.mont_ht_rau,
+		TPrestation.objects.get(id_prest = p_prest).mont_ht_tot_prest
+	])
+
+	# Je définis les bornes HT.
+	borne_min_ht = tab_bornes_min_ht[0]
+	if borne_min_ht < 0 :
+		borne_min_ht = 0
+
+	borne_max_ht = tab_bornes_max_ht[0]
+
+	# Je réalise le même travail pour le TTC.
+	tab_bornes_min_ttc = sorted([
+		obj_suivi_prest_doss.mont_ttc_fact_sum - obj_suivi_prest_doss.mont_ttc_aven_sum,
+		obj_suivi_prest_doss.mont_ttc_fact_sum
+	])
+
+	tab_bornes_max_ttc = sorted([
+		obj_suivi_prest_doss.mont_ttc_prest + obj_suivi_doss.mont_ttc_rau,
+		TPrestation.objects.get(id_prest = p_prest).mont_ttc_tot_prest
+	])
+
+	borne_min_ttc = tab_bornes_min_ttc[0]
+	if borne_min_ttc < 0 :
+		borne_min_ttc = 0
+
+	borne_max_ttc = tab_bornes_max_ttc[0]
+
+	return {
+		'ht' : { 'min' : borne_min_ht, 'max' : borne_max_ht },
+		'ttc' : { 'min' : borne_min_ttc, 'max' : borne_max_ttc }
 	}
 
 '''
@@ -177,64 +242,119 @@ request : Objet requête
 def filtr_doss(request) :
 
 	''' Imports '''
-	from app.functions import init_post, integer
-	from app.models import TDossier, TRegroupementMoa
+	from app.forms.gestion_dossiers import ChoisirDossier
+	from app.functions import integer
+	from app.models import TAction, TAxe, TDossier, TRegroupementsMoa, TSousAxe
 	from django.db.models import Q
 	from functools import reduce
 	import operator
 
-	# Je récupère les données du formulaire.
-	v_org_moa = integer(init_post(request.POST, 'zl_org_moa'))
-	v_progr = integer(init_post(request.POST, 'zld_progr'))
-	v_axe = integer(init_post(request.POST, 'zld_axe'))
-	v_ss_axe = integer(init_post(request.POST, 'zld_ss_axe'))
-	v_act = integer(init_post(request.POST, 'zld_act'))
-	v_nat_doss = integer(init_post(request.POST, 'zl_nat_doss'))
-	v_ann_delib_moa_doss = integer(init_post(request.POST, 'zl_ann_delib_moa_doss'))
+	# Je vérifie la validité du formulaire de recherche d'un dossier.
+	f = ChoisirDossier(request.POST)
 
-	# Je déclare des tableaux qui stockeront les conditions de la requête SQL.
-	tab_or = []
-	tab_and = {}
+	# Je rajoute un choix valide pour certaines listes déroulantes (prévention d'erreurs).
+	post_progr = request.POST.get('zld_progr')
+	post_axe = request.POST.get('zld_axe')
+	post_ss_axe = request.POST.get('zld_ss_axe')
+	post_act = request.POST.get('zld_act')
 
-	# J'empile les tableaux des conditions.
-	if v_org_moa > -1 :
-
-		for un_couple_moa in TRegroupementMoa.objects.filter(id_org_moa_fil = v_org_moa) :
-			tab_or.append(Q(**{ 'id_org_moa' : un_couple_moa.id_org_moa_anc }))
-		
-		if len(tab_or) > 0 :
-			tab_or.append(Q(**{ 'id_org_moa' : v_org_moa }))
+	axe_valide = False
+	try :
+		TAxe.objects.get(id_progr = post_progr, num_axe = post_axe)
+		axe_valide = True
+	except :
+		if post_axe == 'D' or post_axe == 'DBP' :
+			axe_valide = True
 		else :
-			tab_and['id_org_moa'] = v_org_moa
+			pass
 
-	if v_progr > -1 :
-		tab_and['id_progr'] = v_progr
+	if axe_valide == True :
+		f.fields['zld_axe'].choices = [(post_axe, post_axe)]
 
-	if v_axe > -1 :
-		tab_and['num_axe'] = v_axe
+	ss_axe_valide = False
+	try :
+		TSousAxe.objects.get(id_axe = '{0}_{1}'.format(post_progr, post_axe), num_ss_axe = post_ss_axe)
+		ss_axe_valide = True
+	except :
+		if post_ss_axe == 'D' or post_ss_axe == 'DBP' :
+			ss_axe_valide = True
+		else :
+			pass
 
-	if v_ss_axe > -1 :
-		tab_and['num_ss_axe'] = v_ss_axe
+	if ss_axe_valide == True :
+		f.fields['zld_ss_axe'].choices = [(post_ss_axe, post_ss_axe)]
 
-	if v_act > -1 :
-		tab_and['num_act'] = v_act
+	act_valide = False
+	try :
+		TAction.objects.get(
+			id_ss_axe = '{0}_{1}_{2}'.format(post_progr, post_axe, post_ss_axe), num_act = post_act
+		)
+		act_valide = True
+	except :
+		if post_act == 'D' or post_act == 'DBP' :
+			act_valide = True
+		else :
+			pass
 
-	if v_nat_doss > -1 :
-		tab_and['id_nat_doss'] = v_nat_doss
+	if act_valide == True :
+		f.fields['zld_act'].choices = [(post_act, post_act)]
 
-	if v_ann_delib_moa_doss > -1 :
-		tab_and['dt_delib_moa_doss__year'] = v_ann_delib_moa_doss
+	if f.is_valid() :
 
-	# Je stocke dans un tableau les dossiers filtrés.
-	if len(tab_or) > 0 :
-		les_doss = TDossier.objects.filter(reduce(operator.or_, tab_or), **tab_and)
+		# Je récupère et nettoie les données du formulaire valide.
+		cleaned_data = f.cleaned_data
+		v_org_moa = integer(cleaned_data['zl_org_moa'])
+		v_progr = integer(cleaned_data['zld_progr'])
+		v_axe = integer(cleaned_data['zld_axe'])
+		v_ss_axe = integer(cleaned_data['zld_ss_axe'])
+		v_act = integer(cleaned_data['zld_act'])
+		v_nat_doss = integer(cleaned_data['zl_nat_doss'])
+		v_ann_delib_moa_doss = integer(cleaned_data['zl_ann_delib_moa_doss'])
+
+		# Je déclare des tableaux qui stockeront les conditions de la requête SQL.
+		tab_or = []
+		tab_and = {}
+
+		# J'empile les tableaux des conditions.
+		if v_org_moa > -1 :
+
+			for un_couple_moa in TRegroupementsMoa.objects.filter(id_org_moa_fil = v_org_moa) :
+				tab_or.append(Q(**{ 'id_org_moa' : un_couple_moa.id_org_moa_anc }))
+			
+			if len(tab_or) > 0 :
+				tab_or.append(Q(**{ 'id_org_moa' : v_org_moa }))
+			else :
+				tab_and['id_org_moa'] = v_org_moa
+
+		if v_progr > -1 :
+			tab_and['id_progr'] = v_progr
+
+		if v_axe > -1 :
+			tab_and['num_axe'] = v_axe
+
+		if v_ss_axe > -1 :
+			tab_and['num_ss_axe'] = v_ss_axe
+
+		if v_act > -1 :
+			tab_and['num_act'] = v_act
+
+		if v_nat_doss > -1 :
+			tab_and['id_nat_doss'] = v_nat_doss
+
+		if v_ann_delib_moa_doss > -1 :
+			tab_and['dt_delib_moa_doss__year'] = v_ann_delib_moa_doss
+
+		# Je stocke dans un tableau les dossiers filtrés.
+		if len(tab_or) > 0 :
+			les_doss = TDossier.objects.filter(reduce(operator.or_, tab_or), **tab_and)
+		else :
+			les_doss = TDossier.objects.filter(**tab_and)
+
+		reponse = { 'data' : les_doss, 'status' : True }
 	else :
-		les_doss = TDossier.objects.filter(**tab_and)
+		reponse = { 'data' : f.errors, 'status' : False }
 
-	# Je trie les dossiers filtrés.
-	les_doss = les_doss.order_by('-dt_delib_moa_doss', 'num_doss')
-
-	return les_doss
+	return reponse
 
 '''
 Cette fonction convertit une chaîne représentant un nombre entier sous forme de décimal en une chaîne représentant un
@@ -287,7 +407,7 @@ def gen_tabl_chois_doss(request, p_vue) :
 
 	# Je récupère dans un tableau l'ensemble des lignes du tableau HTML des dossiers filtrés.
 	tab_lg = []
-	for un_doss in TDossier.objects.order_by('num_doss') :
+	for un_doss in TDossier.objects.all() :
 
 		# J'initialise une ligne du tableau HTML des dossiers filtrés.
 		lg = '''
@@ -295,23 +415,21 @@ def gen_tabl_chois_doss(request, p_vue) :
 			<td class="b">{0}</td>
 			<td>{1}</td>
 			<td>{2}</td>
-			<td>{3}</td>
 			<td>
-				<span class="bt-choisir pointer pull-right" onclick="ajout_doss_ass(event)" title="Choisir le dossier"></span>
+				<span class="bt-choisir pointer pull-right" title="Choisir le dossier"></span>
 			</td>
 		</tr>
 		'''.format(
 			conv_none(un_doss.num_doss),
-			conv_none(un_doss.int_doss),
 			conv_none(un_doss.id_org_moa.id_org_moa.n_org),
-			conv_none(reecr_dt(un_doss.dt_delib_moa_doss))
+			conv_none(reecr_dt(un_doss.dt_delib_moa_doss)) or 'En projet'
 		)
 
 		# J'ajoute la ligne du tableau HTML des dossiers filtrés.
 		tab_lg.append(lg)
 
 	return '''
-	<form name="form_ajouter_dossier_associe" method="post" action="{0}" class="c-theme">
+	<form name="form_ajouter_dossier_associe" method="post" action="{0}?action=filtrer-dossiers" class="c-theme">
 		<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
 		<fieldset style="padding-bottom: 0;">
 			<legend>Rechercher par</legend>
@@ -338,7 +456,6 @@ def gen_tabl_chois_doss(request, p_vue) :
 			<thead>
 				<tr>
 					<th>N° du dossier</th>
-					<th>Intitulé</th>
 					<th>Maître d'ouvrage</th>
 					<th>Date de délibération au maître d'ouvrage</th>
 					<th></th>
@@ -495,6 +612,23 @@ def init_form(p_form) :
 			</div>
 			'''.format(un_champ.label, '\n'.join(tab_rng_g), '\n'.join(tab_rng_d))
 
+		# Je traite le cas où le champ en cours est une zone de saisie avec autocomplétion.
+		if un_champ.name.startswith('zsac_') == True :
+			autre_gabarit = True
+			contenu = '''
+			<div class="field-wrapper">
+				<div class="typeahead__container">
+					<div class="typeahead__field">
+						<span class="typeahead__query">
+							<label>{0}</label>
+							{1}
+						</span>
+					</div>
+				</div>
+				<span class="za_erreur"></span>
+			</div>
+			'''.format(un_champ.label, un_champ)
+
 		# Je traite le cas classique si le champ en cours ne demande pas un gabarit d'affichage spécifique.
 		if autre_gabarit == False :
 			if un_champ.label != '' :
@@ -551,22 +685,6 @@ def init_pg_cons(p_tab) :
 		tab_attr[cle] = safe(contenu)
 
 	return tab_attr
-
-'''
-Cette fonction renvoie la valeur d'un élément d'un tableau "POST" selon l'existence ou non de cet élément dans le
-tableau "POST".
-p_tab : Tableau "POST"
-p_cle : Clé de l'élément
-Retourne un nombre
-'''
-def init_post(p_tab, p_cle) :
-
-	reponse = -1
-
-	if p_cle in p_tab :
-		reponse = p_tab[p_cle]
-
-	return reponse
 
 ''' 
 Cette fonction retourne une tranche d'années bornée.
@@ -715,6 +833,70 @@ def upload_fich(p_fich, p_chem_fich) :
 	with open(chem_fich, 'wb+') as fich :
 		for c in p_fich.chunks() :
 			fich.write(c)
+
+'''
+Cette fonction renvoie faux si le montant saisi est incorrect, vrai sinon.
+p_valeur : Montant saisi
+p_etre_nul : Puis-je renseigner un montant nul ?
+'''
+def valid_mont(p_valeur, p_etre_nul = True) :
+
+	# J'initialise la valeur de la variable de sortie de la fonction.
+	erreur = False
+
+	# Je prépare le processus de validation.
+	str_valeur = str(p_valeur)
+	tab_caract = []
+
+	# J'empile le tableau des caractères non-numériques.
+	for i in range(0, len(str_valeur)) :
+		try :
+			int(str_valeur[i])
+		except :
+			tab_caract.append(str_valeur[i])
+
+	# J'initialise un indicateur booléen permettant de jauger la validité du montant saisi.
+	valide = False
+
+	# Je traite le cas où le montant saisi est un nombre décimal.
+	if len(tab_caract) == 1 and '.' in tab_caract :
+
+		valide = True
+
+		# J'initialise deux variables, me permettant de calculer le nombre de décimales du montant saisi.
+		sep_trouve = False
+		cpt_dec = 0
+
+		for i in range(0, len(str_valeur)) :
+
+			# J'incrémente le compteur de décimales dès le moment où le séparateur a été trouvé.
+			if sep_trouve == True :
+				cpt_dec += 1
+
+			# J'informe que le séparateur a été trouvé.
+			if tab_caract[0] in str_valeur[i] :
+				sep_trouve = True
+
+			# Je renvoie une erreur si le montant saisi comporte plus de deux décimales.
+			if cpt_dec > 2 :
+				erreur = True
+
+		# Je renvoie une erreur si le séparateur est le dernier caractère.
+		if tab_caract[0] in str_valeur[len(str_valeur) - 1] :
+			erreur = True
+
+	# Je traite le cas où le montant saisi est un nombre entier.
+	if len(tab_caract) == 0 and str_valeur != '' :
+		valide = True
+
+	if str_valeur == '0' :
+		if p_etre_nul == False :
+			erreur = True
+
+	if valide == False :
+		erreur = True
+
+	return erreur
 
 '''
 Cette procédure renvoie une erreur si l'option par défaut d'une liste déroulante est choisie (dépendante ou non d'une 

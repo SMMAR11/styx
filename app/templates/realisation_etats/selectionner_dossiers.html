@@ -1,10 +1,10 @@
-{% extends './gabarit.html' %}
+{% extends 'gabarit.html' %}
 {% load static %}
 
 {% block content %}
 <div class="row">
 	<div class="col-md-4 saut-md">
-		<form name="form_selectionner_dossiers" method="post" action="{% url 'selectionner_dossiers' %}" class="c-theme">
+		<form name="form_selectionner_dossiers" method="post" action="{% url 'selectionner_dossiers' %}?action=filtrer-dossiers" class="c-theme">
 			{% csrf_token %}
 			<fieldset>
 				<legend>Réaliser un état sur les dossiers</legend>
@@ -21,8 +21,8 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-6">{{ f1.zd_dt_deb_delib_moa_doss }}</div>
-						<div class="col-md-6">{{ f1.zd_dt_fin_delib_moa_doss }}</div>
+						<div class="col-xs-6">{{ f1.zd_dt_deb_delib_moa_doss }}</div>
+						<div class="col-xs-6">{{ f1.zd_dt_fin_delib_moa_doss }}</div>
 					</div>
 					{{ f1.zl_av_cp }}
 					<div class="row">
@@ -31,8 +31,8 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-6">{{ f1.zs_mont_ht_doss_min }}</div>
-						<div class="col-md-6">{{ f1.zs_mont_ht_doss_max }}</div>
+						<div class="col-xs-6">{{ f1.zs_mont_ht_doss_min }}</div>
+						<div class="col-xs-6">{{ f1.zs_mont_ht_doss_max }}</div>
 					</div>
 					<div class="field-wrapper">
 						{{ f1.cb_doss_dep_nn_sold }}
@@ -55,7 +55,6 @@
 				<thead>
 					<tr>
 						<th>N° du dossier</th>
-						<th>Intitulé</th>
 						<th>Maître d'ouvrage</th>
 						<th>Date de délibération au maître d'ouvrage</th>
 						<th>Programme</th>
@@ -68,15 +67,9 @@
 			</table>
 		</div>
 		<br />
-		<div class="icon-link">
-			<div><span class="bt-csv"></span></div>
-			<div><a href="{% url 'exporter_csv_selectionner_dossiers_non_complet' %}">Export non-complet au format CSV</a></div>
-		</div>
+		<a href="{% url 'exporter_csv_selectionner_dossiers_non_complet' %}" class="bt-csv icon-link">Export non-complet au format CSV</a>
 		<br />
-		<div class="icon-link">
-			<div><span class="bt-csv"></span></div>
-			<div><a href="{% url 'exporter_csv_selectionner_dossiers_complet' %}">Export complet au format CSV</a></div>
-		</div>
+		<a href="{% url 'exporter_csv_selectionner_dossiers_complet' %}" class="bt-csv icon-link">Export complet au format CSV</a>
 	</div>
 </div>
 {% endblock content %}

@@ -42,33 +42,56 @@ $('form[name="form_oublier_mdp"]').submit(function(e)
 });
 
 /**
- * Ce script permet de griser le champ relatif à la date de délibération au maître d'ouvrage d'un dossier si l'état d'
- * avancement choisi est "En projet".
+ * Ce script permet de gérer les champs liés à état d'avancement du dossier ainsi que ceux liés au comité de
+ * programmation.
  * e : Variable objet JavaScript
  */
-$('select[id$="zl_av"]').change(function(e)
+$('select[id$="zl_av"], select[id$="zl_av_cp"]').change(function(e)
 {
 	// J'obtiens le préfixe du contrôle.
 	var prefixe = ret_pref(e);
 
 	if (isNaN($(this).val()) == false)
 	{
-		// Je récupère l'intitulé de l'état d'avancement sélectionné.
+		// Je récupère les intitulés.
 		var int_av = $('#id_' + prefixe + 'zl_av option:selected').text();
-		
-		// Je stocke l'objet lié à la date de délibération au maître d'ouvrage.
+		var int_av_cp = $('#id_' + prefixe + 'zl_av_cp option:selected').text();
+
+		// Je pointe vers les contrôles de type "date".
 		var obj_dt_delib_moa_doss = $('#id_' + prefixe + 'zd_dt_delib_moa_doss');
+		var obj_dt_av_cp_doss = $('#id_' + prefixe + 'zd_dt_av_cp_doss');
 
 		if (int_av == 'En projet')
 		{
 			// Je grise le champ relatif à la date de délibération au maître d'ouvrage d'un dossier.
 			obj_dt_delib_moa_doss.val('');
 			obj_dt_delib_moa_doss.attr('disabled', true);
+
+			// Je sélectionne par défaut l'option "En attente".
+			$('#id_' + prefixe + 'zl_av_cp option').each(function()
+			{
+				if ($(this).text() == 'En attente')
+				{
+					$('#id_' + prefixe + 'zl_av_cp').val($(this).val());
+				}
+			});
 		}
 		else
 		{
 			// Je dégrise le champ relatif à la date de délibération au maître d'ouvrage d'un dossier.
 			obj_dt_delib_moa_doss.removeAttr('disabled');
+		}
+
+		if (int_av == 'En projet' || int_av_cp == 'En attente' || int_av_cp == 'Sans objet')
+		{
+			// Je grise le champ relatif à la date de l'avis du comité de programmation.
+			obj_dt_av_cp_doss.val('');
+			obj_dt_av_cp_doss.attr('disabled', true);
+		}
+		else
+		{
+			// Je dégrise le champ relatif à la date de l'avis du comité de programmation.
+			obj_dt_av_cp_doss.removeAttr('disabled');
 		}
 	}
 });
@@ -149,6 +172,21 @@ $('form[name="form_ajouter_dossier_associe"]').change(function(e)
 		},
 		'ChoisirDossier-'
 	);
+});
+
+/**
+ * Ce script permet de transmettre un numéro de dossier associé au formulaire de création d'un dossier.
+ */
+$('#tab_ajouter_dossier_associe').on('click', '.bt-choisir', function()
+{
+	// Je récupère le numéro du dossier choisi.
+	var num_doss = $(this).parent().parent().find($('td:first-child')).text();
+
+	// Je transmets le numéro du dossier associé choisi au formulaire principal.
+	$('input[name$="za_doss_ass"]').val(num_doss);
+
+	// Je ferme la fenêtre modale relative au choix d'un dossier associé.
+	$('#fm_choisir_dossier_associe').modal('hide');
 });
 
 /**
@@ -362,22 +400,69 @@ $('form[name="form_ajouter_financement"]').submit(function(e)
 });
 
 /**
- * Ces 3 scripts permettent le calcul du montant HT et/ou TTC total d'une subvention.
+ * Ce script permet le calcul des montants HT et TTC de participation.
  */
-$('input[name$="zs_mont_ht_elig_fin"]').on('input', function()
-{
-	calc_mont_tot('ht');
-});
+$('input[name$="zs_mont_ht_elig_fin"], input[name$="zs_mont_ttc_elig_fin"], input[name$="zs_pourc_elig_fin"]').on(
+	'input', function()
+	{
+		/**
+		 * Cette fonction permet de calculer un montant de participation.
+		 * p_mont : Montant éligible
+		 * p_pourc : Pourcentage éligible
+		 */
+		function calc_mont(p_mont, p_pourc)
+		{
+			// J'initialise le montant total.
+			var mont_tot = '';
 
-$('input[name$="zs_mont_ttc_elig_fin"]').on('input', function()
-{
-	calc_mont_tot('ttc');
-});
+			if (isNaN(p_mont) == false && isNaN(p_pourc) == false)
+			{
+				if (p_mont != '' && p_pourc != '')
+				{
+					// Je calcule le montant total (arrondi au centième).
+					mont_tot = p_mont * (p_pourc / 100);
+					mont_tot = Math.round(mont_tot * 100) / 100;
+				}
+			}
 
-$('input[name$="zs_pourc_elig_fin"]').on('input', function()
+			return mont_tot;
+		}
+
+		// Je récupère les montants éligibles ainsi que le pourcentage éligible.
+		var mont_ht_elig = $('input[name$="zs_mont_ht_elig_fin"]').val();
+		var mont_ttc_elig = $('input[name$="zs_mont_ttc_elig_fin"]').val();
+		var pourc_elig = $('input[name$="zs_pourc_elig_fin"]').val();
+
+		// Je calcule le montant éligible TTC afin de prévenir un bug si et seulement si le contrôlé altéré est celui
+		// appartenant au montant éligible HT.
+		if ($(this).attr('name').indexOf('zs_mont_ht_elig_fin') > -1)
+		{
+			mont_ttc_elig = (mont_ht_elig * POURC_TVA).toFixed(2);
+		}
+
+		// J'affiche les montants de participation.
+		$('input[name$="zs_mont_ht_part_fin"]').val(calc_mont(mont_ht_elig, pourc_elig));
+		$('input[name$="zs_mont_ttc_part_fin"]').val(calc_mont(mont_ttc_elig, pourc_elig));
+	}
+);
+
+/**
+ * Ce script permet la gestion du champ lié au pourcentage de réalisation des travaux.
+ */
+$('select[id$="zl_paiem_prem_ac"').change(function()
 {
-	calc_mont_tot('ht');
-	calc_mont_tot('ttc');
+	// Je pointe vers l'objet souhaité.
+	obj_pourc_real_fin = $('input[name$="zs_pourc_real_fin"]');
+
+	if ($('select[id$="zl_paiem_prem_ac"] option:selected').text() == 'Pourcentage de réalisation des travaux')
+	{
+		obj_pourc_real_fin.removeAttr('readonly');
+	}
+	else
+	{
+		obj_pourc_real_fin.val('');
+		obj_pourc_real_fin.attr('readonly', true);
+	}
 });
 
 /**
@@ -436,10 +521,12 @@ $('input[name="rb_prest_exist"]').change(function()
 	if ($(this).val() == 1)
 	{
 		$('#za_prest_nvelle').hide();
+		$('#za_prest_exist').show();
 	}
 	else
 	{
 		$('#za_prest_nvelle').show();
+		$('#za_prest_exist').hide();
 	}
 });
 
@@ -459,4 +546,235 @@ $('.file-return').on('click', 'span', function()
 	// Je réinitialise la zone d'upload.
 	$(this).parent().prev().prev().removeAttr('title');
 	$(this).parent().empty();
+});
+
+/**
+ * Ce script permet le traitement d'une requête d'insertion d'un avenant dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_ajouter_avenant"]').submit(function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire d'insertion d'un avenant.
+	trait_form(e, 'AjouterAvenant-');
+});
+
+/**
+ * Ce script permet d'actualiser la datatable relative à la consultation des avenants d'un couple prestation/dossier.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_rechercher_avenants"]').change(function(e)
+{
+	// J'actualise la datatable.
+	act_datatable(
+		e, 
+		$('form[name="form_rechercher_avenants"]'), 
+		tab_datatables['consulter_avenants'],
+		function(){},
+		'RechercherAvenants-'
+	);
+
+	// Je récupère l'identifiant du dossier choisi.
+	var id_doss = $('#id_RechercherAvenants-zl_doss').val();
+
+	// J'initialise le contenu de la zone d'affichage liée au dossier affecté par le futur avenant.
+	var result = '';
+	if (isNaN(id_doss) == false)
+	{
+		result = $('#id_RechercherAvenants-zl_doss option:selected').text();
+	}
+
+	// J'affiche le contenu dans la zone d'affichage.
+	$('#id_AjouterAvenant-za_num_doss').val(result);
+});
+
+/**
+ * Ce script permet le traitement d'une requête d'insertion d'une facture dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_ajouter_facture"]').submit(function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire d'insertion d'une facture.
+	trait_form(e, 'AjouterFacture-');
+});
+
+/**
+ * Ce script permet l'autocomplétion via les numéros SIRET existants dans la base de données selon un critère de
+ * recherche.
+ */
+$.typeahead({
+    input : 'input[name$="zsac_siret_org_prest"]',
+    minLength : 1,
+    order : 'asc',
+    dynamic : true,
+    delay : 500,
+    template : function(query, item)
+    {
+    	tpl = [
+    		'{{siret_org_prest}}',
+    		'<br />',
+    		'<span class="description">',
+    		'{{n_org}}',
+    		'</span>'
+    	];
+
+        return tpl.join('\n'); 
+    },
+    emptyTemplate : 'Aucun résultat pour {{query}}',
+    source :
+    {
+        org_prest :
+        {
+            display : 'siret_org_prest',
+            data : [],
+            ajax : function(query)
+            {
+            	return {
+                    type : 'GET',
+                    url : URL_AUTOCOMPL,
+                    path : 'data.org_prest',
+                    data :
+                    {
+                    	action : 'lister-siret',
+                        q : '{{query}}'
+                    },
+                    beforeSend : function()
+					{
+						// J'informe l'utilisateur qu'une requête AJAX se prépare.
+						aff_loader_ajax(true);
+					},
+					complete : function()
+					{
+						// J'informe l'utilisateur que la requête AJAX est terminée.
+						aff_loader_ajax(false);
+					}
+                };
+            },
+        }
+    },
+    debug: true
+});
+
+/**
+ * Ce script permet d'actualiser la datatable relative au choix d'une prestation.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_choisir_prestation"]').change(function(e)
+{
+	// J'actualise la datatable.
+	act_datatable(
+		e, 
+		$('form[name="form_choisir_prestation"]'), 
+		tab_datatables['choisir_prestation'],
+		function()
+		{
+			// Je réinitialise la zone d'affichage consacrée à la redistribution des montants de la prestation.
+			$('#za_tab_montants_prestation').remove();
+		},
+		'ChoisirPrestation-'
+	);
+});
+
+/**
+ * Ce script permet d'afficher le tableau de redistribution des montants d'une prestation.
+ */
+$('#tab_choisir_prestation').on('click', '.bt-choisir', function()
+{
+	// Je garde en mémoire la prestation choisie.
+	var _this = $(this);
+	
+	// Je lance une requête AJAX.
+	$.ajax(
+	{
+		type : 'post',
+		url : $(this).attr('action'),
+		dataType : 'html',
+		beforeSend : function()
+		{
+			// J'informe l'utilisateur qu'une requête AJAX se prépare.
+			aff_loader_ajax(true);
+		},
+		success : function(data)
+		{
+			// Je réinitialise la source du bouton de choix d'une prestation.
+			$('#tab_choisir_prestation').find('.bt-choisir-actif').each(function()
+			{
+				$(this).removeClass('bt-choisir-actif');
+				$(this).addClass('bt-choisir');
+			});
+
+			// Je montre à l'utilisateur la prestation choisie.
+			_this.removeClass('bt-choisir');
+			_this.addClass('bt-choisir-actif');
+
+			// Je réinitialise la zone d'affichage consacrée à la redistribution des montants de la prestation.
+			$('#za_tab_montants_prestation').remove();
+
+			// J'affiche la zone d'affichage.
+			$(data).insertAfter($('#tab_choisir_prestation').parent().parent());
+
+			// Je mets en forme les zones de saisies pré-remplies consacrées aux montants.
+			$('#za_tab_montants_prestation').find('.field-wrapper').each(function()
+			{
+				$(this).css('margin-bottom', 0);
+			});
+
+			// J'initialise la datatable.
+			var dt = init_datatable($('#tab_montants_prestation'), [0, 1, 2, 3, 4]);
+		},
+		error : function(xhr, ajaxOptions, thrownError)
+		{
+			var err = xhr.status + ' ' + thrownError;
+			err += '\n';
+			err += CONTACT_ADMIN;
+			
+			alert(err);
+		},
+		complete : function()
+		{
+			// J'informe l'utilisateur que la requête AJAX est terminée.
+			aff_loader_ajax(false);
+		}
+	});
+});
+
+/**
+ * Ce script permet le traitement d'une requête de modification avancée d'une prestation dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$(document).on('submit', 'form[name="form_relier_prestation"]', function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire d'insertion d'une facture.
+	trait_form(e, 'RepartirMontantsPrestation-');
+});
+
+/**
+ * Ce script permet le calcul automatique d'un montant TTC via un pourcentage de TVA défini préalablement, et à partir
+ * d'un montant HT.
+ */
+$(document).on('keyup', 'input[name*="_ht_"]', function()
+{
+	// Je pointe vers les zones de saisies liées.
+	var obj_ht = $(this).attr('name');
+	var obj_ttc = obj_ht.replace('_ht_', '_ttc_');
+
+	// Je stocke les montants HT et TTC.
+	var v_ht = $(this).val();
+	var v_ttc = (v_ht * POURC_TVA).toFixed(2);
+
+	if (isNaN(v_ht) == true || v_ht.length == 0)
+	{
+		v_ttc = '';
+	}
+
+	// J'affiche le montant TTC.
+	$('input[name="' + obj_ttc + '"]').val(v_ttc);
 });

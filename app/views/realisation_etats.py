@@ -47,7 +47,7 @@ def selectionner_dossiers(request) :
 	from app.functions import nett_val
 	from app.functions import reecr_dt
 	from app.functions import suppr_doubl_dtable
-	from app.models import TAction, TAxe, TDossier, TRegroupementMoa, TSousAxe
+	from app.models import TAction, TAxe, TDossier, TRegroupementsMoa, TSousAxe
 	from django.core.urlresolvers import reverse
 	from django.db.models import Q
 	from django.http import HttpResponse
@@ -161,7 +161,7 @@ def selectionner_dossiers(request) :
 
 						if v_org_moa > -1 :
 							tab_or.append(Q(**{ 'id_org_moa' : v_org_moa }))
-							for un_couple_moa in TRegroupementMoa.objects.filter(id_org_moa_fil = v_org_moa) :
+							for un_couple_moa in TRegroupementsMoa.objects.filter(id_org_moa_fil = v_org_moa) :
 								tab_or.append(Q(**{ 'id_org_moa' : un_couple_moa.id_org_moa_anc }))
 							
 					if v_progr > -1 :
@@ -225,15 +225,11 @@ def selectionner_dossiers(request) :
 						# Je récupère les dossiers sélectionnés (+ les dossiers associés).
 						les_doss = TDossier.objects.filter(reduce(operator.or_, tab_or))
 
-					# Je trie les dossiers sélectionnés.
-					les_doss = les_doss.order_by('-dt_delib_moa_doss', 'num_doss')
-
 					# J'empile le tableau des dossiers sélectionnés.
 					tab_doss_filtr = []
 					for un_doss in les_doss :
 						tab_doss_filtr.append([
 							conv_none(un_doss.num_doss),
-							conv_none(un_doss.int_doss),
 							conv_none(un_doss.id_org_moa.id_org_moa.n_org),
 							conv_none(reecr_dt(un_doss.dt_delib_moa_doss)),
 							conv_none(un_doss.id_progr.int_progr),
@@ -263,7 +259,7 @@ def selectionner_dossiers(request) :
 
 				else :
 
-					# J'affiche les erreurs du formulaire.
+					# J'affiche les erreurs.
 					reponse = HttpResponse(json.dumps(f_select_doss.errors), content_type = 'application/json')
 
 		else :
@@ -314,7 +310,6 @@ def exporter_csv_selectionner_dossiers(request, p_complet) :
 					# J'écris l'en-tête du fichier CSV.
 					writer.writerow((
 						'numero_du_dossier',
-						'intitule_du_dossier',
 						'moa_du_dossier',
 						'date_de_deliberation_au_moa_du_dossier',
 						'programme_du_dossier',
@@ -345,10 +340,8 @@ def exporter_csv_selectionner_dossiers(request, p_complet) :
 
 						tab_cell_lg = [
 							conv_none(obj_doss.comm_doss),
-							conv_none(obj_doss.descr_doss),
 							conv_none(reecr_dt(obj_doss.dt_av_cp_doss)),
 							conv_none(reecr_dt(obj_doss.dt_delib_moa_doss)),
-							conv_none(obj_doss.int_doss),
 							conv_none(float_to_int(obj_doss.mont_ht_doss)),
 							conv_none(float_to_int(obj_doss.mont_ttc_doss)),
 							conv_none(obj_doss.num_doss),

@@ -52,50 +52,71 @@ def valid_int(p_valeur) :
 '''
 Ce validateur renvoie une erreur si le montant saisi est incorrect.
 p_valeur : Montant saisi
+p_etre_nul : Puis-je renseigner un montant nul ?
 '''
-def valid_mont(p_valeur) :
+def valid_mont(p_etre_nul = True) :
 
-	''' Imports '''
-	from django.core.exceptions import ValidationError
+	def func(p_valeur) :
 
-	try :
+		''' Imports '''
+		from django.core.exceptions import ValidationError
 
-		# Je tente de convertir le montant saisi en nombre décimal.
-		p_valeur = float(p_valeur)
+		# J'initialise la valeur de la variable de sortie de la fonction.
+		erreur = False
 
-		# Je vérifie si le montant saisi est positif ou nul.
-		if p_valeur >= 0 :
+		# Je prépare le processus de validation.
+		str_valeur = str(p_valeur)
+		tab_caract = []
 
-			# Je transforme le montant saisi en un tableau de caractères.
-			str_valeur = str(p_valeur)
+		# J'empile le tableau des caractères non-numériques.
+		for i in range(0, len(str_valeur)) :
+			try :
+				int(str_valeur[i])
+			except :
+				tab_caract.append(str_valeur[i])
 
-			# Je traite le cas où le montant saisi est un nombre décimal.
-			if '.' in str_valeur :
+		# J'initialise un indicateur booléen permettant de jauger la validité du montant saisi.
+		valide = False
 
-				# J'initialise deux variables booléennes, me permettant de calculer le nombre de décimales du montant 
-				# saisi.
-				sep_trouve = False
-				cpt_dec = 0
+		# Je traite le cas où le montant saisi est un nombre décimal.
+		if len(tab_caract) == 1 and '.' in tab_caract :
 
-				for i in range(0, len(str_valeur)) :
+			valide = True
 
-					# J'incrémente le compteur de décimales dès le moment où le séparateur a été trouvé.
-					if sep_trouve == True :
-						cpt_dec += 1
+			# J'initialise deux variables, me permettant de calculer le nombre de décimales du montant saisi.
+			sep_trouve = False
+			cpt_dec = 0
 
-					# J'informe que le séparateur a été trouvé.
-					if '.' in str_valeur[i] :
-						sep_trouve = True
+			for i in range(0, len(str_valeur)) :
 
-				# Je revoie une erreur si le montant saisi comporte plus de deux décimales.
+				# J'incrémente le compteur de décimales dès le moment où le séparateur a été trouvé.
+				if sep_trouve == True :
+					cpt_dec += 1
+
+				# J'informe que le séparateur a été trouvé.
+				if tab_caract[0] in str_valeur[i] :
+					sep_trouve = True
+
+				# Je renvoie une erreur si le montant saisi comporte plus de deux décimales.
 				if cpt_dec > 2 :
 					raise ValidationError(MESSAGES['invalid'])
 
-		else :
+			# Je renvoie une erreur si le séparateur est le dernier caractère.
+			if tab_caract[0] in str_valeur[len(str_valeur) - 1] :
+				raise ValidationError(MESSAGES['invalid'])
+
+		# Je traite le cas où le montant saisi est un nombre entier.
+		if len(tab_caract) == 0 and str_valeur != '' :
+			valide = True
+
+		if str_valeur == '0' :
+			if p_etre_nul == False :
+				raise ValidationError(MESSAGES['invalid'])
+
+		if valide == False :
 			raise ValidationError(MESSAGES['invalid'])
 
-	except ValueError :
-		raise ValidationError(MESSAGES['invalid'])
+	return func
 
 '''
 Ce validateur renvoie une erreur si la valeur saisie ne correspond pas à un nombre.

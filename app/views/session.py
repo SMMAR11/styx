@@ -93,7 +93,7 @@ def index(request) :
 
 				else :
 
-					# J'affiche les erreurs du formulaire.
+					# J'affiche les erreurs.
 					reponse = HttpResponse(json.dumps(f_id.errors), content_type = 'application/json')
 
 			# Je traite le cas lié à la soumission du formulaire de réinitialisation du mot de passe.
@@ -122,7 +122,7 @@ def index(request) :
 					
 				else :
 
-					# J'affiche les erreurs du formulaire.
+					# J'affiche les erreurs.
 					reponse = HttpResponse(json.dumps(f_oub_mdp.errors), content_type = 'application/json')
 
 	return reponse

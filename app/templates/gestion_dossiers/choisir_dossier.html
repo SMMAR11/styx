@@ -4,7 +4,7 @@
 {% block content %}
 <div class="row">
 	<div class="col-md-4 saut-md">
-		<form name="form_choisir_dossier" method="post" action="{% url 'choisir_dossier' %}" class="c-theme">
+		<form name="form_choisir_dossier" method="post" action="{% url 'choisir_dossier' %}?action=filtrer-dossiers" class="c-theme">
 			{% csrf_token %}
 			<fieldset style="padding-bottom: 0;">
 				<legend>Choisir un dossier</legend>
@@ -28,7 +28,6 @@
 				<thead>
 					<tr>
 						<th>N° du dossier</th>
-						<th>Intitulé</th>
 						<th>Maître d'ouvrage</th>
 						<th>Date de délibération au maître d'ouvrage</th>
 						<th></th>
@@ -38,7 +37,6 @@
 					{% for un_doss in les_doss %}
 					<tr>
 						<td class="b">{{ un_doss.num_doss }}</td>
-						<td>{{ un_doss.int_doss }}</td>
 						<td>{{ un_doss.n_moa }}</td>
 						<td>{{ un_doss.dt_delib_moa_doss }}</td>
 						<td><a href="{% url 'consulter_dossier' un_doss.id_doss %}" class="bt-consulter pull-right" title="Consulter le dossier"></a></td>

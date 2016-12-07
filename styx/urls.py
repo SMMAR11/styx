@@ -49,6 +49,14 @@ urlpatterns = [
         name = 'ajouter_prestation'
     ),
     url(
+        r'^modules/gestion-dossiers/consulter-prestation/([0-9]+)/$',
+        gestion_dossiers.consulter_prestation,
+        name = 'consulter_prestation'
+    ),
+    url(
+        r'^modules/gestion-dossiers/ajouter-facture/$', gestion_dossiers.ajouter_facture, name = 'ajouter_facture'
+    ),
+    url(
         r'^modules/gestion-dossiers/ajouter-arrete/([0-9]+)/([0-9]+)/$',
         gestion_dossiers.ajouter_arrete,
         name = 'ajouter_arrete'
@@ -87,7 +95,8 @@ urlpatterns = [
         realisation_etats.exporter_csv_selectionner_dossiers, { 'p_complet' : True },
         name = 'exporter_csv_selectionner_dossiers_complet'
     ),
-    url(r'^retourner-onglet-actif.html$', autres.retourner_onglet_actif, name = 'retourner_onglet_actif')
+    url(r'^retourner-onglet-actif.html$', autres.retourner_onglet_actif, name = 'retourner_onglet_actif'),
+    url(r'^autocompleter.html$', autres.autocompleter, name = 'autocompleter')
 ]
 
 # Je modifie les templates relatifs aux codes HTTP.

@@ -2,11 +2,9 @@
 {% load static %}
 
 {% block content %}
-<div class="icon-link pull-right">
-	<div><span class="bt-precedent"></span></div>
-	<div><a href="{% url 'consulter_dossier' le_doss.id_doss %}" onclick="alert_util(event)">Revenir au dossier</a></div>
+<div class="right">
+	<a href="{% url 'consulter_dossier' le_doss.id_doss %}" onclick="alert_util(event)" class="bt-precedent icon-link">Revenir au dossier</a>
 </div>
-<br />
 <div class="row">
 	<div class="col-md-12">
 		<form action="{% url 'ajouter_arrete' le_doss.id_doss l_arr.id_type_decl %}" method="post" name="form_ajouter_arrete" class="c-theme alert-user" enctype="multipart/form-data">

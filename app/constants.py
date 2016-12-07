@@ -2,6 +2,7 @@
 #-*- coding: utf-8
 
 CHAMP_REQUIS = '<span class="required"></span>'
+NOTE_CHAMP = '<span class="memo"></span>'
 ERREUR_ADMIN = 'Veuillez contacter votre administrateur.'
 MESSAGES = {
 	'required' : 'Veuillez renseigner ce champ.',
