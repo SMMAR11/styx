@@ -2,8 +2,9 @@
 const CONTACT_ADMIN = 'Veuillez contacter l\'administrateur de l\'application.';
 const POURC_TVA = 1.2;
 
-/* Variable globale */
+/* Variables globales */
 var tab_datatables;
+var timer = [];
 
 /**
  * Ce script permet l'initialisation d'éléments dès la fin du chargement du DOM.
@@ -28,15 +29,18 @@ $(document).ready(function()
 	}
 
 	// J'initialise les zones de date de l'application.
-	$('.date').datepicker(
+	$(document).on('mousemove', function()
 	{
-		language : 'fr',
-		format : 'dd/mm/yyyy',
-		weekStart : 1,
-		autoclose : true,
-		orientation : 'bottom left',
-		startDate : '01/01/1900',
-		endDate : '31/12/9999'
+		$('.date').datepicker(
+		{
+			language : 'fr',
+			format : 'dd/mm/yyyy',
+			weekStart : 1,
+			autoclose : true,
+			orientation : 'bottom left',
+			startDate : '01/01/1900',
+			endDate : '31/12/9999'
+		});
 	});
 
 	// J'ajoute une alerte à chaque élément du menu principal.
@@ -148,4 +152,13 @@ $(window).load(function()
 		$('div#loader_page').remove();
 
 	}, 250);
+});
+
+/**
+ * Ce script permet de passer le message de succès de la fenêtre modale.
+ */
+$(document).on('click', '.a-to-span', function()
+{
+	clearTimeout(timer[0]);
+	window.location.href = timer[1];
 });

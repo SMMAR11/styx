@@ -583,6 +583,13 @@ class GererDossier(forms.Form) :
 						)
 					)
 
+			# Je gère la contrainte suivante : un dossier en phase de modification ne peut être "En projet" si son plan
+			# de financement est déjà rempli.
+			if v_av > -1 :
+				if TAvancement.objects.get(id_av = v_av).int_av == 'En projet' :
+					if float(mont_ht_part_fin_sum) > 0 and float(mont_ttc_part_fin_sum) > 0 :
+						self.add_error('zl_av', 'Le plan de financement de ce dossier a été déclaré.')
+
 			# Je renvoie une erreur si le dossier associé choisi correspond au dossier en cours de modification.
 			if obj_doss.num_doss == v_doss_ass :
 				self.add_error('za_doss_ass', 'Veuillez choisir un autre dossier associé.')
@@ -1476,10 +1483,11 @@ class GererAvenant(forms.Form) :
 
 		''' Imports '''
 		from app.functions import reecr_dt
-		from app.models import TPrestation
+		from app.models import TDossier, TPrestation
 
 		# Je déclare les éléments du tableau des arguments.
 		k_prest = kwargs.pop('k_prest', None)
+		k_doss = kwargs.pop('k_doss', None)
 
 		super(GererAvenant, self).__init__(*args, **kwargs)
 
@@ -1497,11 +1505,20 @@ class GererAvenant(forms.Form) :
 		except :
 			pass
 
+		obj_doss = None
+		try :
+			obj_doss = TDossier.objects.get(id_doss = k_doss)
+		except :
+			pass
+
 		# Je définis l'identifiant de la prestation.
 		if obj_prest is not None :
 			self.fields['za_prest'].initial = '{0} : {1}'.format(
 				obj_prest.id_org_prest.n_org, reecr_dt(obj_prest.dt_notif_prest)
 			)
+
+		if obj_doss is not None :
+			self.fields['za_num_doss'].initial = obj_doss.num_doss
 
 	def clean(self) :
 

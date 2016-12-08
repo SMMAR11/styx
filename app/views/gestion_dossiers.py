@@ -989,6 +989,7 @@ def consulter_dossier(request, p_doss) :
 	from app.forms.gestion_dossiers import GererPrestation
 	from app.forms.gestion_dossiers import RepartirMontantsPrestation
 	from app.functions import aff_mess_suppr
+	from app.functions import ajout_aven
 	from app.functions import calc_interv
 	from app.functions import conv_none
 	from app.functions import float_to_int
@@ -1791,7 +1792,7 @@ def consulter_dossier(request, p_doss) :
 			if get_action == 'supprimer-arrete' and 'dossier' in request.GET and 'arrete' in request.GET :
 
 				# Je prépare la réponse AJAX.
-				contenu = reponse = HttpResponse(aff_mess_suppr('{0}?dossier={1}&arrete={2}'.format(
+				reponse = HttpResponse(aff_mess_suppr('{0}?dossier={1}&arrete={2}'.format(
 					reverse('supprimer_arrete'), request.GET['dossier'], request.GET['arrete']
 				)))
 
@@ -2154,6 +2155,35 @@ def consulter_dossier(request, p_doss) :
 
 						# J'affiche les erreurs.
 						reponse = HttpResponse(json.dumps({ 'errors' : tab_err }), content_type = 'application/json')
+
+			# Je traite le cas où je dois afficher le formulaire d'ajout d'un avenant.
+			if get_action == 'afficher-form-avenant' :
+
+				if 'prestation' in request.GET :
+					reponse = HttpResponse(ajout_aven(
+						request,
+						'GET',
+						request.GET['prestation'],
+						obj_doss.id_doss,
+						reverse('consulter_dossier', args = [obj_doss.id_doss]),
+						None,
+						None,
+						'&prestation={0}'.format(request.GET['prestation'])
+					))
+
+			# Je traite le cas où je dois ajouter un avenant.
+			if get_action == 'ajouter-avenant' :
+
+				if 'prestation' in request.GET :
+					reponse = ajout_aven(
+						request,
+						'POST',
+						request.GET['prestation'],
+						None,
+						None,
+						reverse('consulter_dossier', args = [obj_doss.id_doss]),
+						'#ong_prestations',
+					)
 
 	return reponse
 
@@ -2952,13 +2982,20 @@ p_prest : Identifiant de la prestation
 def consulter_prestation(request, p_prest) :
 
 	''' Imports '''
-	from app.forms.gestion_dossiers import GererAvenant, RechercherAvenants
-	from app.functions import conv_none, float_to_int, init_fm, init_form, init_pg_cons, integer, nett_val, reecr_dt
-	from app.models import TAvenant, TDossier, TPrestation, TPrestationsDossier
+	from app.forms.gestion_dossiers import RechercherAvenants
+	from app.functions import ajout_aven
+	from app.functions import conv_none
+	from app.functions import float_to_int
+	from app.functions import init_fm
+	from app.functions import init_form
+	from app.functions import init_pg_cons
+	from app.functions import integer
+	from app.functions import nett_val
+	from app.functions import reecr_dt
+	from app.models import TAvenant, TPrestation, TPrestationsDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404, render
-	from django.template.context_processors import csrf
 	import json
 
 	reponse = HttpResponse()
@@ -2969,39 +3006,16 @@ def consulter_prestation(request, p_prest) :
 		obj_prest = get_object_or_404(TPrestation, id_prest = p_prest)
 
 		# J'instancie des objets "formulaire".
-		f_ajout_aven = GererAvenant(prefix = 'AjouterAvenant', k_prest = obj_prest.id_prest)
 		f_rech_aven = RechercherAvenants(prefix = 'RechercherAvenants', k_prest = obj_prest.id_prest)
-
-		# J'initialise les champs du formulaire.
-		tab_ajout_aven = init_form(f_ajout_aven)
 
 		# Je déclare le contenu de certaines fenêtres modales.
 		tab_cont_fm = {
-			'ajouter_avenant' : '''
-			<form name="form_ajouter_avenant" method="post" action="{0}?action=ajouter-avenant" class="c-theme">
-				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
-				<div class="row">
-					<div class="col-xs-6">{2}</div>
-					<div class="col-xs-6">{3}</div>
-				</div>
-				{4}
-				{5}
-				<div class="row">
-					<div class="col-sm-6">{6}</div>
-					<div class="col-sm-6">{7}</div>
-				</div>
-				<button type="submit" class="bt-vert btn center-block to-unfocus">Valider</button>
-			</form>
-			'''.format(
-				reverse('consulter_prestation', args = [obj_prest.id_prest]),
-				csrf(request)['csrf_token'],
-				tab_ajout_aven['za_num_doss'],
-				tab_ajout_aven['za_prest'],
-				tab_ajout_aven['zs_int_aven'],
-				tab_ajout_aven['zd_dt_aven'],
-				tab_ajout_aven['zs_mont_ht_aven'],
-				tab_ajout_aven['zs_mont_ttc_aven']
-			)
+			'ajouter_avenant' : ajout_aven(
+				request,
+				'GET',
+				obj_prest.id_prest, 
+				None, 
+				reverse('consulter_prestation', args = [obj_prest.id_prest]))
 		}
 
 		# Je déclare un tableau de fenêtres modales.
@@ -3089,48 +3103,15 @@ def consulter_prestation(request, p_prest) :
 			# Je traite le cas où je dois ajouter un avenant.
 			if get_action == 'ajouter-avenant' :
 
-				# Je vérifie la validité du formulaire d'ajout d'un avenant.
-				f_ajout_aven = GererAvenant(request.POST)
-
-				if f_ajout_aven.is_valid() :
-
-					# Je récupère et nettoie les données du formulaire valide.
-					cleaned_data = f_ajout_aven.cleaned_data
-					v_num_doss = nett_val(cleaned_data['za_num_doss'])
-					v_dt_aven = nett_val(cleaned_data['zd_dt_aven'])
-					v_int_aven = nett_val(cleaned_data['zs_int_aven'])
-					v_mont_ht_aven = nett_val(cleaned_data['zs_mont_ht_aven'])
-					v_mont_ttc_aven = nett_val(cleaned_data['zs_mont_ttc_aven'])
-
-					# Je remplis les données attributaires du nouvel objet TAvenant.
-					obj_nv_aven = TAvenant(
-						dt_aven = v_dt_aven,
-						int_aven = v_int_aven,
-						mont_ht_aven = v_mont_ht_aven,
-						mont_ttc_aven = v_mont_ttc_aven,
-						id_doss = TDossier.objects.get(num_doss = v_num_doss),
-						id_prest = obj_prest
-					)
-
-					# Je créé un nouvel objet TAvenant.
-					obj_nv_aven.save()
-
-					# J'affiche le message de succès.
-					reponse = HttpResponse(
-						json.dumps({
-							'success' : 'L\'avenant a été ajouté avec succès.',
-							'redirect' : reverse('consulter_prestation', args = [obj_prest.id_prest])
-						}),
-						content_type = 'application/json'
-					)
-
-					# Je renseigne l'onglet actif après rechargement de la page.
-					request.session['app-nav'] = '#ong_avenants'
-
-				else :
-
-					# J'affiche les erreurs.
-					reponse = HttpResponse(json.dumps(f_ajout_aven.errors), content_type = 'application/json')
+				reponse = ajout_aven(
+					request,
+					'POST',
+					obj_prest.id_prest,
+					None,
+					None,
+					reverse('consulter_prestation', args = [obj_prest.id_prest]),
+					'#ong_avenants'
+				)
 
 			# Je traite le cas où je dois rechercher les avenants d'un couple prestation/dossier.
 			if get_action == 'rechercher-avenants' :

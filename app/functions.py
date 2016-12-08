@@ -46,6 +46,112 @@ def aff_mess_suppr(p_vue, p_mess = '') :
 	return '<br />'.join(tab_rows)
 
 '''
+Cette fonction permet soit d'afficher le formulaire d'ajout d'un avenant, soit de traiter celui-ci.
+request : Objet requête
+p_type : "GET" ou "POST" ?
+p_prest : Identifiant de la prestation
+p_doss : Identifiant du dossier
+p_act : URL traitant le formulaire
+p_red : URL de redirection dès l'ajout de l'avenant
+p_ong : Onglet actif après la redirection
+p_get_param : Paramètres "GET" supplémentaires
+Retourne soit une chaîne de caractères, soit un tableau au format JSON
+'''
+def ajout_aven(request, p_type, p_prest, p_doss = None, p_act = None, p_red = None, p_ong = None, p_get_param = '') :
+
+	''' Imports '''
+	from app.forms.gestion_dossiers import GererAvenant
+	from app.functions import init_form, nett_val
+	from app.models import TAvenant, TDossier, TPrestation
+	from django.http import HttpResponse
+	from django.template.context_processors import csrf
+	import json
+
+	reponse = None
+
+	if p_type == 'GET' :
+
+		# J'instancie un objet "formulaire".
+		f = GererAvenant(prefix = 'AjouterAvenant', k_prest = p_prest, k_doss = p_doss)
+
+		# J'initialise les champs du formulaire.
+		tab = init_form(f)
+
+		reponse = '''
+		<form name="form_ajouter_avenant" method="post" action="{0}?action=ajouter-avenant{1}" class="c-theme">
+				<input name="csrfmiddlewaretoken" value="{2}" type="hidden">
+				<div class="row">
+					<div class="col-xs-6">{3}</div>
+					<div class="col-xs-6">{4}</div>
+				</div>
+				{5}
+				{6}
+				<div class="row">
+					<div class="col-sm-6">{7}</div>
+					<div class="col-sm-6">{8}</div>
+				</div>
+				<button type="submit" class="bt-vert btn center-block to-unfocus">Valider</button>
+			</form>
+			'''.format(
+				p_act,
+				p_get_param,
+				csrf(request)['csrf_token'],
+				tab['za_num_doss'],
+				tab['za_prest'],
+				tab['zs_int_aven'],
+				tab['zd_dt_aven'],
+				tab['zs_mont_ht_aven'],
+				tab['zs_mont_ttc_aven']
+			)
+
+	else :
+
+		# Je vérifie la validité du formulaire d'ajout d'un avenant.
+		f = GererAvenant(request.POST)
+
+		if f.is_valid() :
+
+			# Je récupère et nettoie les données du formulaire valide.
+			cleaned_data = f.cleaned_data
+			v_num_doss = nett_val(cleaned_data['za_num_doss'])
+			v_dt_aven = nett_val(cleaned_data['zd_dt_aven'])
+			v_int_aven = nett_val(cleaned_data['zs_int_aven'])
+			v_mont_ht_aven = nett_val(cleaned_data['zs_mont_ht_aven'])
+			v_mont_ttc_aven = nett_val(cleaned_data['zs_mont_ttc_aven'])
+
+			# Je remplis les données attributaires du nouvel objet TAvenant.
+			obj_nv_aven = TAvenant(
+				dt_aven = v_dt_aven,
+				int_aven = v_int_aven,
+				mont_ht_aven = v_mont_ht_aven,
+				mont_ttc_aven = v_mont_ttc_aven,
+				id_doss = TDossier.objects.get(num_doss = v_num_doss),
+				id_prest = TPrestation.objects.get(id_prest = p_prest)
+			)
+
+			# Je créé un nouvel objet TAvenant.
+			obj_nv_aven.save()
+
+			# J'affiche le message de succès.
+			reponse = HttpResponse(
+				json.dumps({
+					'success' : 'L\'avenant a été ajouté avec succès.',
+					'redirect' : p_red
+				}),
+				content_type = 'application/json'
+			)
+
+			# Je renseigne l'onglet actif après rechargement de la page.
+			request.session['app-nav'] = p_ong
+
+		else :
+
+			# J'affiche les erreurs.
+			reponse = HttpResponse(json.dumps(f.errors), content_type = 'application/json')
+
+	return reponse
+
+'''
 Cette fonction permet de générer des données concernant les axes, les sous-axes, les actions et les types de dossiers.
 request : Objet requête
 Retourne un tableau associatif
@@ -519,6 +625,7 @@ def init_fm(p_suffixe, p_header, p_body = '') :
 					</span>
 					<div class="modal-padding-bottom"></div>
 				</div>
+				<div class="modal-footer"></div>
 			</div>
 		</div>
 	</div>

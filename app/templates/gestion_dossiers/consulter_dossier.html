@@ -173,7 +173,7 @@
 											<td>{{ une_prest_doss.mont_ht_rap }}</td>
 											<td>
 												<div class="pull-right">
-													<span class="bt-ajouter icon-link" style="margin-right: 5px;">Avenant</span>
+													<span class="bt-ajouter icon-link" style="margin-right: 5px;" data-target="#fm_ajouter_avenant" action="{% url 'consulter_dossier' le_doss.id_doss %}?action=afficher-form-avenant&prestation={{ une_prest_doss.id_prest }}">Avenant</span>
 													<a href="{% url 'consulter_prestation' une_prest_doss.id_prest %}" class="bt-consulter" style="padding-left: 20px; line-height: 22px;" title="Consulter la prestation"></a>
 												</div>
 											</td>

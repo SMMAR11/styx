@@ -570,14 +570,19 @@ function suppr(e)
 				// J'affiche le message de succès dans une fenêtre modale.
 				$('#za_' + suffixe).html('<p class="text-center c-attention b">' + data['success'] + '</p>');
 
-				// J'affiche la fenêtre modale (en retirant la croix de fermeture de celle-ci).
+				// Je mets en place le pied de la fenêtre modale.
 				$('#bt_fm_' + suffixe).remove();
+				var btn = $('<span/>', { 'class' : 'a-to-span', html : 'Passer' });
+
+				// J'affiche la fenêtre modale (en retirant la croix de fermeture de celle-ci).
+				$('#fm_' + suffixe).find('.modal-footer').append(btn);
 				$('#fm_' + suffixe).modal();
 
-				setTimeout(function()
+				timer[1] = data['redirect'];
+				timer[0] = setTimeout(function()
 				{
 					// Je suis redirigé.
-					window.location.href = data['redirect'];	
+					window.location.href = timer[1];	
 				},
 				2000);
 			}
@@ -651,14 +656,19 @@ function trait_form(e, p_prefixe = '')
 				// J'affiche le message de succès dans une fenêtre modale.
 				$('#za_' + suffixe).html('<p class="text-center c-attention b">' + data['success'] + '</p>');
 
-				// J'affiche la fenêtre modale (en retirant la croix de fermeture de celle-ci).
+				// Je mets en place le pied de la fenêtre modale.
 				$('#bt_fm_' + suffixe).remove();
+				var btn = $('<span/>', { 'class' : 'a-to-span', html : 'Passer' });
+
+				// J'affiche la fenêtre modale (en retirant la croix de fermeture de celle-ci).
+				$('#fm_' + suffixe).find('.modal-footer').append(btn);
 				$('#fm_' + suffixe).modal();
 
-				setTimeout(function()
+				timer[1] = data['redirect'];
+				timer[0] = setTimeout(function()
 				{
 					// Je suis redirigé.
-					window.location.href = data['redirect'];	
+					window.location.href = timer[1];	
 				},
 				2000);
 			}

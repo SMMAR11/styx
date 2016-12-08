@@ -112,6 +112,19 @@
 	text-decoration: underline;
 }
 
+.a-to-span
+{
+	font-size: 12px;
+	font-weight: bold;
+}
+
+.a-to-span:hover,
+.a-to-span:focus
+{
+	text-decoration: underline;
+	cursor: pointer;
+}
+
 /* Boutons sous forme de pictogramme */
 .bt-ajouter
 {

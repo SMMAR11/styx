@@ -552,7 +552,7 @@ $('.file-return').on('click', 'span', function()
  * Ce script permet le traitement d'une requête d'insertion d'un avenant dans la base de données.
  * e : Variable objet JavaScript
  */
-$('form[name="form_ajouter_avenant"]').submit(function(e)
+ $(document).on('submit', 'form[name="form_ajouter_avenant"]', function(e)
 {
 	// Je bloque l'envoi du formulaire.
 	e.preventDefault();
@@ -777,4 +777,12 @@ $(document).on('keyup', 'input[name*="_ht_"]', function()
 
 	// J'affiche le montant TTC.
 	$('input[name="' + obj_ttc + '"]').val(v_ttc);
+});
+
+/**
+ * Ce script permet d'afficher les informations relatives à une photo d'un dossier.
+ */
+$('#tab_consulter_prestations').find('span[data-target="#fm_ajouter_avenant"]').click(function(e)
+{
+	aff_html_ds_fm(e, 'ajouter_avenant');
 });
