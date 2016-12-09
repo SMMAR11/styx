@@ -60,10 +60,10 @@ def creer_dossier(request) :
 	from app.models import TAxe
 	from app.models import TDossier
 	from app.models import TFamille
+	from app.models import TInstanceConcertation
 	from app.models import TMoa
 	from app.models import TNatureDossier
 	from app.models import TPgre
-	from app.models import TPortee
 	from app.models import TProgramme
 	from app.models import TRiviere
 	from app.models import TRivieresDossier
@@ -244,7 +244,7 @@ def creer_dossier(request) :
 				v_quant_real_pgre = nett_val(cleaned_data['zs_quant_real_pgre'])
 				v_unit = nett_val(integer(cleaned_data['zl_unit']), True)
 				v_tab_riv = request.POST.getlist('cbsm_riv')
-				v_port = nett_val(integer(cleaned_data['zl_port']), True)
+				v_inst_conc = nett_val(integer(cleaned_data['zl_inst_conc']), True)
 
 				# Je prépare la valeur de chaque constituant du numéro de dossier.
 				dim_progr = TProgramme.objects.get(id_progr = v_progr).dim_progr
@@ -314,17 +314,17 @@ def creer_dossier(request) :
 					except :
 						pass
 
-					# Je vérifie l'existence d'un objet TPortee.
-					obj_port = None
+					# Je vérifie l'existence d'un objet TInstanceConcertation.
+					obj_inst_conc = None
 					try :
-						obj_port = TPortee.objects.get(id_port = v_port)
+						obj_inst_conc = TInstanceConcertation.objects.get(id_inst_conc = v_inst_conc)
 					except :
 						pass
 
 					# Je complète les données attributaires du nouvel objet.
 					obj_nv_doss.quant_objs_pgre = v_quant_objs_pgre
 					obj_nv_doss.quant_real_pgre = v_quant_real_pgre
-					obj_nv_doss.id_port = obj_port
+					obj_nv_doss.id_inst_conc = obj_inst_conc
 					obj_nv_doss.id_unit = obj_unit
 
 				# Je créé un nouvel objet.
@@ -437,9 +437,9 @@ def modifier_dossier(request, p_doss) :
 	from app.models import TAxe
 	from app.models import TDossier
 	from app.models import TFamille
+	from app.models import TInstanceConcertation
 	from app.models import TNatureDossier
 	from app.models import TPgre
-	from app.models import TPortee
 	from app.models import TProgramme
 	from app.models import TRiviere
 	from app.models import TRivieresDossier
@@ -546,6 +546,7 @@ def modifier_dossier(request, p_doss) :
 				post_ss_axe = request.POST.get('zld_ss_axe')
 				post_act = request.POST.get('zld_act')
 				post_type_doss = request.POST.get('zld_type_doss')
+				post_techn = request.POST.get('zl_techn')
 
 				axe_valide = False
 				try :
@@ -604,6 +605,19 @@ def modifier_dossier(request, p_doss) :
 				if type_doss_valide == True :
 					f_modif_doss.fields['zld_type_doss'].choices = [(post_type_doss, post_type_doss)]
 
+				techn_valide = False
+				try :
+					TTechnicien.objects.get(id_techn = post_techn)
+					techn_valide = True
+				except :
+					if post_techn == 'D' :
+						techn_valide = True
+					else :
+						pass
+
+				if techn_valide == True :
+					f_modif_doss.fields['zl_techn'].choices = [(post_techn, post_techn)]
+
 				if f_modif_doss.is_valid() :
 
 					# Je récupère et nettoie les données du formulaire valide.
@@ -632,7 +646,7 @@ def modifier_dossier(request, p_doss) :
 					v_quant_real_pgre = nett_val(cleaned_data['zs_quant_real_pgre'])
 					v_unit = nett_val(integer(cleaned_data['zl_unit']), True)
 					v_tab_riv = request.POST.getlist('cbsm_riv')
-					v_port = nett_val(integer(cleaned_data['zl_port']), True)
+					v_inst_conc = nett_val(integer(cleaned_data['zl_inst_conc']), True)
 
 					# Je déclare le tableaux des données attributaires modifiées.
 					tab_champs = {}
@@ -735,17 +749,17 @@ def modifier_dossier(request, p_doss) :
 						except :
 							pass
 
-						# Je vérifie l'existence d'un objet TPortee.
-						obj_port = None
+						# Je vérifie l'existence d'un objet TInstanceConcertation.
+						obj_inst_conc = None
 						try :
-							obj_port = TPortee.objects.get(id_port = v_port)
+							obj_inst_conc = TInstanceConcertation.objects.get(id_inst_conc = v_inst_conc)
 						except :
 							pass
 
 						# J'empile le tableau des données attributaires liées à un objet TPgre.
 						tab_champs['quant_objs_pgre'] = v_quant_objs_pgre
 						tab_champs['quant_real_pgre'] = v_quant_real_pgre
-						tab_champs['id_port'] = obj_port
+						tab_champs['id_inst_conc'] = obj_inst_conc
 						tab_champs['id_unit'] = obj_unit
 
 					# Je mets à jour l'objet.
@@ -1004,9 +1018,9 @@ def consulter_dossier(request, p_doss) :
 	from app.models import TAvenant
 	from app.models import TDossier
 	from app.models import TFacture
+	from app.models import TInstanceConcertation
 	from app.models import TPgre
 	from app.models import TPhoto
-	from app.models import TPortee
 	from app.models import TPrestation
 	from app.models import TPrestationsDossier
 	from app.models import TRivieresDossier
@@ -1332,7 +1346,7 @@ def consulter_dossier(request, p_doss) :
 		v_quant_real_pgre = None
 		v_unit = None
 		v_riv = None
-		v_port = None
+		v_inst_conc = None
 
 		if obj_doss_pgre is not None :
 
@@ -1357,9 +1371,11 @@ def consulter_dossier(request, p_doss) :
 			# Je mets en forme la valeur du champ "Rivières impactées".
 			v_riv = ', '.join(tab_riv_doss)
 
-			# Je tente de récupérer la valeur de la portée du dossier.
+			# Je tente de récupérer la valeur de l'instance de concertation du dossier.
 			try :
-				v_port = TPortee.objects.get(id_port = obj_doss_pgre.id_port.id_port).int_port
+				v_inst_conc = TInstanceConcertation.objects.get(
+					id_inst_conc = obj_doss_pgre.id_inst_conc.id_inst_conc
+				).int_inst_conc
 			except :
 				pass
 
@@ -1431,7 +1447,7 @@ def consulter_dossier(request, p_doss) :
 			},
 			'int_unit' : { 'label' : 'Unité', 'value' : conv_none(v_unit) },
 			'n_riv' : { 'label' : 'Rivières impactées', 'value' : conv_none(v_riv) },
-			'int_port' : { 'label' : 'Portée du dossier', 'value' : conv_none(v_port) }
+			'int_inst_conc' : { 'label' : 'Instance de concertation', 'value' : conv_none(v_inst_conc) }
 		}
 
 		# Je récupère les dossiers appartenant à la même famille que le dossier consulté.
@@ -2165,25 +2181,20 @@ def consulter_dossier(request, p_doss) :
 						'GET',
 						request.GET['prestation'],
 						obj_doss.id_doss,
-						reverse('consulter_dossier', args = [obj_doss.id_doss]),
-						None,
-						None,
-						'&prestation={0}'.format(request.GET['prestation'])
+						reverse('consulter_dossier', args = [obj_doss.id_doss])
 					))
 
 			# Je traite le cas où je dois ajouter un avenant.
 			if get_action == 'ajouter-avenant' :
-
-				if 'prestation' in request.GET :
-					reponse = ajout_aven(
-						request,
-						'POST',
-						request.GET['prestation'],
-						None,
-						None,
-						reverse('consulter_dossier', args = [obj_doss.id_doss]),
-						'#ong_prestations',
-					)
+				reponse = ajout_aven(
+					request,
+					'POST',
+					None,
+					None,
+					None,
+					reverse('consulter_dossier', args = [obj_doss.id_doss]),
+					'#ong_prestations',
+				)
 
 	return reponse
 
@@ -3102,11 +3113,10 @@ def consulter_prestation(request, p_prest) :
 
 			# Je traite le cas où je dois ajouter un avenant.
 			if get_action == 'ajouter-avenant' :
-
 				reponse = ajout_aven(
 					request,
 					'POST',
-					obj_prest.id_prest,
+					None,
 					None,
 					None,
 					reverse('consulter_prestation', args = [obj_prest.id_prest]),

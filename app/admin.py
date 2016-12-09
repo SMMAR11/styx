@@ -480,24 +480,6 @@ class AUnite(admin.ModelAdmin) :
 # J'ajoute la possibilité de gérer les unités de mesures.
 admin.site.register(TUnite, AUnite)
 
-class APortee(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['int_port']
-	actions = [admin.actions.delete_selected]
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('int_port'),
-			)
-		}),
-	)
-
-# J'ajoute la possibilité de gérer les portées de dossiers.
-admin.site.register(TPortee, APortee)
-
 class APeriodePriseVuePhoto(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.

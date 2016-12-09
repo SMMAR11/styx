@@ -129,7 +129,7 @@ class TProgramme(models.Model) :
 
     # Je définis les champs de la table.
     id_progr = models.AutoField(primary_key = True)
-    dim_progr = models.CharField(max_length = 255, verbose_name = 'Diminutif')
+    dim_progr = models.CharField(max_length = 255, unique = True, verbose_name = 'Diminutif')
     int_progr = models.CharField(max_length = 255, verbose_name = 'Intitulé')
     seq_progr = models.IntegerField(default = 1, verbose_name = 'Séquentiel')
     id_type_progr = models.ForeignKey(
@@ -225,23 +225,24 @@ class TAction(models.Model) :
         self.id_act = '{0}_{1}'.format(self.id_ss_axe.id_ss_axe, self.num_act)
         super(TAction, self).save(*args, **kwargs)
 
-class TCc(models.Model) :
+class TCommune(models.Model):
 
     # Je définis les champs de la table.
-    num_comm = models.CharField(primary_key = True, max_length = 5)
+    num_comm = models.CharField(max_length = 5, primary_key = True)
+    n_comm = models.CharField(max_length = 255)
 
     class Meta :
-        db_table = 't_cc'
-        ordering = ['num_comm']
+        db_table = 't_commune'
+        ordering = ['n_comm', 'num_comm']
 
     def __str__(self) :
-        return self.num_comm
+        return '{0} ({1})'.format(self.n_comm, self.num_comm)
 
 class TCp(models.Model) :
 
     # Je définis les champs de la table.
     cp_comm = models.CharField(primary_key = True, max_length = 5)
-    code_comm = models.ManyToManyField(TCc, through = 'TCommunesCp')
+    code_comm = models.ManyToManyField(TCommune, through = 'TCommunesCp')
 
     class Meta :
         db_table = 't_cp'
@@ -251,45 +252,32 @@ class TCommunesCp(models.Model) :
 
     # Je définis les champs de la table.
     cp_comm = models.ForeignKey(TCp, models.DO_NOTHING, db_column = 'cp_comm')
-    num_comm = models.ForeignKey(TCc, models.DO_NOTHING, db_column = 'num_comm')
+    num_comm = models.ForeignKey(TCommune, models.DO_NOTHING, db_column = 'num_comm')
 
     class Meta :
         db_table = 't_communes_cp'
-
-class TCommune(models.Model):
-
-    # Je définis les champs de la table.
-    id_comm = models.AutoField(primary_key = True)
-    est_ld = models.BooleanField()
-    n_comm = models.CharField(max_length = 255)
-    num_comm = models.ForeignKey(TCc, models.DO_NOTHING, db_column = 'num_comm')
-
-    class Meta :
-        db_table = 't_commune'
-        ordering = ['n_comm', 'num_comm']
-
-    def __str__(self) :
-        return '{0} ({1})'.format(self.n_comm, self.num_comm)
 
 class TOrganisme(models.Model):
 
     # Je définis les champs de la table.
     id_org = models.AutoField(primary_key = True)
-    adr_org = models.CharField(max_length = 255, verbose_name = 'Adresse (ligne 1)')
+    adr_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Adresse (ligne 1)')
     bp_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Boîte postale')
     cedex_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Cedex')
     comm_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Commentaire')
     compl_adr_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Adresse (ligne 2)')
     cont_org = models.CharField(max_length = 255, null = True, blank = True)
     courr_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Adresse électronique')
-    cp_org = models.CharField(max_length = 5, verbose_name = 'Code postal')
+    cp_org = models.CharField(max_length = 5, null = True, blank = True, verbose_name = 'Code postal')
     n_org = models.CharField(max_length = 255, verbose_name = 'Nom')
     port_org = models.CharField(
         max_length = 10, null = True, blank = True, verbose_name = 'Numéro de téléphone portable'
     )
     site_web_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Site web')
     tel_org = models.CharField(max_length = 10, null = True, blank = True, verbose_name = 'Numéro de téléphone')
-    id_comm = models.ForeignKey(TCommune, models.DO_NOTHING, db_column = 'id_comm', verbose_name = 'Commune')
+    id_comm = models.ForeignKey(
+        TCommune, models.DO_NOTHING, db_column = 'id_comm', null = True, blank = True, verbose_name = 'Commune'
+    )
 
     class Meta :
         db_table = 't_organisme'
@@ -321,7 +309,7 @@ class TMoa(TOrganisme) :
 
     # Je définis les champs de la table.
     id_org_moa = models.OneToOneField(TOrganisme, db_column = 'id_org_moa')
-    dim_org_moa = models.CharField(max_length = 255, verbose_name = 'Diminutif')
+    dim_org_moa = models.CharField(max_length = 255, unique = True, verbose_name = 'Diminutif')
     en_act = models.BooleanField(default = True, verbose_name = 'En activité')
     moa = models.ManyToManyField('self', through = 'TRegroupementsMoa', related_name = '+', symmetrical = False)
 
@@ -434,20 +422,20 @@ class TUnite(models.Model) :
     def __str__(self) :
         return self.int_unit
 
-class TPortee(models.Model) :
+class TInstanceConcertation(models.Model) :
 
     # Je définis les champs de la table.
-    id_port = models.AutoField(primary_key = True)
-    int_port = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    id_inst_conc = models.AutoField(primary_key = True)
+    int_inst_conc = models.CharField(max_length = 255, verbose_name = 'Intitulé')
 
     class Meta :
-        db_table = 't_portee'
-        ordering = ['int_port']
-        verbose_name = 'Portée de dossier'
-        verbose_name_plural = 'Portées de dossiers'
+        db_table = 't_instance_concertation'
+        ordering = ['int_inst_conc']
+        verbose_name = 'Instance de concertation'
+        verbose_name_plural = 'Instances de concertation'
 
     def __str__(self) :
-        return self.int_port
+        return self.int_inst_conc
 
 class TPgre(TDossier) :
 
@@ -455,7 +443,9 @@ class TPgre(TDossier) :
     id_pgre = models.OneToOneField(TDossier, db_column = 'id_pgre')
     quant_objs_pgre = models.FloatField(null = True, blank = True)
     quant_real_pgre = models.FloatField(null = True, blank = True)
-    id_port = models.ForeignKey(TPortee, models.DO_NOTHING, db_column = 'id_port', null = True, blank = True)
+    id_inst_conc = models.ForeignKey(
+        TInstanceConcertation, models.DO_NOTHING, db_column = 'id_inst_conc', null = True, blank = True
+    )
     id_unit = models.ForeignKey(TUnite, models.DO_NOTHING, db_column = 'id_unit', null = True, blank = True)
     riv = models.ManyToManyField(TRiviere, through = 'TRivieresDossier')
 
@@ -478,10 +468,11 @@ class TPeriodePriseVuePhoto(models.Model) :
     # Je définis les champs de la table.
     id_ppv_ph = models.AutoField(primary_key = True)
     int_ppv_ph = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    ordre_ppv_ph = models.IntegerField(null = True, blank = True)
 
     class Meta :
         db_table = 't_periode_prise_vue_photo'
-        ordering = ['int_ppv_ph']
+        ordering = ['ordre_ppv_ph']
         verbose_name = 'Période de prise de vue'
         verbose_name_plural = 'Périodes de prise de vue'
 
@@ -512,10 +503,11 @@ class TTypeDeclaration(models.Model) :
     # Je définis les champs de la table.
     id_type_decl = models.AutoField(primary_key = True)
     int_type_decl = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    ordre_type_decl = models.IntegerField(null = True, blank = True)
 
     class Meta :
         db_table = 't_type_declaration'
-        ordering = ['int_type_decl']
+        ordering = ['ordre_type_decl']
         verbose_name = 'Type de déclaration'
         verbose_name_plural = 'Types de déclarations'
 
@@ -527,10 +519,11 @@ class TTypeAvancementArrete(models.Model) :
     # Je définis les champs de la table.
     id_type_av_arr = models.AutoField(primary_key = True)
     int_type_av_arr = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    ordre_type_av_arr = models.IntegerField(null = True, blank = True)
 
     class Meta :
         db_table = 't_type_avancement_arrete'
-        ordering = ['int_type_av_arr']
+        ordering = ['ordre_type_av_arr']
         verbose_name = 'Avancement d\'un arrêté'
         verbose_name_plural = 'Avancements d\'un arrêté'
 

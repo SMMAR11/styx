@@ -157,8 +157,8 @@ class GererDossier(forms.Form) :
 		widget = forms.CheckboxSelectMultiple()
 	)
 
-	zl_port = forms.ChoiceField(
-		label = 'Portée du dossier',
+	zl_inst_conc = forms.ChoiceField(
+		label = 'Instance de concertation',
 		required = False,
 		widget = forms.Select(attrs = { 'class' : 'form-control' })
 	)
@@ -172,10 +172,10 @@ class GererDossier(forms.Form) :
 		from app.models import TAvisCp
 		from app.models import TAxe
 		from app.models import TDossier
+		from app.models import TInstanceConcertation
 		from app.models import TMoa
 		from app.models import TNatureDossier
 		from app.models import TPgre
-		from app.models import TPortee
 		from app.models import TProgramme
 		from app.models import TRiviere
 		from app.models import TRivieresDossier
@@ -184,6 +184,7 @@ class GererDossier(forms.Form) :
 		from app.models import TTypeDossier
 		from app.models import TTypesProgrammesTypeDossier
 		from app.models import TUnite
+		from itertools import chain
 		from styx.settings import MEDIA_URL
 
 		# Je déclare les arguments.
@@ -271,15 +272,17 @@ class GererDossier(forms.Form) :
 
 				self.fields['cbsm_riv'].initial = tab_riv
 
-				# Je vérifie l'existence d'un objet TPortee.
-				obj_port_doss_pgre = None
+				# Je vérifie l'existence d'un objet TInstanceConcertation.
+				obj_inst_conc_doss_pgre = None
 				try :
-					obj_port_doss_pgre = TPortee.objects.get(id_port = obj_doss_pgre.id_port.id_port)
+					obj_inst_conc_doss_pgre = TInstanceConcertation.objects.get(
+						id_inst_conc = obj_doss_pgre.id_inst_conc.id_inst_conc
+					)
 				except :
 					pass
 
-				if obj_port_doss_pgre is not None :
-					self.fields['zl_port'].initial = obj_port_doss_pgre.id_port
+				if obj_inst_conc_doss_pgre is not None :
+					self.fields['zl_inst_conc'].initial = obj_inst_conc_doss_pgre.id_inst_conc
 
 		if obj_doss is not None :
 
@@ -298,11 +301,13 @@ class GererDossier(forms.Form) :
 			p_progr = int(obj_doss.id_progr.id_progr)
 			p_axe = integer(obj_doss.num_axe)
 			p_ss_axe = integer(obj_doss.num_ss_axe)
+			p_techn = int(obj_doss.id_techn.id_techn)
 		else :
 			p_org_moa = -1
 			p_progr = -1
 			p_axe = -1
 			p_ss_axe = -1
+			p_techn = -1
 
 		# J'alimente la liste déroulante des maîtres d'ouvrages selon l'opération en cours.
 		if p_org_moa > 0 :
@@ -422,6 +427,16 @@ class GererDossier(forms.Form) :
 		les_techn.extend([(i.id_techn, '{0} {1}'.format(i.n_techn, i.pren_techn)) for i in TTechnicien.objects.filter(
 			en_act = 1
 		)])
+
+		# J'ajoute le technicien inactif s'il est à l'origine du dossier en cours de modification.
+		if p_techn > 0 :
+			les_techn = list(chain(
+				les_techn,
+				[(i.id_techn, '{0} {1}'.format(i.n_techn, i.pren_techn)) for i in TTechnicien.objects.filter(
+					id_techn = p_techn
+				)]
+			))
+
 		self.fields['zl_techn'].choices = les_techn
 
 		# J'alimente la liste déroulante des états d'avancements.
@@ -444,10 +459,10 @@ class GererDossier(forms.Form) :
 		les_riv.extend([('T', 'Toutes')]);
 		self.fields['cbsm_riv'].choices = les_riv
 
-		# J'alimente la liste déroulante des portées du dossier.
-		les_port = list(OPTION_INITIALE)
-		les_port.extend([(i.id_port, i.int_port) for i in TPortee.objects.all()])
-		self.fields['zl_port'].choices = les_port
+		# J'alimente la liste déroulante des instances de concertation.
+		les_inst_conc = list(OPTION_INITIALE)
+		les_inst_conc.extend([(i.id_inst_conc, i.int_inst_conc) for i in TInstanceConcertation.objects.all()])
+		self.fields['zl_inst_conc'].choices = les_inst_conc
 
 	def clean(self) :
 
@@ -1109,7 +1124,7 @@ class GererFinancement(forms.Form) :
 	)
 
 	zu_chem_pj_fin = forms.FileField(
-		label = 'Insérer le dossier scanné du DDS <span class="supplement">(fichier PDF)</span>',
+		label = 'Insérer l\'arrêté de subvention <span class="supplement">(fichier PDF)</span>',
 		required = False,
 		widget = forms.FileInput(attrs = { 'class' : 'input-file' })
 	)
@@ -1366,7 +1381,7 @@ class GererPrestation(forms.Form) :
 
 		''' Imports '''
 		from app.functions import float_to_int, nett_val, valid_zl
-		from app.models import TDossier, TPrestataire, TPrestation
+		from app.models import TDossier, TPrestataire
 		from app.sql_views import VSuiviDossier
 
 		# Je récupère certaines données du formulaire pré-valide.
@@ -1375,7 +1390,6 @@ class GererPrestation(forms.Form) :
 		v_siret_org_prest = cleaned_data.get('zsac_siret_org_prest')
 		v_mont_ht_tot_prest = cleaned_data.get('zs_mont_ht_tot_prest')
 		v_mont_ttc_tot_prest = cleaned_data.get('zs_mont_ttc_tot_prest')
-		v_dt_notif_prest = cleaned_data.get('zd_dt_notif_prest')
 		v_nat_prest = cleaned_data.get('zl_nat_prest')
 		v_obj_prest = nett_val(cleaned_data.get('zu_chem_pj_prest'))
 
@@ -1421,18 +1435,6 @@ class GererPrestation(forms.Form) :
 						'Veuillez saisir un montant TTC inférieur ou égal à {0} €.'.format(float_to_int(v_mont_ttc_rau))
 					)
 
-			# Je gère la contrainte suivante : je ne peux pas créer une prestation si le couple prestataire/date de
-			# notification existe déjà.
-			if len(
-				TPrestation.objects.filter(
-					id_org_prest__siret_org_prest = v_siret_org_prest, dt_notif_prest = v_dt_notif_prest
-				)
-			) > 0 :
-				self.add_error(
-					'zd_dt_notif_prest',
-					'Veuillez choisir une autre date de notification.'
-				)
-
 		# Je vérifie l'extension du contrat de prestation.
 		if v_obj_prest is not None :
 			if v_obj_prest.name.endswith('.pdf') == False :
@@ -1448,6 +1450,12 @@ class GererAvenant(forms.Form) :
 		label = 'Numéro du dossier',
 		required = False,
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
+	)
+
+	za_id_prest = forms.CharField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True, 'type' : 'hidden' })
 	)
 
 	za_prest = forms.CharField(
@@ -1505,6 +1513,7 @@ class GererAvenant(forms.Form) :
 		except :
 			pass
 
+		# Je vérifie l'existence d'un objet TDossier.
 		obj_doss = None
 		try :
 			obj_doss = TDossier.objects.get(id_doss = k_doss)
@@ -1516,6 +1525,8 @@ class GererAvenant(forms.Form) :
 			self.fields['za_prest'].initial = '{0} : {1}'.format(
 				obj_prest.id_org_prest.n_org, reecr_dt(obj_prest.dt_notif_prest)
 			)
+
+			self.fields['za_id_prest'].initial = obj_prest.id_prest
 
 		if obj_doss is not None :
 			self.fields['za_num_doss'].initial = obj_doss.num_doss
@@ -1531,7 +1542,7 @@ class GererAvenant(forms.Form) :
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererAvenant, self).clean()
 		v_num_doss = cleaned_data.get('za_num_doss')
-		v_prest = cleaned_data.get('za_prest')
+		v_id_prest = cleaned_data.get('za_id_prest')
 		v_dt_aven = cleaned_data.get('zd_dt_aven')
 		v_mont_ht_aven = cleaned_data.get('zs_mont_ht_aven')
 		v_mont_ttc_aven = cleaned_data.get('zs_mont_ttc_aven')
@@ -1539,12 +1550,7 @@ class GererAvenant(forms.Form) :
 		# Je vérifie l'existence d'un objet TPrestationsDossier.
 		obj_prest_doss = None
 		try :
-			split = v_prest.split(' : ')
-			obj_prest_doss = TPrestationsDossier.objects.get(
-				id_doss__num_doss = v_num_doss,
-				id_prest__id_org_prest__n_org = split[0],
-				id_prest__dt_notif_prest = chang_form_dt(split[1])
-			)
+			obj_prest_doss = TPrestationsDossier.objects.get(id_doss__num_doss = v_num_doss, id_prest = v_id_prest)
 		except :
 			self.add_error('za_num_doss', 'Veuillez choisir un couple prestation/dossier valide.')
 			self.add_error('za_prest', None)

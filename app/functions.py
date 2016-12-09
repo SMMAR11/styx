@@ -54,10 +54,9 @@ p_doss : Identifiant du dossier
 p_act : URL traitant le formulaire
 p_red : URL de redirection dès l'ajout de l'avenant
 p_ong : Onglet actif après la redirection
-p_get_param : Paramètres "GET" supplémentaires
 Retourne soit une chaîne de caractères, soit un tableau au format JSON
 '''
-def ajout_aven(request, p_type, p_prest, p_doss = None, p_act = None, p_red = None, p_ong = None, p_get_param = '') :
+def ajout_aven(request, p_type, p_prest = None, p_doss = None, p_act = None, p_red = None, p_ong = None) :
 
 	''' Imports '''
 	from app.forms.gestion_dossiers import GererAvenant
@@ -78,11 +77,14 @@ def ajout_aven(request, p_type, p_prest, p_doss = None, p_act = None, p_red = No
 		tab = init_form(f)
 
 		reponse = '''
-		<form name="form_ajouter_avenant" method="post" action="{0}?action=ajouter-avenant{1}" class="c-theme">
-				<input name="csrfmiddlewaretoken" value="{2}" type="hidden">
+		<form name="form_ajouter_avenant" method="post" action="{0}?action=ajouter-avenant" class="c-theme">
+				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
 				<div class="row">
-					<div class="col-xs-6">{3}</div>
-					<div class="col-xs-6">{4}</div>
+					<div class="col-xs-6">{2}</div>
+					<div class="col-xs-6">
+						{3}
+						{4}
+					</div>
 				</div>
 				{5}
 				{6}
@@ -94,9 +96,9 @@ def ajout_aven(request, p_type, p_prest, p_doss = None, p_act = None, p_red = No
 			</form>
 			'''.format(
 				p_act,
-				p_get_param,
 				csrf(request)['csrf_token'],
 				tab['za_num_doss'],
+				tab['za_id_prest'],
 				tab['za_prest'],
 				tab['zs_int_aven'],
 				tab['zd_dt_aven'],
@@ -114,6 +116,7 @@ def ajout_aven(request, p_type, p_prest, p_doss = None, p_act = None, p_red = No
 			# Je récupère et nettoie les données du formulaire valide.
 			cleaned_data = f.cleaned_data
 			v_num_doss = nett_val(cleaned_data['za_num_doss'])
+			v_id_prest = nett_val(cleaned_data['za_id_prest'])
 			v_dt_aven = nett_val(cleaned_data['zd_dt_aven'])
 			v_int_aven = nett_val(cleaned_data['zs_int_aven'])
 			v_mont_ht_aven = nett_val(cleaned_data['zs_mont_ht_aven'])
@@ -126,7 +129,7 @@ def ajout_aven(request, p_type, p_prest, p_doss = None, p_act = None, p_red = No
 				mont_ht_aven = v_mont_ht_aven,
 				mont_ttc_aven = v_mont_ttc_aven,
 				id_doss = TDossier.objects.get(num_doss = v_num_doss),
-				id_prest = TPrestation.objects.get(id_prest = p_prest)
+				id_prest = TPrestation.objects.get(id_prest = v_id_prest)
 			)
 
 			# Je créé un nouvel objet TAvenant.
@@ -688,7 +691,7 @@ def init_form(p_form) :
 
 			# Je déclare deux tableaux qui s'empileront selon la valeur du sommet.
 			tab_rng_g = []
-			tab_rng_d = ['']
+			tab_rng_d = []
 
 			# Je parcours chaque élément du tableau des options.
 			for un_element in un_champ :
@@ -748,7 +751,7 @@ def init_form(p_form) :
 				'''.format(un_champ.label, un_champ)
 			else :
 				contenu = '''
-				<div class="field-wrapper">
+				<div class="field-wrapper" style="margin-bottom: 0;">
 					{0}
 					<span class="za_erreur"></span>
 				</div>
