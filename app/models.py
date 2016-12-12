@@ -4,9 +4,9 @@
 ''' Imports '''
 from app.functions import *
 from django.contrib.auth.models import User
-#from django.contrib.gis.db import models as gismodels
+from django.contrib.gis.db import models as gismodels
 from django.db import models
-#import uuid
+import uuid
 
 # Je créé les tables de la base de données.
 class TFamille(models.Model) :
@@ -99,6 +99,7 @@ class TTypeDossier(models.Model) :
     id_type_doss = models.AutoField(primary_key = True)
     int_type_doss = models.CharField(max_length = 255, verbose_name = 'Intitulé')
     type_progr = models.ManyToManyField(TTypeProgramme, through = 'TTypesProgrammesTypeDossier')
+    type_geom = models.ManyToManyField('TTypeGeom', through = 'TTypesGeomTypeDossier')
 
     class Meta :
         db_table = 't_type_dossier'
@@ -735,7 +736,6 @@ class TPaiement(models.Model) :
         db_table = 't_paiement'
         unique_together = (('id_fact', 'id_fin'))
 
-'''
 class TDossierGeom(gismodels.Model) :
 
     # Je définis les champs de la table.
@@ -748,4 +748,22 @@ class TDossierGeom(gismodels.Model) :
 
     class Meta :
         db_table = 't_dossier_geom'
-'''
+
+class TTypeGeom(models.Model) :
+
+    # Je définis les champs de la table.
+    id_type_geom = models.AutoField(primary_key = True)
+    int_type_geom = models.CharField(max_length = 255)
+
+    class Meta :
+        db_table = 't_type_geom'
+        ordering = ['int_type_geom']
+
+class TTypesGeomTypeDossier(models.Model) :
+
+    # Je définis les champs de la table.
+    id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING, db_column = 'id_type_doss')
+    id_type_geom = models.ForeignKey(TTypeGeom, models.DO_NOTHING, db_column = 'id_type_geom')
+
+    class Meta :
+        db_table = 't_types_geom_type_dossier'

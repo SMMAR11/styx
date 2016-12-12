@@ -480,6 +480,24 @@ class AUnite(admin.ModelAdmin) :
 # J'ajoute la possibilité de gérer les unités de mesures.
 admin.site.register(TUnite, AUnite)
 
+class AInstanceConcertation(admin.ModelAdmin) :
+
+	# Je paramètre les différentes options.
+	list_display = ['int_inst_conc']
+	actions = [admin.actions.delete_selected]
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_inst_conc'),
+			)
+		}),
+	)
+
+# J'ajoute la possibilité de gérer les instances de concertation.
+admin.site.register(TInstanceConcertation, AInstanceConcertation)
+
 class APeriodePriseVuePhoto(admin.ModelAdmin) :
 
 	# Je paramètre les différentes options.

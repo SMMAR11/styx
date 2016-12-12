@@ -20,6 +20,8 @@
 		<link rel="stylesheet" type="text/css" href="{% static './css/classes.css' %}">
 		<!-- J'inclus la feuille de style de l'application. -->
 		<link rel="stylesheet" type="text/css" href="{% static './css/styles.css' %}">
+		<!-- J'inclus la bibliothèque Leaflet à part. -->
+		<script type="text/javascript" src="{% static './vendors/leaflet/leaflet-src.js' %}"></script>
 	</head>
 	<body style="background-color: white;">
 		<div id="loader_page" class="text-center">
@@ -115,7 +117,6 @@
 		<script type="text/javascript" src="{% static './vendors/bootstrap-datepicker-master/locales/bootstrap-datepicker.fr.min.js' %}"></script>
 		<script type="text/javascript" src="{% static './vendors/jquery-typeahead-2.7.2/dist/jquery.typeahead.min.js' %}"></script>
 		<script type="text/javascript" src="{% static './vendors/DataTables/js/jquery.dataTables.js' %}"></script>
-		<script type="text/javascript" src="{% static './vendors/leaflet/leaflet-src.js' %}"></script>
 		<!-- J'inclus mes scripts JavaScript. -->
 		<script type="text/javascript">
 

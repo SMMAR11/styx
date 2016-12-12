@@ -223,7 +223,7 @@
 				<div class="row">
 					<div class="col-md-12">
 						<div class="right">
-							<span class="bt-ajouter icon-link">Ajouter une demande de versement</span>
+							<span data-toggle="modal" data-target="#fm_ajouter_ddv" class="bt-ajouter icon-link">Ajouter une demande de versement</span>
 						</div>
 						<div style="overflow: auto;">
 							<table class="display table" id="tab_consulter_demandes_versement">
@@ -293,7 +293,27 @@
 					</div>
 				</div>
 			</div>
-			<div id="ong_cartographie" class="fade tab-pane"></div>
+			<div id="ong_cartographie" class="fade tab-pane">
+				<div class="row">
+					<div class="col-md-12">
+						<form method="post" action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-geom" name="form_modifier_carto">
+							{% csrf_token %}
+							<div style="display: none">
+								<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_modifier_carto">Mettre à jour la géométrie</button>
+							</div>
+							<script type="text/javascript">
+								
+								{% for geom in les_geoms %}
+								g = new L.geoJson({{ geom | safe }});
+								lyr = g.getLayers()[0];
+								editableLayers.addLayer(lyr);
+								{% endfor %}
+
+							</script>
+						</form>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
