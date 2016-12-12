@@ -1324,9 +1324,11 @@ def consulter_dossier(request, p_doss) :
 				'Ajouter un organisme dans le plan de financement', 
 				tab_cont_fm['ajouter_financement']
 			),
+			init_fm('ajouter_ddv', 'Ajouter une demande de versement'),
 			init_fm('ajouter_photo', 'Ajouter une photo', tab_cont_fm['ajouter_photo']),
 			init_fm('ajouter_facture', 'Ajouter une facture', tab_cont_fm['ajouter_facture']),
 			init_fm('ajouter_prestation', 'Ajouter/relier une prestation', tab_cont_fm['ajouter_prestation']),
+			init_fm('modifier_carto', 'Modifier la géométrie'),
 			init_fm('modifier_dossier', 'Modifier un dossier'),
 			init_fm('relier_prestation', 'Relier une prestation'),
 			init_fm('supprimer_arrete', 'Êtes-vous certain de supprimer cet arrêté ?'),
