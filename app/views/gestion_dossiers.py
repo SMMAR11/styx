@@ -1068,7 +1068,7 @@ def consulter_dossier(request, p_doss) :
 	from app.models import TTypeDeclaration
 	from app.models import TUnite
 	from app.models import TDossierGeom
-        from django.contrib.gis import geos
+	from django.contrib.gis import geos
 	from app.sql_views import VFinancement
 	from app.sql_views import VSuiviDossier
 	from app.sql_views import VSuiviPrestationsDossier
