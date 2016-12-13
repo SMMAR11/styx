@@ -693,7 +693,7 @@ class TFinancement(models.Model) :
     pourc_elig_fin = models.FloatField()
     pourc_real_fin = models.FloatField(null = True, blank = True)
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
-    id_org_fin = models.ForeignKey(TFinanceur, models.DO_NOTHING, db_column = 'id_org_fin')
+    id_org_fin = models.ForeignKey(TFinanceur, models.DO_NOTHING, db_column = 'id_org_fin', null = True, blank = True)
     id_paiem_prem_ac = models.ForeignKey(
         TPaiementPremierAcompte, models.DO_NOTHING, db_column = 'id_paiem_prem_ac', null = True, blank = True
     )
@@ -716,25 +716,34 @@ class TTypeVersement(models.Model) :
     def __str__(self) :
         return self.int_type_vers
 
-class TPaiement(models.Model) :
+class TDemandeVersement(models.Model) :
 
     # Je définis les champs de la table.
-    id_fact = models.ForeignKey(TFacture, models.DO_NOTHING, db_column = 'id_fact')
+    id_ddv = models.AutoField(primary_key = True)
+    chem_ddv = models.CharField(max_length = 255, null = True, blank = True)
+    comm_ddv = models.CharField(max_length = 255, null = True, blank = True)
+    dt_ddv = models.DateField(null = True, blank = True)
+    dt_vers_ddv = models.DateField(null = True, blank = True)
+    int_ddv = models.CharField(max_length = 255)
+    mont_ht_ddv = models.FloatField()
+    mont_ht_verse_ddv = models.FloatField()
+    mont_ttc_ddv = models.FloatField()
+    mont_ttc_verse_ddv = models.FloatField()
     id_fin = models.ForeignKey(TFinancement, models.DO_NOTHING, db_column = 'id_fin')
     id_type_vers = models.ForeignKey(TTypeVersement, models.DO_NOTHING, db_column = 'id_type_vers')
-    chem_pj_paiem = models.CharField(max_length = 255, null = True, blank = True)
-    comm_dem_vers = models.CharField(max_length = 255, null = True, blank = True)
-    dt_dem_vers = models.DateField(null = True, blank = True)
-    dt_vers_paiem = models.DateField(null = True, blank = True)
-    int_dem_vers = models.CharField(max_length = 255)
-    mont_ht_dem_vers = models.FloatField()
-    mont_ht_verse = models.FloatField()
-    mont_ttc_dem_vers = models.FloatField()
-    mont_ttc_verse = models.FloatField()
+    fact = models.ManyToManyField(TFacture, through = 'TFacturesDemandeVersement')
 
     class Meta :
-        db_table = 't_paiement'
-        unique_together = (('id_fact', 'id_fin'))
+        db_table = 't_demande_versement'
+
+class TFacturesDemandeVersement(models.Model) :
+
+    # Je définis les champs de la table.
+    id_ddv = models.ForeignKey(TDemandeVersement, models.DO_NOTHING, db_column = 'id_ddv')
+    id_fact = models.ForeignKey(TFacture, models.DO_NOTHING, db_column = 'id_fact')
+
+    class Meta :
+        db_table = 't_factures_demande_versement'
 
 class TDossierGeom(gismodels.Model) :
 

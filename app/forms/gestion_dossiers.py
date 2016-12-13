@@ -1165,9 +1165,16 @@ class GererFinancement(forms.Form) :
 		if obj_doss is not None :
 			self.fields['za_num_doss'].initial = obj_doss.num_doss
 
+		# Je mets en forme le libellé lié à l'autofinancement.
+		lib_autofin = 'Autofinancement'
+		if obj_doss is not None :
+			lib_autofin += ' - {0}'.format(obj_doss.id_org_moa.n_org)
+
 		# J'alimente la liste déroulante des financeurs.
-		les_org_fin = list(OPTION_INITIALE)
+		les_org_fin = list([(0, lib_autofin)])
 		les_org_fin.extend([(i.id_org_fin.id_org, i.id_org_fin.n_org) for i in TFinanceur.objects.all()])
+		les_org_fin = sorted(les_org_fin, key = lambda tup : tup[1])
+		les_org_fin.insert(0, [OPTION_INITIALE[0][0], OPTION_INITIALE[0][1]])
 		self.fields['zl_org_fin'].choices = les_org_fin
 
 		# J'alimente la liste déroulante des types de paiements du premier acompte.
@@ -1249,9 +1256,15 @@ class GererFinancement(forms.Form) :
 					)
 
 			# Je vérifie que le financeur sélectionné ne participe pas déjà au montage financier.
-			if v_org_fin > 0 :
+			if v_org_fin > -1 :
+
+				# J'initialise l'identifiant du financeur selon le cas traité (autofinancement ou non).
+				v_org_fin_rech = v_org_fin
+				if v_org_fin == 0 :
+					v_org_fin_rech = None
+
 				try :
-					TFinancement.objects.get(id_doss = obj_doss.id_doss, id_org_fin = v_org_fin)
+					TFinancement.objects.get(id_doss = obj_doss.id_doss, id_org_fin = v_org_fin_rech)
 					self.add_error(
 						'zl_org_fin',
 						'Le financeur participe déjà au montage financier.'

@@ -1587,19 +1587,30 @@ def consulter_dossier(request, p_doss) :
 		obj_suivi_doss = VSuiviDossier.objects.get(id_doss = obj_doss.id_doss)
 
 		# Je stocke les financements du dossier.
-		les_fin = VFinancement.objects.filter(id_doss = obj_doss.id_doss).order_by('id_org_fin__id_org_fin__n_org')
+		les_fin = VFinancement.objects.filter(id_doss = obj_doss.id_doss)
 
 		# Je stocke dans un tableau les données mises en forme de chaque financement du dossier.
 		tab_fin = []
 
 		for un_fin in les_fin :
+
+			# J'initialise le nom du maître d'ouvrage.
+			v_n_org = 'Autofinancement - {0}'.format(obj_doss.id_org_moa.n_org)
+			try :
+				v_n_org = conv_none(un_fin.id_org_fin.id_org_fin.n_org)
+			except :
+				pass
+
 			tab_fin.append({
 				'id_fin' : un_fin.id_fin,
-				'n_org' : conv_none(un_fin.id_org_fin.id_org_fin.n_org),
+				'n_org' : v_n_org,
 				'mont_ht_tot_subv_fin' : conv_none(float_to_int(un_fin.mont_ht_part_fin)),
 				'dt_deb_elig_fin' : conv_none(reecr_dt(un_fin.dt_deb_elig_fin)),
 				'dt_fin_elig_fin' : conv_none(reecr_dt(un_fin.dt_fin_elig_fin))
 			})
+
+			# Je trie le tableau des financeurs par ordre alphabétique du nom.
+			tab_fin = sorted(tab_fin, key = lambda tup : tup['n_org'])
 
 		# Je stocke les prestations du dossier.
 		les_prest_doss = TPrestationsDossier.objects.filter(id_doss = obj_doss.id_doss).order_by(
@@ -2925,6 +2936,11 @@ def ajouter_financement(request) :
 			except :
 				pass
 
+			# J'initialise l'objet TFinanceur.
+			obj_fin = None
+			if v_org_fin > 0 :
+				obj_fin = TFinanceur.objects.get(id_org_fin = v_org_fin)
+
 			if v_obj_fin is None :
 				v_chem_pj_fin = None
 			else :
@@ -2953,7 +2969,7 @@ def ajouter_financement(request) :
 				pourc_elig_fin = v_pourc_elig_fin,
 				pourc_real_fin = v_pourc_real_fin,
 				id_doss = obj_doss,
-				id_org_fin = TFinanceur.objects.get(id_org_fin = v_org_fin),
+				id_org_fin = obj_fin,
 				id_paiem_prem_ac = obj_paiem_prem_ac
 			)
 
