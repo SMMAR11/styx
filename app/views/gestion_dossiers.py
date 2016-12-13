@@ -851,10 +851,10 @@ def modifier_dossier(request, p_doss) :
 				# On commence par supprimer toutes les géométries déjà existantes
 				TDossierGeom.objects.filter(id_doss = obj_doss).delete()
 
-				if request.POST['geom'] :
+				if request.POST['editgeom'] :
 					
 					# Il peut y avoir plusieurs objets envoyés, on split pour boucler
-					editgeom = request.POST['geom'].split(';')
+					editgeom = request.POST['editgeom'].split(';')
 
 					# On créé un nouvel objet pour chaque géométrie
 					for g in editgeom :
@@ -1070,6 +1070,7 @@ def consulter_dossier(request, p_doss) :
 	from app.models import TTypeDeclaration
 	from app.models import TUnite
 	from app.models import TDossierGeom
+	from app.models import TTypesGeomTypeDossier
 	from django.contrib.gis import geos
 	from app.sql_views import VFinancement
 	from app.sql_views import VSuiviDossier
@@ -1102,6 +1103,10 @@ def consulter_dossier(request, p_doss) :
 			geom_doss.append(la_geom.geojson)
 			
 		# Récupération du/des type(s) de géométrie autorisée pour ce dossier
+		qs_typegeomdoss = TTypesGeomTypeDossier.objects.filter(id_type_doss = obj_doss.id_type_doss.id_type_doss)
+		typegeom_doss = []
+		for tg in qs_typegeomdoss :
+			typegeom_doss.append(tg.id_type_geom.int_type_geom)
 			
 		# J'instancie des objets "formulaire".
 		f_modif_doss = GererDossier_Reglementation(prefix = 'ModifierDossier', k_doss = obj_doss.id_doss)
@@ -1810,6 +1815,7 @@ def consulter_dossier(request, p_doss) :
 				'f1' : init_form(f_modif_doss),
 				'le_doss' : obj_doss,
 				'les_geoms' : geom_doss,
+				'les_types_geom' : typegeom_doss,
 				'les_attr_doss' : init_pg_cons(tab_attr_doss),
 				'les_doss_fam' : tab_doss_fam,
 				'les_fact_doss' : tab_fact_doss,
