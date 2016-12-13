@@ -799,3 +799,16 @@ $('form[name="form_ajouter_ddv"]').submit(function(e)
 	// Je vérifie la validité des données transmises via le formulaire d'insertion d'une demande de versement.
 	trait_form(e, 'AjouterDemandeDeVersement-');
 });
+
+/**
+ * Ce script permet le traitement d'une requête de modification de la géométrie d'un dossier dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_modifier_carto"]').submit(function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire de modification de la géométrie d'un dossier.
+	trait_form(e);
+});

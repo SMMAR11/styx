@@ -300,7 +300,7 @@
 						<form method="post" action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-geom" name="form_modifier_carto" id="form_modifier_dossier_geom">
 							{% csrf_token %}
 							<div style="display: none">
-								<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_modifier_carto">Mettre à jour la géométrie</button>
+								<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_modifier_carto" id="btn-geom-submit">Mettre à jour la géométrie</button>
 							</div>
 							<script type="text/javascript">
 								
@@ -311,7 +311,6 @@
 								{% endfor %}
 
 							</script>
-							
 							<input type="hidden" id="edit-geom" name="edit-geom"/>
 							{% leaflet_map "styxmap" %}
 						</form>

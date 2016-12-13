@@ -851,9 +851,10 @@ def modifier_dossier(request, p_doss) :
 				# On commence par supprimer toutes les géométries déjà existantes
 				TDossierGeom.objects.filter(id_doss = obj_doss).delete()
 
-				if request.POST['edit-geom'] :
+				if request.POST['geom'] :
+					
 					# Il peut y avoir plusieurs objets envoyés, on split pour boucler
-					editgeom = request.POST['edit-geom'].split(';')
+					editgeom = request.POST['geom'].split(';')
 
 					# On créé un nouvel objet pour chaque géométrie
 					for g in editgeom :
