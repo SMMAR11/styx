@@ -1,5 +1,6 @@
 {% extends 'gabarit.html' %}
 {% load static %}
+{% load leaflet_tags %}
 
 {% block content %}
 <div class="right">
@@ -19,7 +20,7 @@
 			<li><a href="#ong_reglementations" data-toggle="tab">Réglementations</a></li>
 			{% endif %}
 			<li><a href="#ong_photos" data-toggle="tab">Photos</a></li>
-			<li><a href="#ong_cartographie" data-toggle="tab">Cartographie</a></li>
+			<li><a href="#ong_cartographie" data-toggle="tab" id="tabCarto">Cartographie</a></li>
 		</ul>
 		<div class="tab-content">
 			<div id="ong_caracteristiques" class="fade tab-pane">
@@ -296,7 +297,7 @@
 			<div id="ong_cartographie" class="fade tab-pane">
 				<div class="row">
 					<div class="col-md-12">
-						<form method="post" action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-geom" name="form_modifier_carto">
+						<form method="post" action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-geom" name="form_modifier_carto" id="form_modifier_dossier_geom">
 							{% csrf_token %}
 							<div style="display: none">
 								<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_modifier_carto">Mettre à jour la géométrie</button>
@@ -310,6 +311,9 @@
 								{% endfor %}
 
 							</script>
+							
+							<input type="hidden" id="edit-geom" name="edit-geom"/>
+							{% leaflet_map "styxmap" %}
 						</form>
 					</div>
 				</div>
