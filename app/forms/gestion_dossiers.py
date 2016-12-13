@@ -1928,3 +1928,158 @@ class RepartirMontantsPrestation(forms.Form) :
 			self.fields['za_doss'].initial = obj_prest_doss.id_doss.id_doss
 			self.fields['zs_mont_ht_prest_doss'].initial = float_to_int(obj_prest_doss.mont_ht_prest)
 			self.fields['zs_mont_ttc_prest_doss'].initial = float_to_int(obj_prest_doss.mont_ttc_prest)
+
+class GererDemandeDeVersement(forms.Form) :
+
+	''' Imports '''
+	from app.validators import valid_cdc, valid_mont
+
+	# Je définis les champs du formulaire.
+	za_num_doss = forms.CharField(
+		label = 'Numéro du dossier',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
+	)
+
+	zl_org_fin = forms.ChoiceField(
+		label = 'Partenaire financier',
+		widget = forms.Select(attrs = { 'class' : 'form-control' })
+	)
+
+	zl_type_vers = forms.ChoiceField(
+		label = 'Type de demande de versement',
+		widget = forms.Select(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_int_ddv = forms.CharField(
+		label = 'Intitulé de la demande de versement',
+		validators = [valid_cdc],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
+	)
+
+	zs_mont_ht_ddv = forms.CharField(
+		label = 'Montant HT de la demande de versement (en €)',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_mont_ttc_ddv = forms.CharField(
+		label = 'Montant TTC de la demande de versement (en €)',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zd_dt_ddv = forms.DateField(
+		label = 'Date de la demande de versement',
+		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
+	)
+
+	zd_dt_vers_ddv = forms.DateField(
+		label = 'Date de versement',
+		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
+	)
+
+	zs_mont_ht_verse_ddv = forms.CharField(
+		label = 'Montant HT versé (en €)',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zs_mont_ttc_verse_ddv = forms.CharField(
+		label = 'Montant TTC versé (en €)',
+		validators = [valid_mont],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
+	)
+
+	zu_chem_pj_ddv = forms.FileField(
+		label = 'Insérer le courrier scanné de la demande de versement <span class="supplement">(fichier PDF)</span>',
+		required = False,
+		widget = forms.FileInput(attrs = { 'class' : 'input-file' })
+	)
+
+	za_chem_pj_ddv = forms.CharField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True, 'type' : 'hidden' })
+	)
+
+	zs_comm_ddv = forms.CharField(
+		label = 'Commentaire',
+		required = False,
+		validators = [valid_cdc],
+		widget = forms.Textarea(attrs = { 'class' : 'form-control', 'maxlength' : 255, 'rows' : 5 })
+	)
+
+	def __init__(self, *args, **kwargs) :
+
+		''' Imports '''
+		from app.models import TDossier, TFinancement, TTypeVersement
+
+		# Je déclare les éléments du tableau des arguments.
+		k_doss = kwargs.pop('k_doss', None)
+
+		super(GererDemandeDeVersement, self).__init__(*args, **kwargs)
+
+		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
+		# personnalisés à chaque champ.
+		for cle, valeur in self.fields.items() :
+			self.fields[cle].error_messages = MESSAGES
+			if self.fields[cle].required == True :
+				self.fields[cle].label += CHAMP_REQUIS
+
+		# Je vérifie l'existence d'un objet TDossier.
+		obj_doss = None
+		try :
+			obj_doss = TDossier.objects.get(id_doss = k_doss)
+		except :
+			pass
+
+		v_doss = -1
+		if obj_doss is not None :
+			v_doss = obj_doss.id_doss
+
+			self.fields['za_num_doss'].initial = obj_doss.num_doss
+
+		# Je mets en forme le tableau des financeurs du dossier.
+		tab_org_fin = []
+		for i in TFinancement.objects.filter(id_doss = v_doss) :
+
+			# J'initialise la valeur et le texte de chaque élément de la future liste déroulante des financeurs du
+			# dossier.
+			v_id_org_fin = 0
+			v_n_org_fin = 'Autofinancement - {0}'.format(TDossier.objects.get(id_doss = v_doss).id_org_moa.n_org)
+			try :
+				v_id_org_fin = i.id_org_fin.id_org
+				v_n_org_fin = i.id_org_fin.n_org
+			except :
+				pass
+
+			# J'empile le tableau des financeurs du dossier.
+			tab_org_fin.append([v_id_org_fin, v_n_org_fin])
+
+		# Je trie le tableau des financeurs du dossier.
+		tab_org_fin = sorted(tab_org_fin, key = lambda tup : tup[1])
+
+		# J'alimente la liste déroulante des financeurs du dossier.
+		les_org_fin = list(OPTION_INITIALE)
+		les_org_fin.extend(tab_org_fin)
+		self.fields['zl_org_fin'].choices = les_org_fin
+
+		# J'alimente la liste déroulante des types de versements.
+		les_type_vers = list(OPTION_INITIALE)
+		les_type_vers.extend([(i.id_type_vers, i.int_type_vers) for i in TTypeVersement.objects.all()])
+		self.fields['zl_type_vers'].choices = les_type_vers
+
+	def clean(self) :
+
+		''' Imports '''
+		from app.functions import valid_zl
+
+		# Je récupère certaines données du formulaire pré-valide.
+		cleaned_data = super(GererDemandeDeVersement, self).clean()
+		v_org_fin = cleaned_data.get('zl_org_fin')
+		v_type_vers = cleaned_data.get('zl_type_vers')
+
+		# Je vérifie la valeur de chaque liste déroulante obligatoire du formulaire.
+		v_org_fin = valid_zl(self, 'zl_org_fin', v_org_fin)
+		v_type_vers = valid_zl(self, 'zl_type_vers', v_type_vers)

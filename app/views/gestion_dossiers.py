@@ -1037,9 +1037,10 @@ def consulter_dossier(request, p_doss) :
 
 	''' Imports '''
 	from app.forms.gestion_dossiers import ChoisirPrestation
+	from app.forms.gestion_dossiers import GererDemandeDeVersement
+	from app.forms.gestion_dossiers import GererDossier_Reglementation
 	from app.forms.gestion_dossiers import GererFacture
 	from app.forms.gestion_dossiers import GererFinancement
-	from app.forms.gestion_dossiers import GererDossier_Reglementation
 	from app.forms.gestion_dossiers import GererPhoto
 	from app.forms.gestion_dossiers import GererPrestation
 	from app.forms.gestion_dossiers import RepartirMontantsPrestation
@@ -1106,6 +1107,7 @@ def consulter_dossier(request, p_doss) :
 		f_ajout_prest = GererPrestation(prefix = 'AjouterPrestation', k_doss = obj_doss.id_doss)
 		f_ajout_fact = GererFacture(prefix = 'AjouterFacture', k_doss = obj_doss.id_doss)
 		f_ch_prest = ChoisirPrestation(prefix = 'ChoisirPrestation', k_doss = obj_doss.id_doss)
+		f_ajout_ddv = GererDemandeDeVersement(prefix = 'AjouterDemandeDeVersement', k_doss = obj_doss.id_doss)
 
 		# J'initialise les champs de certains formulaires.
 		tab_ajout_ph = init_form(f_ajout_ph)
@@ -1113,6 +1115,7 @@ def consulter_dossier(request, p_doss) :
 		tab_ajout_prest = init_form(f_ajout_prest)
 		tab_ajout_fact = init_form(f_ajout_fact)
 		tab_ch_prest = init_form(f_ch_prest)
+		tab_ajout_ddv = init_form(f_ajout_ddv)
 
 		# Je récupère l'ensemble des prestations pouvant être reliées avec le dossier courant.
 		les_prest_filtr = TPrestation.objects.filter(
@@ -1157,6 +1160,45 @@ def consulter_dossier(request, p_doss) :
 
 		# Je déclare le contenu de certaines fenêtres modales.
 		tab_cont_fm = {
+			'ajouter_ddv' : '''
+			<form name="form_ajouter_ddv" method="post" action="{0}" class="c-theme" enctype="multipart/form-data">
+				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
+				{2}
+				{3}
+				{4}
+				{5}
+				<div class="row">
+					<div class="col-sm-6">{6}</div>
+					<div class="col-sm-6">{7}</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-6">{8}</div>
+					<div class="col-sm-6">{9}</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-6">{10}</div>
+					<div class="col-sm-6">{11}</div>
+				</div>
+				{12}
+				{13}
+				<button type="submit" class="bt-vert btn center-block to-unfocus">Valider</button>
+			</form>
+			'''.format(
+				reverse('ajouter_demande_versement'),
+				csrf(request)['csrf_token'],
+				tab_ajout_ddv['za_num_doss'],
+				tab_ajout_ddv['zl_org_fin'],
+				tab_ajout_ddv['zl_type_vers'],
+				tab_ajout_ddv['zs_int_ddv'],
+				tab_ajout_ddv['zs_mont_ht_ddv'],
+				tab_ajout_ddv['zs_mont_ttc_ddv'],
+				tab_ajout_ddv['zd_dt_ddv'],
+				tab_ajout_ddv['zd_dt_vers_ddv'],
+				tab_ajout_ddv['zs_mont_ht_verse_ddv'],
+				tab_ajout_ddv['zs_mont_ttc_verse_ddv'],
+				tab_ajout_ddv['zu_chem_pj_ddv'],
+				tab_ajout_ddv['zs_comm_ddv']
+			),
 			'ajouter_facture' : '''
 			<form name="form_ajouter_facture" method="post" action="{0}" class="c-theme" enctype="multipart/form-data">
 				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
@@ -1380,7 +1422,7 @@ def consulter_dossier(request, p_doss) :
 				'Ajouter un organisme dans le plan de financement', 
 				tab_cont_fm['ajouter_financement']
 			),
-			init_fm('ajouter_ddv', 'Ajouter une demande de versement'),
+			init_fm('ajouter_ddv', 'Ajouter une demande de versement', tab_cont_fm['ajouter_ddv']),
 			init_fm('ajouter_photo', 'Ajouter une photo', tab_cont_fm['ajouter_photo']),
 			init_fm('ajouter_facture', 'Ajouter une facture', tab_cont_fm['ajouter_facture']),
 			init_fm('ajouter_prestation', 'Ajouter/relier une prestation', tab_cont_fm['ajouter_prestation']),
@@ -3340,5 +3382,66 @@ def ajouter_facture(request) :
 
 			# J'affiche les erreurs.
 			reponse = HttpResponse(json.dumps(f_ajout_fact.errors), content_type = 'application/json')
+
+	return reponse
+
+'''
+Gestion des demandes de versements
+'''
+
+'''
+Cette vue permet soit de traiter le formulaire d'ajout d'une demande de versement. 
+request : Objet requête
+'''
+@verif_acces
+def ajouter_demande_versement(request) :
+
+	''' Imports '''
+	from app.forms.gestion_dossiers import GererDemandeDeVersement
+	from app.functions import nett_val
+	from app.models import TDossier
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	import json
+
+	reponse = HttpResponse()
+
+	if request.method == 'POST' :
+
+		# J'initialise la valeur du paramètre k_doss.
+		v_id_doss = None
+		try :
+			v_id_doss = TDossier.objects.get(num_doss = request.POST['za_num_doss']).id_doss
+		except :
+			pass
+
+		# Je vérifie la validité du formulaire d'ajout d'une demande de versement.
+		f_ajout_ddv = GererDemandeDeVersement(request.POST, request.FILES, k_doss = v_id_doss)
+
+		if f_ajout_ddv.is_valid() :
+
+			# Je récupère et nettoie les données du formulaire valide.
+			cleaned_data = f_ajout_ddv.cleaned_data
+			v_num_doss = nett_val(cleaned_data['za_num_doss'])
+
+			# Je pointe vers l'objet TDossier consulté.
+			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
+				
+			# J'affiche le message de succès.
+			reponse = HttpResponse(
+				json.dumps({
+					'success' : 'La demande de versement a été ajoutée avec succès.',
+					'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss])
+				}),
+				content_type = 'application/json'
+			)
+
+			# Je renseigne l'onglet actif après rechargement de la page.
+			request.session['app-nav'] = '#ong_demandes_versements'
+
+		else :
+
+			# J'affiche les erreurs.
+			reponse = HttpResponse(json.dumps(f_ajout_ddv.errors), content_type = 'application/json')
 
 	return reponse

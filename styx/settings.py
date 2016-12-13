@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'leaflet'
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -131,3 +132,10 @@ STATIC_URL = '/static/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+LEAFLET_CONFIG = {
+    'DEFAULT_CENTER' : (43.20, 2.32),
+    'DEFAULT_ZOOM' : 12,
+    'MIN_ZOOM' : 9,
+    'MAX_ZOOM' : 20,
+}

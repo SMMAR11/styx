@@ -57,6 +57,11 @@ urlpatterns = [
         r'^modules/gestion-dossiers/ajouter-facture/$', gestion_dossiers.ajouter_facture, name = 'ajouter_facture'
     ),
     url(
+        r'^modules/gestion-dossiers/ajouter-demande-versement/$',
+        gestion_dossiers.ajouter_demande_versement,
+        name = 'ajouter_demande_versement'
+    ),
+    url(
         r'^modules/gestion-dossiers/ajouter-arrete/([0-9]+)/([0-9]+)/$',
         gestion_dossiers.ajouter_arrete,
         name = 'ajouter_arrete'

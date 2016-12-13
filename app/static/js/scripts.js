@@ -786,3 +786,16 @@ $('#tab_consulter_prestations').find('span[data-target="#fm_ajouter_avenant"]').
 {
 	aff_html_ds_fm(e, 'ajouter_avenant');
 });
+
+/**
+ * Ce script permet le traitement d'une requête d'insertion d'une demande de versement dans la base de données.
+ * e : Variable objet JavaScript
+ */
+$('form[name="form_ajouter_ddv"]').submit(function(e)
+{
+	// Je bloque l'envoi du formulaire.
+	e.preventDefault();
+
+	// Je vérifie la validité des données transmises via le formulaire d'insertion d'une demande de versement.
+	trait_form(e, 'AjouterDemandeDeVersement-');
+});
