@@ -301,17 +301,26 @@
 							{% csrf_token %}
 							<div style="display: none">
 								<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_modifier_carto" id="btn-geom-submit">Mettre à jour la géométrie</button>
-							</div>
+							</div>				
+
+							<!-- Champ caché pour stocker la géométrie définie pour le dossier-->
+							<input type="hidden" id="edit-geom" name="editgeom"/>
+							<!-- Champ caché pour stocker les types de géom autorisés -->
+							<input type="hidden" id="typegeom_doss"/>
+
 							<script type="text/javascript">
-								
+								// Chargement des géométries déjà stockées pour le dossier
 								{% for geom in les_geoms %}
 								g = new L.geoJson({{ geom | safe }});
 								lyr = g.getLayers()[0];
 								editableLayers.addLayer(lyr);
 								{% endfor %}
+								// Récup des types de géom autorisées pour le filtrage des outils d'édition
+								var _typegeom_doss = "{{les_types_geom|safe}}";
+								$('#typegeom_doss').val(_typegeom_doss);
 
 							</script>
-							<input type="hidden" id="edit-geom" name="edit-geom"/>
+
 							{% leaflet_map "styxmap" %}
 						</form>
 					</div>
