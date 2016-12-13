@@ -448,6 +448,8 @@ def modifier_dossier(request, p_doss) :
 	from app.models import TTypeDossier
 	from app.models import TTypesProgrammesTypeDossier
 	from app.models import TUnite
+	from app.models import TDossierGeom
+	from django.contrib.gis import geos
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404, render
@@ -843,6 +845,45 @@ def modifier_dossier(request, p_doss) :
 					# J'affiche les erreurs.
 					reponse = HttpResponse(json.dumps(f_modif_doss.errors), content_type = 'application/json')
 
+			# Je traite le cas où je veux modifier la géométrie des objets associés dossier.
+			elif get_action == 'modifier-geom' :
+
+				# On commence par supprimer toutes les géométries déjà existantes
+				TDossierGeom.objects.filter(id_doss = obj_doss).delete()
+
+				if request.POST['edit-geom'] :
+					# Il peut y avoir plusieurs objets envoyés, on split pour boucler
+					editgeom = request.POST['edit-geom'].split(';')
+
+					# On créé un nouvel objet pour chaque géométrie
+					for g in editgeom :
+
+						geom = geos.GEOSGeometry(g)
+
+						geom_doss = TDossierGeom(id_doss = obj_doss)
+
+						if geom and isinstance(geom, geos.Polygon):
+							geom_doss.geom_pol = geom
+
+						if geom and isinstance(geom, geos.LineString):
+							geom_doss.geom_lin = geom
+
+						if geom and isinstance(geom, geos.Point):
+							geom_doss.geom_pct = geom
+
+						geom_doss.save()
+
+				# J'affiche le message de succès.
+				reponse = HttpResponse(
+					json.dumps({
+						'success' : 'La géométrie a été mise à jour avec succès.',
+						'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss])
+					}),
+					content_type = 'application/json'
+				)
+
+				# Je renseigne l'onglet actif après rechargement de la page.
+				request.session['app-nav'] = '#ong_cartographie'
 		else :
 
 			# J'alimente les listes déroulantes des axes, des sous-axes, des actions et des types de dossiers.
@@ -1026,6 +1067,8 @@ def consulter_dossier(request, p_doss) :
 	from app.models import TRivieresDossier
 	from app.models import TTypeDeclaration
 	from app.models import TUnite
+	from app.models import TDossierGeom
+        from django.contrib.gis import geos
 	from app.sql_views import VFinancement
 	from app.sql_views import VSuiviDossier
 	from app.sql_views import VSuiviPrestationsDossier
@@ -1043,6 +1086,19 @@ def consulter_dossier(request, p_doss) :
 		# Je vérifie l'existence d'un objet TDossier.
 		obj_doss = get_object_or_404(TDossier, id_doss = p_doss)
 
+		# Récupération des géométries du dossier s'il y en a
+		qs_geomdoss = TDossierGeom.objects.filter(id_doss = obj_doss)
+		geom_doss = []
+		for g in qs_geomdoss :
+			if g.geom_pol is not None :
+				la_geom = geos.GEOSGeometry(g.geom_pol)
+			if g.geom_lin is not None :
+				la_geom = geos.GEOSGeometry(g.geom_lin)
+			if g.geom_pct is not None :
+				la_geom = geos.GEOSGeometry(g.geom_pct)
+
+			geom_doss.append(la_geom.geojson)
+			
 		# J'instancie des objets "formulaire".
 		f_modif_doss = GererDossier_Reglementation(prefix = 'ModifierDossier', k_doss = obj_doss.id_doss)
 		f_ajout_ph = GererPhoto(prefix = 'AjouterPhoto', k_doss = obj_doss.id_doss)
@@ -1697,6 +1753,7 @@ def consulter_dossier(request, p_doss) :
 			{
 				'f1' : init_form(f_modif_doss),
 				'le_doss' : obj_doss,
+				'les_geoms' : geom_doss,
 				'les_attr_doss' : init_pg_cons(tab_attr_doss),
 				'les_doss_fam' : tab_doss_fam,
 				'les_fact_doss' : tab_fact_doss,
