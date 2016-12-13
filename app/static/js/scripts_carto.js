@@ -1,28 +1,6 @@
-/*var bloc_carte;
-var carte;
-
-try
-{
-    var bloc_carte = L.map('map', { attributionControl: false }).setView([2.38, 43.20], 15);
-    var carte = L.tileLayer('http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}').addTo(bloc_carte);
-}
-catch (e)
-{
-    
-}*/
 var map;
-
 var editableLayers = new L.FeatureGroup();
-/*
-var pinMarker = L.Icon.extend({
-    options: {
-        shadowUrl: null,
-        iconAnchor: new L.Point(12, 24),
-        iconSize: new L.Point(24, 24),
-        iconUrl: '/static/images/pictos/portail_carto/location-pin-24.png'
-    }
-});
-*/
+
 var options = {
     position: 'topleft',
     draw: {
@@ -39,9 +17,6 @@ var options = {
         },
         circle: false, // Turns off this drawing tool
         rectangle: false//, // Turns off this drawing tool
-        //marker: {
-        //    icon: new pinMarker()
-        //}
     },
     edit: {
         featureGroup: editableLayers, //REQUIRED!!
@@ -50,7 +25,6 @@ var options = {
 };
 
 var drawControl = new L.Control.Draw(options);
-
 
 window.addEventListener("map:init", function (e) {
     var detail = e.detail;
@@ -101,11 +75,16 @@ $(function() {
         $("#styxmap").height($(window).height() - _heightHeader - _heightFooter);
         map.invalidateSize();
 
-        /*
-        $(".leaflet-draw-draw-marker").css("display","none");
-        $(".leaflet-draw-draw-polyline").css("display","none");
-        $(".leaflet-draw-draw-polygone").css("display","none");
-        */
+        // Les boutons des geoms non autorisées sont masqués
+        if( $('#typegeom_doss').val().indexOf('marker') == -1)
+            $(".leaflet-draw-draw-marker").css("display","none");
+
+        if( $('#typegeom_doss').val().indexOf('polyline') == -1)
+            $(".leaflet-draw-draw-polyline").css("display","none");
+
+        if( $('#typegeom_doss').val().indexOf('polygon') == -1)
+            $(".leaflet-draw-draw-polygon").css("display","none");
+        
     });
 
 });
