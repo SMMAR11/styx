@@ -1100,6 +1100,8 @@ def consulter_dossier(request, p_doss) :
 
 			geom_doss.append(la_geom.geojson)
 			
+		# Récupération du/des type(s) de géométrie autorisée pour ce dossier
+			
 		# J'instancie des objets "formulaire".
 		f_modif_doss = GererDossier_Reglementation(prefix = 'ModifierDossier', k_doss = obj_doss.id_doss)
 		f_ajout_ph = GererPhoto(prefix = 'AjouterPhoto', k_doss = obj_doss.id_doss)
