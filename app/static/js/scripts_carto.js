@@ -58,8 +58,8 @@ window.addEventListener("map:init", function (e) {
         $('#edit-geom').val(p.join(';'));
 
         // Submit du form
-        //$('#form_modifier_dossier_geom').submit();
-        $('#btn-geom-submit').click();
+        $('#form_modifier_dossier_geom').submit();
+        $('#fm_modifier_carto').modal('show');
 
     }).addTo(map);
 
