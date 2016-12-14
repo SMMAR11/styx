@@ -436,6 +436,7 @@ def modifier_dossier(request, p_doss) :
 	from app.models import TAvisCp
 	from app.models import TAxe
 	from app.models import TDossier
+	from app.models import TDossierGeom
 	from app.models import TFamille
 	from app.models import TInstanceConcertation
 	from app.models import TNatureDossier
@@ -448,7 +449,6 @@ def modifier_dossier(request, p_doss) :
 	from app.models import TTypeDossier
 	from app.models import TTypesProgrammesTypeDossier
 	from app.models import TUnite
-	from app.models import TDossierGeom
 	from django.contrib.gis import geos
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -1057,6 +1057,7 @@ def consulter_dossier(request, p_doss) :
 	from app.models import TArretesDossier
 	from app.models import TAvenant
 	from app.models import TDossier
+	from app.models import TDossierGeom
 	from app.models import TFacture
 	from app.models import TInstanceConcertation
 	from app.models import TPgre
@@ -1065,13 +1066,12 @@ def consulter_dossier(request, p_doss) :
 	from app.models import TPrestationsDossier
 	from app.models import TRivieresDossier
 	from app.models import TTypeDeclaration
-	from app.models import TUnite
-	from app.models import TDossierGeom
 	from app.models import TTypesGeomTypeDossier
-	from django.contrib.gis import geos
+	from app.models import TUnite
 	from app.sql_views import VFinancement
 	from app.sql_views import VSuiviDossier
 	from app.sql_views import VSuiviPrestationsDossier
+	from django.contrib.gis import geos
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404, render
@@ -1811,16 +1811,16 @@ def consulter_dossier(request, p_doss) :
 			{
 				'f1' : init_form(f_modif_doss),
 				'le_doss' : obj_doss,
-				'les_geoms' : geom_doss,
-				'les_types_geom' : typegeom_doss,
+				'les_arr' : cont_regl,
 				'les_attr_doss' : init_pg_cons(tab_attr_doss),
 				'les_doss_fam' : tab_doss_fam,
 				'les_fact_doss' : tab_fact_doss,
 				'les_fin' : tab_fin,
 				'les_fm' : tab_fm,
+				'les_geoms' : geom_doss,
 				'les_ph' : tab_ph,
 				'les_prest_doss' : tab_prest_doss,
-				'les_arr' : cont_regl,
+				'les_types_geom' : typegeom_doss,
 				'mont_ht_doss' : float_to_int(obj_doss.mont_ht_doss),
 				'mont_ht_raf' : float_to_int(obj_suivi_doss.mont_ht_raf),
 				'mont_ht_rau' : float_to_int(obj_suivi_doss.mont_ht_rau),

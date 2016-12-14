@@ -43,9 +43,9 @@ $(document).ready(function()
 		});
 	});
 
-	// J'ajoute une alerte à chaque élément du menu principal.
 	$('form').each(function()
 	{
+		// J'ajoute une alerte à chaque élément du menu principal.
 		if ($(this).hasClass('alert-user'))
 		{
 			$('#menu_principal').find('.alert-user').each(function()
@@ -59,6 +59,17 @@ $(document).ready(function()
 
 			// Je retire la classe "alert-user" du formulaire courant.
 			$(this).removeClass('alert-user');
+		}
+
+		// Je retire l'attribut "required" pour tous les champs de tous les formulaire de la page active.
+		for (var i = 0; i < $(this).length; i ++)
+		{
+			var form = $(this)[i];
+			for (var j = 0; j < form.length; j ++)
+			{
+				var balise = form[j];
+				$(balise).removeAttr('required');
+			}
 		}
 	});
 

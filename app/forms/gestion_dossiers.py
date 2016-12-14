@@ -418,7 +418,9 @@ class GererDossier(forms.Form) :
 		# J'alimente la liste déroulante des types de dossiers.
 		les_types_doss = list(OPTION_INITIALE)
 		les_types_doss.extend([(i.id_type_doss.id_type_doss, i.id_type_doss.int_type_doss) 
-			for i in TTypesProgrammesTypeDossier.objects.filter(id_type_progr = v_type_progr)
+			for i in TTypesProgrammesTypeDossier.objects.filter(id_type_progr = v_type_progr).order_by(
+				'id_type_doss__int_type_doss'
+			)
 		])
 		self.fields['zld_type_doss'].choices = les_types_doss
 

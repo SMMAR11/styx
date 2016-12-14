@@ -195,7 +195,9 @@ def alim_liste(request) :
 			pass
 
 		# Je récupère la liste des types de dossiers relatifs à un programme.
-		les_types_doss = TTypesProgrammesTypeDossier.objects.filter(id_type_progr = v_type_progr)
+		les_types_doss = TTypesProgrammesTypeDossier.objects.filter(id_type_progr = v_type_progr).order_by(
+			'id_type_doss__int_type_doss'
+		)
 
 		# J'empile le tableau des types de dossiers.
 		for un_type_doss in les_types_doss :
@@ -938,7 +940,11 @@ def upload_fich(p_fich, p_chem_fich) :
 	from styx.settings import MEDIA_ROOT
 
 	# Je stocke le chemin de destination du fichier à uploader.
-	chem_fich = '{0}\{1}'.format(MEDIA_ROOT, p_chem_fich)
+	chem_fich = '{0}/{1}'.format(MEDIA_ROOT, p_chem_fich)
+
+	# Je mets en forme le chemin de destination du fichier à uploader.
+	chem_fich = chem_fich.replace('\\', '/')
+	chem_fich = chem_fich.replace('//', '/')
 
 	with open(chem_fich, 'wb+') as fich :
 		for c in p_fich.chunks() :

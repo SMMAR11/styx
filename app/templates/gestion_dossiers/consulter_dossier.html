@@ -100,9 +100,6 @@
 						{{ les_attr_doss.comm_doss }}
 					</div>
 					<div class="col-md-3">
-						<a href="{% url 'consulter_carto' le_doss.id_doss %}" class="bt-carto icon-link">Gérer/consulter l'objet géographique sur la carte</a>
-						<br />
-						<br />
 						<a href="{% url 'modifier_dossier' le_doss.id_doss %}" class="bt-modifier icon-link">Modifier</a>
 						<br />
 						<span action="{% url 'consulter_dossier' le_doss.id_doss %}?action=supprimer-dossier" class="bt-supprimer icon-link" id="bt_supprimer_dossier">Supprimer le dossier</span>		

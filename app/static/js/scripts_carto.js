@@ -59,7 +59,6 @@ window.addEventListener("map:init", function (e) {
 
         // Submit du form
         $('#form_modifier_dossier_geom').submit();
-        $('#fm_modifier_carto').modal('show');
 
     }).addTo(map);
 

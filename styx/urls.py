@@ -14,7 +14,6 @@ urlpatterns = [
 	url(r'^index.html$', session.index, name = 'index'),
 	url(r'^deconnecter.html$', session.deconnecter, name = 'deconnecter'),
     url(r'^modules/gestion-compte/consulter-compte/$', session.consulter_compte, name = 'consulter_compte'),
-    url(r'^modules/portail-cartographique/$', portail_carto.index, name = 'portail_carto'),
 	url(r'^modules/gestion-dossiers/$', gestion_dossiers.index, name = 'gestion_dossiers'),
 	url(r'^modules/gestion-dossiers/creer-dossier/$', gestion_dossiers.creer_dossier, name = 'creer_dossier'),
     url(
@@ -32,11 +31,6 @@ urlpatterns = [
         r'^modules/gestion-dossiers/consulter-dossier/([0-9]+)/$',
         gestion_dossiers.consulter_dossier,
         name = 'consulter_dossier'
-    ),
-    url(
-        r'^modules/gestion-dossiers/consulter-cartographie/([0-9]+)/$',
-        portail_carto.consulter_carto,
-        name = 'consulter_carto'
     ),
     url(
         r'^modules/gestion-dossiers/ajouter-financement/$',
