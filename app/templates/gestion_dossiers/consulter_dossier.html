@@ -298,10 +298,7 @@
 				<div class="row">
 					<div class="col-md-12">
 						<form method="post" action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-geom" name="form_modifier_carto" id="form_modifier_dossier_geom">
-							{% csrf_token %}
-							<div style="display: none">
-								<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_modifier_carto" id="btn-geom-submit">Mettre à jour la géométrie</button>
-							</div>				
+							{% csrf_token %}			
 
 							<!-- Champ caché pour stocker la géométrie définie pour le dossier-->
 							<input type="hidden" id="edit-geom" name="editgeom"/>
