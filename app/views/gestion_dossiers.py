@@ -882,9 +882,6 @@ def modifier_dossier(request, p_doss) :
 					}),
 					content_type = 'application/json'
 				)
-
-				# Je renseigne l'onglet actif après rechargement de la page.
-				request.session['app-nav'] = '#ong_cartographie'
 		else :
 
 			# J'alimente les listes déroulantes des axes, des sous-axes, des actions et des types de dossiers.
