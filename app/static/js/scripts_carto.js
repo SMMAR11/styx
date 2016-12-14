@@ -74,7 +74,10 @@ $(function() {
         var _heightFooter = $('#pre-footer').height() + $('#footer').height();
         $("#styxmap").height($(window).height() - _heightHeader - _heightFooter);
         map.invalidateSize();
-
+        
+        // centrage de la carte sur les objets
+        map.fitBounds(editableLayers.getBounds());
+        
         // Les boutons des geoms non autorisées sont masqués
         if( $('#typegeom_doss').val().indexOf('marker') == -1)
             $(".leaflet-draw-draw-marker").css("display","none");
