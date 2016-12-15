@@ -276,8 +276,8 @@ class TOrganisme(models.Model):
     )
     site_web_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Site web')
     tel_org = models.CharField(max_length = 10, null = True, blank = True, verbose_name = 'Numéro de téléphone')
-    id_comm = models.ForeignKey(
-        TCommune, models.DO_NOTHING, db_column = 'id_comm', null = True, blank = True, verbose_name = 'Commune'
+    num_comm = models.ForeignKey(
+        TCommune, models.DO_NOTHING, db_column = 'num_comm', null = True, blank = True, verbose_name = 'Commune'
     )
 
     class Meta :
@@ -349,7 +349,7 @@ class TDroit(models.Model) :
 
     # Je définis les champs de la table.
     id_org_moa = models.ForeignKey(TMoa, models.DO_NOTHING, db_column = 'id_org_moa')
-    id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, db_column = 'id_progr')
+    id_type_progr = models.ForeignKey(TTypeProgramme, models.DO_NOTHING, db_column = 'id_type_progr')
     id_util = models.ForeignKey(TUtilisateur, models.DO_NOTHING, db_column = 'id_util')
     en_ecr = models.BooleanField()
     en_lect = models.BooleanField()
@@ -357,7 +357,22 @@ class TDroit(models.Model) :
     class Meta :
         db_table = 't_droit'
         verbose_name = 'Droit'
-        unique_together = (('id_org_moa', 'id_progr', 'id_util'))
+        unique_together = (('id_org_moa', 'id_type_progr', 'id_util'))
+
+class TSage(models.Model) :
+
+    # Je définis les champs de la table.
+    id_sage = models.AutoField(primary_key = True)
+    n_sage = models.CharField(max_length = 255, verbose_name = 'Nom')
+
+    class Meta :
+        db_table = 't_sage'
+        ordering = ['n_sage']
+        verbose_name = 'SAGE'
+        verbose_name_plural = 'SAGE'
+
+    def __str__(self) :
+        return self.n_sage
 
 class TDossier(models.Model) :
 
@@ -369,10 +384,10 @@ class TDossier(models.Model) :
     dt_av_cp_doss = models.DateField(null = True, blank = True)
     dt_delib_moa_doss = models.DateField(null = True, blank = True)
     dt_int_doss = models.DateField()
-    ld_doss = models.CharField(max_length = 255, null = True, blank = True)
+    ld_doss = models.CharField(max_length = 255)
     mont_ht_doss = models.FloatField()
     mont_ttc_doss = models.FloatField()
-    terr_doss = models.CharField(max_length = 255, null = True, blank = True)
+    terr_doss = models.CharField(max_length = 255)
     num_doss = models.CharField(max_length = 255, unique = True)
     num_act = models.IntegerField(null = True, blank = True)
     num_axe = models.IntegerField(null = True, blank = True)
@@ -384,6 +399,7 @@ class TDossier(models.Model) :
     id_fam = models.ForeignKey(TFamille, models.DO_NOTHING, db_column = 'id_fam')
     id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, db_column = 'id_nat_doss')
     id_org_moa = models.ForeignKey(TMoa, models.DO_NOTHING, db_column = 'id_org_moa')
+    id_sage = models.ForeignKey(TSage, models.DO_NOTHING, db_column = 'id_sage', null = True, blank = True)
     id_techn = models.ForeignKey(TTechnicien, models.DO_NOTHING, db_column = 'id_techn')
     id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING, db_column = 'id_type_doss')
 
@@ -720,7 +736,7 @@ class TDemandeVersement(models.Model) :
 
     # Je définis les champs de la table.
     id_ddv = models.AutoField(primary_key = True)
-    chem_ddv = models.CharField(max_length = 255, null = True, blank = True)
+    chem_pj_ddv = models.CharField(max_length = 255, null = True, blank = True)
     comm_ddv = models.CharField(max_length = 255, null = True, blank = True)
     dt_ddv = models.DateField(null = True, blank = True)
     dt_vers_ddv = models.DateField(null = True, blank = True)
@@ -768,11 +784,20 @@ class TTypeGeom(models.Model) :
         db_table = 't_type_geom'
         ordering = ['int_type_geom']
 
+    def __str__(self) :
+        return self.int_type_geom
+
 class TTypesGeomTypeDossier(models.Model) :
 
     # Je définis les champs de la table.
     id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING, db_column = 'id_type_doss')
-    id_type_geom = models.ForeignKey(TTypeGeom, models.DO_NOTHING, db_column = 'id_type_geom')
+    id_type_geom = models.ForeignKey(
+        TTypeGeom, models.DO_NOTHING, db_column = 'id_type_geom', verbose_name = 'Type de géométrie'
+    )
 
     class Meta :
         db_table = 't_types_geom_type_dossier'
+        verbose_name = 'Types de géométries par type de dossier'
+
+    def __str__(self) :
+        return '{0} ({1})'.format(self.id_type_doss.int_type_doss, self.id_type_geom.int_type_geom)

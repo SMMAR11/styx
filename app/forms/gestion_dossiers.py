@@ -76,6 +76,12 @@ class GererDossier(forms.Form) :
 		widget = forms.Select(attrs = { 'class' : 'form-control' })
 	)
 
+	zl_sage = forms.ChoiceField(
+		label = 'SAGE',
+		required = False,
+		widget = forms.Select(attrs = { 'class' : 'form-control' })
+	)
+
 	zs_mont_ht_doss = forms.CharField(
 		label = 'Montant HT du dossier (en €)',
 		validators = [valid_mont(False)],
@@ -179,6 +185,7 @@ class GererDossier(forms.Form) :
 		from app.models import TProgramme
 		from app.models import TRiviere
 		from app.models import TRivieresDossier
+		from app.models import TSage
 		from app.models import TSousAxe
 		from app.models import TTechnicien
 		from app.models import TTypeDossier
@@ -231,6 +238,17 @@ class GererDossier(forms.Form) :
 			self.fields['zs_terr_doss'].initial = obj_doss.terr_doss
 			self.fields['zs_ld_doss'].initial = obj_doss.ld_doss
 			self.fields['zl_techn'].initial = obj_doss.id_techn.id_techn
+
+			# Je vérifie l'existence d'un objet TSage.
+			obj_sage = None
+			try :
+				obj_sage = TSage.objects.get(id_sage = obj_doss.id_sage.id_sage)
+			except :
+				pass
+
+			if obj_sage is not None :
+				self.fields['zl_sage'].initial = obj_doss.id_sage.id_sage
+
 			self.fields['zs_mont_ht_doss'].initial = float_to_int(obj_doss.mont_ht_doss)
 			self.fields['zs_mont_ttc_doss'].initial = float_to_int(obj_doss.mont_ttc_doss)
 			self.fields['zl_av'].initial = obj_doss.id_av.id_av
@@ -440,6 +458,11 @@ class GererDossier(forms.Form) :
 			))
 
 		self.fields['zl_techn'].choices = les_techn
+
+		# J'alimente la liste déroulante des SAGE.
+		les_sage = list(OPTION_INITIALE)
+		les_sage.extend([(i.id_sage, i.n_sage) for i in TSage.objects.all()])
+		self.fields['zl_sage'].choices = les_sage
 
 		# J'alimente la liste déroulante des états d'avancements.
 		les_av = list(OPTION_INITIALE)
@@ -1053,13 +1076,13 @@ class GererFinancement(forms.Form) :
 
 	zs_mont_ht_elig_fin = forms.CharField(
 		label = 'Montant HT de l\'assiette éligible de la subvention',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_elig_fin = forms.CharField(
 		label = 'Montant TTC de l\'assiette éligible de la subvention',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
@@ -1072,14 +1095,14 @@ class GererFinancement(forms.Form) :
 	zs_mont_ht_part_fin = forms.CharField(
 		label = 'Montant HT total de la participation',
 		required = False,
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
 	)
 
 	zs_mont_ttc_part_fin = forms.CharField(
 		label = 'Montant TTC total de la participation',
 		required = False,
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
 	)
 
@@ -1274,7 +1297,7 @@ class GererFinancement(forms.Form) :
 				except :
 					pass
 
-			# Je vérifie l'extension du fichier de l'arrêté.
+			# Je vérifie l'extension du fichier de l'arrêté de subvention.
 			if v_obj_fin is not None :
 				if v_obj_fin.name.endswith('.pdf') == False :
 					self.add_error('zu_chem_pj_fin', 'Veuillez choisir un fichier au format PDF.')
@@ -1305,13 +1328,13 @@ class GererPrestation(forms.Form) :
 
 	zs_mont_ht_tot_prest = forms.CharField(
 		label = 'Montant HT total de la prestation',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_tot_prest = forms.CharField(
 		label = 'Montant TTC total de la prestation',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
@@ -1487,13 +1510,13 @@ class GererAvenant(forms.Form) :
 
 	zs_mont_ht_aven = forms.CharField(
 		label = 'Montant HT de l\'avenant (en €)',
-		validators = [valid_mont],
+		validators = [valid_mont(True)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_aven = forms.CharField(
 		label = 'Montant TTC de l\'avenant (en €)',
-		validators = [valid_mont],
+		validators = [valid_mont(True)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
@@ -1678,13 +1701,13 @@ class GererFacture(forms.Form) :
 
 	zs_mont_ht_fact = forms.CharField(
 		label = 'Montant HT de la facture',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_fact = forms.CharField(
 		label = 'Montant TTC de la facture',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
@@ -1974,13 +1997,13 @@ class GererDemandeDeVersement(forms.Form) :
 
 	zs_mont_ht_ddv = forms.CharField(
 		label = 'Montant HT de la demande de versement (en €)',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_ddv = forms.CharField(
 		label = 'Montant TTC de la demande de versement (en €)',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
@@ -1996,13 +2019,13 @@ class GererDemandeDeVersement(forms.Form) :
 
 	zs_mont_ht_verse_ddv = forms.CharField(
 		label = 'Montant HT versé (en €)',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_verse_ddv = forms.CharField(
 		label = 'Montant TTC versé (en €)',
-		validators = [valid_mont],
+		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
@@ -2088,13 +2111,86 @@ class GererDemandeDeVersement(forms.Form) :
 	def clean(self) :
 
 		''' Imports '''
-		from app.functions import valid_zl
+		from app.functions import float_to_int, nett_val, valid_zl
+		from app.models import TDossier
+		from app.sql_views import VFinancement
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererDemandeDeVersement, self).clean()
+		v_num_doss = cleaned_data.get('za_num_doss')
 		v_org_fin = cleaned_data.get('zl_org_fin')
 		v_type_vers = cleaned_data.get('zl_type_vers')
+		v_mont_ht_ddv = cleaned_data.get('zs_mont_ht_ddv')
+		v_mont_ttc_ddv = cleaned_data.get('zs_mont_ttc_ddv')
+		v_mont_ht_verse_ddv = cleaned_data.get('zs_mont_ht_verse_ddv')
+		v_mont_ttc_verse_ddv = cleaned_data.get('zs_mont_ttc_verse_ddv')
+		v_obj_ddv = nett_val(cleaned_data.get('zu_chem_pj_ddv'))
 
 		# Je vérifie la valeur de chaque liste déroulante obligatoire du formulaire.
 		v_org_fin = valid_zl(self, 'zl_org_fin', v_org_fin)
 		v_type_vers = valid_zl(self, 'zl_type_vers', v_type_vers)
+
+		# J'initialise la valeur du financeur en cas d'autofinancement.
+		if v_org_fin == 0 :
+			v_org_fin = None
+
+		# Je vérifie l'existence d'un objet TDossier.
+		obj_doss = None
+		try :
+			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
+		except :
+			self.add_error('za_num_doss', MESSAGES['invalid'])
+
+		if obj_doss is not None :
+
+			# Je vérifie l'existence d'un objet VFinancement.
+			obj_fin = None
+			try :
+				obj_fin = VFinancement.objects.get(id_doss = obj_doss.id_doss, id_org_fin = v_org_fin)
+			except :
+				pass
+
+			if obj_fin is not None :
+
+				# Je gère la contrainte suivante : la somme des demandes de versements pour un financement ne doit être
+				# supérieure au montant de participation pour celui-ci.
+				if v_mont_ht_ddv is not None and float(v_mont_ht_ddv) > obj_fin.mont_ht_rad :
+					self.add_error(
+						'zs_mont_ht_ddv',
+						'Veuillez saisir un montant HT inférieur ou égal à {0} €.'.format(
+							float_to_int(obj_fin.mont_ht_rad)
+						)
+					)
+
+				if v_mont_ttc_ddv is not None and float(v_mont_ttc_ddv) > obj_fin.mont_ttc_rad :
+					self.add_error(
+						'zs_mont_ttc_ddv',
+						'Veuillez saisir un montant TTC inférieur ou égal à {0} €.'.format(
+							float_to_int(obj_fin.mont_ttc_rad)
+						)
+					)
+
+				# Je gère la contrainte suivante : le montant versé ne doit être supérieur au montant de la demande de
+				# versement.
+				if v_mont_ht_ddv is not None and v_mont_ht_verse_ddv is not None :
+					if float(v_mont_ht_verse_ddv) > float(v_mont_ht_ddv) :
+						self.add_error(
+							'zs_mont_ht_verse_ddv',
+							'Veuillez saisir un montant HT inférieur ou égal à {0} €.'.format(
+								float_to_int(v_mont_ht_ddv)
+							)
+						)
+
+				if v_mont_ttc_ddv is not None and v_mont_ttc_verse_ddv is not None :
+					if float(v_mont_ttc_verse_ddv) > float(v_mont_ttc_ddv) :
+						self.add_error(
+							'zs_mont_ttc_verse_ddv',
+							'Veuillez saisir un montant TTC inférieur ou égal à {0} €.'.format(
+								float_to_int(v_mont_ttc_ddv)
+							)
+						)
+
+			# Je vérifie l'extension du fichier scanné de la demande de versement.
+			if v_obj_ddv is not None :
+				if v_obj_ddv.name.endswith('.pdf') == False :
+					self.add_error('zu_chem_pj_ddv', 'Veuillez choisir un fichier au format PDF.')

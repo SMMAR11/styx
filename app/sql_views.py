@@ -6,6 +6,30 @@ from app.models import *
 from django.db import models
 
 # Je créé le modèle de chaque vue utile de la base de données.
+class VDemandeVersement(models.Model) :
+
+    # Je définis les champs de la table.
+    id_ddv = models.IntegerField(primary_key = True)
+    chem_ddv = models.CharField(max_length = 255)
+    comm_ddv = models.CharField(max_length = 255)
+    dt_ddv = models.DateField()
+    dt_vers_ddv = models.DateField()
+    int_ddv = models.CharField(max_length = 255)
+    map_ht_ddv = models.FloatField()
+    map_ttc_ddv = models.FloatField()
+    mont_ht_ddv = models.FloatField()
+    mont_ht_verse_ddv = models.FloatField()
+    mont_ttc_ddv = models.FloatField()
+    mont_ttc_verse_ddv = models.FloatField()
+    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
+    id_fin = models.ForeignKey(TFinancement, models.DO_NOTHING, db_column = 'id_fin')
+    id_org_fin = models.ForeignKey(TFinanceur, models.DO_NOTHING, db_column = 'id_org_fin')
+    id_type_vers = models.ForeignKey(TTypeVersement, models.DO_NOTHING, db_column = 'id_type_vers')
+
+    class Meta :
+        db_table = 'v_demande_versement'
+        managed = False
+
 class VFinancement(models.Model):
 
     # Je définis les champs de la vue.
@@ -26,6 +50,10 @@ class VFinancement(models.Model):
     pourc_elig_fin = models.FloatField()
     pourc_fact_fin = models.FloatField()
     pourc_real_fin = models.FloatField()
+    mont_ht_ddv_sum = models.FloatField()
+    mont_ttc_ddv_sum = models.FloatField()
+    mont_ht_rad = models.FloatField()
+    mont_ttc_rad = models.FloatField()
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
     id_org_fin = models.ForeignKey(TFinanceur, models.DO_NOTHING, db_column = 'id_org_fin')
     id_paiem_prem_ac = models.ForeignKey(

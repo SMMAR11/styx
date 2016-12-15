@@ -129,6 +129,12 @@ class ATypeDossierInline(admin.TabularInline) :
 	extra = 0
 	verbose_name = ''
 
+class ATypeDossierInline2(admin.TabularInline) :
+
+	model = TTypeDossier.type_geom.through
+	extra = 0
+	verbose_name = ''
+
 class ATypeDossier(admin.ModelAdmin) :
 
 	# Je mets en forme la dernière colonne du tableau.
@@ -143,7 +149,7 @@ class ATypeDossier(admin.ModelAdmin) :
 	# Je paramètre les différentes options.
 	list_display = ['int_type_doss', 'les_type_progr']
 	actions = [admin.actions.delete_selected]
-	inlines = [ATypeDossierInline]
+	inlines = [ATypeDossierInline, ATypeDossierInline2]
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -423,7 +429,7 @@ class AMoa(admin.ModelAdmin) :
 				('adr_org'),
 				('compl_adr_org'),
 				('cp_org'),
-				('id_comm'),
+				('num_comm'),
 				('cedex_org'),
 				('bp_org')
 			)
@@ -443,6 +449,24 @@ class AMoa(admin.ModelAdmin) :
 
 # J'ajoute la possibilité de gérer les maîtres d'ouvrages.
 admin.site.register(TMoa, AMoa)
+
+class ASage(admin.ModelAdmin) :
+
+	# Je paramètre les différentes options.
+	list_display = ['n_sage']
+	actions = [admin.actions.delete_selected]
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('n_sage'),
+			)
+		}),
+	)
+
+# J'ajoute la possibilité de gérer les SAGE.
+admin.site.register(TSage, ASage)
 
 class ARiviere(admin.ModelAdmin) :
 
@@ -576,7 +600,7 @@ class APrestataire(admin.ModelAdmin) :
 				('adr_org'),
 				('compl_adr_org'),
 				('cp_org'),
-				('id_comm'),
+				('num_comm'),
 				('cedex_org'),
 				('bp_org')
 			)
@@ -615,7 +639,7 @@ class AFinanceur(admin.ModelAdmin) :
 				('adr_org'),
 				('compl_adr_org'),
 				('cp_org'),
-				('id_comm'),
+				('num_comm'),
 				('cedex_org'),
 				('bp_org')
 			)

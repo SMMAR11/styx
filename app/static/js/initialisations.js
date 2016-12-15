@@ -16,13 +16,14 @@ $(document).ready(function()
 	{
 		'ajouter_dossier_associe' : init_datatable($('#tab_ajouter_dossier_associe'), [3]),
 		'choisir_dossier' : init_datatable($('#tab_choisir_dossier'), [3]),
+		'choisir_factures_ddv' : init_datatable($('#tab_choisir_factures_ddv'), [4]),
 		'choisir_prestation' : init_datatable($('#tab_choisir_prestation'), [5]),
 		'consulter_avenants' : init_datatable($('#tab_consulter_avenants'), []),
-		'consulter_demandes_versement' : init_datatable($('#tab_consulter_demandes_versement'), [6]),
+		'consulter_demandes_versement' : init_datatable($('#tab_consulter_demandes_versement'), [5]),
 		'consulter_dossiers_associes' : init_datatable($('#tab_consulter_dossiers_associes'), [5]),
 		'consulter_factures' : init_datatable($('#tab_consulter_factures'), [4]),
 		'consulter_photos' : init_datatable($('#tab_consulter_photos'), [0, 4]),
-		'consulter_financements' : init_datatable($('#tab_consulter_financements'), [4]),
+		'consulter_financements' : init_datatable($('#tab_consulter_financements'), [5]),
 		'consulter_prestations' : init_datatable($('#tab_consulter_prestations'), [6]),
 		'consulter_dossiers_prestation' : init_datatable($('#tab_dossiers_prestation'), [2]),
 		'selectionner_dossiers' : init_datatable($('#tab_selectionner_dossiers'), [6])

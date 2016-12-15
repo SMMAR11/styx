@@ -67,6 +67,7 @@ def creer_dossier(request) :
 	from app.models import TProgramme
 	from app.models import TRiviere
 	from app.models import TRivieresDossier
+	from app.models import TSage
 	from app.models import TSousAxe
 	from app.models import TTechnicien
 	from app.models import TTypeDossier
@@ -232,6 +233,7 @@ def creer_dossier(request) :
 				v_terr_doss = nett_val(cleaned_data['zs_terr_doss'])
 				v_ld_doss = nett_val(cleaned_data['zs_ld_doss'])
 				v_techn = nett_val(integer(cleaned_data['zl_techn']), True)
+				v_sage = nett_val(integer(cleaned_data['zl_sage']), True)
 				v_mont_ht_doss = nett_val(cleaned_data['zs_mont_ht_doss'])
 				v_mont_ttc_doss = nett_val(cleaned_data['zs_mont_ttc_doss'])
 				v_av = nett_val(integer(cleaned_data['zl_av']), True)
@@ -276,6 +278,13 @@ def creer_dossier(request) :
 					# J'inclus le futur objet TDossier dans une famille existante.
 					v_fam = TDossier.objects.get(id_doss = obj_doss_ass.id_doss).id_fam.id_fam
 
+				# Je vérifie l'existence d'un objet TSage.
+				obj_sage = None
+				try :
+					obj_sage = TSage.objects.get(id_sage = v_sage)
+				except :
+					pass
+
 				# J'initialise l'instance du nouveau dossier.
 				obj_nv_doss = TDossier()
 				if TProgramme.objects.get(id_progr = v_progr).int_progr == 'PGRE' :
@@ -301,6 +310,7 @@ def creer_dossier(request) :
 				obj_nv_doss.id_fam = TFamille.objects.get(id_fam = v_fam)
 				obj_nv_doss.id_nat_doss = TNatureDossier.objects.get(id_nat_doss = v_nat_doss)
 				obj_nv_doss.id_org_moa = TMoa.objects.get(id_org_moa = v_org_moa)
+				obj_nv_doss.id_sage = obj_sage
 				obj_nv_doss.id_techn = TTechnicien.objects.get(id_techn = v_techn)
 				obj_nv_doss.id_type_doss = TTypeDossier.objects.get(id_type_doss = v_type_doss)				
 
@@ -444,6 +454,7 @@ def modifier_dossier(request, p_doss) :
 	from app.models import TProgramme
 	from app.models import TRiviere
 	from app.models import TRivieresDossier
+	from app.models import TSage
 	from app.models import TSousAxe
 	from app.models import TTechnicien
 	from app.models import TTypeDossier
@@ -635,6 +646,7 @@ def modifier_dossier(request, p_doss) :
 					v_terr_doss = nett_val(cleaned_data['zs_terr_doss'])
 					v_ld_doss = nett_val(cleaned_data['zs_ld_doss'])
 					v_techn = nett_val(integer(cleaned_data['zl_techn']), True)
+					v_sage = nett_val(integer(cleaned_data['zl_sage']), True)
 					v_mont_ht_doss = nett_val(cleaned_data['zs_mont_ht_doss'])
 					v_mont_ttc_doss = nett_val(cleaned_data['zs_mont_ttc_doss'])
 					v_av = nett_val(integer(cleaned_data['zl_av']), True)
@@ -689,6 +701,13 @@ def modifier_dossier(request, p_doss) :
 							id_fam = TFamille.objects.get(id_fam = v_fam)
 						)
 
+					# Je vérifie l'existence d'un objet TSage.
+					obj_sage = None
+					try :
+						obj_sage = TSage.objects.get(id_sage = v_sage)
+					except :
+						pass
+
 					# Je déclare une variable stockant le chemin du fichier à effacer du serveur média.
 					fich_a_eff = None
 
@@ -740,6 +759,7 @@ def modifier_dossier(request, p_doss) :
 					tab_champs['id_fam'] = TFamille.objects.get(id_fam = v_fam)
 					tab_champs['id_nat_doss'] = TNatureDossier.objects.get(id_nat_doss = v_nat_doss)
 					tab_champs['id_techn'] = TTechnicien.objects.get(id_techn = v_techn)
+					tab_champs['id_sage'] = obj_sage
 					tab_champs['id_type_doss'] = TTypeDossier.objects.get(id_type_doss = v_type_doss)
 
 					if TProgramme.objects.get(id_progr = obj_doss.id_progr.id_progr).int_progr == 'PGRE' :
@@ -1065,9 +1085,11 @@ def consulter_dossier(request, p_doss) :
 	from app.models import TPrestation
 	from app.models import TPrestationsDossier
 	from app.models import TRivieresDossier
+	from app.models import TSage
 	from app.models import TTypeDeclaration
 	from app.models import TTypesGeomTypeDossier
 	from app.models import TUnite
+	from app.sql_views import VDemandeVersement
 	from app.sql_views import VFinancement
 	from app.sql_views import VSuiviDossier
 	from app.sql_views import VSuiviPrestationsDossier
@@ -1172,6 +1194,22 @@ def consulter_dossier(request, p_doss) :
 				{3}
 				{4}
 				{5}
+				<div id="za_tab_factures_ddv" style="display: none;">
+					<div style="overflow: auto; margin-bottom: 20px;">
+						<table class="display table" id="tab_choisir_factures_ddv">
+							<thead>
+								<tr>
+									<th>Prestation</th>
+									<th>Numéro de facture</th>
+									<th>Date de mandatement par le maître d'ouvrage</th>
+									<th>Montant HT (en €)</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody class="c-police"></tbody>
+						</table>
+					</div>
+				</div>
 				<div class="row">
 					<div class="col-sm-6">{6}</div>
 					<div class="col-sm-6">{7}</div>
@@ -1484,6 +1522,12 @@ def consulter_dossier(request, p_doss) :
 			except :
 				pass
 
+		# Je tente de récupérer la valeur du SAGE.
+		try :
+			v_sage = TSage.objects.get(id_sage = obj_doss.id_sage.id_sage).n_sage
+		except :
+			v_sage = None
+
 		# Je prépare la page de consultation des caractéristiques d'un dossier.
 		tab_attr_doss = {
 			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : conv_none(obj_doss.num_doss) },
@@ -1525,6 +1569,7 @@ def consulter_dossier(request, p_doss) :
 					conv_none(obj_doss.id_techn.n_techn), conv_none(obj_doss.id_techn.pren_techn)
 				)
 			},
+			'n_sage' : { 'label' : 'SAGE', 'value' : conv_none(v_sage) },
 			'int_av' : { 'label' : 'État d\'avancement du dossier', 'value' : conv_none(obj_doss.id_av.int_av) },
 			'dt_delib_moa_doss' :
 			{
@@ -1611,10 +1656,11 @@ def consulter_dossier(request, p_doss) :
 				'n_org' : v_n_org,
 				'mont_ht_tot_subv_fin' : conv_none(float_to_int(un_fin.mont_ht_part_fin)),
 				'dt_deb_elig_fin' : conv_none(reecr_dt(un_fin.dt_deb_elig_fin)),
-				'dt_fin_elig_fin' : conv_none(reecr_dt(un_fin.dt_fin_elig_fin))
+				'dt_fin_elig_fin' : conv_none(reecr_dt(un_fin.dt_fin_elig_fin)),
+				'mont_ht_rad' : conv_none(float_to_int(un_fin.mont_ht_rad))
 			})
 
-			# Je trie le tableau des financeurs par ordre alphabétique du nom.
+			# Je trie le tableau des financeurs par financeurs.
 			tab_fin = sorted(tab_fin, key = lambda tup : tup['n_org'])
 
 		# Je stocke les prestations du dossier.
@@ -1663,6 +1709,33 @@ def consulter_dossier(request, p_doss) :
 				'dt_mand_moa_fact' : conv_none(reecr_dt(une_fact_doss.dt_mand_moa_fact)),
 				'mont_ht_fact' : conv_none(float_to_int(une_fact_doss.mont_ht_fact)),
 			})
+
+		# Je stocke les demandes de versements du dossier.
+		les_ddv_doss = VDemandeVersement.objects.filter(id_doss = obj_doss)
+
+		# Je stocke dans un tableau les données mises en forme de chaque demande de versement du dossier.
+		tab_ddv_doss = []
+
+		for une_ddv_doss in les_ddv_doss :
+
+			# J'initialise le nom du partenaire financier.
+			v_org_fin = 'Autofinancement - {0}'.format(une_ddv_doss.id_doss.id_org_moa.n_org)
+			try :
+				v_org_fin = une_ddv_doss.id_org_fin.n_org
+			except :
+				pass
+
+			tab_ddv_doss.append({
+				'id_ddv' : une_ddv_doss.id_ddv,
+				'n_org' : conv_none(v_org_fin),
+				'mont_ht_ddv' : conv_none(float_to_int(une_ddv_doss.mont_ht_ddv)),
+				'dt_ddv' : conv_none(reecr_dt(une_ddv_doss.dt_ddv)),
+				'dt_vers_ddv' : conv_none(reecr_dt(une_ddv_doss.dt_vers_ddv)),
+				'map_ht_ddv' : conv_none(float_to_int(une_ddv_doss.map_ht_ddv))
+			})
+
+		# Je trie le tableau des demandes de versements par financeurs, puis par identifiants.
+		tab_ddv_doss = sorted(tab_ddv_doss, key = lambda tup : (tup['n_org'], tup['id_ddv']))
 
 		# Je stocke les différents types de déclarations.
 		les_arr = TTypeDeclaration.objects.all()
@@ -1813,6 +1886,7 @@ def consulter_dossier(request, p_doss) :
 				'le_doss' : obj_doss,
 				'les_arr' : cont_regl,
 				'les_attr_doss' : init_pg_cons(tab_attr_doss),
+				'les_ddv_doss' : tab_ddv_doss,
 				'les_doss_fam' : tab_doss_fam,
 				'les_fact_doss' : tab_fact_doss,
 				'les_fin' : tab_fin,
@@ -3420,50 +3494,227 @@ def ajouter_demande_versement(request) :
 
 	''' Imports '''
 	from app.forms.gestion_dossiers import GererDemandeDeVersement
-	from app.functions import nett_val
+	from app.functions import conv_none, crypt_val, float_to_int, integer, nett_val, reecr_dt, upload_fich
+	from app.models import TDemandeVersement
 	from app.models import TDossier
+	from app.models import TFacture
+	from app.models import TFacturesDemandeVersement
+	from app.models import TFinancement
+	from app.models import TTypeVersement
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	import json
+	import time
 
 	reponse = HttpResponse()
 
 	if request.method == 'POST' :
 
-		# J'initialise la valeur du paramètre k_doss.
+		# J'initialise l'identifiant du dossier.
 		v_id_doss = None
 		try :
 			v_id_doss = TDossier.objects.get(num_doss = request.POST['za_num_doss']).id_doss
 		except :
 			pass
 
-		# Je vérifie la validité du formulaire d'ajout d'une demande de versement.
-		f_ajout_ddv = GererDemandeDeVersement(request.POST, request.FILES, k_doss = v_id_doss)
+		if 'action' in request.GET :
 
-		if f_ajout_ddv.is_valid() :
+			# Je retiens le nom du paramètre "GET".
+			get_action = request.GET['action']
 
-			# Je récupère et nettoie les données du formulaire valide.
-			cleaned_data = f_ajout_ddv.cleaned_data
-			v_num_doss = nett_val(cleaned_data['za_num_doss'])
+			# Je traite le cas où je dois afficher le tableau des factures filtrées.
+			if get_action == 'filtrer-factures' :
 
-			# Je pointe vers l'objet TDossier consulté.
-			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
-				
-			# J'affiche le message de succès.
-			reponse = HttpResponse(
-				json.dumps({
-					'success' : 'La demande de versement a été ajoutée avec succès.',
-					'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss])
-				}),
-				content_type = 'application/json'
-			)
+				# Je récupère le financeur sélectionné.
+				v_org_fin = integer(request.POST['zl_org_fin'])
 
-			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['app-nav'] = '#ong_demandes_versements'
+				# J'initialise la valeur du financeur en cas d'autofinancement.
+				if v_org_fin == 0 :
+					v_org_fin = None
+
+				# Je stocke les factures du dossier.
+				les_fact_doss = TFacture.objects.filter(id_doss = v_id_doss)
+
+				# Je stocke les factures reliées au financeur sélectionné.
+				les_fact_org_fin = TFacturesDemandeVersement.objects.filter(
+					id_ddv__id_fin__id_org_fin__id_org = v_org_fin
+				)
+
+				# J'initialise deux tableaux à partir des querysets déclarés : le tableau des factures du dossier et le
+				# tableau des identifiants des factures reliées au financeur sélectionné.
+				tab_fact_doss = [i for i in les_fact_doss]
+				tab_id_fact_org_fin = [str(i.id_fact.id_fact) for i in les_fact_org_fin]
+
+				# Je déclare le tableau des factures disponibles au reliage.
+				tab_fact_dispo = []
+
+				# J'empile le tableau des factures disponibles au reliage si l'identifiant de la facture ne se trouve
+				# pas dans le tableau des identifiants des factures reliées au financeur sélectionné.
+				for i in range(0, len(tab_fact_doss)) :
+					double = False
+					for j in range(0, len(tab_id_fact_org_fin)) :
+						if str(tab_fact_doss[i].id_fact) == tab_id_fact_org_fin[j] :
+							double = True
+					if double == False :
+						tab_fact_dispo.append(tab_fact_doss[i])
+
+				# Je prépare le contenu du tableau HTML des factures filtrées.
+				tab_fact_filtr = []
+				for i in range(0, len(tab_fact_dispo)) :
+					tab_fact_filtr.append([
+						'{0} : {1}'.format(
+							conv_none(tab_fact_dispo[i].id_prest.id_org_prest.n_org), 
+							conv_none(reecr_dt(tab_fact_dispo[i].id_prest.dt_notif_prest))
+						),
+						conv_none(tab_fact_dispo[i].num_fact),
+						conv_none(reecr_dt(tab_fact_dispo[i].dt_mand_moa_fact)),
+						conv_none(float_to_int(tab_fact_dispo[i].mont_ht_fact)),
+						'<input name="cbsm_fact" value="{0}" type="checkbox" class="pull-right">'.format(
+							tab_fact_dispo[i].id_fact
+						)	
+					])
+
+				# Je vide le tableau des factures filtrées si l'option par défaut est choisie pour le champ des
+				# financeurs.
+				if v_org_fin is not None and v_org_fin < 0 :
+					tab_fact_filtr = []
+
+				# Je mets à jour le tableau HTML des factures filtrées.
+				reponse = HttpResponse(json.dumps(tab_fact_filtr), content_type = 'application/json')
+
+			# Je traite le cas où je dois calculer les sommes HT et TTC des factures sélectionnées.
+			if get_action == 'calculer-montants' :
+
+				# J'initialise le statut de la requête.
+				status = True
+
+				# Je récupère les données nécessaires.
+				v_org_fin = integer(request.POST['zl_org_fin'])
+				v_tab_fact = request.POST.getlist('cbsm_fact')
+
+				# J'initialise la valeur du financeur en cas d'autofinancement.
+				if v_org_fin == 0 :
+					v_org_fin = None
+
+				# J'initialise les sommes HT et TTC des factures sélectionnées.
+				v_mont_ht_fact_sum = 0
+				v_mont_ttc_fact_sum = 0
+
+				# Je calcule les sommes HT et TTC des factures sélectionnées.
+				for i in range(0, len(v_tab_fact)) :
+					try :
+						obj_fact = TFacture.objects.get(id_fact = v_tab_fact[i])
+						v_mont_ht_fact_sum += obj_fact.mont_ht_fact
+						v_mont_ttc_fact_sum += obj_fact.mont_ttc_fact
+					except :
+						status = False
+
+				# Je récupère le pourcentage éligible du financement sélectionné.
+				v_pourc_elig_fin = 0
+				try :
+					v_pourc_elig_fin = TFinancement.objects.get(
+						id_doss = v_id_doss, id_org_fin = v_org_fin
+					).pourc_elig_fin
+				except :
+					status = False
+
+				# J'envoie les montants HT et TTC pré-calculés de la demande de versement.
+				reponse = HttpResponse(
+					json.dumps({
+						'success' : [v_mont_ht_fact_sum * v_pourc_elig_fin, v_mont_ttc_fact_sum * v_pourc_elig_fin],
+						'status' : status
+					}),
+					content_type = 'application/json'
+				)
 
 		else :
 
-			# J'affiche les erreurs.
-			reponse = HttpResponse(json.dumps(f_ajout_ddv.errors), content_type = 'application/json')
+			# Je vérifie la validité du formulaire d'ajout d'une demande de versement.
+			f_ajout_ddv = GererDemandeDeVersement(request.POST, request.FILES, k_doss = v_id_doss)
+
+			if f_ajout_ddv.is_valid() :
+
+				# Je récupère et nettoie les données du formulaire valide.
+				cleaned_data = f_ajout_ddv.cleaned_data
+				v_num_doss = nett_val(cleaned_data['za_num_doss'])
+				v_org_fin = nett_val(integer(cleaned_data['zl_org_fin']), True)
+				v_type_vers = nett_val(integer(cleaned_data['zl_type_vers']), True)
+				v_int_ddv = nett_val(cleaned_data['zs_int_ddv'])
+				v_tab_fact = request.POST.getlist('cbsm_fact')
+				v_mont_ht_ddv = nett_val(cleaned_data['zs_mont_ht_ddv'])
+				v_mont_ttc_ddv = nett_val(cleaned_data['zs_mont_ttc_ddv'])
+				v_dt_ddv = nett_val(cleaned_data['zd_dt_ddv'])
+				v_dt_vers_ddv = nett_val(cleaned_data['zd_dt_vers_ddv'])
+				v_mont_ht_verse_ddv = nett_val(cleaned_data['zs_mont_ht_verse_ddv'])
+				v_mont_ttc_verse_ddv = nett_val(cleaned_data['zs_mont_ttc_verse_ddv'])
+				v_obj_ddv = nett_val(cleaned_data['zu_chem_pj_ddv'])
+				v_comm_ddv = nett_val(cleaned_data['zs_comm_ddv'])
+
+				# J'initialise la valeur du financeur en cas d'autofinancement.
+				if v_org_fin == 0 :
+					v_org_fin = None
+
+				# Je pointe vers l'objet TDossier consulté.
+				obj_doss = TDossier.objects.get(num_doss = v_num_doss)
+
+				if v_obj_ddv is None :
+					v_chem_pj_ddv = None
+				else :
+
+					# J'initialise le nom du fichier uploadé ainsi que le chemin de destination.
+					n_fich = crypt_val('{0}-{1}'.format(request.user.id, time.strftime('%d%m%Y%H%M%S')))
+					v_chem_pj_ddv = 'dossiers/{0}/demandes_de_versement/{1}.pdf'.format(obj_doss.num_doss, n_fich)
+
+					# J'uploade le fichier.
+					upload_fich(v_obj_ddv, v_chem_pj_ddv)
+
+				# Je remplis les données attributaires du nouvel objet TDemandeVersement.
+				obj_nvelle_ddv = TDemandeVersement(
+					chem_pj_ddv = v_chem_pj_ddv,
+					comm_ddv = v_comm_ddv,
+					dt_ddv = v_dt_ddv,
+					dt_vers_ddv = v_dt_vers_ddv,
+					int_ddv = v_int_ddv,
+					mont_ht_ddv = v_mont_ht_ddv,
+					mont_ht_verse_ddv = v_mont_ht_verse_ddv,
+					mont_ttc_ddv = v_mont_ttc_ddv,
+					mont_ttc_verse_ddv = v_mont_ttc_verse_ddv,
+					id_fin = TFinancement.objects.get(id_doss__num_doss = v_num_doss, id_org_fin = v_org_fin),
+					id_type_vers = TTypeVersement.objects.get(id_type_vers = v_type_vers)
+				)
+
+				# Je créé un nouvel objet TDemandeVersement.
+				obj_nvelle_ddv.save()
+
+				# Je parcours le tableau des factures sélectionnées.
+				for i in range(0, len(v_tab_fact)) :
+
+					# Je tente de convertir la valeur de la facture courante en un nombre entier. Si celle-ci n'est pas
+					# un nombre entier, alors elle prend -1.
+					v_fact = integer(v_tab_fact[i])
+
+					# Je créé un nouvel objet TFacturesDemandeVersement.
+					if v_fact > 0 :
+						obj_nvelle_fact_ddv = TFacturesDemandeVersement.objects.create(
+							id_ddv = obj_nvelle_ddv,
+							id_fact = TFacture.objects.get(id_fact = v_fact)
+						)
+					
+				# J'affiche le message de succès.
+				reponse = HttpResponse(
+					json.dumps({
+						'success' : 'La demande de versement a été ajoutée avec succès.',
+						'redirect' : reverse('consulter_dossier', args = [obj_doss.id_doss])
+					}),
+					content_type = 'application/json'
+				)
+
+				# Je renseigne l'onglet actif après rechargement de la page.
+				request.session['app-nav'] = '#ong_demandes_versements'
+
+			else :
+
+				# J'affiche les erreurs.
+				reponse = HttpResponse(json.dumps(f_ajout_ddv.errors), content_type = 'application/json')
 
 	return reponse

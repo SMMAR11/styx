@@ -483,10 +483,12 @@ def float_to_int(p_valeur, p_montant = True) :
 		# Je transforme le nombre en chaîne de caractères.
 		str_valeur = str(p_valeur)
 
-		# Je vérifie si la chaîne de caractères se termine par ".0" afin de retirer la partie décimale inutile si 
-		# besoin.
+		# Je vérifie si la chaîne de caractères se termine par ".0" ou par ".00" afin de retirer la partie décimale
+		# inutile si  besoin.
 		if str_valeur.endswith('.0') :
 			reponse = str_valeur[:-2]
+		elif str_valeur.endswith('.00') :
+			reponse = str_valeur[:-3]
 		else :
 			reponse = str_valeur
 

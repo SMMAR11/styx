@@ -812,3 +812,147 @@ $('form[name="form_modifier_carto"]').submit(function(e)
 	// Je vérifie la validité des données transmises via le formulaire de modification de la géométrie d'un dossier.
 	trait_form(e);
 });
+
+/**
+ * Ce script permet la gestion du tableau des factures selon le type de versement sélectionné et le financeur 
+ * sélectionné.
+ * e : Variable objet JavaScript
+ */
+$('select[id$="zl_type_vers"], select[id$="zl_org_fin"]').change(function(e)
+{
+	// J'obtiens le préfixe du contrôle.
+	var prefixe = ret_pref(e);
+
+	// Je mets en place un indicateur déterminant si je dois afficher le tableau des factures.
+	var tab = false;
+
+	if (isNaN($('#id_' + prefixe + 'zl_type_vers').val()) == false)
+	{
+		// Je récupère l'intitulé du type de versement sélectionné.
+		var int_type_vers = $('#id_' + prefixe + 'zl_type_vers option:selected').text();
+
+		if (int_type_vers == 'Acompte')
+		{
+			tab = true;
+		}
+	}
+
+	// Je pointe vers la datatable relative.
+	var dtab = tab_datatables['choisir_factures_ddv'];
+
+	if (tab == true)
+	{
+		// Je pointe vers le formulaire d'ajout d'une demande de versement.
+		var obj_form = $('form[name="form_ajouter_ddv"]');
+
+		// Je lance une requête AJAX.
+		$.ajax(
+		{
+			type : 'post',
+			url : obj_form.attr('action') + '?action=filtrer-factures',
+			data : recup_post(obj_form),
+			dataType : 'json',
+			processData : false,
+			contentType : false,
+			beforeSend : function()
+			{
+				// J'informe l'utilisateur qu'une requête AJAX se prépare.
+				aff_loader_ajax(true);
+			},
+			success : function(data)
+			{
+				// Je vide la datatable pour la rafraîchir entièrement.
+				dtab.clear().draw();
+
+				for (var i = 0; i < data.length; i ++)
+				{
+					// Je déclare un tableau vierge qui contiendra les données d'une ligne de la datatable actualisée.
+					var lg = [];
+
+					for (var j = 0; j < data[i].length; j ++)
+					{
+						// J'empile le tableau déclaré précédemment (cellule par cellule).
+						lg.push(data[i][j]);
+					}
+
+					// J'ajoute une ligne à la datatable (ligne visible).
+					dtab.row.add(lg).draw(true);
+				}
+			},
+			error : function(xhr, ajaxOptions, thrownError)
+			{
+				var err = xhr.status + ' ' + thrownError;
+				err += '\n';
+				err += CONTACT_ADMIN;
+				
+				alert(err);
+			},
+			complete : function()
+			{
+				// J'informe l'utilisateur que la requête AJAX est terminée.
+				aff_loader_ajax(false);
+			}
+		});
+
+		$('#za_tab_factures_ddv').show();
+	}
+	else
+	{
+		// Je vide la datatable.
+		dtab.clear().draw();
+		
+		$('#za_tab_factures_ddv').hide();
+	}
+});
+
+/**
+ * Ce script permet l'affichage des montants HT et TTC pré-calculés d'une demande de versement.
+ */
+$(document).on('change', 'input[name="cbsm_fact"]', function()
+{
+	// Je pointe vers le formulaire d'ajout d'une demande de versement.
+	var obj_form = $('form[name="form_ajouter_ddv"]');
+
+	// Je lance une requête AJAX.
+	$.ajax(
+	{
+		type : 'post',
+		url : obj_form.attr('action') + '?action=calculer-montants',
+		data : recup_post(obj_form),
+		dataType : 'json',
+		processData : false,
+		contentType : false,
+		beforeSend : function()
+		{
+			// J'informe l'utilisateur qu'une requête AJAX se prépare.
+			aff_loader_ajax(true);
+		},
+		success : function(data)
+		{
+			if (data['status'] == true)
+			{
+				// J'affiche les montants HT et TTC pré-calculés de la demande de versement.
+				$('input[name$="zs_mont_ht_ddv"]').val(data['success'][0].toFixed(2));
+				$('input[name$="zs_mont_ttc_ddv"]').val(data['success'][1].toFixed(2));
+			}
+			else
+			{
+				$('input[name$="zs_mont_ht_ddv"]').val('');
+				$('input[name$="zs_mont_ttc_ddv"]').val('');
+			}
+		},
+		error : function(xhr, ajaxOptions, thrownError)
+		{
+			var err = xhr.status + ' ' + thrownError;
+			err += '\n';
+			err += CONTACT_ADMIN;
+			
+			alert(err);
+		},
+		complete : function()
+		{
+			// J'informe l'utilisateur que la requête AJAX est terminée.
+			aff_loader_ajax(false);
+		}
+	});
+});

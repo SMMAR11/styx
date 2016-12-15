@@ -12,8 +12,10 @@ def valid_cdc(p_valeur) :
 	''' Imports '''
 	from django.core.exceptions import ValidationError
 
-	if ';' in p_valeur :
-		raise ValidationError('Le caractère ";" est interdit.')
+	tab_caract = [';', '"']
+	for i in range(0, len(p_valeur)) :
+		if any(s in p_valeur[i] for s in tab_caract) :
+			raise ValidationError('Le caractère « {0} » est interdit.'.format(p_valeur[i]))
 
 '''
 Ce validateur renvoie une erreur si le format du courriel saisi est incorrect.
