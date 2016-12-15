@@ -5932,7 +5932,7 @@ button.close {
 .modal-body {
   position: relative;
   padding: 15px 15px 0 15px;
-  max-height: 480px;
+  max-height: calc(100vh - 93px);
   overflow-y: auto;
   background-color: #EBF0F7;
 }

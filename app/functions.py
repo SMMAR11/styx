@@ -750,9 +750,10 @@ def init_form(p_form) :
 				<div class="field-wrapper">
 					<label>{0}</label>
 					{1}
+					<span class="c-police i" style="font-size: 12px;">{2}</span>
 					<span class="za_erreur"></span>
 				</div>
-				'''.format(un_champ.label, un_champ)
+				'''.format(un_champ.label, un_champ, un_champ.help_text)
 			else :
 				contenu = '''
 				<div class="field-wrapper" style="margin-bottom: 0;">

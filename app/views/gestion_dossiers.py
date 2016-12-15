@@ -1284,12 +1284,14 @@ def consulter_dossier(request, p_doss) :
 				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
 				{2}
 				{3}
-				{4}
-				<div class="row">
-					<div class="col-sm-6">{5}</div>
-					<div class="col-sm-6">{6}</div>
+				<div id="za_pas_autofinancement" style="display: none;">
+					{4}
+					<div class="row">
+						<div class="col-sm-6">{5}</div>
+						<div class="col-sm-6">{6}</div>
+					</div>
+					{7}
 				</div>
-				{7}
 				<div class="row">
 					<div class="col-sm-6">{8}</div>
 					<div class="col-sm-6">{9}</div>
@@ -1299,17 +1301,22 @@ def consulter_dossier(request, p_doss) :
 					<div class="col-sm-6">{11}</div>
 					<div class="col-sm-6">{12}</div>
 				</div>
+				{13}
 				<div class="row">
-					<div class="col-sm-6">{13}</div>
 					<div class="col-sm-6">{14}</div>
-				</div>
-				<div class="row">
 					<div class="col-sm-6">{15}</div>
-					<div class="col-sm-6">{16}</div>
 				</div>
+				{16}
 				{17}
 				{18}
 				<button type="submit" class="bt-vert btn center-block to-unfocus">Valider</button>
+				<br />
+				<div class="b c-attention text-center" style="font-size: 12px;">
+					**
+					<br />
+					Les montants HT et TTC de participation doivent être renseignés dans le cas d'un autofinancement 
+					par le maître d'ouvrage du dossier.
+				</div>
 			</form>
 			'''.format(
 				reverse('ajouter_financement'),
@@ -1826,7 +1833,7 @@ def consulter_dossier(request, p_doss) :
 
 			# Je complète le contenu d'un élément <div/> possédant la classe "row".
 			cont_row += '''
-			<div class="col-sm-6">
+			<div class="col-md-6">
 				<div class="alt-thumbnail">
 					<p class="b c-theme-fonce text-center">{0}</p>
 					<br />
@@ -1956,14 +1963,17 @@ def consulter_dossier(request, p_doss) :
 				# Je prépare la réponse AJAX.
 				reponse = HttpResponse(
 					'''
-					<fieldset class="c-theme subfieldset" style="padding-bottom : 0;">
-						<legend class="sublegend">Visualisation</legend>
-						<div class="attribute-wrapper text-center">
-							<img src="{0}" id="img_consulter_photo"/>
-						</div>
-					</fieldset>
-					<fieldset class="c-theme subfieldset" style="padding-bottom : 0; margin-bottom : 0;">
-						<legend class="sublegend">Caractéristiques</legend>
+					<div id="img_consulter_photo" class="text-center">
+						<img src="{0}"/>
+					</div>
+					<br />
+					<div class="right">
+						<span class="bt-consulter icon-link" id="bt_afficher_infos_photo">
+							Consulter les informations de la photo
+						</span>
+					</div>
+					<fieldset class="c-theme subfieldset" style="padding-bottom: 0; margin-bottom: 0; display: none;" id="za_infos_photo">
+						<legend class="sublegend">Informations</legend>
 						{1}
 						<div class="row">
 							<div class="col-xs-6">{2}</div>
@@ -2174,7 +2184,7 @@ def consulter_dossier(request, p_doss) :
 						reponse = HttpResponse('''
 						<div id="za_tab_montants_prestation" style="padding-top : 15px;">
 							<p class="c-theme">Redistribuer les montants dédiés de cette prestation</p>
-							<form action="{0}?action=relier-prestation&prestation={1}" method="post" name="form_relier_prestation" class="alert-user">
+							<form action="{0}?action=relier-prestation&prestation={1}" method="post" name="form_relier_prestation">
 								<input name="csrfmiddlewaretoken" value="{2}" type="hidden">
 								<div style="overflow: auto">
 									<table class="display table" id="tab_montants_prestation">
@@ -2990,7 +3000,7 @@ def ajouter_financement(request) :
 			v_num_arr_fin = nett_val(cleaned_data['zs_num_arr_fin'])
 			v_mont_ht_elig_fin = nett_val(cleaned_data['zs_mont_ht_elig_fin'])
 			v_mont_ttc_elig_fin = nett_val(cleaned_data['zs_mont_ttc_elig_fin'])
-			v_pourc_elig_fin = nett_val(float(cleaned_data['zs_pourc_elig_fin']) / 100)
+			v_pourc_elig_fin = nett_val(cleaned_data['zs_pourc_elig_fin'])
 			v_mont_ht_part_fin = nett_val(cleaned_data['zs_mont_ht_part_fin'])
 			v_mont_ttc_part_fin = nett_val(cleaned_data['zs_mont_ttc_part_fin'])
 			v_dt_deb_elig_fin = nett_val(cleaned_data['zd_dt_deb_elig_fin'])
@@ -3005,7 +3015,7 @@ def ajouter_financement(request) :
 
 			# Je pointe vers l'objet TDossier consulté.
 			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
-				
+			
 			if v_pourc_real_fin is not None :
 				v_pourc_real_fin = float(v_pourc_real_fin) / 100
 
@@ -3032,7 +3042,7 @@ def ajouter_financement(request) :
 				# J'uploade le fichier.
 				upload_fich(v_obj_fin, v_chem_pj_fin)
 
-			# Je remplis les données attributaires du nouvel objet TFinancement.
+			# Je pré-remplis les données attributaires du nouvel objet TFinancement.
 			obj_nv_fin = TFinancement(
 				chem_pj_fin = v_chem_pj_fin,
 				comm_fin = v_comm_fin,
@@ -3041,17 +3051,21 @@ def ajouter_financement(request) :
 				dt_lim_prem_ac_fin = v_dt_lim_prem_ac_fin,
 				duree_pror_fin = v_duree_pror_fin,
 				duree_valid_fin = v_duree_valid_fin,
-				mont_ht_elig_fin = v_mont_ht_elig_fin,
-				mont_ttc_elig_fin = v_mont_ttc_elig_fin,
 				mont_ht_part_fin = v_mont_ht_part_fin,
 				mont_ttc_part_fin = v_mont_ttc_part_fin,
-				num_arr_fin = v_num_arr_fin,
-				pourc_elig_fin = v_pourc_elig_fin,
 				pourc_real_fin = v_pourc_real_fin,
 				id_doss = obj_doss,
 				id_org_fin = obj_fin,
 				id_paiem_prem_ac = obj_paiem_prem_ac
 			)
+
+			# Je termine de remplir les données attributaires du nouvel objet TFinancement lorsque je ne traite pas le
+			# cas d'un d'autofinancement.
+			if v_org_fin > 0 :
+				obj_nv_fin.mont_ht_elig_fin = v_mont_ht_elig_fin
+				obj_nv_fin.mont_ttc_elig_fin = v_mont_ttc_elig_fin
+				obj_nv_fin.num_arr_fin = v_num_arr_fin
+				obj_nv_fin.pourc_elig_fin = float(v_pourc_elig_fin) / 100
 
 			# Je créé un nouvel objet TFinancement.
 			obj_nv_fin.save()
@@ -3614,7 +3628,7 @@ def ajouter_demande_versement(request) :
 				try :
 					v_pourc_elig_fin = TFinancement.objects.get(
 						id_doss = v_id_doss, id_org_fin = v_org_fin
-					).pourc_elig_fin
+					).pourc_elig_fin or 1
 				except :
 					status = False
 

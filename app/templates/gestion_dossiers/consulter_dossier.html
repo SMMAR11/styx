@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="right">
-	<a href="{% url 'choisir_dossier' %}" class="bt-precedent icon-link">Revenir à la liste des dossiers</a>
+	<a href="{% url 'choisir_dossier' %}" class="bt-precedent icon-link" onclick="alert_util(event)">Revenir à la liste des dossiers</a>
 </div>
 <div class="row">
 	<div class="col-md-12">
@@ -16,7 +16,7 @@
 			<li><a href="#ong_financements" data-toggle="tab">Plan de financement</a></li>
 			<li><a href="#ong_prestations" data-toggle="tab">Prestations</a></li>
 			<li><a href="#ong_factures" data-toggle="tab">Factures</a></li>
-			<li><a href="#ong_demandes_versements" data-toggle="tab">Demandes de versement</a></li>
+			<li><a href="#ong_demandes_versements" data-toggle="tab">Demandes de versements</a></li>
 			<li><a href="#ong_reglementations" data-toggle="tab">Réglementations</a></li>
 			{% endif %}
 			<li><a href="#ong_photos" data-toggle="tab">Photos</a></li>
@@ -309,14 +309,12 @@
 			<div id="ong_cartographie" class="fade tab-pane">
 				<div class="row">
 					<div class="col-md-12">
-						<form method="post" action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-geom" name="form_modifier_carto" id="form_modifier_dossier_geom">
+						<form method="post" action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-geom" name="form_modifier_carto" id="form_modifier_dossier_geom" class="alert-user">
 							{% csrf_token %}			
-
 							<!-- Champ caché pour stocker la géométrie définie pour le dossier-->
 							<input type="hidden" id="edit-geom" name="editgeom"/>
 							<!-- Champ caché pour stocker les types de géom autorisés -->
 							<input type="hidden" id="typegeom_doss"/>
-
 							<script type="text/javascript">
 								// Chargement des géométries déjà stockées pour le dossier
 								{% for geom in les_geoms %}
@@ -329,7 +327,6 @@
 								$('#typegeom_doss').val(_typegeom_doss);
 
 							</script>
-
 							{% leaflet_map "styxmap" %}
 						</form>
 					</div>

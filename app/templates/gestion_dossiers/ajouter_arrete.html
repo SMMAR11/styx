@@ -7,7 +7,7 @@
 </div>
 <div class="row">
 	<div class="col-md-12">
-		<form action="{% url 'ajouter_arrete' le_doss.id_doss l_arr.id_type_decl %}" method="post" name="form_ajouter_arrete" class="c-theme alert-user" enctype="multipart/form-data">
+		<form action="{% url 'ajouter_arrete' le_doss.id_doss l_arr.id_type_decl %}" method="post" name="form_ajouter_arrete" class="alert-user c-theme" enctype="multipart/form-data">
 			{% csrf_token %}
 			<fieldset>
 				<legend>Ajouter un arrêté</legend>
@@ -23,6 +23,12 @@
 					{{ f1.zu_chem_pj_arr }}
 				</div>
 				<button type="submit" class="center-block btn bt-vert" data-target="#fm_ajouter_arrete">Valider</button>
+				<br />
+				<div class="b c-attention text-center" style="font-size: 12px;">
+					**
+					<br />
+					Le numéro de l'arrêté, la date de signature de l'arrêté ainsi que la date limite d'enclenchement des travaux de l'arrêté sont obligatoires si l'avancement de l'arrêté est "Validé".
+				</div>
 			</fieldset>
 		</form>						
 	</div>

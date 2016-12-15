@@ -956,3 +956,58 @@ $(document).on('change', 'input[name="cbsm_fact"]', function()
 		}
 	});
 });
+
+/**
+ * Ce script permet la gestion d'affichage de certains champs du formulaire de gestion des financements.
+ */
+$('#id_AjouterFinancement-zl_org_fin').change(function()
+{
+	// Je mets en place un indicateur me permettant de savoir si je pourrai afficher les champs supplémentaires.
+	var bloc = false;
+
+	// Je stocke la valeur du financeur sélectionné.
+	var v_org_fin = $(this).val();
+
+	if (isNaN(v_org_fin) == false)
+	{
+		if (v_org_fin > 0)
+		{
+			bloc = true;
+		}
+	}
+
+	if (bloc == true)
+	{
+		// J'affiche les champs supplémentaires.
+		$('#za_pas_autofinancement').show();
+
+		$('input[name$="zs_mont_ht_part_fin"]').attr('readonly', true);
+		$('input[name$="zs_mont_ttc_part_fin"]').attr('readonly', true);
+	}
+	else
+	{
+		// Je vide les champs supplémentaires.
+		$('input[name$="zs_num_arr_fin"]').val('');
+		$('input[name$="zs_mont_ht_elig_fin"]').val('');
+		$('input[name$="zs_mont_ttc_elig_fin"]').val('');
+		$('input[name$="zs_pourc_elig_fin"]').val('');
+		
+		// Je cache les champs supplémentaires.
+		$('#za_pas_autofinancement').hide();
+
+		$('input[name$="zs_mont_ht_part_fin"]').removeAttr('readonly');
+		$('input[name$="zs_mont_ttc_part_fin"]').removeAttr('readonly');
+	}
+});
+
+/**
+ * Ce script permet l'affichage des informations relatives à une photo.
+ */
+$(document).on('click', '#bt_afficher_infos_photo', function()
+{
+	// Je retire le bouton du DOM.
+	$(this).parent().remove();
+
+	// J'affiche les informations de la photo.
+	$('#za_infos_photo').show();
+});

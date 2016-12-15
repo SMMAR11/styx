@@ -10,7 +10,7 @@ class VDemandeVersement(models.Model) :
 
     # Je définis les champs de la table.
     id_ddv = models.IntegerField(primary_key = True)
-    chem_ddv = models.CharField(max_length = 255)
+    chem_pj_ddv = models.CharField(max_length = 255)
     comm_ddv = models.CharField(max_length = 255)
     dt_ddv = models.DateField()
     dt_vers_ddv = models.DateField()

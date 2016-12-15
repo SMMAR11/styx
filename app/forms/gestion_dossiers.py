@@ -77,6 +77,7 @@ class GererDossier(forms.Form) :
 	)
 
 	zl_sage = forms.ChoiceField(
+		help_text = 'Si le dossier est intégre dans un SAGE, alors il vous faut le préciser.',
 		label = 'SAGE',
 		required = False,
 		widget = forms.Select(attrs = { 'class' : 'form-control' })
@@ -932,18 +933,21 @@ class GererArrete(forms.Form) :
 	)
 
 	zs_num_arr = forms.CharField(
-		label = 'Numéro de l\'arrêté',
+		label = 'Numéro de l\'arrêté' + NOTE_CHAMP,
 		validators = [valid_int],
+		required = False,
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
 	)
 
 	zd_dt_sign_arr = forms.DateField(
-		label = 'Date de signature de l\'arrêté',
+		label = 'Date de signature de l\'arrêté' + NOTE_CHAMP,
+		required = False,
 		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
 	)
 
 	zd_dt_lim_encl_trav_arr = forms.DateField(
-		label = 'Date limite d\'enclenchement des travaux',
+		label = 'Date limite d\'enclenchement des travaux' + NOTE_CHAMP,
+		required = False,
 		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
 	)
 
@@ -1028,15 +1032,29 @@ class GererArrete(forms.Form) :
 
 		''' Imports '''
 		from app.functions import nett_val, valid_zl
+		from app.models import TTypeAvancementArrete
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererArrete, self).clean()
 		v_type_av_arr = cleaned_data.get('zl_type_av_arr')
+		v_num_arr = nett_val(cleaned_data.get('zs_num_arr'))
 		v_obj_arr = nett_val(cleaned_data.get('zu_chem_pj_arr'))
 		v_arr = nett_val(cleaned_data.get('za_chem_pj_arr'))
+		v_dt_sign_arr = nett_val(cleaned_data.get('zd_dt_sign_arr'))
+		v_dt_lim_encl_trav_arr = nett_val(cleaned_data.get('zd_dt_lim_encl_trav_arr'))
 
 		# Je vérifie la valeur de chaque liste déroulante obligatoire du formulaire.
 		v_type_av_arr = valid_zl(self, 'zl_type_av_arr', v_type_av_arr)
+
+		# Je rends obligatoire certains champs si et seulement si l'avancement de l'arrêté est "Validé".
+		if v_type_av_arr > -1 :
+			if TTypeAvancementArrete.objects.get(id_type_av_arr = v_type_av_arr).int_type_av_arr == 'Validé' :
+				if v_num_arr is None :
+					self.add_error('zs_num_arr', MESSAGES['required'])
+				if v_dt_sign_arr is None :
+					self.add_error('zd_dt_sign_arr', MESSAGES['required'])
+				if v_dt_lim_encl_trav_arr is None :
+					self.add_error('zd_dt_lim_encl_trav_arr', MESSAGES['required'])
 
 		if v_obj_arr is not None :
 
@@ -1069,41 +1087,45 @@ class GererFinancement(forms.Form) :
 	)
 
 	zs_num_arr_fin = forms.CharField(
-		label = 'Numéro de l\'arrêté ou convention',
+		label = 'Numéro de l\'arrêté ou convention' + CHAMP_REQUIS,
+		required = False,
 		validators = [valid_cdc],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
 	)
 
 	zs_mont_ht_elig_fin = forms.CharField(
-		label = 'Montant HT de l\'assiette éligible de la subvention',
+		label = 'Montant HT de l\'assiette éligible de la subvention' + CHAMP_REQUIS,
+		required = False,
 		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_elig_fin = forms.CharField(
-		label = 'Montant TTC de l\'assiette éligible de la subvention',
+		label = 'Montant TTC de l\'assiette éligible de la subvention' + CHAMP_REQUIS,
+		required = False,
 		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_pourc_elig_fin = forms.CharField(
-		label = 'Pourcentage de l\'assiette éligible',
+		label = 'Pourcentage de l\'assiette éligible' + CHAMP_REQUIS,
+		required = False,
 		validators = [valid_pourc],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ht_part_fin = forms.CharField(
-		label = 'Montant HT total de la participation',
+		label = 'Montant HT total de la participation' + NOTE_CHAMP,
 		required = False,
 		validators = [valid_mont(False)],
-		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_part_fin = forms.CharField(
-		label = 'Montant TTC total de la participation',
+		label = 'Montant TTC total de la participation' + NOTE_CHAMP,
 		required = False,
 		validators = [valid_mont(False)],
-		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
+		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zd_dt_deb_elig_fin = forms.DateField(
@@ -1126,6 +1148,7 @@ class GererFinancement(forms.Form) :
 
 	zd_dt_lim_deb_oper_fin = forms.DateField(
 		label = 'Date limite du début de l\'opération',
+		required = False,
 		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
 	)
 
@@ -1220,8 +1243,10 @@ class GererFinancement(forms.Form) :
 		cleaned_data = super(GererFinancement, self).clean()
 		v_num_doss = cleaned_data.get('za_num_doss')
 		v_org_fin = cleaned_data.get('zl_org_fin')
-		v_mont_ht_elig_fin = cleaned_data.get('zs_mont_ht_elig_fin')
-		v_mont_ttc_elig_fin = cleaned_data.get('zs_mont_ttc_elig_fin')
+		v_num_arr_fin = nett_val(cleaned_data.get('zs_num_arr_fin'))
+		v_mont_ht_elig_fin = nett_val(cleaned_data.get('zs_mont_ht_elig_fin'))
+		v_mont_ttc_elig_fin = nett_val(cleaned_data.get('zs_mont_ttc_elig_fin'))
+		v_pourc_elig_fin = nett_val(cleaned_data.get('zs_pourc_elig_fin'))
 		v_mont_ht_part_fin = nett_val(cleaned_data.get('zs_mont_ht_part_fin'))
 		v_mont_ttc_part_fin = nett_val(cleaned_data.get('zs_mont_ttc_part_fin'))
 		v_paiem_prem_ac = cleaned_data.get('zl_paiem_prem_ac')
@@ -1238,6 +1263,25 @@ class GererFinancement(forms.Form) :
 			self.add_error('za_num_doss', MESSAGES['invalid'])
 
 		if obj_doss is not None :
+
+			# Je rends certains champs obligatoires lorsque je veux ajouter un financement qui est différent d'un
+			# autofinancement.
+			if v_org_fin > 0 :
+				if v_num_arr_fin is None :
+					self.add_error('zs_num_arr_fin', MESSAGES['required'])
+				if v_mont_ht_elig_fin is None :
+					self.add_error('zs_mont_ht_elig_fin', MESSAGES['required'])
+				if v_mont_ttc_elig_fin is None :
+					self.add_error('zs_mont_ttc_elig_fin', MESSAGES['required'])
+				if v_pourc_elig_fin is None :
+					self.add_error('zs_pourc_elig_fin', MESSAGES['required'])
+
+			# Je rends certains champs obligatoires lorsque je veux ajouter un autofinancement.
+			if v_org_fin == 0 :
+				if v_mont_ht_part_fin is None :
+					self.add_error('zs_mont_ht_part_fin', MESSAGES['required'])
+				if v_mont_ttc_part_fin is None :
+					self.add_error('zs_mont_ttc_part_fin', MESSAGES['required'])
 
 			# Je récupère les restes à financer.
 			obj_suivi_doss = VSuiviDossier.objects.get(id_doss = obj_doss.id_doss)
@@ -1265,13 +1309,14 @@ class GererFinancement(forms.Form) :
 
 			# Je gère la contrainte suivante : le montant de la subvention doit être inférieur ou égal à la différence
 			# du montant du dossier et de la somme des montants des subventions.
-			if v_mont_ht_part_fin is not None and v_mont_ttc_part_fin is not None :
+			if v_mont_ht_part_fin is not None :
 				if float(v_mont_ht_part_fin) > float(v_mont_ht_raf) :
 					self.add_error(
 						'zs_mont_ht_part_fin',
 						'Veuillez saisir un montant HT inférieur ou égal à {0} €.'.format(float_to_int(v_mont_ht_raf))
 					)
 
+			if v_mont_ttc_part_fin is not None :
 				if float(v_mont_ttc_part_fin) > float(v_mont_ttc_raf) :
 					self.add_error(
 						'zs_mont_ttc_part_fin',
@@ -2014,18 +2059,21 @@ class GererDemandeDeVersement(forms.Form) :
 
 	zd_dt_vers_ddv = forms.DateField(
 		label = 'Date de versement',
+		required = False,
 		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
 	)
 
 	zs_mont_ht_verse_ddv = forms.CharField(
+		initial = 0,
 		label = 'Montant HT versé (en €)',
-		validators = [valid_mont(False)],
+		validators = [valid_mont(True)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_verse_ddv = forms.CharField(
+		initial = 0,
 		label = 'Montant TTC versé (en €)',
-		validators = [valid_mont(False)],
+		validators = [valid_mont(True)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 

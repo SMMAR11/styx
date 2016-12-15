@@ -62,11 +62,20 @@ window.addEventListener("map:init", function (e) {
 
     }).addTo(map);
 
+    // Les boutons des geoms non autorisées sont masqués
+    if( $('#typegeom_doss').val().indexOf('marker') == -1)
+        $(".leaflet-draw-draw-marker").css("display","none");
+
+    if( $('#typegeom_doss').val().indexOf('polyline') == -1)
+        $(".leaflet-draw-draw-polyline").css("display","none");
+
+    if( $('#typegeom_doss').val().indexOf('polygon') == -1)
+        $(".leaflet-draw-draw-polygon").css("display","none");
+
 }, false);
 
 
 $(function() {
-
     $("body").on("shown.bs.tab", "#tabCarto", function() {
         // Calcul dynamique de la hauteur de la carto
         var _heightHeader = $('#header').height() + $('#navbar').height() + 130 + $('#menu_dossier').height();
@@ -75,18 +84,6 @@ $(function() {
         map.invalidateSize();
         
         // centrage de la carte sur les objets
-        map.fitBounds(editableLayers.getBounds());
-        
-        // Les boutons des geoms non autorisées sont masqués
-        if( $('#typegeom_doss').val().indexOf('marker') == -1)
-            $(".leaflet-draw-draw-marker").css("display","none");
-
-        if( $('#typegeom_doss').val().indexOf('polyline') == -1)
-            $(".leaflet-draw-draw-polyline").css("display","none");
-
-        if( $('#typegeom_doss').val().indexOf('polygon') == -1)
-            $(".leaflet-draw-draw-polygon").css("display","none");
-        
+        map.fitBounds(editableLayers.getBounds());    
     });
-
 });

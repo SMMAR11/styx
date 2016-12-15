@@ -108,14 +108,14 @@ fieldset.subfieldset legend.sublegend
 	opacity: 0.5;
 }
 
-#img_consulter_photo
+#img_consulter_photo img
 {
-	max-width: 820px;
+	max-width: 852px;
 }
 
 @media (max-width: 991px)
 {
-	#img_consulter_photo
+	#img_consulter_photo img
 	{
 		width: 100%;
 	}
