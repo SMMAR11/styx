@@ -1055,6 +1055,7 @@ def consulter_dossier(request, p_doss) :
 
 	''' Imports '''
 	from app.forms.gestion_dossiers import ChoisirPrestation
+	from app.forms.gestion_dossiers import GererArrete
 	from app.forms.gestion_dossiers import GererDemandeDeVersement
 	from app.forms.gestion_dossiers import GererDossier_Reglementation
 	from app.forms.gestion_dossiers import GererFacture
@@ -1086,7 +1087,6 @@ def consulter_dossier(request, p_doss) :
 	from app.models import TPrestationsDossier
 	from app.models import TRivieresDossier
 	from app.models import TSage
-	from app.models import TTypeDeclaration
 	from app.models import TTypesGeomTypeDossier
 	from app.models import TUnite
 	from app.sql_views import VDemandeVersement
@@ -1135,6 +1135,7 @@ def consulter_dossier(request, p_doss) :
 		f_ajout_fact = GererFacture(prefix = 'AjouterFacture', k_doss = obj_doss.id_doss)
 		f_ch_prest = ChoisirPrestation(prefix = 'ChoisirPrestation', k_doss = obj_doss.id_doss)
 		f_ajout_ddv = GererDemandeDeVersement(prefix = 'AjouterDemandeDeVersement', k_doss = obj_doss.id_doss)
+		f_ajout_arr = GererArrete(prefix = 'AjouterArrete', k_doss = obj_doss.id_doss)
 
 		# J'initialise les champs de certains formulaires.
 		tab_ajout_ph = init_form(f_ajout_ph)
@@ -1143,6 +1144,7 @@ def consulter_dossier(request, p_doss) :
 		tab_ajout_fact = init_form(f_ajout_fact)
 		tab_ch_prest = init_form(f_ch_prest)
 		tab_ajout_ddv = init_form(f_ajout_ddv)
+		tab_ajout_arr = init_form(f_ajout_arr)
 
 		# Je récupère l'ensemble des prestations pouvant être reliées avec le dossier courant.
 		les_prest_filtr = TPrestation.objects.filter(
@@ -1169,8 +1171,10 @@ def consulter_dossier(request, p_doss) :
 				<td>{3}</td>
 				<td>{4}</td>
 				<td>{5}</td>
+				<td>{6}</td>
 			</tr>
 			'''.format(
+				conv_none(une_prest.id_org_prest.n_org),
 				conv_none(une_prest.int_prest),
 				conv_none(reecr_dt(une_prest.dt_notif_prest)),
 				conv_none(float_to_int(une_prest.mont_ht_tot_prest)),
@@ -1187,6 +1191,39 @@ def consulter_dossier(request, p_doss) :
 
 		# Je déclare le contenu de certaines fenêtres modales.
 		tab_cont_fm = {
+			'ajouter_arrete' : '''
+			<form action="{0}" method="post" name="form_ajouter_arrete" class="c-theme" enctype="multipart/form-data">
+				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
+				<div class="row">
+					<div class="col-xs-6">{2}</div>
+					<div class="col-xs-6">{3}</div>
+				</div>
+				{4}
+				{5}
+				{6}
+				{7}
+				{8}
+				{9}
+				<button type="submit" class="center-block btn bt-vert" data-target="#fm_ajouter_arrete">Valider</button>
+				<br />
+				<div class="b c-attention text-center" style="font-size: 12px;">
+					**
+					<br />
+					Le numéro de l'arrêté, la date de signature de l'arrêté ainsi que la date limite d'enclenchement des travaux de l'arrêté sont obligatoires si l'avancement de l'arrêté est "Validé".
+				</div>
+			</form>	
+			'''.format(
+				reverse('ajouter_arrete'),
+				csrf(request)['csrf_token'],
+				tab_ajout_arr['za_num_doss'],
+				tab_ajout_arr['zl_type_decl'],
+				tab_ajout_arr['zl_type_av_arr'],
+				tab_ajout_arr['zs_num_arr'],
+				tab_ajout_arr['zd_dt_sign_arr'],
+				tab_ajout_arr['zd_dt_lim_encl_trav_arr'],
+				tab_ajout_arr['zu_chem_pj_arr'],
+				tab_ajout_arr['zs_comm_arr']
+			),
 			'ajouter_ddv' : '''
 			<form name="form_ajouter_ddv" method="post" action="{0}" class="c-theme" enctype="multipart/form-data">
 				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
@@ -1284,14 +1321,12 @@ def consulter_dossier(request, p_doss) :
 				<input name="csrfmiddlewaretoken" value="{1}" type="hidden">
 				{2}
 				{3}
-				<div id="za_pas_autofinancement" style="display: none;">
-					{4}
-					<div class="row">
-						<div class="col-sm-6">{5}</div>
-						<div class="col-sm-6">{6}</div>
-					</div>
-					{7}
+				{4}
+				<div class="row">
+					<div class="col-sm-6">{5}</div>
+					<div class="col-sm-6">{6}</div>
 				</div>
+				{7}
 				<div class="row">
 					<div class="col-sm-6">{8}</div>
 					<div class="col-sm-6">{9}</div>
@@ -1310,13 +1345,6 @@ def consulter_dossier(request, p_doss) :
 				{17}
 				{18}
 				<button type="submit" class="bt-vert btn center-block to-unfocus">Valider</button>
-				<br />
-				<div class="b c-attention text-center" style="font-size: 12px;">
-					**
-					<br />
-					Les montants HT et TTC de participation doivent être renseignés dans le cas d'un autofinancement 
-					par le maître d'ouvrage du dossier.
-				</div>
 			</form>
 			'''.format(
 				reverse('ajouter_financement'),
@@ -1389,37 +1417,38 @@ def consulter_dossier(request, p_doss) :
 						</div>
 					</div>
 					{4}
+					{5}
 					<div class="row">
-						<div class="col-sm-6">
-							{5}
-						</div>
 						<div class="col-sm-6">
 							{6}
 						</div>
-					</div>
-					<div class="row">
 						<div class="col-sm-6">
 							{7}
 						</div>
+					</div>
+					<div class="row">
 						<div class="col-sm-6">
 							{8}
 						</div>
+						<div class="col-sm-6">
+							{9}
+						</div>
 					</div>
-					{9}
 					{10}
 					{11}
+					{12}
 					<button type="submit" class="center-block btn bt-vert to-unfocus">Valider</button>
 				</form>	
 			</div>
 			<div id="za_prest_exist" style="display: none;">
-				<form name="form_choisir_prestation" method="post" action="{12}?action=filtrer-prestations" class="c-theme">
-					<input name="csrfmiddlewaretoken" value="{13}" type="hidden">
+				<form name="form_choisir_prestation" method="post" action="{13}?action=filtrer-prestations" class="c-theme">
+					<input name="csrfmiddlewaretoken" value="{14}" type="hidden">
 					<fieldset style="padding-bottom: 0;">
 						<legend>Rechercher par</legend>
 						<div class="form-content">
-							{14}
 							{15}
 							{16}
+							{17}
 						</div>
 					</fieldset>
 				</form>
@@ -1429,6 +1458,7 @@ def consulter_dossier(request, p_doss) :
 					<table class="display table" id="tab_choisir_prestation">
 						<thead>
 							<tr>
+								<th>Prestataire</th>
 								<th>Intitulé</th>
 								<th>Date de notification</th>
 								<th>Montant HT (en €)</th>
@@ -1437,7 +1467,7 @@ def consulter_dossier(request, p_doss) :
 								<th></th>
 							</tr>
 						</thead>
-						<tbody>{17}</tbody>
+						<tbody>{18}</tbody>
 					</table>
 				</div>
 			</div>
@@ -1447,6 +1477,7 @@ def consulter_dossier(request, p_doss) :
 				tab_ajout_prest['za_num_doss'],
 				tab_ajout_prest['zsac_siret_org_prest'],
 				tab_ajout_prest['zs_int_prest'],
+				tab_ajout_prest['zs_ref_prest'],
 				tab_ajout_prest['zs_mont_ht_tot_prest'],
 				tab_ajout_prest['zs_mont_ttc_tot_prest'],
 				tab_ajout_prest['zd_dt_notif_prest'],
@@ -1466,6 +1497,7 @@ def consulter_dossier(request, p_doss) :
 		# Je déclare un tableau de fenêtres modales.
 		tab_fm = [
 			init_fm('afficher_photo', 'Consulter une photo'),
+			init_fm('ajouter_arrete', 'Ajouter un arrêté', tab_cont_fm['ajouter_arrete']),
 			init_fm('ajouter_avenant', 'Ajouter un avenant'),
 			init_fm(
 				'ajouter_financement', 
@@ -1479,7 +1511,6 @@ def consulter_dossier(request, p_doss) :
 			init_fm('modifier_carto', 'Modifier la géométrie'),
 			init_fm('modifier_dossier', 'Modifier un dossier'),
 			init_fm('relier_prestation', 'Relier une prestation'),
-			init_fm('supprimer_arrete', 'Êtes-vous certain de supprimer cet arrêté ?'),
 			init_fm('supprimer_dossier', 'Êtes-vous certain de supprimer ce dossier ?'),
 			init_fm('supprimer_photo', 'Êtes-vous certain de supprimer cette photo ?')
 		]
@@ -1650,25 +1681,34 @@ def consulter_dossier(request, p_doss) :
 		tab_fin = []
 
 		for un_fin in les_fin :
-
-			# J'initialise le nom du maître d'ouvrage.
-			v_n_org = 'Autofinancement - {0}'.format(obj_doss.id_org_moa.n_org)
-			try :
-				v_n_org = conv_none(un_fin.id_org_fin.id_org_fin.n_org)
-			except :
-				pass
-
 			tab_fin.append({
 				'id_fin' : un_fin.id_fin,
-				'n_org' : v_n_org,
+				'n_org' : conv_none(un_fin.id_org_fin.id_org_fin.n_org),
+				'pourc_elig_fin' : conv_none(float_to_int(obt_pourc(un_fin.pourc_elig_fin))),
+				'pourc_glob_fin' : conv_none(float_to_int(obt_pourc(un_fin.pourc_glob_fin))),
 				'mont_ht_tot_subv_fin' : conv_none(float_to_int(un_fin.mont_ht_part_fin)),
 				'dt_deb_elig_fin' : conv_none(reecr_dt(un_fin.dt_deb_elig_fin)),
 				'dt_fin_elig_fin' : conv_none(reecr_dt(un_fin.dt_fin_elig_fin)),
 				'mont_ht_rad' : conv_none(float_to_int(un_fin.mont_ht_rad))
 			})
 
-			# Je trie le tableau des financeurs par financeurs.
-			tab_fin = sorted(tab_fin, key = lambda tup : tup['n_org'])
+		# J'ajoute la ligne liée à l'autofinancement si son montant HT de participation serait supérieur à 0 €.
+		if obj_suivi_doss.mont_ht_raf > 0 :
+			tab_fin.append({
+				'id_fin' : None,
+				'n_org' : 'Autofinancement - {0}'.format(obj_doss.id_org_moa.n_org),
+				'mont_ht_tot_subv_fin' : float_to_int(obj_suivi_doss.mont_ht_raf),
+				'pourc_elig_fin' : conv_none(None),
+				'pourc_glob_fin' : conv_none(float_to_int(obt_pourc(
+					obj_suivi_doss.mont_ht_raf / obj_suivi_doss.mont_ht_doss
+				))),
+				'dt_deb_elig_fin' : conv_none(None),
+				'dt_fin_elig_fin' : conv_none(None),
+				'mont_ht_rad' : conv_none(None)
+			})
+
+		# Je trie le tableau des financeurs.
+		tab_fin = sorted(tab_fin, key = lambda tup : tup['n_org'])
 
 		# Je stocke les prestations du dossier.
 		les_prest_doss = TPrestationsDossier.objects.filter(id_doss = obj_doss.id_doss).order_by(
@@ -1715,6 +1755,8 @@ def consulter_dossier(request, p_doss) :
 				'num_fact' : conv_none(une_fact_doss.num_fact),
 				'dt_mand_moa_fact' : conv_none(reecr_dt(une_fact_doss.dt_mand_moa_fact)),
 				'mont_ht_fact' : conv_none(float_to_int(une_fact_doss.mont_ht_fact)),
+				'num_mandat' : conv_none(une_fact_doss.num_mandat),
+				'num_bord' : conv_none(une_fact_doss.num_bord)
 			})
 
 		# Je stocke les demandes de versements du dossier.
@@ -1744,137 +1786,29 @@ def consulter_dossier(request, p_doss) :
 		# Je trie le tableau des demandes de versements par financeurs, puis par identifiants.
 		tab_ddv_doss = sorted(tab_ddv_doss, key = lambda tup : (tup['n_org'], tup['id_ddv']))
 
-		# Je stocke les différents types de déclarations.
-		les_arr = TTypeDeclaration.objects.all()
+		# Je stocke les arrêtés d'un dossier.
+		les_arr_doss = TArretesDossier.objects.filter(id_doss = obj_doss.id_doss)
 
-		# Je parcours les différents types de déclarations afin d'implémenter l'onglet "Réglementations".
-		i = -1
-		cont_regl = ''
-		for un_arr in les_arr :
+		# Je stocke dans un tableau les données mises en forme de chaque arrêté.
+		tab_arr_doss = []
 
-			# J'incrémente le sommet.
-			i += 1
-
-			# Je stocke la valeur du modulo pour la valeur courante du sommet.
-			mod = i % 2
-
-			# J'initialise ou je réinitialise le contenu d'un élément <div/> possédant la classe "row".
-			if mod == 0 :
-				cont_row = ''
-
-			# Je vérifie l'existence d'un objet TArretesDossier.
-			obj_arr = None
-			try :
-				obj_arr = TArretesDossier.objects.get(id_doss = obj_doss.id_doss, id_type_decl = un_arr.id_type_decl)
-			except :
-				pass
-
-			# Je récupère la valeur de chaque champ si et seulement si l'objet TArretesDossier existe.
-			if obj_arr is not None :
-				v_int_type_av_arr = obj_arr.id_type_av_arr.int_type_av_arr
-				v_num_arr = obj_arr.num_arr
-				v_dt_sign_arr = obj_arr.dt_sign_arr
-				v_dt_lim_encl_trav_arr = obj_arr.dt_lim_encl_trav_arr
-			else :
-				v_int_type_av_arr = None
-				v_num_arr = None
-				v_dt_sign_arr = None
-				v_dt_lim_encl_trav_arr = None
-
-			# Je prépare la page de consultation d'un arrêté.
-			tab_attr_arr = {
-				'int_type_av_arr' : { 
-					'label' : 'Avancement', 'value' : conv_none(v_int_type_av_arr)
-				},
-				'num_arr' : { 'label' : 'Numéro de l\'arrêté', 'value' : conv_none(v_num_arr) },
-				'dt_sign_arr' : 
-				{ 
-					'label' : 'Date de signature de l\'arrêté', 'value' : conv_none(reecr_dt(v_dt_sign_arr))
-				},
-				'dt_lim_encl_trav_arr' :
-				{
-					'label' : 'Date limite d\'enclenchement des travaux',
-					'value' : conv_none(reecr_dt(v_dt_lim_encl_trav_arr))
-				}
-			}
-
-			# Je mets en forme les attributs.
-			tab_attr_arr = init_pg_cons(tab_attr_arr)
-
-			# J'initialise les options disponibles pour chaque arrêté.
-			bt_pdf = ''
-			if obj_arr is None :
-				opt_dispo = '''
-				<div class="col-xs-6">
-					<a href="{0}" class="bt-ajouter icon-link">Ajouter</a>
-				</div>
-				'''.format(reverse('ajouter_arrete', args = [obj_doss.id_doss, un_arr.id_type_decl]))
-			else :
-				opt_dispo = '''
-				<div class="col-xs-3">
-					<a href="{0}" class="bt-modifier icon-link">Modifier</a>
-				</div>
-				<div class="col-xs-3">
-					<span class="bt-supprimer bt_supprimer_arrete icon-link" data-target="#fm_supprimer_arrete" action="{1}?action=supprimer-arrete&dossier={2}&arrete={3}">Supprimer</span>
-				</div>
-				'''.format(
-						reverse('modifier_arrete', args = [obj_doss.id_doss, un_arr.id_type_decl]),
-						reverse('consulter_dossier', args = [obj_doss.id_doss]),
-						obj_doss.id_doss,
-						un_arr.id_type_decl,
-					)
-
-				if obj_arr.chem_pj_arr is not None :
-					bt_pdf = '''
-					<div class="col-xs-6">
-						<a href="{0}" target="blank" class="bt-pdf icon-link">Consulter le fichier scanné de l'arrêté</a>
-					</div>
-					'''.format(MEDIA_URL + obj_arr.chem_pj_arr)
-
-			# Je complète le contenu d'un élément <div/> possédant la classe "row".
-			cont_row += '''
-			<div class="col-md-6">
-				<div class="alt-thumbnail">
-					<p class="b c-theme-fonce text-center">{0}</p>
-					<br />
-					{1}
-					{2}
-					{3}
-					{4}
-					<div class="row">
-						{5}
-						{6}
-					</div>
-				</div>
-			</div>
-			'''.format(
-				conv_none(un_arr.int_type_decl),
-				tab_attr_arr['int_type_av_arr'],
-				tab_attr_arr['num_arr'],
-				tab_attr_arr['dt_sign_arr'],
-				tab_attr_arr['dt_lim_encl_trav_arr'],
-				opt_dispo,
-				bt_pdf
-			)
-
-			# Je vérifie si je dois terminer ou non l'élément <div/> possédant la classe "row".
-			row_term = False
-			if mod == 1 :
-				row_term = True
-			if i + 1 == len(les_arr) and mod == 0 :
-				row_term = True
-			if row_term == True :
-				cont_regl += '''
-				<div class="row">
-					{0}
-				</div>
-				'''.format(cont_row)
+		for un_arr_doss in les_arr_doss :
+			tab_arr_doss.append({
+				'id_doss' : un_arr_doss.id_doss.id_doss,
+				'id_type_decl' : un_arr_doss.id_type_decl.id_type_decl,
+				'int_type_decl' : conv_none(un_arr_doss.id_type_decl.int_type_decl),
+				'int_type_av_arr' : conv_none(un_arr_doss.id_type_av_arr.int_type_av_arr),
+				'num_arr' : conv_none(un_arr_doss.num_arr),
+				'dt_sign_arr' : conv_none(reecr_dt(un_arr_doss.dt_sign_arr)),
+				'dt_lim_encl_trav_arr' : conv_none(reecr_dt(un_arr_doss.dt_lim_encl_trav_arr))
+			})
 
 		# Je récupère les photos du dossier.
 		les_ph = TPhoto.objects.filter(id_doss = obj_doss.id_doss).order_by('-dt_pv_ph')
 
 		# Je stocke dans un tableau les données mises en forme de chaque photo du dossier.
 		tab_ph = []
+
 		for une_ph in les_ph :
 			tab_ph.append({
 				'id_ph' : une_ph.id_ph,
@@ -1891,7 +1825,7 @@ def consulter_dossier(request, p_doss) :
 			{
 				'f1' : init_form(f_modif_doss),
 				'le_doss' : obj_doss,
-				'les_arr' : cont_regl,
+				'les_arr_doss' : tab_arr_doss,
 				'les_attr_doss' : init_pg_cons(tab_attr_doss),
 				'les_ddv_doss' : tab_ddv_doss,
 				'les_doss_fam' : tab_doss_fam,
@@ -1902,8 +1836,9 @@ def consulter_dossier(request, p_doss) :
 				'les_ph' : tab_ph,
 				'les_prest_doss' : tab_prest_doss,
 				'les_types_geom' : typegeom_doss,
+				'mont_ht_aven_sum' : float_to_int(obj_suivi_doss.mont_ht_aven_sum),
 				'mont_ht_doss' : float_to_int(obj_doss.mont_ht_doss),
-				'mont_ht_raf' : float_to_int(obj_suivi_doss.mont_ht_raf),
+				'mont_ht_prest_sum' : float_to_int(obj_suivi_doss.mont_ht_prest_sum),
 				'mont_ht_rau' : float_to_int(obj_suivi_doss.mont_ht_rau),
 				'title' : 'Consulter un dossier'
 			}
@@ -2006,14 +1941,6 @@ def consulter_dossier(request, p_doss) :
 					'''
 				))
 
-			# Je traite le cas où je veux délier un arrêté pour un dossier.
-			if get_action == 'supprimer-arrete' and 'dossier' in request.GET and 'arrete' in request.GET :
-
-				# Je prépare la réponse AJAX.
-				reponse = HttpResponse(aff_mess_suppr('{0}?dossier={1}&arrete={2}'.format(
-					reverse('supprimer_arrete'), request.GET['dossier'], request.GET['arrete']
-				)))
-
 			# Je traite le cas où je veux filtrer les prestations.
 			if get_action == 'filtrer-prestations' :
 
@@ -2056,6 +1983,7 @@ def consulter_dossier(request, p_doss) :
 							tab_doss_prest.append(conv_none(un_doss_prest.id_doss.num_doss))
 
 						tab_prest_filtr.append([
+							conv_none(une_prest.id_org_prest.n_org),
 							conv_none(une_prest.int_prest),
 							conv_none(reecr_dt(une_prest.dt_notif_prest)),
 							conv_none(float_to_int(une_prest.mont_ht_tot_prest)),
@@ -2670,65 +2598,23 @@ Gestion des arrêtés
 '''
 Cette vue permet soit d'afficher la page d'ajout d'un arrêté, soit de traiter le formulaire de la page. 
 request : Objet requête
-p_doss : Identifiant du dossier rattaché à l'arrêté
-p_arr : Identifiant du type de déclaration
 '''
 @nett_form
 @verif_acces
-def ajouter_arrete(request, p_doss, p_arr) :
+def ajouter_arrete(request) :
 
 	''' Imports '''
 	from app.forms.gestion_dossiers import GererArrete
-	from app.functions import crypt_val, init_fm, init_form, integer, nett_val, upload_fich
+	from app.functions import crypt_val, integer, nett_val, upload_fich
 	from app.models import TArretesDossier, TDossier, TTypeAvancementArrete, TTypeDeclaration
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
-	from django.shortcuts import get_object_or_404, render
 	import json
 	import time
 
 	reponse = HttpResponse()
 
-	if request.method == 'GET' :
-
-		# Je vérifie l'existence des objets TDossier et TTypeDeclaration.
-		obj_doss = get_object_or_404(TDossier, id_doss = p_doss)
-		obj_arr = get_object_or_404(TTypeDeclaration, id_type_decl = p_arr)
-
-		# J'instancie un objet "formulaire".
-		f_ajout_arr = GererArrete(prefix = 'AjouterArrete', k_doss = obj_doss.id_doss, k_arr = obj_arr.id_type_decl)
-
-		# Je déclare un tableau de fenêtres modales.
-		tab_fm = [
-			init_fm('ajouter_arrete', 'Ajouter un arrêté')
-		]
-
-		# J'affiche le template.
-		reponse = render(
-			request,
-			'./gestion_dossiers/ajouter_arrete.html',
-			{
-				'f1' : init_form(f_ajout_arr),
-				'l_arr' : obj_arr,
-				'le_doss' : obj_doss,
-				'les_fm' : tab_fm,
-				'title' : 'Ajouter un arrêté'
-			}
-		)
-
-	else :
-
-		# Je vérifie l'existence d'un objet TDossier.
-		try :
-			obj_doss = TDossier.objects.get(id_doss = p_doss)
-		except :
-			return HttpResponse()
-
-		# Je vérifie l'existence d'un objet TTypeDeclaration.
-		try :
-			obj_arr = TTypeDeclaration.objects.get(id_type_decl = p_arr)
-		except :
-			return HttpResponse()
+	if request.method == 'POST' :
 
 		# Je vérifie la validité du formulaire d'ajout d'un arrêté.
 		f_ajout_arr = GererArrete(request.POST, request.FILES)
@@ -2737,11 +2623,17 @@ def ajouter_arrete(request, p_doss, p_arr) :
 
 			# Je récupère et nettoie les données du formulaire valide.
 			cleaned_data = f_ajout_arr.cleaned_data
+			v_num_doss = nett_val(cleaned_data['za_num_doss'])
+			v_type_decl = nett_val(integer(cleaned_data['zl_type_decl']), True)
 			v_type_av_arr = nett_val(integer(cleaned_data['zl_type_av_arr']), True)
 			v_num_arr = nett_val(cleaned_data['zs_num_arr'])
 			v_dt_sign_arr = nett_val(cleaned_data['zd_dt_sign_arr'])
 			v_dt_lim_encl_trav_arr = nett_val(cleaned_data['zd_dt_lim_encl_trav_arr'])
 			v_obj_arr = nett_val(cleaned_data['zu_chem_pj_arr'])
+			v_comm_arr = nett_val(cleaned_data['zs_comm_arr'])
+
+			# Je pointe vers l'objet TDossier consulté.
+			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
 
 			# J'initialise le nom du fichier uploadé ainsi que le chemin de destination.
 			n_fich = crypt_val('{0}-{1}'.format(request.user.id, time.strftime('%d%m%Y%H%M%S')))
@@ -2754,8 +2646,9 @@ def ajouter_arrete(request, p_doss, p_arr) :
 			obj_nv_arr_doss = TArretesDossier.objects.create(
 				id_doss = obj_doss,
 				id_type_av_arr = TTypeAvancementArrete.objects.get(id_type_av_arr = v_type_av_arr),
-				id_type_decl = obj_arr,
+				id_type_decl = TTypeDeclaration.objects.get(id_type_decl = v_type_decl),
 				chem_pj_arr = v_chem_pj_arr,
+				comm_arr = v_comm_arr,
 				dt_lim_encl_trav_arr = v_dt_lim_encl_trav_arr,
 				dt_sign_arr = v_dt_sign_arr,
 				num_arr = v_num_arr
@@ -2813,7 +2706,8 @@ def modifier_arrete(request, p_doss, p_arr) :
 		f_modif_arr = GererArrete(
 			prefix = 'ModifierArrete', 
 			k_doss = obj_arr_doss.id_doss.id_doss,
-			k_arr = obj_arr_doss.id_type_decl.id_type_decl
+			k_arr = obj_arr_doss.id_type_decl.id_type_decl,
+			k_modif = True
 		)
 
 		# Je déclare un tableau de fenêtres modales.
@@ -2844,7 +2738,13 @@ def modifier_arrete(request, p_doss, p_arr) :
 			pass
 
 		# Je vérifie la validité du formulaire de mise à jour d'un arrêté.
-		f_modif_arr = GererArrete(request.POST, request.FILES, k_modif = True)
+		f_modif_arr = GererArrete(
+			request.POST,
+			request.FILES,
+			k_doss = obj_arr_doss.id_doss.id_doss,
+			k_arr = obj_arr_doss.id_type_decl.id_type_decl,
+			k_modif = True
+		)
 
 		if f_modif_arr.is_valid() :
 
@@ -2855,8 +2755,10 @@ def modifier_arrete(request, p_doss, p_arr) :
 			v_dt_sign_arr = nett_val(cleaned_data['zd_dt_sign_arr'])
 			v_dt_lim_encl_trav_arr = nett_val(cleaned_data['zd_dt_lim_encl_trav_arr'])
 			v_obj_arr = nett_val(cleaned_data['zu_chem_pj_arr'])
+			v_comm_arr = nett_val(cleaned_data['zs_comm_arr'])
 
 			# Je remplis les données attributaires de l'objet TArretesDossier à modifier.
+			obj_arr_doss.comm_arr = v_comm_arr
 			obj_arr_doss.dt_lim_encl_trav_arr = v_dt_lim_encl_trav_arr
 			obj_arr_doss.dt_sign_arr = v_dt_sign_arr
 			obj_arr_doss.num_arr = v_num_arr
@@ -2965,6 +2867,87 @@ def supprimer_arrete(request) :
 	return reponse
 
 '''
+Cette vue permet d'afficher la page de consultation d'un arrêté. 
+request : Objet requête
+p_doss : Identifiant du dossier rattaché à l'arrêté
+p_arr : Identifiant du type de déclaration
+'''
+@csrf_exempt
+@verif_acces
+def consulter_arrete(request, p_doss, p_arr) :
+
+	''' Imports '''
+	from app.functions import aff_mess_suppr, conv_none, init_fm, init_pg_cons, reecr_dt
+	from app.models import TArretesDossier
+	from django.http import HttpResponse
+	from django.core.urlresolvers import reverse
+	from django.shortcuts import get_object_or_404, render
+
+	reponse = HttpResponse()
+
+	if request.method == 'GET' :
+
+		# Je vérifie l'existence d'un objet TArretesDossier.
+		obj_arr_doss = get_object_or_404(TArretesDossier, id_doss = p_doss, id_type_decl = p_arr)
+
+		# Je prépare la page de consultation des caractéristiques d'un arrêté.
+		tab_attr_arr = {
+			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : conv_none(obj_arr_doss.id_doss.num_doss) },
+			'int_type_decl' : {
+				'label' : 'Type de déclaration', 'value' : conv_none(obj_arr_doss.id_type_decl.int_type_decl)
+			},
+			'int_type_av_arr' : {
+				'label' : 'Avancement', 'value' : conv_none(obj_arr_doss.id_type_av_arr.int_type_av_arr)
+			},
+			'num_arr' : { 'label' : 'Numéro de l\'arrêté', 'value' : conv_none(obj_arr_doss.num_arr) },
+			'dt_sign_arr' : {
+				'label' : 'Date de signature de l\'arrêté', 'value' : conv_none(reecr_dt(obj_arr_doss.dt_sign_arr))
+			},
+			'dt_lim_encl_trav_arr' : {
+				'label' : 'Date limite d\'enclenchement des travaux',
+				'value' : conv_none(reecr_dt(obj_arr_doss.dt_lim_encl_trav_arr))
+			},
+			'comm_arr' : { 'label' : 'Commentaire', 'value' : conv_none(obj_arr_doss.comm_arr), 'textarea' : True }
+		}
+
+		# Je déclare un tableau de fenêtres modales.
+		tab_fm = [
+			init_fm('supprimer_arrete', 'Êtes-vous certain de supprimer cet arrêté ?')
+		]
+
+		# J'affiche le template.
+		reponse = render(
+			request,
+			'./gestion_dossiers/consulter_arrete.html',
+			{
+				'l_arr' : obj_arr_doss.id_type_decl,
+				'l_arr_doss' : obj_arr_doss,
+				'le_doss' : obj_arr_doss.id_doss,
+				'les_attr_arr' : init_pg_cons(tab_attr_arr),
+				'les_fm' : tab_fm,
+				'title' : 'Consulter un arrêté'
+			}
+		)
+
+	else :
+
+		# Je vérifie l'existence d'un objet TArretesDossier.
+		try :
+			obj_arr_doss = TArretesDossier.objects.get(id_doss = p_doss, id_type_decl = p_arr)
+		except :
+			return HttpResponse()
+		
+		# Je traite le cas où je veux délier un arrêté pour un dossier.
+		if 'action' in request.GET :
+
+				# Je prépare la réponse AJAX.
+				reponse = HttpResponse(aff_mess_suppr('{0}?dossier={1}&arrete={2}'.format(
+					reverse('supprimer_arrete'), obj_arr_doss.id_doss.id_doss, obj_arr_doss.id_type_decl.id_type_decl
+				)))
+
+	return reponse
+
+'''
 Gestion des financements
 '''
 
@@ -3004,7 +2987,7 @@ def ajouter_financement(request) :
 			v_mont_ht_part_fin = nett_val(cleaned_data['zs_mont_ht_part_fin'])
 			v_mont_ttc_part_fin = nett_val(cleaned_data['zs_mont_ttc_part_fin'])
 			v_dt_deb_elig_fin = nett_val(cleaned_data['zd_dt_deb_elig_fin'])
-			v_duree_valid_fin = nett_val(cleaned_data['zs_duree_valid_fin'])
+			v_duree_valid_fin = nett_val(cleaned_data['zs_duree_valid_fin']) or 0
 			v_duree_pror_fin = nett_val(cleaned_data['zs_duree_pror_fin']) or 0
 			v_dt_lim_deb_oper_fin = nett_val(cleaned_data['zd_dt_lim_deb_oper_fin'])
 			v_dt_lim_prem_ac_fin = nett_val(cleaned_data['zd_dt_lim_prem_ac_fin'])
@@ -3016,6 +2999,9 @@ def ajouter_financement(request) :
 			# Je pointe vers l'objet TDossier consulté.
 			obj_doss = TDossier.objects.get(num_doss = v_num_doss)
 			
+			if v_pourc_elig_fin is not None :
+				v_pourc_elig_fin = float(v_pourc_elig_fin) / 100
+
 			if v_pourc_real_fin is not None :
 				v_pourc_real_fin = float(v_pourc_real_fin) / 100
 
@@ -3051,21 +3037,17 @@ def ajouter_financement(request) :
 				dt_lim_prem_ac_fin = v_dt_lim_prem_ac_fin,
 				duree_pror_fin = v_duree_pror_fin,
 				duree_valid_fin = v_duree_valid_fin,
+				mont_ht_elig_fin = v_mont_ht_elig_fin,
 				mont_ht_part_fin = v_mont_ht_part_fin,
+				mont_ttc_elig_fin = v_mont_ttc_elig_fin,
 				mont_ttc_part_fin = v_mont_ttc_part_fin,
+				num_arr_fin = v_num_arr_fin,
+				pourc_elig_fin = v_pourc_elig_fin,
 				pourc_real_fin = v_pourc_real_fin,
 				id_doss = obj_doss,
 				id_org_fin = obj_fin,
 				id_paiem_prem_ac = obj_paiem_prem_ac
 			)
-
-			# Je termine de remplir les données attributaires du nouvel objet TFinancement lorsque je ne traite pas le
-			# cas d'un d'autofinancement.
-			if v_org_fin > 0 :
-				obj_nv_fin.mont_ht_elig_fin = v_mont_ht_elig_fin
-				obj_nv_fin.mont_ttc_elig_fin = v_mont_ttc_elig_fin
-				obj_nv_fin.num_arr_fin = v_num_arr_fin
-				obj_nv_fin.pourc_elig_fin = float(v_pourc_elig_fin) / 100
 
 			# Je créé un nouvel objet TFinancement.
 			obj_nv_fin.save()
@@ -3129,6 +3111,7 @@ def ajouter_prestation(request) :
 			v_num_doss = nett_val(cleaned_data['za_num_doss'])
 			v_siret_org_prest = nett_val(cleaned_data['zsac_siret_org_prest'])
 			v_int_prest = nett_val(cleaned_data['zs_int_prest'])
+			v_ref_prest = nett_val(cleaned_data['zs_ref_prest'])
 			v_mont_ht_tot_prest = nett_val(cleaned_data['zs_mont_ht_tot_prest'])
 			v_mont_ttc_tot_prest = nett_val(cleaned_data['zs_mont_ttc_tot_prest'])
 			v_dt_notif_prest = nett_val(cleaned_data['zd_dt_notif_prest'])
@@ -3160,6 +3143,7 @@ def ajouter_prestation(request) :
 				int_prest = v_int_prest,
 				mont_ht_tot_prest = v_mont_ht_tot_prest,
 				mont_ttc_tot_prest = v_mont_ttc_tot_prest,
+				ref_prest = v_ref_prest,
 				id_nat_prest = TNaturePrestation.objects.get(id_nat_prest = v_nat_prest),
 				id_org_prest = TPrestataire.objects.get(siret_org_prest = v_siret_org_prest)
 			)
@@ -3249,6 +3233,7 @@ def consulter_prestation(request, p_prest) :
 		tab_attr_prest = {
 			'n_org' : { 'label' : 'Prestataire', 'value' : conv_none(obj_prest.id_org_prest.n_org) },
 			'int_prest' : { 'label' : 'Intitulé de la prestation', 'value' : conv_none(obj_prest.int_prest) },
+			'ref_prest' : { 'label' : 'Référence de la prestation', 'value' : conv_none(obj_prest.ref_prest) },
 			'mont_ht_tot_prest' :
 			{
 				'label' : 'Montant HT total de la prestation (en €)',
@@ -3439,9 +3424,9 @@ def ajouter_facture(request) :
 			if v_suivi_fact == 1 :
 				v_suivi_fact = 'Acompte {0}'.format(obj_prest_doss.seq_ac)
 				obj_prest_doss.seq_ac = int(obj_prest_doss.seq_ac) + 1
+				obj_prest_doss.save()
 			else :
-				v_suivi_fact = 'Solde {0}'.format(obj_prest_doss.seq_solde)
-				obj_prest_doss.seq_solde = int(obj_prest_doss.seq_solde) + 1
+				v_suivi_fact = 'Solde'
 
 			if v_obj_fact is None :
 				v_chem_pj_fact = None
@@ -3472,9 +3457,6 @@ def ajouter_facture(request) :
 
 			# Je créé un nouvel objet TFacture.
 			obj_nvelle_fact.save()
-
-			# Je mets à jour l'objet TPrestationsDossier (séquentiel lié au suivi de la facture saisie).
-			obj_prest_doss.save()
 
 			# J'affiche le message de succès.
 			reponse = HttpResponse(
@@ -3542,10 +3524,6 @@ def ajouter_demande_versement(request) :
 				# Je récupère le financeur sélectionné.
 				v_org_fin = integer(request.POST['zl_org_fin'])
 
-				# J'initialise la valeur du financeur en cas d'autofinancement.
-				if v_org_fin == 0 :
-					v_org_fin = None
-
 				# Je stocke les factures du dossier.
 				les_fact_doss = TFacture.objects.filter(id_doss = v_id_doss)
 
@@ -3605,10 +3583,6 @@ def ajouter_demande_versement(request) :
 				# Je récupère les données nécessaires.
 				v_org_fin = integer(request.POST['zl_org_fin'])
 				v_tab_fact = request.POST.getlist('cbsm_fact')
-
-				# J'initialise la valeur du financeur en cas d'autofinancement.
-				if v_org_fin == 0 :
-					v_org_fin = None
 
 				# J'initialise les sommes HT et TTC des factures sélectionnées.
 				v_mont_ht_fact_sum = 0

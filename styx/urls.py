@@ -56,7 +56,7 @@ urlpatterns = [
         name = 'ajouter_demande_versement'
     ),
     url(
-        r'^modules/gestion-dossiers/ajouter-arrete/([0-9]+)/([0-9]+)/$',
+        r'^modules/gestion-dossiers/ajouter-arrete/$',
         gestion_dossiers.ajouter_arrete,
         name = 'ajouter_arrete'
     ),
@@ -69,6 +69,11 @@ urlpatterns = [
         r'^modules/gestion-dossiers/supprimer-arrete/$',
         gestion_dossiers.supprimer_arrete,
         name = 'supprimer_arrete'
+    ),
+    url(
+        r'^modules/gestion-dossiers/consulter-arrete/([0-9]+)/([0-9]+)/$',
+        gestion_dossiers.consulter_arrete,
+        name = 'consulter_arrete'
     ),
     url(r'^modules/gestion-dossiers/ajouter-photo/$', gestion_dossiers.ajouter_photo, name = 'ajouter_photo'),
     url(

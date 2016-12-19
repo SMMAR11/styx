@@ -912,7 +912,7 @@ class GererPhoto(forms.Form) :
 class GererArrete(forms.Form) :
 
 	''' Imports '''
-	from app.validators import valid_int
+	from app.validators import valid_cdc
 
 	# Je définis les champs du formulaire.
 	za_num_doss = forms.CharField(
@@ -921,10 +921,9 @@ class GererArrete(forms.Form) :
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
 	)
 
-	za_int_type_decl = forms.CharField(
-		label = 'Intitulé de l\'arrêté',
-		required = False,
-		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True })
+	zl_type_decl = forms.ChoiceField(
+		label = 'Type de déclaration',
+		widget = forms.Select(attrs = { 'class' : 'form-control' })
 	)
 
 	zl_type_av_arr = forms.ChoiceField(
@@ -934,7 +933,7 @@ class GererArrete(forms.Form) :
 
 	zs_num_arr = forms.CharField(
 		label = 'Numéro de l\'arrêté' + NOTE_CHAMP,
-		validators = [valid_int],
+		validators = [valid_cdc],
 		required = False,
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
 	)
@@ -962,6 +961,13 @@ class GererArrete(forms.Form) :
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'readonly' : True, 'type' : 'hidden' })
 	)
 
+	zs_comm_arr = forms.CharField(
+		label = 'Commentaire',
+		required = False,
+		validators = [valid_cdc],
+		widget = forms.Textarea(attrs = {'class' : 'form-control', 'maxlength' : 255, 'rows' : 5 })
+	)
+
 	def __init__(self, *args, **kwargs) :
 
 		''' Imports '''
@@ -972,7 +978,7 @@ class GererArrete(forms.Form) :
 		# Je déclare les éléments du tableau des arguments.
 		k_doss = kwargs.pop('k_doss', None)
 		k_arr = kwargs.pop('k_arr', None)
-		k_modif = kwargs.pop('k_modif', False)
+		self.k_modif = kwargs.pop('k_modif', False)
 
 		super(GererArrete, self).__init__(*args, **kwargs)
 
@@ -1005,23 +1011,36 @@ class GererArrete(forms.Form) :
 			pass
 
 		# Je définis les valeurs initiales du formulaire.
-		if obj_doss is not None and obj_arr is not None :
+		if obj_doss is not None :
 			self.fields['za_num_doss'].initial = obj_doss.num_doss
-			self.fields['za_int_type_decl'].initial = obj_arr.int_type_decl
 
 		if obj_arr_doss is not None :
+			self.fields['zl_type_decl'].initial = obj_arr_doss.id_type_decl.id_type_decl
 			self.fields['zl_type_av_arr'].initial = obj_arr_doss.id_type_av_arr.id_type_av_arr
 			self.fields['zs_num_arr'].initial = obj_arr_doss.num_arr
 			self.fields['zd_dt_sign_arr'].initial = reecr_dt(obj_arr_doss.dt_sign_arr)
 			self.fields['zd_dt_lim_encl_trav_arr'].initial = reecr_dt(obj_arr_doss.dt_lim_encl_trav_arr)
+			self.fields['zs_comm_arr'].initial = obj_arr_doss.comm_arr
 
 			# J'initialise l'attribut "title" de la zone d'upload du fichier scanné de l'arrêté.
 			if obj_arr_doss.chem_pj_arr is not None :
 				self.fields['zu_chem_pj_arr'].widget.attrs['title'] = MEDIA_URL + obj_arr_doss.chem_pj_arr
 				self.fields['za_chem_pj_arr'].initial = MEDIA_URL + obj_arr_doss.chem_pj_arr
 
-		if k_modif == True :
+		if self.k_modif == True :
 			self.fields['zu_chem_pj_arr'].required = False
+
+		# J'alimente la liste déroulante des types de déclarations.
+		if self.k_modif == False :
+			les_type_decl = list(OPTION_INITIALE)
+			les_type_decl.extend([(i.id_type_decl, i.int_type_decl) for i in TTypeDeclaration.objects.all()])
+		else :
+			les_type_decl = list([(i.id_type_decl, i.id_type_decl.int_type_decl)
+				for i in TArretesDossier.objects.filter(
+					id_doss = obj_arr_doss.id_doss.id_doss, id_type_decl = obj_arr_doss.id_type_decl.id_type_decl
+				)
+			])
+		self.fields['zl_type_decl'].choices = les_type_decl
 
 		# J'alimente la liste déroulante des types d'avancements d'un arrêté.
 		les_type_av_arr = list(OPTION_INITIALE)
@@ -1032,10 +1051,12 @@ class GererArrete(forms.Form) :
 
 		''' Imports '''
 		from app.functions import nett_val, valid_zl
-		from app.models import TTypeAvancementArrete
+		from app.models import TArretesDossier, TDossier, TTypeAvancementArrete
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererArrete, self).clean()
+		v_num_doss = cleaned_data.get('za_num_doss')
+		v_type_decl = cleaned_data.get('zl_type_decl')
 		v_type_av_arr = cleaned_data.get('zl_type_av_arr')
 		v_num_arr = nett_val(cleaned_data.get('zs_num_arr'))
 		v_obj_arr = nett_val(cleaned_data.get('zu_chem_pj_arr'))
@@ -1044,7 +1065,14 @@ class GererArrete(forms.Form) :
 		v_dt_lim_encl_trav_arr = nett_val(cleaned_data.get('zd_dt_lim_encl_trav_arr'))
 
 		# Je vérifie la valeur de chaque liste déroulante obligatoire du formulaire.
+		v_type_decl = valid_zl(self, 'zl_type_decl', v_type_decl)
 		v_type_av_arr = valid_zl(self, 'zl_type_av_arr', v_type_av_arr)
+
+		# Je vérifie l'existence d'un objet TDossier.
+		try :
+			TDossier.objects.get(num_doss = v_num_doss)
+		except :
+			self.add_error('za_num_doss', MESSAGES['invalid'])
 
 		# Je rends obligatoire certains champs si et seulement si l'avancement de l'arrêté est "Validé".
 		if v_type_av_arr > -1 :
@@ -1056,18 +1084,23 @@ class GererArrete(forms.Form) :
 				if v_dt_lim_encl_trav_arr is None :
 					self.add_error('zd_dt_lim_encl_trav_arr', MESSAGES['required'])
 
+		# Je vérifie l'extension du fichier de l'arrêté.
 		if v_obj_arr is not None :
-
-			# Je vérifie l'extension du fichier de l'arrêté.
 			if v_obj_arr.name.endswith('.pdf') == False :
 				self.add_error('zu_chem_pj_arr', 'Veuillez choisir un fichier au format PDF.')
 
 		else :
-			if v_arr is None :
 
-				# Je vérifie le renseignement du fichier scanné de l'arrêté dans le cas d'une modification. Je demande
-				# le renseignement du champ si et seulement si j'ai appuyé sur le bouton "Retirer".
+			# Je vérifie le renseignement du fichier scanné de l'arrêté dans le cas d'une modification. Je demande le
+			# renseignement du champ si et seulement si j'ai appuyé sur le bouton "Retirer".
+			if v_arr is None :
 				self.add_error('zu_chem_pj_arr', MESSAGES['required'])
+
+		# Je gère la contrainte suivante : un type de déclaration ne peut être dupliqué pour un même dossier.
+		if self.k_modif == False :
+			if len(TArretesDossier.objects.filter(id_doss__num_doss = v_num_doss, id_type_decl = v_type_decl)) > 0 :
+				self.add_error('za_num_doss', 'Veuillez choisir un autre type de déclaration.')
+				self.add_error('zl_type_decl', None)
 
 class GererFinancement(forms.Form) :
 
@@ -1087,55 +1120,55 @@ class GererFinancement(forms.Form) :
 	)
 
 	zs_num_arr_fin = forms.CharField(
-		label = 'Numéro de l\'arrêté ou convention' + CHAMP_REQUIS,
+		label = 'Numéro de l\'arrêté ou convention',
 		required = False,
 		validators = [valid_cdc],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
 	)
 
 	zs_mont_ht_elig_fin = forms.CharField(
-		label = 'Montant HT de l\'assiette éligible de la subvention' + CHAMP_REQUIS,
+		label = 'Montant HT de l\'assiette éligible de la subvention',
 		required = False,
 		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_elig_fin = forms.CharField(
-		label = 'Montant TTC de l\'assiette éligible de la subvention' + CHAMP_REQUIS,
+		label = 'Montant TTC de l\'assiette éligible de la subvention',
 		required = False,
 		validators = [valid_mont(False)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_pourc_elig_fin = forms.CharField(
-		label = 'Pourcentage de l\'assiette éligible' + CHAMP_REQUIS,
+		label = 'Pourcentage de l\'assiette éligible',
 		required = False,
 		validators = [valid_pourc],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ht_part_fin = forms.CharField(
-		label = 'Montant HT total de la participation' + NOTE_CHAMP,
-		required = False,
-		validators = [valid_mont(False)],
+		label = 'Montant HT total de la participation',
+		validators = [valid_mont(True)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zs_mont_ttc_part_fin = forms.CharField(
-		label = 'Montant TTC total de la participation' + NOTE_CHAMP,
-		required = False,
-		validators = [valid_mont(False)],
+		label = 'Montant TTC total de la participation',
+		validators = [valid_mont(True)],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control' })
 	)
 
 	zd_dt_deb_elig_fin = forms.DateField(
 		label = 'Date de début d\'éligibilité',
+		required = False,
 		widget = forms.TextInput(attrs = { 'class' : 'date form-control' })
 	)
 
 	zs_duree_valid_fin = forms.CharField(
 		label = 'Durée de validité de l\'aide (en mois)',
 		validators = [valid_int],
+		required = False,
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
 	)
 
@@ -1213,16 +1246,9 @@ class GererFinancement(forms.Form) :
 		if obj_doss is not None :
 			self.fields['za_num_doss'].initial = obj_doss.num_doss
 
-		# Je mets en forme le libellé lié à l'autofinancement.
-		lib_autofin = 'Autofinancement'
-		if obj_doss is not None :
-			lib_autofin += ' - {0}'.format(obj_doss.id_org_moa.n_org)
-
 		# J'alimente la liste déroulante des financeurs.
-		les_org_fin = list([(0, lib_autofin)])
+		les_org_fin = list(OPTION_INITIALE)
 		les_org_fin.extend([(i.id_org_fin.id_org, i.id_org_fin.n_org) for i in TFinanceur.objects.all()])
-		les_org_fin = sorted(les_org_fin, key = lambda tup : tup[1])
-		les_org_fin.insert(0, [OPTION_INITIALE[0][0], OPTION_INITIALE[0][1]])
 		self.fields['zl_org_fin'].choices = les_org_fin
 
 		# J'alimente la liste déroulante des types de paiements du premier acompte.
@@ -1243,12 +1269,13 @@ class GererFinancement(forms.Form) :
 		cleaned_data = super(GererFinancement, self).clean()
 		v_num_doss = cleaned_data.get('za_num_doss')
 		v_org_fin = cleaned_data.get('zl_org_fin')
-		v_num_arr_fin = nett_val(cleaned_data.get('zs_num_arr_fin'))
 		v_mont_ht_elig_fin = nett_val(cleaned_data.get('zs_mont_ht_elig_fin'))
 		v_mont_ttc_elig_fin = nett_val(cleaned_data.get('zs_mont_ttc_elig_fin'))
-		v_pourc_elig_fin = nett_val(cleaned_data.get('zs_pourc_elig_fin'))
 		v_mont_ht_part_fin = nett_val(cleaned_data.get('zs_mont_ht_part_fin'))
 		v_mont_ttc_part_fin = nett_val(cleaned_data.get('zs_mont_ttc_part_fin'))
+		v_dt_deb_elig_fin = nett_val(cleaned_data.get('zd_dt_deb_elig_fin'))
+		v_duree_valid_fin = nett_val(cleaned_data.get('zs_duree_valid_fin'))
+		v_duree_pror_fin = nett_val(cleaned_data.get('zs_duree_pror_fin'))
 		v_paiem_prem_ac = cleaned_data.get('zl_paiem_prem_ac')
 		v_obj_fin = nett_val(cleaned_data.get('zu_chem_pj_fin'))
 
@@ -1263,25 +1290,6 @@ class GererFinancement(forms.Form) :
 			self.add_error('za_num_doss', MESSAGES['invalid'])
 
 		if obj_doss is not None :
-
-			# Je rends certains champs obligatoires lorsque je veux ajouter un financement qui est différent d'un
-			# autofinancement.
-			if v_org_fin > 0 :
-				if v_num_arr_fin is None :
-					self.add_error('zs_num_arr_fin', MESSAGES['required'])
-				if v_mont_ht_elig_fin is None :
-					self.add_error('zs_mont_ht_elig_fin', MESSAGES['required'])
-				if v_mont_ttc_elig_fin is None :
-					self.add_error('zs_mont_ttc_elig_fin', MESSAGES['required'])
-				if v_pourc_elig_fin is None :
-					self.add_error('zs_pourc_elig_fin', MESSAGES['required'])
-
-			# Je rends certains champs obligatoires lorsque je veux ajouter un autofinancement.
-			if v_org_fin == 0 :
-				if v_mont_ht_part_fin is None :
-					self.add_error('zs_mont_ht_part_fin', MESSAGES['required'])
-				if v_mont_ttc_part_fin is None :
-					self.add_error('zs_mont_ttc_part_fin', MESSAGES['required'])
 
 			# Je récupère les restes à financer.
 			obj_suivi_doss = VSuiviDossier.objects.get(id_doss = obj_doss.id_doss)
@@ -1307,6 +1315,20 @@ class GererFinancement(forms.Form) :
 						)
 					)
 
+			# Je gère la contrainte suivante : une date de début d'éligibilité devra être renseignée si je renseigne
+			# une durée de validité et/ou de prorogation.
+			if v_dt_deb_elig_fin is None :
+				if v_duree_valid_fin is not None :
+					self.add_error(
+						'zs_duree_valid_fin',
+						'Veuillez saisir une date de début d\'éligibilité.'
+					)
+				if v_duree_pror_fin is not None :
+					self.add_error(
+						'zs_duree_pror_fin',
+						'Veuillez saisir une date de début d\'éligibilité.'
+					)
+
 			# Je gère la contrainte suivante : le montant de la subvention doit être inférieur ou égal à la différence
 			# du montant du dossier et de la somme des montants des subventions.
 			if v_mont_ht_part_fin is not None :
@@ -1327,14 +1349,8 @@ class GererFinancement(forms.Form) :
 
 			# Je vérifie que le financeur sélectionné ne participe pas déjà au montage financier.
 			if v_org_fin > -1 :
-
-				# J'initialise l'identifiant du financeur selon le cas traité (autofinancement ou non).
-				v_org_fin_rech = v_org_fin
-				if v_org_fin == 0 :
-					v_org_fin_rech = None
-
 				try :
-					TFinancement.objects.get(id_doss = obj_doss.id_doss, id_org_fin = v_org_fin_rech)
+					TFinancement.objects.get(id_doss = obj_doss.id_doss, id_org_fin = v_org_fin)
 					self.add_error(
 						'zl_org_fin',
 						'Le financeur participe déjà au montage financier.'
@@ -1367,6 +1383,12 @@ class GererPrestation(forms.Form) :
 
 	zs_int_prest = forms.CharField(
 		label = 'Intitulé de la prestation',
+		validators = [valid_cdc],
+		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
+	)
+
+	zs_ref_prest = forms.CharField(
+		label = 'Référence de la prestation',
 		validators = [valid_cdc],
 		widget = forms.TextInput(attrs = { 'class' : 'form-control', 'maxlength' : 255 })
 	)
@@ -1605,8 +1627,8 @@ class GererAvenant(forms.Form) :
 
 		# Je définis l'identifiant de la prestation.
 		if obj_prest is not None :
-			self.fields['za_prest'].initial = '{0} : {1}'.format(
-				obj_prest.id_org_prest.n_org, reecr_dt(obj_prest.dt_notif_prest)
+			self.fields['za_prest'].initial = '{0} - {1} - {2}'.format(
+				obj_prest.id_org_prest.n_org, reecr_dt(obj_prest.dt_notif_prest), obj_prest.int_prest
 			)
 
 			self.fields['za_id_prest'].initial = obj_prest.id_prest
@@ -1827,9 +1849,13 @@ class GererFacture(forms.Form) :
 		# J'alimente la liste déroulante des prestations du dossier.
 		les_prest = list(OPTION_INITIALE)
 		les_prest.extend([(
-			i.id_prest.id_prest, '{0} : {1}'.format(i.id_prest.id_org_prest.n_org, reecr_dt(i.id_prest.dt_notif_prest))
+			i.id_prest.id_prest, '{0} - {1} - {2}'.format(
+				i.id_prest.id_org_prest.n_org,
+				reecr_dt(i.id_prest.dt_notif_prest),
+				i.id_prest.int_prest
+			)
 		) for i in TPrestationsDossier.objects.filter(id_doss = k_doss).order_by(
-			'id_prest__id_org_prest__n_org', '-id_prest__dt_notif_prest'
+			'id_prest__id_org_prest__n_org', '-id_prest__dt_notif_prest', 'id_prest__int_prest'
 		)])
 		self.fields['zl_prest'].choices = les_prest
 
@@ -1842,7 +1868,7 @@ class GererFacture(forms.Form) :
 
 		''' Imports '''
 		from app.functions import float_to_int, nett_val, valid_zl
-		from app.models import TDossier
+		from app.models import TDossier, TFacture
 		from app.sql_views import VSuiviPrestationsDossier
 
 		# Je récupère certaines données du formulaire pré-valide.
@@ -1901,6 +1927,19 @@ class GererFacture(forms.Form) :
 								float_to_int(mont_ttc_rap)
 							)
 						)
+
+				if v_suivi_fact > -1 :
+
+					# Je récupère les factures soldées du couple prestation/dossier.
+					les_fact_sold = TFacture.objects.filter(
+						id_doss = obj_suivi_prest_doss.id_doss,
+						id_prest = obj_suivi_prest_doss.id_prest,
+						suivi_fact = 'Solde'
+					)
+
+					# Je renvoie une erreur si une facture soldée a déjà été générée.
+					if len(les_fact_sold) > 0 :
+						self.add_error('zl_suivi_fact', 'Vous ne pouvez plus créer de factures pour cette prestation.')
 
 		# Je vérifie l'extension du fichier scanné de la facture.
 		if v_obj_fact is not None :
@@ -2126,29 +2165,11 @@ class GererDemandeDeVersement(forms.Form) :
 
 			self.fields['za_num_doss'].initial = obj_doss.num_doss
 
-		# Je mets en forme le tableau des financeurs du dossier.
-		tab_org_fin = []
-		for i in TFinancement.objects.filter(id_doss = v_doss) :
-
-			# J'initialise la valeur et le texte de chaque élément de la future liste déroulante des financeurs du
-			# dossier.
-			v_id_org_fin = 0
-			v_n_org_fin = 'Autofinancement - {0}'.format(TDossier.objects.get(id_doss = v_doss).id_org_moa.n_org)
-			try :
-				v_id_org_fin = i.id_org_fin.id_org
-				v_n_org_fin = i.id_org_fin.n_org
-			except :
-				pass
-
-			# J'empile le tableau des financeurs du dossier.
-			tab_org_fin.append([v_id_org_fin, v_n_org_fin])
-
-		# Je trie le tableau des financeurs du dossier.
-		tab_org_fin = sorted(tab_org_fin, key = lambda tup : tup[1])
-
 		# J'alimente la liste déroulante des financeurs du dossier.
 		les_org_fin = list(OPTION_INITIALE)
-		les_org_fin.extend(tab_org_fin)
+		les_org_fin.extend([(i.id_org_fin.id_org, i.id_org_fin.n_org) for i in TFinancement.objects.filter(
+			id_doss = v_doss).order_by('id_org_fin__id_org_fin__n_org')
+		])
 		self.fields['zl_org_fin'].choices = les_org_fin
 
 		# J'alimente la liste déroulante des types de versements.
@@ -2161,7 +2182,7 @@ class GererDemandeDeVersement(forms.Form) :
 		''' Imports '''
 		from app.functions import float_to_int, nett_val, valid_zl
 		from app.models import TDossier
-		from app.sql_views import VFinancement
+		from app.sql_views import VDemandeVersement, VFinancement
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererDemandeDeVersement, self).clean()
@@ -2170,17 +2191,11 @@ class GererDemandeDeVersement(forms.Form) :
 		v_type_vers = cleaned_data.get('zl_type_vers')
 		v_mont_ht_ddv = cleaned_data.get('zs_mont_ht_ddv')
 		v_mont_ttc_ddv = cleaned_data.get('zs_mont_ttc_ddv')
-		v_mont_ht_verse_ddv = cleaned_data.get('zs_mont_ht_verse_ddv')
-		v_mont_ttc_verse_ddv = cleaned_data.get('zs_mont_ttc_verse_ddv')
 		v_obj_ddv = nett_val(cleaned_data.get('zu_chem_pj_ddv'))
 
 		# Je vérifie la valeur de chaque liste déroulante obligatoire du formulaire.
 		v_org_fin = valid_zl(self, 'zl_org_fin', v_org_fin)
 		v_type_vers = valid_zl(self, 'zl_type_vers', v_type_vers)
-
-		# J'initialise la valeur du financeur en cas d'autofinancement.
-		if v_org_fin == 0 :
-			v_org_fin = None
 
 		# Je vérifie l'existence d'un objet TDossier.
 		obj_doss = None
@@ -2218,25 +2233,14 @@ class GererDemandeDeVersement(forms.Form) :
 						)
 					)
 
-				# Je gère la contrainte suivante : le montant versé ne doit être supérieur au montant de la demande de
-				# versement.
-				if v_mont_ht_ddv is not None and v_mont_ht_verse_ddv is not None :
-					if float(v_mont_ht_verse_ddv) > float(v_mont_ht_ddv) :
-						self.add_error(
-							'zs_mont_ht_verse_ddv',
-							'Veuillez saisir un montant HT inférieur ou égal à {0} €.'.format(
-								float_to_int(v_mont_ht_ddv)
-							)
-						)
+				# Je récupère les demandes de versements soldées pour un financeur.
+				les_ddv_sold = VDemandeVersement.objects.filter(
+					id_doss = obj_fin.id_doss, id_org_fin = obj_fin.id_org_fin, id_type_vers__int_type_vers = 'Solde'
+				)
 
-				if v_mont_ttc_ddv is not None and v_mont_ttc_verse_ddv is not None :
-					if float(v_mont_ttc_verse_ddv) > float(v_mont_ttc_ddv) :
-						self.add_error(
-							'zs_mont_ttc_verse_ddv',
-							'Veuillez saisir un montant TTC inférieur ou égal à {0} €.'.format(
-								float_to_int(v_mont_ttc_ddv)
-							)
-						)
+				# Je renvoie une erreur si une demande de versement soldée a déjà été générée.
+				if len(les_ddv_sold) > 0 :
+					self.add_error('zl_type_vers', 'Vous ne pouvez plus créer de demandes de versements pour ce financeur.')
 
 			# Je vérifie l'extension du fichier scanné de la demande de versement.
 			if v_obj_ddv is not None :

@@ -400,7 +400,8 @@ $('form[name="form_ajouter_financement"]').submit(function(e)
 });
 
 /**
- * Ce script permet le calcul des montants HT et TTC de participation.
+ * Ce script permet le calcul des montants HT et TTC de participation, ainsi que l'ajout ou non de l'attribut 
+ * "readonly" sur certains champs.
  */
 $('input[name$="zs_mont_ht_elig_fin"], input[name$="zs_mont_ttc_elig_fin"], input[name$="zs_pourc_elig_fin"]').on(
 	'input', function()
@@ -429,20 +430,50 @@ $('input[name$="zs_mont_ht_elig_fin"], input[name$="zs_mont_ttc_elig_fin"], inpu
 		}
 
 		// Je récupère les montants éligibles ainsi que le pourcentage éligible.
-		var mont_ht_elig = $('input[name$="zs_mont_ht_elig_fin"]').val();
-		var mont_ttc_elig = $('input[name$="zs_mont_ttc_elig_fin"]').val();
-		var pourc_elig = $('input[name$="zs_pourc_elig_fin"]').val();
+		var mont_ht_elig_fin = $('input[name$="zs_mont_ht_elig_fin"]').val();
+		var mont_ttc_elig_fin = $('input[name$="zs_mont_ttc_elig_fin"]').val();
+		var pourc_elig_fin = $('input[name$="zs_pourc_elig_fin"]').val();
 
 		// Je calcule le montant éligible TTC afin de prévenir un bug si et seulement si le contrôlé altéré est celui
 		// appartenant au montant éligible HT.
 		if ($(this).attr('name').indexOf('zs_mont_ht_elig_fin') > -1)
 		{
-			mont_ttc_elig = (mont_ht_elig * POURC_TVA).toFixed(2);
+			mont_ttc_elig_fin = (mont_ht_elig_fin * POURC_TVA).toFixed(2);
 		}
 
 		// J'affiche les montants de participation.
-		$('input[name$="zs_mont_ht_part_fin"]').val(calc_mont(mont_ht_elig, pourc_elig));
-		$('input[name$="zs_mont_ttc_part_fin"]').val(calc_mont(mont_ttc_elig, pourc_elig));
+		$('input[name$="zs_mont_ht_part_fin"]').val(calc_mont(mont_ht_elig_fin, pourc_elig_fin));
+		$('input[name$="zs_mont_ttc_part_fin"]').val(calc_mont(mont_ttc_elig_fin, pourc_elig_fin));
+
+		// Je prépare les variables qui vont me permettre de savoir si je dois ajouter l'attribut "readonly" aux champs
+		// liés à la participation.
+		var tab_val = new Array(mont_ht_elig_fin, mont_ttc_elig_fin, pourc_elig_fin);
+		var readonly = true;
+
+		// Je vérifie s'il y a une erreur de saisie.
+		for (var i = 0; i < tab_val.length; i ++)
+		{
+			if (isNaN(tab_val[i]) == true)
+			{
+				readonly = false;
+			}
+
+			if (tab_val[i].length == 0)
+			{
+				readonly = false;
+			}
+		}
+
+		if (readonly == true)
+		{
+			$('input[name$="zs_mont_ht_part_fin"]').attr('readonly', true);
+			$('input[name$="zs_mont_ttc_part_fin"]').attr('readonly', true);
+		}
+		else
+		{
+			$('input[name$="zs_mont_ht_part_fin"]').removeAttr('readonly');
+			$('input[name$="zs_mont_ttc_part_fin"]').removeAttr('readonly');
+		}
 	}
 );
 
@@ -482,7 +513,7 @@ $('form[name="form_ajouter_arrete"]').submit(function(e)
  * Ce script permet d'afficher la demande de confirmation de suppression d'un arrêté.
  * e : Variable objet JavaScript
  */
-$('#ong_reglementations').find('.bt_supprimer_arrete').click(function(e)
+$('#bt_supprimer_arrete').click(function(e)
 {
 	aff_html_ds_fm(e, 'supprimer_arrete');
 });
@@ -831,7 +862,7 @@ $('select[id$="zl_type_vers"], select[id$="zl_org_fin"]').change(function(e)
 		// Je récupère l'intitulé du type de versement sélectionné.
 		var int_type_vers = $('#id_' + prefixe + 'zl_type_vers option:selected').text();
 
-		if (int_type_vers == 'Acompte')
+		if (int_type_vers == 'Acompte' || int_type_vers == 'Solde')
 		{
 			tab = true;
 		}
@@ -955,49 +986,6 @@ $(document).on('change', 'input[name="cbsm_fact"]', function()
 			aff_loader_ajax(false);
 		}
 	});
-});
-
-/**
- * Ce script permet la gestion d'affichage de certains champs du formulaire de gestion des financements.
- */
-$('#id_AjouterFinancement-zl_org_fin').change(function()
-{
-	// Je mets en place un indicateur me permettant de savoir si je pourrai afficher les champs supplémentaires.
-	var bloc = false;
-
-	// Je stocke la valeur du financeur sélectionné.
-	var v_org_fin = $(this).val();
-
-	if (isNaN(v_org_fin) == false)
-	{
-		if (v_org_fin > 0)
-		{
-			bloc = true;
-		}
-	}
-
-	if (bloc == true)
-	{
-		// J'affiche les champs supplémentaires.
-		$('#za_pas_autofinancement').show();
-
-		$('input[name$="zs_mont_ht_part_fin"]').attr('readonly', true);
-		$('input[name$="zs_mont_ttc_part_fin"]').attr('readonly', true);
-	}
-	else
-	{
-		// Je vide les champs supplémentaires.
-		$('input[name$="zs_num_arr_fin"]').val('');
-		$('input[name$="zs_mont_ht_elig_fin"]').val('');
-		$('input[name$="zs_mont_ttc_elig_fin"]').val('');
-		$('input[name$="zs_pourc_elig_fin"]').val('');
-		
-		// Je cache les champs supplémentaires.
-		$('#za_pas_autofinancement').hide();
-
-		$('input[name$="zs_mont_ht_part_fin"]').removeAttr('readonly');
-		$('input[name$="zs_mont_ttc_part_fin"]').removeAttr('readonly');
-	}
 });
 
 /**

@@ -520,11 +520,10 @@ class TTypeDeclaration(models.Model) :
     # Je définis les champs de la table.
     id_type_decl = models.AutoField(primary_key = True)
     int_type_decl = models.CharField(max_length = 255, verbose_name = 'Intitulé')
-    ordre_type_decl = models.IntegerField(null = True, blank = True)
 
     class Meta :
         db_table = 't_type_declaration'
-        ordering = ['ordre_type_decl']
+        ordering = ['int_type_decl']
         verbose_name = 'Type de déclaration'
         verbose_name_plural = 'Types de déclarations'
 
@@ -554,6 +553,7 @@ class TArretesDossier(models.Model) :
     id_type_av_arr = models.ForeignKey(TTypeAvancementArrete, models.DO_NOTHING, db_column = 'id_type_av_arr')
     id_type_decl = models.ForeignKey(TTypeDeclaration, models.DO_NOTHING, db_column = 'id_type_decl')
     chem_pj_arr = models.CharField(max_length = 255, null = True, blank = True)
+    comm_arr = models.CharField(max_length = 255, null = True, blank = True)
     dt_lim_encl_trav_arr = models.DateField(null = True, blank = True)
     dt_sign_arr = models.DateField(null = True, blank = True)
     num_arr = models.CharField(max_length = 255, null = True, blank = True)
@@ -621,6 +621,7 @@ class TPrestation(models.Model) :
     int_prest = models.CharField(max_length = 255)
     mont_ht_tot_prest = models.FloatField()
     mont_ttc_tot_prest = models.FloatField()
+    ref_prest = models.CharField(max_length = 255)
     id_nat_prest = models.ForeignKey(TNaturePrestation, models.DO_NOTHING, db_column = 'id_nat_prest')
     id_org_prest = models.ForeignKey(TPrestataire, models.DO_NOTHING, db_column = 'id_org_prest')
     doss = models.ManyToManyField(TDossier, through = 'TPrestationsDossier')
@@ -636,7 +637,6 @@ class TPrestationsDossier(models.Model) :
     mont_ht_prest = models.FloatField()
     mont_ttc_prest = models.FloatField()
     seq_ac = models.IntegerField(default = 1)
-    seq_solde = models.IntegerField(default = 1)
 
     class Meta :
         db_table = 't_prestations_dossier'
@@ -699,7 +699,7 @@ class TFinancement(models.Model) :
     dt_deb_elig_fin = models.DateField(null = True, blank = True)
     dt_lim_deb_oper_fin = models.DateField(null = True, blank = True)
     dt_lim_prem_ac_fin = models.DateField(null = True, blank = True)
-    duree_pror_fin = models.IntegerField(default = 0)
+    duree_pror_fin = models.IntegerField()
     duree_valid_fin = models.IntegerField()
     mont_ht_elig_fin = models.FloatField(null = True, blank = True)
     mont_ht_part_fin = models.FloatField()
@@ -709,7 +709,7 @@ class TFinancement(models.Model) :
     pourc_elig_fin = models.FloatField(null = True, blank = True)
     pourc_real_fin = models.FloatField(null = True, blank = True)
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
-    id_org_fin = models.ForeignKey(TFinanceur, models.DO_NOTHING, db_column = 'id_org_fin', null = True, blank = True)
+    id_org_fin = models.ForeignKey(TFinanceur, models.DO_NOTHING, db_column = 'id_org_fin')
     id_paiem_prem_ac = models.ForeignKey(
         TPaiementPremierAcompte, models.DO_NOTHING, db_column = 'id_paiem_prem_ac', null = True, blank = True
     )

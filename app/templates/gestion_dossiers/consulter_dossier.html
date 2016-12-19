@@ -105,7 +105,9 @@
 					<div class="col-md-3">
 						<a href="{% url 'modifier_dossier' le_doss.id_doss %}" class="bt-modifier icon-link">Modifier</a>
 						<br />
-						<span action="{% url 'consulter_dossier' le_doss.id_doss %}?action=supprimer-dossier" class="bt-supprimer icon-link" id="bt_supprimer_dossier">Supprimer le dossier</span>		
+						<!--
+						<span action="{% url 'consulter_dossier' le_doss.id_doss %}?action=supprimer-dossier" class="bt-supprimer icon-link" id="bt_supprimer_dossier">Supprimer le dossier</span>
+						-->
 					</div>
 				</div>
 			</div>
@@ -122,6 +124,8 @@
 									<tr>
 										<th>Organisme financier</th>
 										<th>Montant HT de participation (en €)</th>
+										<th>Pourcentage éligible</th>
+										<th>Pourcentage global</th>
 										<th>Date de début d'éligibilité</th>
 										<th>Date de fin d'éligibilité</th>
 										<th>Montant HT restant à demander (en €)</th>
@@ -133,16 +137,21 @@
 									<tr>
 										<td>{{ un_fin.n_org }}</td>
 										<td>{{ un_fin.mont_ht_tot_subv_fin }}</td>
+										<td>{{ un_fin.pourc_elig_fin }}</td>
+										<td>{{ un_fin.pourc_glob_fin }}</td>
 										<td>{{ un_fin.dt_deb_elig_fin }}</td>
 										<td>{{ un_fin.dt_fin_elig_fin }}</td>
 										<td>{{ un_fin.mont_ht_rad }}</td>
+										{% if un_fin.id_fin != None %}
 										<td><a href="#" class="bt-consulter pull-right"></a></td>
+										{% else %}
+										<td></td>
+										{% endif %}
 									</tr>
 									{% endfor %}
 								</tbody>
 							</table>
 						</div>
-						<p class="b c-attention text-center"><span class="u">Reste à financer (en HT) :</span> {{ mont_ht_raf }} € sur {{ mont_ht_doss }} € du dossier</p>
 					</div>
 				</div>
 			</div>
@@ -161,7 +170,7 @@
 										<th>Nombre d'avenants</th>
 										<th>Somme HT des avenants (en €)</th>
 										<th>Somme HT des factures émises (en €)</th>
-										<th>Montant HT disponible de la prestation (en €)</th>
+										<th>Reste à facturer HT (en €)</th>
 										<th></th>
 									</tr>
 								</thead>
@@ -185,7 +194,15 @@
 								</tbody>
 							</table>
 						</div>
-						<p class="b c-attention text-center"><span class="u">Reste à engager pour ce dossier (en HT) :</span> {{ mont_ht_rau }} €</p>
+						<div class="b c-attention text-center" style="font-size: 12px;">
+							Le montant HT du dossier est de {{ mont_ht_doss }} €.
+							<br />
+							La somme HT des prestations engagées pour ce dossier est de {{ mont_ht_prest_sum }} €.
+							<br />
+							La somme HT des avenants pour les prestations de ce dossier est de {{ mont_ht_aven_sum }} €.
+							<br />
+							Le reste à engager HT pour ce dossier est de {{ mont_ht_rau }} €.
+						</div>
 					</div>
 				</div>
 			</div>
@@ -200,9 +217,11 @@
 								<thead>
 									<tr>
 										<th>Prestation</th>
-										<th>Numéro de facture</th>
+										<th>N° de facture</th>
 										<th>Date de mandatement par le maître d'ouvrage</th>
 										<th>Montant HT (en €)</th>
+										<th>N° de mandat</th>
+										<th>N° de bordereau</th>
 										<th></th>
 									</tr>
 								</thead>
@@ -212,7 +231,9 @@
 											<td>{{ une_fact_doss.prest }}</td>
 											<td>{{ une_fact_doss.num_fact }}</td>
 											<td>{{ une_fact_doss.dt_mand_moa_fact }}</td>
-											<td>{{ une_fact_doss.mont_ht_fact }}</td>				
+											<td>{{ une_fact_doss.mont_ht_fact }}</td>
+											<td>{{ une_fact_doss.num_mandat }}</td>
+											<td>{{ une_fact_doss.num_bord }}</td>				
 											<td><a href="#" class="bt-consulter pull-right"></a></td>
 										</tr>
 									{% endfor %}
@@ -261,7 +282,36 @@
 			<div id="ong_reglementations" class="fade tab-pane">
 				<div class="row">
 					<div class="col-md-12">
-						{{ les_arr | safe }}
+						<div class="right">
+							<span data-toggle="modal" data-target="#fm_ajouter_arrete" class="bt-ajouter icon-link">Ajouter un arrêté</span>
+						</div>
+						<div style="overflow: auto;">
+							<table class="display table" id="tab_consulter_reglementations">
+								<thead>
+									<tr>
+										<th>Type de déclaration</th>
+										<th>Avancement</th>
+										<th>N° de l'arrêté</th>
+										<th>Date de signature</th>
+										<th>Date limite d'enclenchement des travaux</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for un_arr_doss in les_arr_doss %}
+									<tr>
+										<td>{{ un_arr_doss.int_type_decl }}</td>
+										<td>{{ un_arr_doss.int_type_av_arr }}</td>
+										<td>{{ un_arr_doss.num_arr }}</td>
+										<td>{{ un_arr_doss.dt_sign_arr }}</td>
+										<td>{{ un_arr_doss.dt_lim_encl_trav_arr }}</td>
+										<td><a href="{% url 'consulter_arrete' un_arr_doss.id_doss un_arr_doss.id_type_decl %}" class="bt-consulter pull-right" title="Consulter l'arrêté"></a></td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+						<br />
 						<form method="post" action="{% url 'modifier_dossier' le_doss.id_doss %}?action=modifier-reglementations" class="c-theme" name="form_modifier_dossier">
 							{% csrf_token %}
 							{{ f1.zs_comm_regl_doss }}

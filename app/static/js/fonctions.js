@@ -190,7 +190,7 @@ function ajout_err(p_controle)
 function alert_util(e)
 {
 	// J'affiche une alerte de redirection de page à l'utilisateur.
-	var msg_box = confirm('Es-tu sûr de vouloir quitter cette page ?');
+	var msg_box = confirm('Une opération est en cours. Es-tu sûr de vouloir quitter cette page ?');
 
 	// Je ne suis pas redirigé si l'utilisateur choisi l'option "Annuler".
 	if (msg_box == false)
