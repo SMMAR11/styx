@@ -178,6 +178,7 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TDossier
 		from app.models import TFinancement
 		from app.models import TMoa
+		from app.models import TPrestationsDossier
 		from app.sql_views import VSuiviDossier
 		from django.db.models import Max
 		from django.db.models import Sum
@@ -275,6 +276,17 @@ class GererDossier(forms.ModelForm) :
 					'mont_doss', 
 					'Veuillez saisir un montant supérieur ou égal à {0} €.'.format(obt_mont(t_mont_doss[2]))
 				)
+
+			# Je renvoie une erreur si je passe un dossier en projet alors que des éléments comptables ont déjà été
+			# saisis.
+			if v_av and v_av.int_av == 'En projet' :
+				mess = None
+				if len(TFinancement.objects.filter(id_doss = i)) > 0 :
+					mess = 'Un financement a déjà été déclaré pour ce dossier.' 
+				if len(TPrestationsDossier.objects.filter(id_doss = i)) > 0 :
+					mess = 'Une prestation a déjà été lancée pour ce dossier.'
+				if mess :
+					self.add_error('id_av', mess)
 
 	def save(self, commit = True) :
 

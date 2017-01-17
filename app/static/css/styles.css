@@ -399,6 +399,7 @@ form > fieldset.my-fieldset > div {
 .add-icon {
 	background-image: url('../pics/icons/add.png');
 	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
@@ -407,6 +408,7 @@ form > fieldset.my-fieldset > div {
 .add_aven-icon {
 	background-image: url('../pics/icons/add_aven.png');
 	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
@@ -415,6 +417,7 @@ form > fieldset.my-fieldset > div {
 .choose-icon {
 	background-image: url('../pics/icons/choose.png');
 	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
@@ -423,6 +426,7 @@ form > fieldset.my-fieldset > div {
 .chosen-icon {
 	background-image: url('../pics/icons/chosen.png');
 	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
@@ -431,6 +435,7 @@ form > fieldset.my-fieldset > div {
 .consult-icon {
 	background-image: url('../pics/icons/consult.png');
 	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
@@ -439,6 +444,7 @@ form > fieldset.my-fieldset > div {
 .delete-icon {
 	background-image: url('../pics/icons/delete.png');
 	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
@@ -447,6 +453,7 @@ form > fieldset.my-fieldset > div {
 .modify-icon {
 	background-image: url('../pics/icons/modify.png');
 	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
@@ -455,6 +462,7 @@ form > fieldset.my-fieldset > div {
 .pdf-icon {
 	background-image: url('../pics/icons/pdf.png');
 	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
@@ -463,6 +471,7 @@ form > fieldset.my-fieldset > div {
 .previous-icon {
 	background-image: url('../pics/icons/previous.png');
 	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 20px;
