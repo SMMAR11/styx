@@ -1,23 +1,22 @@
 #!/usr/bin/env python
 #-*- coding: utf-8
 
-''' Imports '''
+# Imports
 from app.forms.admin import *
-from app.functions import *
 from app.models import *
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import User
 
-# Je désactive l'option de base afin de pouvoir trier les options par ordre alphabétique.
+# Je désactive l'action de base.
 admin.site.disable_action('delete_selected')
 
 class ANatureDossier(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['int_nat_doss']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_nat_doss']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -28,31 +27,31 @@ class ANatureDossier(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les natures de dossiers.
+# Je peux désormais gérer les natures de dossiers.
 admin.site.register(TNatureDossier, ANatureDossier)
 
 class ATechnicien(admin.ModelAdmin) :
 
-	# J'initialise les actions supplémentaires.
-	def en_act(modeladmin, request, queryset) :
-		queryset.update(en_act = True)
-	en_act.short_description = 'Rendre les Techniciens sélectionnés actifs'
+	# Je déclare les actions supplémentaires.
+	def set_en_act_on(_madm, _r, _qs) :
+		_qs.update(en_act_techn = True)
+	set_en_act_on.short_description = 'Rendre les T_TECHNICIEN sélectionnés actifs'
 
-	def en_inact(modeladmin, request, queryset) :
-		queryset.update(en_act = False)
-	en_inact.short_description = 'Rendre les Techniciens sélectionnés inactifs'
+	def set_en_act_off(_madm, _r, _qs) :
+		_qs.update(en_act_techn = False)
+	set_en_act_off.short_description = 'Rendre les T_TECHNICIEN sélectionnés inactifs'
 
 	# Je mets en forme la première colonne du tableau.
-	def techn(self, p_obj) :
-		return '{0} {1}'.format(p_obj.n_techn, p_obj.pren_techn)
-	techn.allow_tags = True
-	techn.short_description = 'Nom complet'
+	def n_comp_techn(self, _o) :
+		return '{0} {1}'.format(_o.n_techn, _o.pren_techn)
+	n_comp_techn.allow_tags = True
+	n_comp_techn.short_description = 'Nom complet'
 
-	# Je paramètre les différentes options.
-	list_display = ('techn', 'en_act')
-	actions = [en_act, en_inact, admin.actions.delete_selected]
+	# J'initialise les paramètres.
+	actions = [set_en_act_on, set_en_act_off, admin.actions.delete_selected]
+	list_display = ('n_comp_techn', 'en_act_techn')
 	list_filter = (
-		('en_act', admin.BooleanFieldListFilter),
+		('en_act_techn', admin.BooleanFieldListFilter),
 	)
 
 	# Je mets en forme le formulaire.
@@ -61,19 +60,19 @@ class ATechnicien(admin.ModelAdmin) :
 			'fields' : (
 				('n_techn'),
 				('pren_techn'),
-				('en_act')
+				('en_act_techn')
 			)
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les techniciens.
+# Je peux désormais gérer les techniciens.
 admin.site.register(TTechnicien, ATechnicien)
 
 class AAvisCp(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['int_av_cp']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_av_cp']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -84,14 +83,14 @@ class AAvisCp(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les avis du comité de programmation.
+# Je peux désormais gérer les avis du comité de programmation.
 admin.site.register(TAvisCp, AAvisCp)
 
 class AAvancement(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['int_av']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_av']	
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -102,14 +101,14 @@ class AAvancement(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les états d'avancements.
+# Je peux désormais gérer les états d'avancements d'un dossier.
 admin.site.register(TAvancement, AAvancement)
 
 class ATypeProgramme(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['int_type_progr']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_type_progr']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -120,36 +119,54 @@ class ATypeProgramme(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les types de programmes.
+# Je peux désormais gérer les types de programmes.
 admin.site.register(TTypeProgramme, ATypeProgramme)
 
-class ATypeDossierInline(admin.TabularInline) :
+class ATypeGeom(admin.ModelAdmin) :
 
-	model = TTypeDossier.type_progr.through
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	list_display = ['int_type_geom']
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_type_geom'),
+			)
+		}),
+	)
+
+# Je peux désormais gérer les types de géométries.
+admin.site.register(TTypeGeom, ATypeGeom)
+
+class ATypeProgrammeInline(admin.TabularInline) :
+
 	extra = 0
+	model = TTypeDossier.type_progr.through
 	verbose_name = ''
 
-class ATypeDossierInline2(admin.TabularInline) :
+class ATypeGeomInline(admin.TabularInline) :
 
-	model = TTypeDossier.type_geom.through
 	extra = 0
+	model = TTypeDossier.type_geom.through
 	verbose_name = ''
 
 class ATypeDossier(admin.ModelAdmin) :
 
 	# Je mets en forme la dernière colonne du tableau.
-	def les_type_progr(self, p_obj) :
-		tab = []
-		for un_obj in p_obj.type_progr.all() :
-			tab.append(un_obj.int_type_progr)
-		return ', '.join(tab)
+	def les_type_progr(self, _o) :
+		arr = []
+		for tp in _o.type_progr.all() :
+			arr.append(tp.int_type_progr)
+		return ', '.join(arr)
 	les_type_progr.allow_tags = True
 	les_type_progr.short_description = 'Type(s) de programme(s)'
 
-	# Je paramètre les différentes options.
-	list_display = ['int_type_doss', 'les_type_progr']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
-	inlines = [ATypeDossierInline, ATypeDossierInline2]
+	inlines = [ATypeProgrammeInline, ATypeGeomInline]
+	list_display = ['int_type_doss', 'les_type_progr']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -160,28 +177,29 @@ class ATypeDossier(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les types de dossiers.
+# Je peux désormais gérer les types de dossiers.
 admin.site.register(TTypeDossier, ATypeDossier)
 
 class AProgramme(admin.ModelAdmin) :
 
-	# Je mets en forme la dernière colonne du tableau.
-	def int_type_progr(self, p_obj) :
-		return p_obj.id_type_progr.int_type_progr
-	int_type_progr.allow_tags = True
-	int_type_progr.short_description = 'Type de programme'
-
-	# Je paramètre les différentes options.
-	list_display = ['int_progr', 'int_type_progr']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_progr', 'id_type_progr']
 	list_filter = ['id_type_progr']
+
+	# Je déclare les champs en lecture seule lors d'une mise à jour.
+	def get_readonly_fields(self, _r, _o = None) :
+		if _o :
+			return self.readonly_fields + ('dim_progr',)
+		return self.readonly_fields
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
 		('Informations générales', {
 			'fields' : (
 				('int_progr'),
-				('id_type_progr')
+				('id_type_progr'),
+				('en_act_progr')
 			)
 		}),
 		('Options', {
@@ -192,27 +210,27 @@ class AProgramme(admin.ModelAdmin) :
 		})
 	)
 
-	# J'initialise les champs en lecture seule lors d'une modification.
-	def get_readonly_fields(self, request, obj = None) :
-		if obj :
-			return self.readonly_fields + ('dim_progr',)
-		return self.readonly_fields
-
-# J'ajoute la possibilité de gérer les programmes.
+# Je peux désormais gérer les programmes.
 admin.site.register(TProgramme, AProgramme)
 
 class AAxe(admin.ModelAdmin) :
 
 	# Je mets en forme la première colonne du tableau.
-	def axe(self, p_obj) :
-		return '{0} - {1}'.format(p_obj.num_axe, p_obj.int_axe)
+	def axe(self, _o) :
+		return '{0} - {1}'.format(_o.num_axe, _o.int_axe)
 	axe.allow_tags = True
 	axe.short_description = 'Axe'
 
-	# Je paramètre les différentes options.
-	list_display = ('axe', 'id_progr')
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ('axe', 'id_progr')
 	list_filter = ['id_progr']
+
+	# Je déclare les champs en lecture seule lors d'une mise à jour.
+	def get_readonly_fields(self, _r, _o = None) :
+		if _o :
+			return self.readonly_fields + ('num_axe', 'id_progr')
+		return self.readonly_fields
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -225,32 +243,32 @@ class AAxe(admin.ModelAdmin) :
 		}),
 	)
 
-	# J'initialise les champs en lecture seule lors d'une modification.
-	def get_readonly_fields(self, request, obj = None) :
-		if obj :
-			return self.readonly_fields + ('num_axe', 'id_progr')
-		return self.readonly_fields
-
-# J'ajoute la possibilité de gérer les axes.
+# Je peux désormais gérer les axes.
 admin.site.register(TAxe, AAxe)
 
 class ASousAxe(admin.ModelAdmin) :
 
 	# Je mets en forme les colonnes du tableau.
-	def ss_axe(self, p_obj) :
-		return '{0}.{1} - {2}'.format(p_obj.id_axe.num_axe, p_obj.num_ss_axe, p_obj.int_ss_axe)
+	def ss_axe(self, _o) :
+		return '{0}.{1} - {2}'.format(_o.id_axe.num_axe, _o.num_ss_axe, _o.int_ss_axe)
 	ss_axe.allow_tags = True
 	ss_axe.short_description = 'Sous-axe'
 
-	def int_progr(self, p_obj) :
-		return p_obj.id_axe.id_progr.int_progr
+	def int_progr(self, _o) :
+		return _o.id_axe.id_progr.int_progr
 	int_progr.allow_tags = True
 	int_progr.short_description = 'Programme'
 
-	# Je paramètre les différentes options.
-	list_display = ('ss_axe', 'int_progr')
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ('ss_axe', 'int_progr')
 	list_filter = ['id_axe__id_progr']
+
+	# Je déclare les champs en lecture seule lors d'une mise à jour.
+	def get_readonly_fields(self, _r, _o = None) :
+		if _o :
+			return self.readonly_fields + ('num_ss_axe',)
+		return self.readonly_fields
 
 	form = MSousAxe
 
@@ -258,7 +276,7 @@ class ASousAxe(admin.ModelAdmin) :
 	fieldsets = (
 		('Informations générales', {
 			'fields' : (
-				('les_axes'),
+				('zl_axe'),
 				('num_ss_axe'),
 				('int_ss_axe')
 			)
@@ -272,34 +290,32 @@ class ASousAxe(admin.ModelAdmin) :
 		})
 	)
 
-	# J'initialise les champs en lecture seule lors d'une modification.
-	def get_readonly_fields(self, request, obj = None) :
-		if obj :
-			return self.readonly_fields + ('num_ss_axe',)
-		return self.readonly_fields
-
-# J'ajoute la possibilité de gérer les sous-axes.
+# Je peux désormais gérer les sous-axes.
 admin.site.register(TSousAxe, ASousAxe)
 
 class AAction(admin.ModelAdmin) :
 
 	# Je mets en forme les colonnes du tableau.
-	def act(self, p_obj) :
-		return '{0}.{1}.{2} - {3}'.format(
-			p_obj.id_ss_axe.id_axe.num_axe, p_obj.id_ss_axe.num_ss_axe, index_alpha(p_obj.num_act), p_obj.int_act
-		)
+	def act(self, _o) :
+		return '{0}.{1}.{2} - {3}'.format(_o.id_ss_axe.id_axe.num_axe, _o.id_ss_axe.num_ss_axe, _o.num_act, _o.int_act)
 	act.allow_tags = True
 	act.short_description = 'Action'
 
-	def int_progr(self, p_obj) :
-		return p_obj.id_ss_axe.id_axe.id_progr.int_progr
+	def int_progr(self, _o) :
+		return _o.id_ss_axe.id_axe.id_progr.int_progr
 	int_progr.allow_tags = True
 	int_progr.short_description = 'Programme'
 
-	# Je paramètre les différentes options.
-	list_display = ('act', 'int_progr')
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ('act', 'int_progr')
 	list_filter = ['id_ss_axe__id_axe__id_progr']
+
+	# Je déclare les champs en lecture seule lors d'une mise à jour.
+	def get_readonly_fields(self, _r, _o = None) :
+		if _o :
+			return self.readonly_fields + ('num_act',)
+		return self.readonly_fields
 
 	form = MAction
 
@@ -307,7 +323,7 @@ class AAction(admin.ModelAdmin) :
 	fieldsets = (
 		('Informations générales', {
 			'fields' : (
-				('les_ss_axes'),
+				('zl_ss_axe'),
 				('num_act'),
 				('int_act')
 			)
@@ -321,97 +337,22 @@ class AAction(admin.ModelAdmin) :
 		})
 	)
 
-	# J'initialise les champs en lecture seule lors d'une modification.
-	def get_readonly_fields(self, request, obj = None) :
-		if obj :
-			return self.readonly_fields + ('num_act',)
-		return self.readonly_fields
-
-# J'ajoute la possibilité de gérer les actions.
+# Je peux désormais gérer les actions.
 admin.site.register(TAction, AAction)
-
-class AUtilisateur(UserAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['username', 'last_name', 'first_name', 'email', 'is_staff', 'last_login']
-	actions = [admin.actions.delete_selected]
-	search_fields = ('username',)
-	list_filter = (
-		('is_staff', admin.BooleanFieldListFilter),
-		('is_superuser', admin.BooleanFieldListFilter),
-		('is_active', admin.BooleanFieldListFilter)
-	)
-
-	# Je détermine le formulaire utilisé pour l'ajout ou la mise à jour d'un objet TUtilisateur.
-	form = MUtilisateurUpdate
-	add_form = MUtilisateurCreate
-
-	# Je mets en forme le formulaire de modification.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('last_name'),
-				('first_name'),
-				('email'),
-				('les_org'),
-				('tel_util'),
-				('port_util')
-			)
-		}),
-		('Identifiants', {
-			'fields' : (
-				('username'),
-				('password')
-			)
-		}),
-		('Permissions', {
-			'fields' : (
-				('is_active'),
-				('is_staff'),
-				('is_superuser')
-			)
-		}),
-	)
-
-	# Je mets en forme le formulaire d'ajout.
-	add_fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('last_name'),
-				('first_name'),
-				('email'),
-				('les_org')
-			)
-		}),
-		('Identifiants', {
-			'fields' : (
-				('username'),
-				('password1'),
-				('password2')
-			)
-		})
-	)
-
-# J'ajoute la possibilité de gérer les utilisateurs.
-admin.site.register(TUtilisateur, AUtilisateur)
-
-# Je retire les fonctionnalités du mode d'administration de base.
-admin.site.unregister(User)
-admin.site.unregister(Group)
 
 class AMoaInline(admin.TabularInline) :
 
-	model = TMoa.moa.through
-	fk_name = 'id_org_moa_fil'
 	extra = 0
+	fk_name = 'id_org_moa_fil'
+	model = TMoa.moa.through
 	verbose_name = ''
 
 class AMoa(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['n_org']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
 	inlines = [AMoaInline]
+	list_display = ['n_org']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -437,24 +378,99 @@ class AMoa(admin.ModelAdmin) :
 		('Options', {
 			'fields' : (
 				('dim_org_moa'),
-				('en_act')
+				('en_act_org_moa')
 			)
 		}),
 		('Autres', {
 			'fields' : (
 				('comm_org'),
+				('logo_org_moa')
 			)
 		})
 	)
 
-# J'ajoute la possibilité de gérer les maîtres d'ouvrages.
+# Je peux désormais gérer les maîtres d'ouvrages.
 admin.site.register(TMoa, AMoa)
+
+class ADroitInline(admin.TabularInline) :
+
+	extra = 0
+	model = TUtilisateur.moa.through
+	verbose_name = ''
+
+class AUtilisateur(UserAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	inlines = [ADroitInline]
+	list_display = ['username', 'last_name', 'first_name', 'email', 'is_staff', 'last_login']
+	list_filter = (
+		('is_staff', admin.BooleanFieldListFilter),
+		('is_superuser', admin.BooleanFieldListFilter),
+		('is_active', admin.BooleanFieldListFilter)
+	)
+	search_fields = ('username',)
+
+	form = MUtilisateurUpdate
+	add_form = MUtilisateurCreate
+
+	# Je mets en forme les formulaires.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('last_name'),
+				('first_name'),
+				('email'),
+				('zl_org'),
+				('tel_util'),
+				('port_util')
+			)
+		}),
+		('Identifiants', {
+			'fields' : (
+				('username'),
+				('password')
+			)
+		}),
+		('Permissions', {
+			'fields' : (
+				('is_active'),
+				('is_staff'),
+				('is_superuser')
+			)
+		}),
+	)
+
+	add_fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('last_name'),
+				('first_name'),
+				('email'),
+				('zl_org')
+			)
+		}),
+		('Identifiants', {
+			'fields' : (
+				('username'),
+				('zs_pwd1'),
+				('zs_pwd2')
+			)
+		})
+	)
+
+# Je peux désormais gérer les utilisateurs.
+admin.site.register(TUtilisateur, AUtilisateur)
+
+# Je retire les fonctionnalités de base.
+admin.site.unregister(User)
+admin.site.unregister(Group)
 
 class ASage(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['n_sage']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['n_sage']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -465,86 +481,14 @@ class ASage(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les SAGE.
+# Je peux désormais gérer les SAGE.
 admin.site.register(TSage, ASage)
-
-class ARiviere(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['n_riv']
-	actions = [admin.actions.delete_selected]
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('n_riv'),
-			)
-		}),
-	)
-
-# J'ajoute la possibilité de gérer les rivières.
-admin.site.register(TRiviere, ARiviere)
-
-class AUnite(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['int_unit']
-	actions = [admin.actions.delete_selected]
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('int_unit'),
-			)
-		}),
-	)
-
-# J'ajoute la possibilité de gérer les unités de mesures.
-admin.site.register(TUnite, AUnite)
-
-class AInstanceConcertation(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['int_inst_conc']
-	actions = [admin.actions.delete_selected]
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('int_inst_conc'),
-			)
-		}),
-	)
-
-# J'ajoute la possibilité de gérer les instances de concertation.
-admin.site.register(TInstanceConcertation, AInstanceConcertation)
-
-class APeriodePriseVuePhoto(admin.ModelAdmin) :
-
-	# Je paramètre les différentes options.
-	list_display = ['int_ppv_ph']
-	actions = [admin.actions.delete_selected]
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('int_ppv_ph'),
-			)
-		}),
-	)
-
-# J'ajoute la possibilité de gérer les périodes de prise de vue d'une photo.
-admin.site.register(TPeriodePriseVuePhoto, APeriodePriseVuePhoto)
 
 class ATypeDeclaration(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['int_type_decl']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_type_decl']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -555,14 +499,14 @@ class ATypeDeclaration(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les types de déclarations.
+# Je peux désormais gérer les types de déclarations.
 admin.site.register(TTypeDeclaration, ATypeDeclaration)
 
 class ATypeAvancementArrete(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['int_type_av_arr']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_type_av_arr', 'ordre_type_av_arr']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -571,17 +515,98 @@ class ATypeAvancementArrete(admin.ModelAdmin) :
 				('int_type_av_arr'),
 			)
 		}),
+		('Options', {
+			'fields' : (
+				('ordre_type_av_arr'),
+			)
+		})
 	)
 
-# J'ajoute la possibilité de gérer les types d'avancements d'un arrêté.
+# Je peux désormais gérer les types d'avancements d'un arrêté.
 admin.site.register(TTypeAvancementArrete, ATypeAvancementArrete)
+
+class ARiviere(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	list_display = ['n_riv']
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('n_riv'),
+			)
+		}),
+	)
+
+# Je peux désormais gérer les rivières.
+admin.site.register(TRiviere, ARiviere)
+
+class AUnite(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	list_display = ['int_unit']
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_unit'),
+			)
+		}),
+	)
+
+# Je peux désormais gérer les unités de mesures.
+admin.site.register(TUnite, AUnite)
+
+class AInstanceConcertation(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	list_display = ['int_inst_conc']
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_inst_conc'),
+			)
+		}),
+	)
+
+# Je peux désormais gérer les instances de concertation.
+admin.site.register(TInstanceConcertation, AInstanceConcertation)
+
+class APeriodePriseVuePhoto(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	list_display = ['int_ppv_ph', 'ordre_ppv_ph']
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_ppv_ph'),
+			)
+		}),
+		('Options', {
+			'fields' : (
+				('ordre_ppv_ph'),
+			)
+		})
+	)
+
+# Je peux désormais gérer les périodes de prise de vue d'une photo.
+admin.site.register(TPeriodePriseVuePhoto, APeriodePriseVuePhoto)
 
 class APrestataire(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['n_org', 'siret_org_prest']
-	ordering = ['n_org']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['n_org']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -613,15 +638,14 @@ class APrestataire(admin.ModelAdmin) :
 		})
 	)
 
-# J'ajoute la possibilité de gérer les prestataires.
+# Je peux désormais gérer les prestataires.
 admin.site.register(TPrestataire, APrestataire)
 
 class AFinanceur(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['n_org']
-	ordering = ['n_org']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['n_org']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -651,14 +675,14 @@ class AFinanceur(admin.ModelAdmin) :
 		})
 	)
 
-# J'ajoute la possibilité de gérer les financeurs.
+# Je peux désormais gérer les financeurs.
 admin.site.register(TFinanceur, AFinanceur)
 
 class ANaturePrestation(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['int_nat_prest']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_nat_prest']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -669,14 +693,14 @@ class ANaturePrestation(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les natures de prestations.
+# Je peux désormais gérer les natures de prestations.
 admin.site.register(TNaturePrestation, ANaturePrestation)
 
 class APaiementPremierAcompte(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['int_paiem_prem_ac']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_paiem_prem_ac']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -687,14 +711,14 @@ class APaiementPremierAcompte(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les types de paiements du premier acompte.
+# Je peux désormais gérer les types de paiements du premier acompte.
 admin.site.register(TPaiementPremierAcompte, APaiementPremierAcompte)
 
 class ATypeVersement(admin.ModelAdmin) :
 
-	# Je paramètre les différentes options.
-	list_display = ['int_type_vers']
+	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
+	list_display = ['int_type_vers']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -705,5 +729,5 @@ class ATypeVersement(admin.ModelAdmin) :
 		}),
 	)
 
-# J'ajoute la possibilité de gérer les types de paiements du premier acompte.
+# Je peux désormais gérer les types de versements.
 admin.site.register(TTypeVersement, ATypeVersement)

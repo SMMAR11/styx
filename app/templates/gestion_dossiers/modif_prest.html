@@ -1,0 +1,30 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_prest' pd.pk %}" class="icon-link previous-icon">Revenir à la prestation</a>
+	</div>
+</div>
+<form action="?action=valider-etape-1" enctype="multipart/form-data" method="post" name="f_modif_prest_etape_1" onsubmit="soum_f(event)">
+	{% csrf_token %}
+	<fieldset class="my-fieldset">
+		<legend>Modifier une prestation (étape 1)</legend>
+		<div>
+			{{ f_modif_prest.zsac_siret_org_prest }}
+			{{ f_modif_prest.int_prest }}
+			{{ f_modif_prest.ref_prest }}
+			{{ f_modif_prest.mont_prest }}
+			<div class="row">
+				<div class="col-sm-6">{{ f_modif_prest.dt_notif_prest }}</div>
+				<div class="col-sm-6">{{ f_modif_prest.dt_fin_prest }}</div>
+			</div>
+			{{ f_modif_prest.id_nat_prest }}
+			<!--{{ f_modif_prest.chem_pj_prest }}-->
+			{{ f_modif_prest.comm_prest }}
+			<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		</div>
+	</fieldset>
+</form>
+{% endblock content %}

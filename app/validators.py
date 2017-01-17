@@ -1,178 +1,171 @@
 #!/usr/bin/env python
 #-*- coding: utf-8
 
+# Imports
 from app.constants import *
 
 '''
-Ce validateur renvoie une erreur si la valeur saisie contient un point-virgule.
-p_valeur : Valeur saisie
+Ce validateur renvoie une erreur si la valeur saisie contient un caractère indésirable.
+_v : Valeur saisie
 '''
-def valid_cdc(p_valeur) :
+def val_cdc(_v) :
 
-	''' Imports '''
+	# Imports
 	from django.core.exceptions import ValidationError
 
-	tab_caract = [';', '"']
-	for i in range(0, len(p_valeur)) :
-		if any(s in p_valeur[i] for s in tab_caract) :
-			raise ValidationError('Le caractère « {0} » est interdit.'.format(p_valeur[i]))
+	t = [';', '"']
+	for i in range(0, len(_v)) :
+		if any(s in _v[i] for s in t) :
+			raise ValidationError('Le caractère « {0} » est interdit.'.format(_v[i]))
 
 '''
 Ce validateur renvoie une erreur si le format du courriel saisi est incorrect.
 p_valeur : Courriel saisi
 '''
-def valid_courr(p_valeur) :
+def val_courr(_v) :
 
-	''' Imports '''
+	# Imports
 	from django.core.exceptions import ValidationError
 	import re
 
-	if not re.match(r'[^@]+@[^@]+\.[^@]+', p_valeur) :
+	if not re.match(r'[^@]+@[^@]+\.[^@]+', _v) :
 		raise ValidationError('Veuillez saisir un courriel valide.')
 
 '''
-Ce validateur renvoie une erreur si la valeur saisie n'est pas un nombre entier.
-p_valeur : Valeur saisie
+Ce validateur renvoie une erreur si l'extension d'un fichier uploadé n'est pas au format image autorisé.
+_v : Fichier uploadé
 '''
-def valid_int(p_valeur) :
+def val_fich_img(_v) :
 
-	''' Imports '''
+	# Imports
+	from app.functions import verif_ext_fich
 	from django.core.exceptions import ValidationError
 
-	try :
+	if verif_ext_fich(_v, ('.bmp', '.gif', '.jpg', '.jpeg', '.png')) == True :
+		raise ValidationError('Veuillez choisir un fichier au format BMP, GIF, JPG, JPEG ou PNG.')
 
-		# Je tente de convertir la valeur saisie en un nombre entier.
-		p_valeur = int(p_valeur)
-
-		# Je vérifie que l'entier est supérieur à 0.
-		if p_valeur < 0 :
-			raise ValidationError(MESSAGES['invalid'])
-
-	except ValueError :
-		raise ValidationError(MESSAGES['invalid'])
+	return _v
 
 '''
-Ce validateur renvoie une erreur si le montant saisi est incorrect.
-p_valeur : Montant saisi
-p_etre_nul : Puis-je renseigner un montant nul ?
+Ce validateur renvoie une erreur si l'extension d'un fichier uploadé n'est pas au format PDF.
+_v : Fichier uploadé
 '''
-def valid_mont(p_etre_nul = True) :
+def val_fich_pdf(_v) :
 
-	def func(p_valeur) :
-
-		''' Imports '''
-		from django.core.exceptions import ValidationError
-
-		# J'initialise la valeur de la variable de sortie de la fonction.
-		erreur = False
-
-		# Je prépare le processus de validation.
-		str_valeur = str(p_valeur)
-		tab_caract = []
-
-		# J'empile le tableau des caractères non-numériques.
-		for i in range(0, len(str_valeur)) :
-			try :
-				int(str_valeur[i])
-			except :
-				tab_caract.append(str_valeur[i])
-
-		# J'initialise un indicateur booléen permettant de jauger la validité du montant saisi.
-		valide = False
-
-		# Je traite le cas où le montant saisi est un nombre décimal.
-		if len(tab_caract) == 1 and '.' in tab_caract :
-
-			valide = True
-
-			# J'initialise deux variables, me permettant de calculer le nombre de décimales du montant saisi.
-			sep_trouve = False
-			cpt_dec = 0
-
-			for i in range(0, len(str_valeur)) :
-
-				# J'incrémente le compteur de décimales dès le moment où le séparateur a été trouvé.
-				if sep_trouve == True :
-					cpt_dec += 1
-
-				# J'informe que le séparateur a été trouvé.
-				if tab_caract[0] in str_valeur[i] :
-					sep_trouve = True
-
-				# Je renvoie une erreur si le montant saisi comporte plus de deux décimales.
-				if cpt_dec > 2 :
-					raise ValidationError(MESSAGES['invalid'])
-
-			# Je renvoie une erreur si le séparateur est le dernier caractère.
-			if tab_caract[0] in str_valeur[len(str_valeur) - 1] :
-				raise ValidationError(MESSAGES['invalid'])
-
-		# Je traite le cas où le montant saisi est un nombre entier.
-		if len(tab_caract) == 0 and str_valeur != '' :
-			valide = True
-
-		if str_valeur == '0' :
-			if p_etre_nul == False :
-				raise ValidationError(MESSAGES['invalid'])
-
-		if valide == False :
-			raise ValidationError(MESSAGES['invalid'])
-
-	return func
-
-'''
-Ce validateur renvoie une erreur si la valeur saisie ne correspond pas à un nombre.
-p_valeur : Valeur saisie
-'''
-def valid_nb(p_valeur) :
-
-	''' Imports '''
+	# Imports
+	from app.functions import verif_ext_fich
 	from django.core.exceptions import ValidationError
 
-	try :
-		float(p_valeur)
-	except ValueError :
-		raise ValidationError(MESSAGES['invalid'])
+	if verif_ext_fich(_v, '.pdf') == True :
+		raise ValidationError('Veuillez choisir un fichier au format PDF.')
+
+	return _v
 
 '''
-Ce validateur renvoie une erreur si le pourcentage renseigné est incorrect.
-p_valeur : Pourcentage saisi
+Ce validateur renvoie une erreur si la valeur saisie n'est pas conforme.
+_v : Valeur saisie
 '''
-def valid_pourc(p_valeur) :
+def val_mont_nul(_v) :
 
-	''' Imports '''
+	# Imports
+	from app.functions import verif_mont
 	from django.core.exceptions import ValidationError
 
-	try :
+	if verif_mont(_v, True) == True :
+		raise ValidationError(ERROR_MESSAGES['invalid'])
 
-		# Je tente de convertir la valeur saisie en nombre décimal.
-		p_valeur = float(p_valeur)
-
-		# Je vérifie que le pourcentage est compris entre 0 et 100 %.
-		if p_valeur < 0 or p_valeur > 100 :
-			raise ValidationError(MESSAGES['invalid'])
-			
-	except ValueError :
-		raise ValidationError(MESSAGES['invalid'])
+	return _v
 
 '''
-Ce validateur renvoie une erreur si le numéro SIRET saisi est incorrect.
-p_valeur : Numéro SIRET saisi
+Ce validateur renvoie une erreur si la valeur saisie n'est pas conforme.
+_v : Valeur saisie
 '''
-def valid_siret(p_valeur) :
+def val_mont_pos(_v) :
 
-	''' Imports '''
+	# Imports
+	from app.functions import verif_mont
 	from django.core.exceptions import ValidationError
 
-	if len(p_valeur) != 14 :
+	if verif_mont(_v, False) == True :
+		raise ValidationError(ERROR_MESSAGES['invalid'])
 
-		# Je renvoie une erreur si le numéro SIRET saisi ne comporte pas quatorze caractères.
-		raise ValidationError(MESSAGES['invalid'])
-		
+	return _v
+
+'''
+Ce validateur renvoie une erreur si la valeur saisie n'est pas comprise dans l'intervalle ]0; 100].
+_v : Valeur saisie
+'''
+def val_pourc(_v) :
+
+	# Imports
+	from django.core.exceptions import ValidationError
+	
+	if not 0 < _v <= 100 :
+		raise ValidationError(ERROR_MESSAGES['invalid'])
+
+'''
+Ce validateur renvoie une erreur si la valeur saisie ne ressemble pas à un numéro SIRET.
+_v : Valeur saisie
+'''
+def val_siret(_v) :
+
+	# Imports
+	from django.core.exceptions import ValidationError
+
+	err = False
+
+	if len(_v) != 14 :
+		err = True
 	else :
-
-		# Je renvoie une erreur si le numéro SIRET saisi comporte un ou plusieurs caractères non-numériques.
 		try :
-			int(p_valeur)
-		except ValueError :
-			raise ValidationError(MESSAGES['invalid'])
+			int(_v)
+		except :
+			err = True
+
+	if err == True :
+		raise ValidationError(ERROR_MESSAGES['invalid'])
+
+	return _v
+
+'''
+Ce validateur renvoie une erreur si la taille d'un fichier uploadé n'est pas conforme.
+_t : Taille du fichier uploadé en Mo
+_v : Fichier uploadé
+'''
+def val_taille_fich(_t) :
+	def f(_v) :
+
+		# Imports
+		from django.core.exceptions import ValidationError
+		import os
+
+		if _v.size > _t * 1048576 :
+			raise ValidationError(
+				'Veuillez choisir un fichier dont la taille est inférieure ou égale à {0} Mo.'.format(_t)
+			)
+			
+	return f
+
+'''
+Ce validateur renvoie une erreur si la valeur saisie ne ressemble pas à un numéro de téléphone.
+_v : Valeur saisie
+'''
+def val_tel(_v) :
+
+	# Imports
+	from django.core.exceptions import ValidationError
+
+	err = False
+
+	if len(_v) != 10 :
+		err = True
+	else :
+		try :
+			int(_v)
+		except :
+			err = True
+
+	if err == True :
+		raise ValidationError(ERROR_MESSAGES['invalid'])
+
+	return _v

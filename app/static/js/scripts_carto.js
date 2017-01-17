@@ -1,89 +1,93 @@
 var map;
 var editableLayers = new L.FeatureGroup();
-
 var options = {
-    position: 'topleft',
-    draw: {
-        polyline: {
-            shapeOptions: {
-                color: '#cf532d',
-                weight: 5
+    position : 'topleft',
+    draw : {
+        polyline : {
+            shapeOptions : {
+                color : '#CF532D',
+                weight : 5
             }
         },
-        polygon: {
-            shapeOptions: {
-                color: '#2d58cf'
+        polygon : {
+            shapeOptions : {
+                color : '#2D58CF'
             }
         },
-        circle: false, // Turns off this drawing tool
-        rectangle: false//, // Turns off this drawing tool
+        circle : false,
+        rectangle : false
     },
-    edit: {
-        featureGroup: editableLayers, //REQUIRED!!
-        remove: true
+    edit : {
+        featureGroup : editableLayers,
+        remove : true
     }
 };
 
-var drawControl = new L.Control.Draw(options);
+if (forbidden == false) {
+    var drawControl = new L.Control.Draw(options);
+}
 
-window.addEventListener("map:init", function (e) {
+window.addEventListener('map:init', function(e) {
     var detail = e.detail;
     map = detail.map;
 
-    // Ajout du layer des géométries
+    // J'ajoute la couche des géométries.
     map.addLayer(editableLayers);
 
-    // Ajout de la barre d'édition
-    map.addControl(drawControl);
+    if (forbidden == false) {
+        // J'ajoute la barre d'édition.
+        map.addControl(drawControl);
+    }
 
-    // A l'évènement created du dessin, on sauve dans le layer
-    map.on(L.Draw.Event.CREATED, function (e) {
-        var type = e.layerType,
-            layer = e.layer;
-
+    // Je sauve la géométrie dans le layer lors de l'événement "CREATED" du dessin.
+    map.on(L.Draw.Event.CREATED, function(e) {
+        var type = e.layerType;
+        var layer = e.layer;
         editableLayers.addLayer(layer);
     });
 
-    // Bouton de sauvegarde de la géométrie
-    L.easyButton('fa-floppy-o', function (){
-        // Extraction GeoJson du featureGroup
-        var data = editableLayers.toGeoJSON().features;
-        var p = [];
-        for(var i=0; i<data.length ; i++){
-            feat = data[i];
-            p.push(JSON.stringify(feat.geometry));
-        }
+    if (forbidden == false) {
+        L.easyButton('fa-floppy-o', function() {
 
-        // Maj du champ caché avec le GeoJson
-        $('#edit-geom').val(p.join(';'));
+            // J'extrais le GeoJSON du FeatureGroup.
+            var data = editableLayers.toGeoJSON().features;
+            var p = [];
+            for(var i = 0; i < data.length ; i += 1) {
+                var feat = data[i];
+                p.push(JSON.stringify(feat.geometry));
+            }
 
-        // Submit du form
-        $('#form_modifier_dossier_geom').submit();
+            // Je mets à jour le champ caché via le GeoJSON.
+            $('#edit-geom').val(p.join(';'));
 
-    }).addTo(map);
+            // Je soumets le formulaire.
+            $('form[name="f_modif_carto"]').submit();
 
-    // Les boutons des geoms non autorisées sont masqués
-    if( $('#typegeom_doss').val().indexOf('marker') == -1)
-        $(".leaflet-draw-draw-marker").css("display","none");
-
-    if( $('#typegeom_doss').val().indexOf('polyline') == -1)
-        $(".leaflet-draw-draw-polyline").css("display","none");
-
-    if( $('#typegeom_doss').val().indexOf('polygon') == -1)
-        $(".leaflet-draw-draw-polygon").css("display","none");
-
+        }).addTo(map);
+    }
 }, false);
 
-
 $(function() {
-    $("body").on("shown.bs.tab", "#tabCarto", function() {
-        // Calcul dynamique de la hauteur de la carto
-        var _heightHeader = $('#header').height() + $('#navbar').height() + 130 + $('#menu_dossier').height();
-        var _heightFooter = $('#pre-footer').height() + $('#footer').height();
-        $("#styxmap").height($(window).height() - _heightHeader - _heightFooter);
+    $('body').on('shown.bs.tab', 'a[href="#ong_carto"]', function() {
+
+        // Je calcule la hauteur de la carte.
+        $('#styx-map').css('min-height', 'calc(100vh - 382px)');
         map.invalidateSize();
-        
-        // centrage de la carte sur les objets
-        map.fitBounds(editableLayers.getBounds());    
+
+        // Je centre la carte sur les objets géométriques.
+        if (editableLayers.getBounds().getNorthEast() != undefined) {
+            map.fitBounds(editableLayers.getBounds());
+        }
+
+        // Je cache les boutons non-autorisés.
+        if($('#types_geom_doss').val().indexOf('marker') == -1) {
+            $('.leaflet-draw-draw-marker').remove();
+        }
+        if($('#types_geom_doss').val().indexOf('polyline') == -1) {
+            $('.leaflet-draw-draw-polyline').remove();
+        }
+        if($('#types_geom_doss').val().indexOf('polygon') == -1) {
+            $('.leaflet-draw-draw-polygon').remove();
+        }
     });
 });

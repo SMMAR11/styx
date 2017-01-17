@@ -1,0 +1,49 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_fin' f.pk %}" class="icon-link previous-icon">Revenir au financement</a>
+	</div>
+</div>
+<form action="" enctype="multipart/form-data" method="post" name="f_modif_fin" onsubmit="soum_f(event)">
+	{% csrf_token %}
+	<fieldset class="my-fieldset">
+		<legend>Modifier un financement</legend>
+		<div>
+			{{ f_modif_fin.za_num_doss }}
+			{{ f_modif_fin.id_org_fin }}
+			{{ f_modif_fin.num_arr_fin }}
+			<div class="row">
+				<div class="col-sm-6">{{ f_modif_fin.mont_elig_fin }}</div>
+				<div class="col-sm-6">{{ f_modif_fin.pourc_elig_fin }}</div>
+			</div>
+			{{ f_modif_fin.mont_part_fin }}
+			{{ f_modif_fin.dt_deb_elig_fin }}
+			<div class="row">
+				<div class="col-sm-6">{{ f_modif_fin.duree_valid_fin }}</div>
+				<div class="col-sm-6">{{ f_modif_fin.duree_pror_fin }}</div>
+			</div>
+			{{ f_modif_fin.dt_lim_deb_oper_fin }}
+			<div class="row">
+				<div class="col-sm-6">{{ f_modif_fin.dt_lim_prem_ac_fin }}</div>
+				<div class="col-sm-6">{{ f_modif_fin.id_paiem_prem_ac }}</div>
+			</div>
+			{{ f_modif_fin.pourc_real_fin }}
+			{{ f_modif_fin.chem_pj_fin }}
+			{{ f_modif_fin.comm_fin }}
+			<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		</div>
+		<div class="form-remark">
+			**
+			<br/>
+			Le montant de l'assiette éligible de la subvention et le pourcentage de l'assiette éligible peuvent ne pas être renseignés, mais si l'un d'entre eux est renseigné, l'autre doit l'être également.
+			<br/>
+			La date de début d'éligibilité doit être renseignée si et seulement si la durée de validité de l'aide et/ou la durée de prorogation est/sont supérieure(s) à 0 mois.
+			<br/>
+			Il est impossible de renseigner un pourcentage de réalisation des travaux tant que le premier acompte n'est pas payé en fonction de celui-ci.
+		</div>
+	</fieldset>
+</form>
+{% endblock content %}

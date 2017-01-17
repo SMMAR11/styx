@@ -1,0 +1,58 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<form action="" enctype="multipart/form-data" method="post" name="f_cr_doss" onsubmit="soum_f(event)">
+	{% csrf_token %}
+	<fieldset class="my-fieldset">
+		<legend>Créer un dossier</legend>
+		<div>
+			<div class="row">
+				<div class="col-md-6">{{ f_cr_doss.rb_doss_ass }}</div>
+				<div class="col-md-6">{{ f_cr_doss.za_doss_ass }}</div>
+			</div>
+			{{ f_cr_doss.zl_org_moa }}
+			<div class="row">
+				<div class="col-md-6">{{ f_cr_doss.id_progr }}</div>
+				<div class="col-md-2">{{ f_cr_doss.zl_axe }}</div>
+				<div class="col-md-2">{{ f_cr_doss.zl_ss_axe }}</div>
+				<div class="col-md-2">{{ f_cr_doss.zl_act }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_cr_doss.id_nat_doss }}</div>
+				<div class="col-md-6">{{ f_cr_doss.zl_type_doss }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_cr_doss.terr_doss }}</div>
+				<div class="col-md-6">{{ f_cr_doss.ld_doss }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_cr_doss.zl_techn }}</div>
+				<div class="col-md-6">{{ f_cr_doss.id_sage }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_cr_doss.mont_doss }}</div>
+				<div class="col-md-6">{{ f_cr_doss.rb_est_ttc_doss }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_cr_doss.id_av }}</div>
+				<div class="col-md-6">{{ f_cr_doss.dt_delib_moa_doss }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_cr_doss.id_av_cp }}</div>
+				<div class="col-md-6">{{ f_cr_doss.dt_av_cp_doss }}</div>
+			</div>
+			{{ f_cr_doss.chem_pj_doss }}
+			{{ f_cr_doss.comm_doss }}
+			<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		</div>
+		<div class="form-remark">
+			**
+			<br/>
+			La date de délibération au maître d'ouvrage doit être renseignée lorsque l'état d'avancement choisi est différent de « En projet ».
+			<br/>
+			La date de l'avis du comité de programmation doit être renseignée lorsque l'avis du comité de programmation est différent de « En attente » ou de « Sans objet ».
+		</div>
+	</fieldset>
+</form>
+{% endblock content %}

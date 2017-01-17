@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 #-*- coding: utf-8
 
-CHAMP_REQUIS = '<span class="required"></span>'
-NOTE_CHAMP = '<span class="memo"></span>'
-ERREUR_ADMIN = 'Veuillez contacter votre administrateur.'
-MESSAGES = {
+DEFAULT_OPTION = ('', '---------')
+
+ERROR_MESSAGES = {
+	'blank' : 'Veuillez renseigner ce champ.',
+	'contradiction' : 'Veuillez ne pas envoyer un fichier et cocher la case d\'effacement en même temps.',
+	'null' : 'Veuillez renseigner ce champ.',
 	'required' : 'Veuillez renseigner ce champ.',
 	'invalid' : 'Veuillez saisir une valeur valide.',
 	'invalid_choice' : 'Veuillez saisir une valeur valide.',
 }
-OPTION_INITIALE = [('D', '--- Choisir ---')]
+
+REMARK = '<span class="field-remark"></span>'
+
+REQUIRED = '<span class="required-field"></span>'

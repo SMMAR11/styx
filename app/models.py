@@ -1,210 +1,224 @@
 #!/usr/bin/env python
 #-*- coding: utf-8
 
-''' Imports '''
-from app.functions import *
+# Imports
 from django.contrib.auth.models import User
 from django.contrib.gis.db import models as gismodels
 from django.db import models
 import uuid
 
-# Je créé les tables de la base de données.
 class TFamille(models.Model) :
 
-    # Je définis les champs de la table.
     id_fam = models.AutoField(primary_key = True)
 
     class Meta :
-        db_table = 't_famille'
+    	db_table = 't_famille'
+    	verbose_name = 'T_FAMILLE'
+    	verbose_name_plural = 'T_FAMILLE'
+
+    def __str__(self) :
+    	return self.id_fam
 
 class TNatureDossier(models.Model) :
 
-    # Je définis les champs de la table.
     id_nat_doss = models.AutoField(primary_key = True)
     int_nat_doss = models.CharField(max_length = 255, verbose_name = 'Intitulé')
 
     class Meta :
         db_table = 't_nature_dossier'
         ordering = ['int_nat_doss']
-        verbose_name = 'Nature de dossier'
-        verbose_name_plural = 'Natures de dossiers'
+        verbose_name = 'T_NATURE_DOSSIER'
+        verbose_name_plural = 'T_NATURE_DOSSIER'
 
     def __str__(self) :
         return self.int_nat_doss
 
 class TTechnicien(models.Model) :
 
-    # Je définis les champs de la table.
     id_techn = models.AutoField(primary_key = True)
-    en_act = models.BooleanField(default = True, verbose_name = 'En activité')
+    en_act_techn = models.BooleanField(default = True, verbose_name = 'En activité')
     n_techn = models.CharField(max_length = 255, verbose_name = 'Nom de famille')
     pren_techn = models.CharField(max_length = 255, verbose_name = 'Prénom')
 
     class Meta :
         db_table = 't_technicien'
         ordering = ['n_techn', 'pren_techn']
-        verbose_name = 'Technicien'
+        verbose_name = 'T_TECHNICIEN'
+        verbose_name_plural = 'T_TECHNICIEN'
 
     def __str__(self) :
         return '{0} {1}'.format(self.n_techn, self.pren_techn)
 
 class TAvisCp(models.Model) :
 
-    # Je définis les champs de la table.
     id_av_cp = models.AutoField(primary_key = True)
     int_av_cp = models.CharField(max_length = 255, verbose_name = 'Intitulé')
 
     class Meta :
         db_table = 't_avis_cp'
         ordering = ['int_av_cp']
-        verbose_name = 'Avis du comité de programmation'
-        verbose_name_plural = 'Avis du comité de programmation'
+        verbose_name = 'T_AVIS_CP'
+        verbose_name_plural = 'T_AVIS_CP'
 
     def __str__(self) :
         return self.int_av_cp
 
 class TAvancement(models.Model) :
 
-    # Je définis les champs de la table.
     id_av = models.AutoField(primary_key = True)
     int_av = models.CharField(max_length = 255, verbose_name = 'Intitulé')
 
     class Meta :
         db_table = 't_avancement'
         ordering = ['int_av']
-        verbose_name = 'Avancement d\'un dossier'
-        verbose_name_plural = 'Avancements d\'un dossier'
+        verbose_name = 'T_AVANCEMENT'
+        verbose_name_plural = 'T_AVANCEMENT'
 
     def __str__(self) :
         return self.int_av
 
 class TTypeProgramme(models.Model) :
 
-    # Je définis les champs de la table.
     id_type_progr = models.AutoField(primary_key = True)
     int_type_progr = models.CharField(max_length = 255, verbose_name = 'Intitulé')
 
     class Meta :
         db_table = 't_type_programme'
         ordering = ['int_type_progr']
-        verbose_name = 'Type de programme'
-        verbose_name_plural = 'Types de programmes'
+        verbose_name = 'T_TYPE_PROGRAMME'
+        verbose_name_plural = 'T_TYPE_PROGRAMME'
 
     def __str__(self) :
         return self.int_type_progr
 
+class TTypeGeom(models.Model) :
+
+    id_type_geom = models.AutoField(primary_key = True)
+    int_type_geom = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+
+    class Meta :
+        db_table = 't_type_geom'
+        ordering = ['int_type_geom']
+        verbose_name = 'T_TYPE_GEOM'
+        verbose_name_plural = 'T_TYPE_GEOM'
+
+    def __str__(self) :
+        return self.int_type_geom
+
 class TTypeDossier(models.Model) :
 
-    # Je définis les champs de la table.
     id_type_doss = models.AutoField(primary_key = True)
     int_type_doss = models.CharField(max_length = 255, verbose_name = 'Intitulé')
     type_progr = models.ManyToManyField(TTypeProgramme, through = 'TTypesProgrammesTypeDossier')
-    type_geom = models.ManyToManyField('TTypeGeom', through = 'TTypesGeomTypeDossier')
+    type_geom = models.ManyToManyField(TTypeGeom, through = 'TTypesGeomTypeDossier')
 
     class Meta :
         db_table = 't_type_dossier'
         ordering = ['int_type_doss']
-        verbose_name = 'Type de dossier'
-        verbose_name_plural = 'Types de dossiers'
+        verbose_name = 'T_TYPE_DOSSIER'
+        verbose_name_plural = 'T_TYPE_DOSSIER'
 
     def __str__(self) :
         return self.int_type_doss
 
+class TTypesGeomTypeDossier(models.Model) :
+
+    id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING)
+    id_type_geom = models.ForeignKey(TTypeGeom, models.DO_NOTHING, verbose_name = 'Type de géométrie')
+
+    class Meta :
+        db_table = 't_types_geom_type_dossier'
+        verbose_name = 'T_TYPES_GEOM_TYPE_DOSSIER'
+        verbose_name_plural = 'T_TYPES_GEOM_TYPE_DOSSIER'
+
+    def __str__(self) :
+        return '{0} -> {1}'.format(self.id_type_doss, self.id_type_geom)
+
 class TTypesProgrammesTypeDossier(models.Model) :
 
-    # Je définis les champs de la table.
-    id_type_progr = models.ForeignKey(
-        TTypeProgramme, models.DO_NOTHING, db_column = 'id_type_progr', verbose_name = 'Type de programme'
-    )
-    id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING, db_column = 'id_type_doss')
+    id_type_progr = models.ForeignKey(TTypeProgramme, models.DO_NOTHING, verbose_name = 'Type de programme')
+    id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING)
 
     class Meta :
         db_table = 't_types_programmes_type_dossier'
-        verbose_name = 'Type de programme par type de dossier'
-        verbose_name_plural = 'Types de programmes par type de dossier'
+        verbose_name = 'T_TYPES_PROGRAMMES_TYPE_DOSSIER'
+        verbose_name_plural = 'T_TYPES_PROGRAMMES_TYPE_DOSSIER'
 
     def __str__(self) :
-        return '{0} - {1}'.format(self.id_type_progr.int_type_progr, self.id_type_doss.int_type_doss)
+        return '{0} -> {1}'.format(self.id_type_progr, self.id_type_doss)
 
 class TProgramme(models.Model) :
 
-    # Je définis les champs de la table.
     id_progr = models.AutoField(primary_key = True)
     dim_progr = models.CharField(max_length = 255, unique = True, verbose_name = 'Diminutif')
+    en_act_progr = models.BooleanField(default = True, verbose_name = 'En activité')
     int_progr = models.CharField(max_length = 255, verbose_name = 'Intitulé')
     seq_progr = models.IntegerField(default = 1, verbose_name = 'Séquentiel')
-    id_type_progr = models.ForeignKey(
-        TTypeProgramme, models.DO_NOTHING, db_column = 'id_type_progr', verbose_name = 'Type de programme'
-    )
+    id_type_progr = models.ForeignKey(TTypeProgramme, models.DO_NOTHING, verbose_name = 'Type de programme')
 
     class Meta :
         db_table = 't_programme'
         ordering = ['int_progr']
-        verbose_name = 'Programme'
+        verbose_name = 'T_PROGRAMME'
+        verbose_name_plural = 'T_PROGRAMME'
 
     def __str__(self) :
         return self.int_progr
 
 class TAxe(models.Model) :
 
-    # Je définis les champs de la table.
-    id_axe = models.CharField(primary_key = True, max_length = 255)
+    id_axe = models.CharField(max_length = 255, primary_key = True)
     int_axe = models.CharField(max_length = 255, verbose_name = 'Intitulé')
     num_axe = models.IntegerField(verbose_name = 'Numéro')
-    id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, db_column = 'id_progr', verbose_name = 'Programme')
+    id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, verbose_name = 'Programme')
 
     class Meta :
         db_table = 't_axe'
         ordering = ['id_progr__int_progr', 'num_axe']
         unique_together = (('num_axe', 'id_progr'))
-        verbose_name = 'Axe'
+        verbose_name = 'T_AXE'
+        verbose_name_plural = 'T_AXE'
 
     def __str__(self) :
         return '{0} - {1}'.format(self.num_axe, self.int_axe)
 
     def save(self, *args, **kwargs) :
-        self.id_axe = '{0}_{1}'.format(self.id_progr.id_progr, self.num_axe)
+        self.pk = '{0}_{1}'.format(self.id_progr.id_progr, self.num_axe)
         super(TAxe, self).save(*args, **kwargs)
 
 class TSousAxe(models.Model) :
 
-    # Je définis les champs de la table.
-    id_ss_axe = models.CharField(primary_key = True, max_length = 255)
-    ech_ss_axe = models.IntegerField(null = True, blank = True, verbose_name = 'Échéancier')
+    id_ss_axe = models.CharField(max_length = 255, primary_key = True)
+    ech_ss_axe = models.IntegerField(blank = True, null = True, verbose_name = 'Échéancier')
     int_ss_axe = models.CharField(max_length = 255, verbose_name = 'Intitulé')
-    mont_ht_ss_axe = models.FloatField(null = True, blank = True, verbose_name = 'Montant HT')
-    mont_ttc_ss_axe = models.FloatField(null = True, blank = True, verbose_name = 'Montant TTC')
+    mont_ht_ss_axe = models.FloatField(blank = True, null = True, verbose_name = 'Montant HT')
+    mont_ttc_ss_axe = models.FloatField(blank = True, null = True, verbose_name = 'Montant TTC')
     num_ss_axe = models.IntegerField(verbose_name = 'Numéro')
-    id_axe = models.ForeignKey(TAxe, models.DO_NOTHING, db_column = 'id_axe', verbose_name = 'Axe')
+    id_axe = models.ForeignKey(TAxe, models.DO_NOTHING, verbose_name = 'Axe')
 
     class Meta :
         db_table = 't_sous_axe'
         ordering = ['id_axe__id_progr__int_progr', 'id_axe__num_axe', 'num_ss_axe']
         unique_together = (('num_ss_axe', 'id_axe'))
-        verbose_name = 'Sous-axe'
+        verbose_name = 'T_SOUS_AXE'
+        verbose_name_plural = 'T_SOUS_AXE'
 
     def __str__(self) :
-        return '{0}.{1} - {2}'.format(
-            self.id_axe.num_axe, self.num_ss_axe, self.int_ss_axe
-        )
+        return '{0}.{1} - {2}'.format(self.id_axe.num_axe, self.num_ss_axe, self.int_ss_axe)
 
     def save(self, *args, **kwargs) :
-        self.id_ss_axe = '{0}_{1}'.format(self.id_axe.id_axe, self.num_ss_axe)
+        self.pk = '{0}_{1}'.format(self.id_axe.id_axe, self.num_ss_axe)
         super(TSousAxe, self).save(*args, **kwargs)
 
 class TAction(models.Model) :
 
-    # Je définis les champs de la table.
     id_act = models.CharField(primary_key = True, max_length = 255)
-    ech_act = models.IntegerField(null = True, blank = True, verbose_name = 'Échéancier')
-    int_act = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Intitulé')
-    mont_ht_act = models.FloatField(null = True, blank = True, verbose_name = 'Montant HT')
-    mont_ttc_act = models.FloatField(null = True, blank = True, verbose_name = 'Montant TTC')
-    num_act = models.IntegerField(
-        verbose_name = 'Numéro',
-        help_text = 'Veuillez renseigner l\'index de la lettre de l\'alphabet. Exemple : 1 -> a, 2 -> b, 3 -> c...'
-    )
-    id_ss_axe = models.ForeignKey(TSousAxe, models.DO_NOTHING, db_column = 'id_ss_axe', verbose_name = 'Sous-axe')
+    ech_act = models.IntegerField(blank = True, null = True, verbose_name = 'Échéancier')
+    int_act = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Intitulé')
+    mont_ht_act = models.FloatField(blank = True, null = True, verbose_name = 'Montant HT')
+    mont_ttc_act = models.FloatField(blank = True, null = True, verbose_name = 'Montant TTC')
+    num_act = models.CharField(max_length = 1, verbose_name = 'Numéro')
+    id_ss_axe = models.ForeignKey(TSousAxe, models.DO_NOTHING, verbose_name = 'Sous-axe')
 
     class Meta :
         db_table = 't_action'
@@ -212,592 +226,837 @@ class TAction(models.Model) :
             'id_ss_axe__id_axe__id_progr__int_progr', 'id_ss_axe__id_axe__num_axe', 'id_ss_axe__num_ss_axe', 'num_act'
         ]
         unique_together = (('num_act', 'id_ss_axe'))
-        verbose_name = 'Action'
+        verbose_name = 'T_ACTION'
+        verbose_name_plural = 'T_ACTION'
 
     def __str__(self) :
         return '{0}.{1}.{2} - {3}'.format(
             self.id_ss_axe.id_axe.num_axe, 
             self.id_ss_axe.num_ss_axe, 
-            index_alpha(self.num_act), 
+            self.num_act, 
             self.int_act
         )
 
     def save(self, *args, **kwargs) :
-        self.id_act = '{0}_{1}'.format(self.id_ss_axe.id_ss_axe, self.num_act)
+        self.pk = '{0}_{1}'.format(self.id_ss_axe.id_ss_axe, self.num_act)
         super(TAction, self).save(*args, **kwargs)
 
 class TCommune(models.Model):
 
-    # Je définis les champs de la table.
     num_comm = models.CharField(max_length = 5, primary_key = True)
     n_comm = models.CharField(max_length = 255)
 
     class Meta :
         db_table = 't_commune'
         ordering = ['n_comm', 'num_comm']
+        verbose_name = 'T_COMMUNE'
+        verbose_name_plural = 'T_COMMUNE'
 
     def __str__(self) :
         return '{0} ({1})'.format(self.n_comm, self.num_comm)
 
 class TCp(models.Model) :
 
-    # Je définis les champs de la table.
     cp_comm = models.CharField(primary_key = True, max_length = 5)
     code_comm = models.ManyToManyField(TCommune, through = 'TCommunesCp')
 
     class Meta :
         db_table = 't_cp'
         ordering = ['cp_comm']
+        verbose_name = 'T_CP'
+        verbose_name_plural = 'T_CP'
+
+    def __str__(self) :
+        return self.cp_comm
 
 class TCommunesCp(models.Model) :
 
-    # Je définis les champs de la table.
-    cp_comm = models.ForeignKey(TCp, models.DO_NOTHING, db_column = 'cp_comm')
-    num_comm = models.ForeignKey(TCommune, models.DO_NOTHING, db_column = 'num_comm')
+    cp_comm = models.ForeignKey(TCp, models.DO_NOTHING)
+    num_comm = models.ForeignKey(TCommune, models.DO_NOTHING)
 
     class Meta :
-        db_table = 't_communes_cp'
+        db_table = 't_communes_cp' 
+        verbose_name = 'T_COMMUNES_CP'
+        verbose_name_plural = 'T_COMMUNES_CP'
+
+    def __str__(self) :
+    	return str(self.pk)
 
 class TOrganisme(models.Model):
 
-    # Je définis les champs de la table.
     id_org = models.AutoField(primary_key = True)
-    adr_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Adresse (ligne 1)')
-    bp_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Boîte postale')
-    cedex_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Cedex')
-    comm_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Commentaire')
-    compl_adr_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Adresse (ligne 2)')
-    cont_org = models.CharField(max_length = 255, null = True, blank = True)
-    courr_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Adresse électronique')
-    cp_org = models.CharField(max_length = 5, null = True, blank = True, verbose_name = 'Code postal')
+    adr_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Adresse (ligne 1)')
+    bp_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Boîte postale')
+    cedex_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Cedex')
+    comm_org = models.TextField(blank = True, null = True, verbose_name = 'Commentaire')
+    compl_adr_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Adresse (ligne 2)')
+    cont_org = models.CharField(blank = True, max_length = 255, null = True)
+    courr_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Adresse électronique')
+    cp_org = models.CharField(blank = True, max_length = 5, null = True, verbose_name = 'Code postal')
     n_org = models.CharField(max_length = 255, verbose_name = 'Nom')
     port_org = models.CharField(
-        max_length = 10, null = True, blank = True, verbose_name = 'Numéro de téléphone portable'
+        blank = True, max_length = 10, null = True, verbose_name = 'Numéro de téléphone portable'
     )
-    site_web_org = models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Site web')
-    tel_org = models.CharField(max_length = 10, null = True, blank = True, verbose_name = 'Numéro de téléphone')
-    num_comm = models.ForeignKey(
-        TCommune, models.DO_NOTHING, db_column = 'num_comm', null = True, blank = True, verbose_name = 'Commune'
-    )
+    site_web_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Site web')
+    tel_org = models.CharField(blank = True, max_length = 10, null = True, verbose_name = 'Numéro de téléphone')
+    num_comm = models.ForeignKey(TCommune, models.DO_NOTHING, blank = True, null = True, verbose_name = 'Commune')
 
     class Meta :
         db_table = 't_organisme'
         ordering = ['n_org']
-        verbose_name = 'Organisme'
+        verbose_name = 'T_ORGANISME'
+        verbose_name_plural = 'T_ORGANISME'
 
     def __str__(self) :
         return self.n_org
 
+class TMoa(TOrganisme) :
+
+    # Imports
+    from app.validators import val_fich_img
+
+    def set_logo_org_moa_upload_to(_i, _fn) :
+        new_fn = '{0}.{1}'.format(_i.dim_org_moa.lower(), _fn.split('.')[-1])
+        return 'logos/{0}'.format(new_fn)
+
+    id_org_moa = models.OneToOneField(TOrganisme)
+    dim_org_moa = models.CharField(max_length = 255, unique = True, verbose_name = 'Diminutif')
+    en_act_org_moa = models.BooleanField(default = True, verbose_name = 'En activité')
+    logo_org_moa = models.FileField(
+        blank = True, 
+        null = True, 
+        upload_to = set_logo_org_moa_upload_to, 
+        validators = [val_fich_img], 
+        verbose_name = 'Logo'
+    )
+    moa = models.ManyToManyField('self', related_name = '+', symmetrical = False, through = 'TRegroupementsMoa')
+
+    class Meta :
+        db_table = 't_moa'
+        verbose_name = 'T_MOA'
+        verbose_name_plural = 'T_MOA'
+
+class TRegroupementsMoa(models.Model) :
+
+    id_org_moa_anc = models.ForeignKey(
+        TMoa, models.DO_NOTHING, related_name = 'id_org_moa_anc', verbose_name = 'Maître d\'ouvrage ancien'
+    )
+    id_org_moa_fil = models.ForeignKey(TMoa, models.DO_NOTHING, related_name = 'id_org_moa_fil')
+
+    class Meta :
+        db_table = 't_regroupements_moa'
+        verbose_name = 'T_REGROUPEMENTS_MOA'
+        verbose_name_plural = 'T_REGROUPEMENTS_MOA'
+
+    def __str__(self) :
+        return '{0} ({1})'.format(self.id_org_moa_anc, self.id_org_moa_fil)
+
 class TUtilisateur(User) :
 
-    # Je définis les champs de la table.
-    id_util = models.OneToOneField(User, db_column = 'id_util')
+    # Imports
+    from app.validators import val_tel
+
+    id_util = models.OneToOneField(User)
     port_util = models.CharField(
-        max_length = 10, null = True, blank = True, verbose_name = 'Numéro de téléphone portable'
+        blank = True, 
+        max_length = 10, 
+        null = True, 
+        validators = [val_tel], 
+        verbose_name = 'Numéro de téléphone portable'
     )
-    tel_util = models.CharField(max_length = 10, null = True, blank = True, verbose_name = 'Numéro de téléphone')
-    id_org = models.ForeignKey(TOrganisme, models.DO_NOTHING, db_column = 'id_org', verbose_name = 'Organisme')
+    tel_util = models.CharField(
+        blank = True, max_length = 10, null = True, validators = [val_tel], verbose_name = 'Numéro de téléphone'
+    )
+    id_org = models.ForeignKey(TOrganisme, models.DO_NOTHING, verbose_name = 'Organisme')
+    moa = models.ManyToManyField(TMoa, related_name = '+', through = 'TDroit')
 
     class Meta :
         db_table = 't_utilisateur'
         ordering = ['username']
-        verbose_name = 'Utilisateur'
+        verbose_name = 'T_UTILISATEUR'
+        verbose_name_plural = 'T_UTILISATEUR'
 
     def __str__(self) :
         return self.id_util.username
 
-class TMoa(TOrganisme) :
-
-    # Je définis les champs de la table.
-    id_org_moa = models.OneToOneField(TOrganisme, db_column = 'id_org_moa')
-    dim_org_moa = models.CharField(max_length = 255, unique = True, verbose_name = 'Diminutif')
-    en_act = models.BooleanField(default = True, verbose_name = 'En activité')
-    moa = models.ManyToManyField('self', through = 'TRegroupementsMoa', related_name = '+', symmetrical = False)
-
-    class Meta :
-        db_table = 't_moa'
-        verbose_name = 'Maître d\'ouvrage'
-        verbose_name_plural = 'Maîtres d\'ouvrages'
-
-class TRegroupementsMoa(models.Model) :
-
-    # Je définis les champs de la table.
-    id_org_moa_anc = models.ForeignKey(
-        TMoa,
-        models.DO_NOTHING,
-        db_column = 'id_org_moa_anc',
-        related_name = 'id_org_moa_anc',
-        verbose_name = 'Maître d\'ouvrage ancien'
-    )
-    id_org_moa_fil = models.ForeignKey(
-        TMoa,
-        models.DO_NOTHING,
-        db_column = 'id_org_moa_fil',
-        related_name = 'id_org_moa_fil',
-        verbose_name = 'Maître d\'ouvrage par filiation'
-    )
-
-    class Meta :
-        db_table = 't_regroupements_moa'
-        verbose_name = 'Regroupement de maîtres d\'ouvrages'
-        verbose_name_plural = 'Regroupements de maîtres d\'ouvrages'
-
-    def __str__(self) :
-        return '{0} - {1}'.format(self.id_org_moa_fil.id_org_moa.n_org, self.id_org_moa_anc.id_org_moa.n_org)
-
 class TDroit(models.Model) :
 
-    # Je définis les champs de la table.
-    id_org_moa = models.ForeignKey(TMoa, models.DO_NOTHING, db_column = 'id_org_moa')
-    id_type_progr = models.ForeignKey(TTypeProgramme, models.DO_NOTHING, db_column = 'id_type_progr')
-    id_util = models.ForeignKey(TUtilisateur, models.DO_NOTHING, db_column = 'id_util')
-    en_ecr = models.BooleanField()
-    en_lect = models.BooleanField()
+    id_org_moa = models.ForeignKey(
+        TMoa, models.DO_NOTHING, blank = True, null = True, verbose_name = 'Maître d\'ouvrage'
+    )
+    id_type_progr = models.ForeignKey(
+        TTypeProgramme, models.DO_NOTHING, blank = True, null = True, verbose_name = 'Type de programme'
+    )
+    id_util = models.ForeignKey(TUtilisateur, models.DO_NOTHING, verbose_name = 'Utilisateur')
+    en_ecr = models.BooleanField(verbose_name = 'Écriture')
+    en_lect = models.BooleanField(verbose_name = 'Lecture')
 
     class Meta :
         db_table = 't_droit'
-        verbose_name = 'Droit'
-        unique_together = (('id_org_moa', 'id_type_progr', 'id_util'))
+        unique_together = ('id_org_moa', 'id_type_progr', 'id_util')
+        verbose_name = 'T_DROIT'
+        verbose_name_plural = 'T_DROIT'
+
+    def __str__(self) :
+        return ''
 
 class TSage(models.Model) :
 
-    # Je définis les champs de la table.
     id_sage = models.AutoField(primary_key = True)
     n_sage = models.CharField(max_length = 255, verbose_name = 'Nom')
 
     class Meta :
         db_table = 't_sage'
         ordering = ['n_sage']
-        verbose_name = 'SAGE'
-        verbose_name_plural = 'SAGE'
+        verbose_name = 'T_SAGE'
+        verbose_name_plural = 'T_SAGE'
 
     def __str__(self) :
         return self.n_sage
 
-class TDossier(models.Model) :
-
-    # Je définis les champs de la table.
-    id_doss = models.AutoField(primary_key = True)
-    chem_dds_doss = models.CharField(max_length = 255, null = True, blank = True)
-    comm_doss = models.CharField(max_length = 255, null = True, blank = True)
-    comm_regl_doss = models.CharField(max_length = 255, null = True, blank = True)
-    dt_av_cp_doss = models.DateField(null = True, blank = True)
-    dt_delib_moa_doss = models.DateField(null = True, blank = True)
-    dt_int_doss = models.DateField()
-    ld_doss = models.CharField(max_length = 255)
-    mont_ht_doss = models.FloatField()
-    mont_ttc_doss = models.FloatField()
-    terr_doss = models.CharField(max_length = 255)
-    num_doss = models.CharField(max_length = 255, unique = True)
-    num_act = models.IntegerField(null = True, blank = True)
-    num_axe = models.IntegerField(null = True, blank = True)
-    num_ss_axe = models.IntegerField(null = True, blank = True)
-    id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, db_column = 'id_progr')
-    id_av = models.ForeignKey(TAvancement, models.DO_NOTHING, db_column = 'id_av')
-    id_av_cp = models.ForeignKey(TAvisCp, models.DO_NOTHING, db_column = 'id_av_cp')
-    id_doss_ass = models.ForeignKey('self', models.DO_NOTHING, db_column = 'id_doss_ass', null = True, blank = True)
-    id_fam = models.ForeignKey(TFamille, models.DO_NOTHING, db_column = 'id_fam')
-    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, db_column = 'id_nat_doss')
-    id_org_moa = models.ForeignKey(TMoa, models.DO_NOTHING, db_column = 'id_org_moa')
-    id_sage = models.ForeignKey(TSage, models.DO_NOTHING, db_column = 'id_sage', null = True, blank = True)
-    id_techn = models.ForeignKey(TTechnicien, models.DO_NOTHING, db_column = 'id_techn')
-    id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING, db_column = 'id_type_doss')
-
-    class Meta :
-        db_table = 't_dossier'
-        ordering = ['num_doss']
-        verbose_name = 'Dossier'
-
-    def __str__(self) :
-        return self.num_doss
-
-class TRiviere(models.Model) :
-
-    # Je définis les champs de la table.
-    id_riv = models.AutoField(primary_key = True)
-    n_riv = models.CharField(max_length = 255, verbose_name = 'Nom')
-
-    class Meta :
-        db_table = 't_riviere'
-        ordering = ['n_riv']
-        verbose_name = 'Rivière'
-
-    def __str__(self) :
-        return self.n_riv
-
-class TUnite(models.Model) :
-
-    # Je définis les champs de la table.
-    id_unit = models.AutoField(primary_key = True)
-    int_unit = models.CharField(max_length = 255, verbose_name = 'Intitulé')
-
-    class Meta :
-        db_table = 't_unite'
-        ordering = ['int_unit']
-        verbose_name = 'Unité'
-
-    def __str__(self) :
-        return self.int_unit
-
-class TInstanceConcertation(models.Model) :
-
-    # Je définis les champs de la table.
-    id_inst_conc = models.AutoField(primary_key = True)
-    int_inst_conc = models.CharField(max_length = 255, verbose_name = 'Intitulé')
-
-    class Meta :
-        db_table = 't_instance_concertation'
-        ordering = ['int_inst_conc']
-        verbose_name = 'Instance de concertation'
-        verbose_name_plural = 'Instances de concertation'
-
-    def __str__(self) :
-        return self.int_inst_conc
-
-class TPgre(TDossier) :
-
-    # Je définis les champs de la table.
-    id_pgre = models.OneToOneField(TDossier, db_column = 'id_pgre')
-    quant_objs_pgre = models.FloatField(null = True, blank = True)
-    quant_real_pgre = models.FloatField(null = True, blank = True)
-    id_inst_conc = models.ForeignKey(
-        TInstanceConcertation, models.DO_NOTHING, db_column = 'id_inst_conc', null = True, blank = True
-    )
-    id_unit = models.ForeignKey(TUnite, models.DO_NOTHING, db_column = 'id_unit', null = True, blank = True)
-    riv = models.ManyToManyField(TRiviere, through = 'TRivieresDossier')
-
-    class Meta :
-        db_table = 't_pgre'
-        verbose_name = 'Dossier PGRE'
-        verbose_name_plural = 'Dossiers PGRE'
-
-class TRivieresDossier(models.Model) :
-
-    # Je définis les champs de la table.
-    id_pgre = models.ForeignKey(TPgre, models.DO_NOTHING, db_column = 'id_pgre')
-    id_riv = models.ForeignKey(TRiviere, models.DO_NOTHING, db_column = 'id_riv')
-
-    class Meta :
-        db_table = 't_rivieres_dossier'
-
-class TPeriodePriseVuePhoto(models.Model) :
-
-    # Je définis les champs de la table.
-    id_ppv_ph = models.AutoField(primary_key = True)
-    int_ppv_ph = models.CharField(max_length = 255, verbose_name = 'Intitulé')
-    ordre_ppv_ph = models.IntegerField(null = True, blank = True)
-
-    class Meta :
-        db_table = 't_periode_prise_vue_photo'
-        ordering = ['ordre_ppv_ph']
-        verbose_name = 'Période de prise de vue'
-        verbose_name_plural = 'Périodes de prise de vue'
-
-    def __str__(self) :
-        return self.int_ppv_ph
-
-class TPhoto(models.Model) :
-
-    # Je définis les champs de la table.
-    id_ph = models.AutoField(primary_key = True)
-    chem_ph = models.CharField(max_length = 255)
-    descr_ph = models.CharField(max_length = 255, null = True, blank = True)
-    dt_pv_ph = models.DateField(null = True, blank = True)
-    geom_ph = models.TextField(null = True, blank = True)
-    int_ph = models.CharField(max_length = 255)
-    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
-    id_ppv_ph = models.ForeignKey(TPeriodePriseVuePhoto, models.DO_NOTHING, db_column = 'id_ppv_ph')
-
-    class Meta :
-        db_table = 't_photo'
-        verbose_name = 'Photo'
-
-    def __str__(self) :
-        return self.int_ph
-
 class TTypeDeclaration(models.Model) :
 
-    # Je définis les champs de la table.
     id_type_decl = models.AutoField(primary_key = True)
     int_type_decl = models.CharField(max_length = 255, verbose_name = 'Intitulé')
 
     class Meta :
         db_table = 't_type_declaration'
         ordering = ['int_type_decl']
-        verbose_name = 'Type de déclaration'
-        verbose_name_plural = 'Types de déclarations'
+        verbose_name = 'T_TYPE_DECLARATION'
+        verbose_name_plural = 'T_TYPE_DECLARATION'
 
     def __str__(self) :
         return self.int_type_decl
 
 class TTypeAvancementArrete(models.Model) :
 
-    # Je définis les champs de la table.
     id_type_av_arr = models.AutoField(primary_key = True)
     int_type_av_arr = models.CharField(max_length = 255, verbose_name = 'Intitulé')
-    ordre_type_av_arr = models.IntegerField(null = True, blank = True)
+    ordre_type_av_arr = models.IntegerField(blank = True, null = True, verbose_name = 'Ordre dans la liste déroulante')
 
     class Meta :
         db_table = 't_type_avancement_arrete'
         ordering = ['ordre_type_av_arr']
-        verbose_name = 'Avancement d\'un arrêté'
-        verbose_name_plural = 'Avancements d\'un arrêté'
+        verbose_name = 'T_TYPE_AVANCEMENT_ARRETE'
+        verbose_name_plural = 'T_TYPE_AVANCEMENT_ARRETE'
 
     def __str__(self) :
         return self.int_type_av_arr
 
+class TDossier(models.Model) :
+
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_fich_pdf
+    from app.validators import val_mont_pos
+    from datetime import date
+
+    def set_chem_pj_doss_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'dossiers/caracteristiques/{0}'.format(new_fn)
+
+    def set_id_av_cp_default() :
+
+        # Imports
+        from app.models import TAvisCp
+
+        # Je vérifie l'existence d'un objet TAvisCp dont son intitulé est "En attente".
+        try :
+            o_av_cp = TAvisCp.objects.get(int_av_cp = 'En attente')
+        except :
+            o_av_cp = None
+
+        return o_av_cp
+
+    id_doss = models.AutoField(primary_key = True)
+    chem_pj_doss = models.FileField(
+        blank = True, 
+        null = True,
+        upload_to = set_chem_pj_doss_upload_to,
+        validators = [val_fich_pdf],
+        verbose_name = 'Insérer le fichier scanné du mémoire technique'
+    )
+    comm_doss = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
+    comm_regl_doss = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
+    dt_av_cp_doss = models.DateField(
+        blank = True, null = True, verbose_name = 'Date de l\'avis du comité de programmation'
+    )
+    dt_delib_moa_doss = models.DateField(
+        blank = True, null = True, verbose_name = 'Date de délibération au maître d\'ouvrage'
+    )
+    dt_int_doss = models.DateField(default = date.today())
+    est_ttc_doss = models.BooleanField()
+    ld_doss = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Lieu-dit précis')
+    mont_doss = models.FloatField(validators = [val_mont_pos], verbose_name = 'Montant (en €)')
+    num_act = models.CharField(blank = True, max_length = 1, null = True)
+    num_axe = models.IntegerField(blank = True, null = True)
+    num_doss = models.CharField(max_length = 255, unique = True)
+    num_ss_axe = models.IntegerField(blank = True, null = True)
+    terr_doss = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Territoire')
+    id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, verbose_name = 'Programme')
+    id_av = models.ForeignKey(TAvancement, models.DO_NOTHING, verbose_name = 'État d\'avancement')
+    id_av_cp = models.ForeignKey(
+        TAvisCp, models.DO_NOTHING, default = set_id_av_cp_default, verbose_name = 'Avis du comité de programmation'
+    )
+    id_doss_ass = models.ForeignKey('self', models.DO_NOTHING, blank = True, null = True)
+    id_fam = models.ForeignKey(TFamille, models.DO_NOTHING)
+    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, verbose_name = 'Nature du dossier')
+    id_org_moa = models.ForeignKey(TMoa, models.DO_NOTHING)
+    id_sage = models.ForeignKey(TSage, models.DO_NOTHING, blank = True, null = True, verbose_name = 'SAGE')
+    id_techn = models.ForeignKey(TTechnicien, models.DO_NOTHING, verbose_name = 'Technicien')
+    id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING)
+    type_decl = models.ManyToManyField(TTypeDeclaration, through = 'TArretesDossier')
+
+    class Meta :
+        db_table = 't_dossier'
+        ordering = ['num_doss']
+        verbose_name = 'T_DOSSIER'
+        verbose_name_plural = 'T_DOSSIER'
+
+    def __str__(self) :
+        return self.num_doss
+
+    def clean(self) :
+
+        # Imports
+        from django.core.exceptions import ValidationError
+
+        if self.terr_doss == 'Aaa' :
+            raise ValidationError({ 'terr_doss' : 'Ok' })
+
+class TDossierGeom(gismodels.Model) :
+
+    gid = models.UUIDField(default = uuid.uuid4, editable = False, primary_key = True)
+    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 2154)
+    geom_pct = gismodels.PointField(blank = True, null = True, srid = 2154)
+    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 2154)
+    objects = gismodels.GeoManager()
+    id_doss = models.ForeignKey(TDossier, on_delete = models.CASCADE)
+
+    class Meta :
+        db_table = 't_dossier_geom'
+        verbose_name = 'T_DOSSIER_GEOM'
+        verbose_name_plural = 'T_DOSSIER_GEOM'
+
+    def __str__(self) :
+        return self.gid
+
+class TRiviere(models.Model) :
+
+    id_riv = models.AutoField(primary_key = True)
+    n_riv = models.CharField(max_length = 255, verbose_name = 'Nom')
+
+    class Meta :
+        db_table = 't_riviere'
+        ordering = ['n_riv']
+        verbose_name = 'T_RIVIERE'
+        verbose_name_plural = 'T_RIVIERE'
+
+    def __str__(self) :
+        return self.n_riv
+
+class TUnite(models.Model) :
+
+    id_unit = models.AutoField(primary_key = True)
+    int_unit = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+
+    class Meta :
+        db_table = 't_unite'
+        ordering = ['int_unit']
+        verbose_name = 'T_UNITE'
+        verbose_name_plural = 'T_UNITE'
+
+    def __str__(self) :
+        return self.int_unit
+
+class TInstanceConcertation(models.Model) :
+
+    id_inst_conc = models.AutoField(primary_key = True)
+    int_inst_conc = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+
+    class Meta :
+        db_table = 't_instance_concertation'
+        ordering = ['int_inst_conc']
+        verbose_name = 'T_INSTANCE_CONCERTATION'
+        verbose_name_plural = 'T_INSTANCE_CONCERTATION'
+
+    def __str__(self) :
+        return self.int_inst_conc
+
+class TPgre(TDossier) :
+
+    id_pgre = models.OneToOneField(TDossier)
+    quant_objs_pgre = models.FloatField(blank = True, null = True)
+    quant_real_pgre = models.FloatField(blank = True, null = True)
+    id_inst_conc = models.ForeignKey(TInstanceConcertation, models.DO_NOTHING, blank = True, null = True)
+    id_unit = models.ForeignKey(TUnite, models.DO_NOTHING, blank = True, null = True)
+    riv = models.ManyToManyField(TRiviere, through = 'TRivieresDossier')
+
+    class Meta :
+        db_table = 't_pgre'
+        verbose_name = 'T_PGRE'
+        verbose_name_plural = 'T_PGRE'
+
+class TRivieresDossier(models.Model) :
+
+    id_pgre = models.ForeignKey(TPgre, models.DO_NOTHING)
+    id_riv = models.ForeignKey(TRiviere, models.DO_NOTHING)
+
+    class Meta :
+        db_table = 't_rivieres_dossier'
+        verbose_name = 'T_RIVIERES_DOSSIER'
+        verbose_name_plural = 'T_RIVIERES_DOSSIER'
+
+    def __str__(self) :
+        return str(self.pk)
+
+class TPeriodePriseVuePhoto(models.Model) :
+
+    id_ppv_ph = models.AutoField(primary_key = True)
+    int_ppv_ph = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    ordre_ppv_ph = models.IntegerField(blank = True, null = True, verbose_name = 'Ordre dans la liste déroulante')
+
+    class Meta :
+        db_table = 't_periode_prise_vue_photo'
+        ordering = ['ordre_ppv_ph']
+        verbose_name = 'T_PERIODE_PRISE_VUE_PHOTO'
+        verbose_name_plural = 'T_PERIODE_PRISE_VUE_PHOTO'
+
+    def __str__(self) :
+        return self.int_ppv_ph
+
+class TPhoto(models.Model) :
+
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_fich_img
+
+    def set_chem_ph_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'dossiers/photos/{0}'.format(new_fn)
+
+    id_ph = models.AutoField(primary_key = True)
+    chem_ph = models.FileField(
+        upload_to = set_chem_ph_upload_to,
+        validators = [val_fich_img],
+        verbose_name = 'Insérer une photo <span class="field-complement">(taille limitée à 3 Mo)</span>'
+    )
+    descr_ph = models.CharField(
+        blank = True, max_length = 255, null = True, validators = [val_cdc], verbose_name = 'Description'
+    )
+    dt_pv_ph = models.DateField(verbose_name = 'Date de prise de vue')
+    int_ph = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la photo')
+    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
+    id_ppv_ph = models.ForeignKey(TPeriodePriseVuePhoto, models.DO_NOTHING, verbose_name = 'Période de prise de vue')
+
+    class Meta :
+        db_table = 't_photo'
+        verbose_name = 'T_PHOTO'
+        verbose_name_plural = 'T_PHOTO'
+
+    def __str__(self) :
+        return self.int_ph
+
 class TArretesDossier(models.Model) :
 
-    # Je définis les champs de la table.
-    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
-    id_type_av_arr = models.ForeignKey(TTypeAvancementArrete, models.DO_NOTHING, db_column = 'id_type_av_arr')
-    id_type_decl = models.ForeignKey(TTypeDeclaration, models.DO_NOTHING, db_column = 'id_type_decl')
-    chem_pj_arr = models.CharField(max_length = 255, null = True, blank = True)
-    comm_arr = models.CharField(max_length = 255, null = True, blank = True)
-    dt_lim_encl_trav_arr = models.DateField(null = True, blank = True)
-    dt_sign_arr = models.DateField(null = True, blank = True)
-    num_arr = models.CharField(max_length = 255, null = True, blank = True)
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_fich_pdf
+
+    def set_chem_pj_arr_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'dossiers/reglementations/{0}'.format(new_fn)
+
+    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
+    id_type_av_arr = models.ForeignKey(TTypeAvancementArrete, models.DO_NOTHING, verbose_name = 'Avancement')
+    id_type_decl = models.ForeignKey(TTypeDeclaration, models.DO_NOTHING)
+    chem_pj_arr = models.FileField(
+        blank = True,
+        null = True,
+        upload_to = set_chem_pj_arr_upload_to,
+        validators = [val_fich_pdf],
+        verbose_name = 'Insérer le fichier scanné de l\'arrêté <span class="field-complement">(fichier PDF)</span>'
+    )
+    comm_arr = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
+    dt_lim_encl_trav_arr = models.DateField(
+        blank = True, null = True, verbose_name = 'Date limite d\'enclenchement des travaux'
+    )
+    dt_sign_arr = models.DateField(blank = True, null = True, verbose_name = 'Date de signature de l\'arrêté')
+    num_arr = models.CharField(
+        blank = True, max_length = 255, null = True, validators = [val_cdc], verbose_name = 'Numéro de l\'arrêté'
+    )
 
     class Meta :
         db_table = 't_arretes_dossier'
-        unique_together = (('id_doss', 'id_type_decl'))
+        verbose_name = 'T_ARRETES_DOSSIER'
+        verbose_name_plural = 'T_ARRETES_DOSSIER'
+
+    def __str__(self) :
+        return str(self.pk)
 
 class TDepartement(models.Model) :
 
-    # Je définis les champs de la table.
-    num_dep = models.CharField(primary_key = True, max_length = 3, verbose_name = 'Numéro')
+    num_dep = models.CharField(max_length = 3, primary_key = True, verbose_name = 'Numéro')
     n_dep = models.CharField(max_length = 255, verbose_name = 'Nom')
 
     class Meta :
         db_table = 't_departement'
         ordering = ['num_dep']
+        verbose_name = 'T_DEPARTEMENT'
+        verbose_name_plural = 'T_DEPARTEMENT'
 
     def __str__(self) :
-        return '{0} ({1})'.format(self.n_dep, self.num_dep)
+        return self.n_dep
 
 class TPrestataire(TOrganisme) :
 
-    # Je définis les champs de la table.
-    id_org_prest = models.OneToOneField(TOrganisme, db_column = 'id_org_prest')
-    siret_org_prest = models.CharField(max_length = 14, unique = True, verbose_name = 'Numéro SIRET')
-    num_dep = models.ForeignKey(TDepartement, models.DO_NOTHING, db_column = 'num_dep', verbose_name = 'Département')
+    # Imports
+    from app.validators import val_siret
+
+    id_org_prest = models.OneToOneField(TOrganisme)
+    siret_org_prest = models.CharField(
+        max_length = 14, unique = True, validators = [val_siret], verbose_name = 'Numéro SIRET'
+    )
+    num_dep = models.ForeignKey(TDepartement, models.DO_NOTHING, verbose_name = 'Département')
 
     class Meta :
         db_table = 't_prestataire'
-        verbose_name = 'Prestataire'
+        verbose_name = 'T_PRESTATAIRE'
+        verbose_name_plural = 'T_PRESTATAIRE'
 
 class TFinanceur(TOrganisme) :
 
-    # Je définis les champs de la table.
-    id_org_fin = models.OneToOneField(TOrganisme, db_column = 'id_org_fin')
+    id_org_fin = models.OneToOneField(TOrganisme)
 
     class Meta :
         db_table = 't_financeur'
-        verbose_name = 'Financeur'
+        verbose_name = 'T_FINANCEUR'
+        verbose_name_plural = 'T_FINANCEUR'
 
 class TNaturePrestation(models.Model):
 
-    # Je définis les champs de la table.
     id_nat_prest = models.AutoField(primary_key = True)
     int_nat_prest = models.CharField(max_length = 255, verbose_name = 'Intitulé')
 
     class Meta :
         db_table = 't_nature_prestation'
         ordering = ['int_nat_prest']
-        verbose_name = 'Nature de prestation'
-        verbose_name_plural = 'Natures de prestations'
+        verbose_name = 'T_NATURE_PRESTATION'
+        verbose_name_plural = 'T_NATURE_PRESTATION'
 
     def __str__(self) :
         return self.int_nat_prest
 
 class TPrestation(models.Model) :
 
-    # Je définis les champs de la table.
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_fich_pdf
+    from app.validators import val_mont_pos
+
+    def set_chem_pj_prest_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'dossiers/prestations/{0}'.format(new_fn)
+
     id_prest = models.AutoField(primary_key = True)
-    chem_pj_prest = models.CharField(max_length = 255, null = True, blank = True)
-    comm_prest = models.CharField(max_length = 255, null = True, blank = True)
-    dt_fin_prest = models.DateField(null = True, blank = True)
-    dt_notif_prest = models.DateField(null = True, blank = True)
-    int_prest = models.CharField(max_length = 255)
-    mont_ht_tot_prest = models.FloatField()
-    mont_ttc_tot_prest = models.FloatField()
-    ref_prest = models.CharField(max_length = 255)
-    id_nat_prest = models.ForeignKey(TNaturePrestation, models.DO_NOTHING, db_column = 'id_nat_prest')
-    id_org_prest = models.ForeignKey(TPrestataire, models.DO_NOTHING, db_column = 'id_org_prest')
+    chem_pj_prest = models.FileField(
+        blank = True, 
+        null = True, 
+        upload_to = set_chem_pj_prest_upload_to,
+        validators = [val_fich_pdf],
+        verbose_name = 'Insérer le contrat de prestation <span class="field-complement">(fichier PDF)</span>'
+    )
+    comm_prest = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
+    dt_fin_prest = models.DateField(verbose_name = 'Date de fin de la prestation')
+    dt_notif_prest = models.DateField(verbose_name = 'Date de notification de la prestation')
+    int_prest = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la prestation')
+    mont_prest = models.FloatField(
+        validators = [val_mont_pos], verbose_name = 'Montant [ht_ou_ttc] total de la prestation'
+    )
+    ref_prest = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Référence de la prestation')
+    id_nat_prest = models.ForeignKey(TNaturePrestation, models.DO_NOTHING, verbose_name = 'Nature de la prestation')
+    id_org_prest = models.ForeignKey(TPrestataire, models.DO_NOTHING)
     doss = models.ManyToManyField(TDossier, through = 'TPrestationsDossier')
 
     class Meta :
         db_table = 't_prestation'
+        verbose_name = 'T_PRESTATION'
+        verbose_name_plural = 'T_PRESTATION'
+
+    def __str__(self) :
+
+        # Imports
+        from app.functions import dt_fr
+
+        return '{0} - {1} - {2}'.format(self.id_org_prest, dt_fr(self.dt_notif_prest), self.int_prest)
 
 class TPrestationsDossier(models.Model) :
 
-    # Je définis les champs de la table.
-    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
-    id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING, db_column = 'id_prest')
-    mont_ht_prest = models.FloatField()
-    mont_ttc_prest = models.FloatField()
-    seq_ac = models.IntegerField(default = 1)
+    # Imports
+    from app.validators import val_mont_pos
+
+    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
+    id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING)
+    mont_prest_doss = models.FloatField(validators = [val_mont_pos])
+    seq_ac_prest_doss = models.IntegerField(default = 1)
 
     class Meta :
         db_table = 't_prestations_dossier'
+        verbose_name = 'T_PRESTATIONS_DOSSIER'
+        verbose_name_plural = 'T_PRESTATIONS_DOSSIER'
+
+    def __str__(self) :
+        return str(self.pk)
 
 class TAvenant(models.Model) :
 
-    # Je définis les champs de la table.
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_mont_nul
+
     id_aven = models.AutoField(primary_key = True)
-    dt_aven = models.DateField(null = True, blank = True)
-    int_aven = models.CharField(max_length = 255)
-    mont_ht_aven = models.FloatField()
-    mont_ttc_aven = models.FloatField()
-    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
-    id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING, db_column = 'id_prest')
+    comm_aven = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
+    dt_aven = models.DateField(verbose_name = 'Date de fin de l\'avenant')
+    int_aven = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de l\'avenant')
+    mont_aven = models.FloatField(
+        validators = [val_mont_nul], verbose_name = 'Montant [ht_ou_ttc] de l\'avenant (en €)'
+    )
+    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
+    id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING)
 
     class Meta :
         db_table = 't_avenant'
+        verbose_name = 'T_AVENANT'
+        verbose_name_plural = 'T_AVENANT'
+
+    def __str__(self) :
+        return self.int_aven
 
 class TFacture(models.Model) :
 
-    # Je définis les champs de la table.
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_fich_pdf
+    from app.validators import val_mont_pos
+
+    def set_chem_pj_fact_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'dossiers/factures/{0}'.format(new_fn)
+
     id_fact = models.AutoField(primary_key = True)
-    chem_pj_fact = models.CharField(max_length = 255, null = True, blank = True)
-    comm_fact = models.CharField(max_length = 255, null = True, blank = True)
-    dt_mand_moa_fact = models.DateField(null = True, blank = True)
-    dt_rec_fact = models.DateField(null = True, blank = True)
-    mont_ht_fact = models.FloatField()
-    mont_ttc_fact = models.FloatField()
-    num_bord = models.CharField(max_length = 255, null = True, blank = True)
-    num_fact = models.CharField(max_length = 255)
-    num_mandat = models.CharField(max_length = 255, null = True, blank = True)
+    chem_pj_fact = models.FileField(
+        blank = True,
+        null = True,
+        upload_to = set_chem_pj_fact_upload_to,
+        validators = [val_fich_pdf],
+        verbose_name = 'Insérer le fichier scanné de la facture <span class="field-complement">(fichier PDF)</span>'
+    )
+    comm_fact = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
+    dt_mand_moa_fact = models.DateField(verbose_name = 'Date de mandatement par le maître d\'ouvrage'
+    )
+    dt_rec_fact = models.DateField(verbose_name = 'Date de réception de la facture')
+    mont_ht_fact = models.FloatField(validators = [val_mont_pos], verbose_name = 'Montant HT de la facture (en €)')
+    mont_ttc_fact = models.FloatField(validators = [val_mont_pos], verbose_name = 'Montant TTC de la facture (en €)')
+    num_bord_fact = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Numéro de bordereau')
+    num_fact = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Numéro de facture')
+    num_mandat_fact = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Numéro de mandat')
     suivi_fact = models.CharField(max_length = 255)
-    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
-    id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING, db_column = 'id_prest')
+    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
+    id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING)
 
     class Meta :
         db_table = 't_facture'
+        verbose_name = 'T_FACTURE'
+        verbose_name_plural = 'T_FACTURE'
+
+    def __str__(self) :
+        return self.num_fact
 
 class TPaiementPremierAcompte(models.Model) :
 
-    # Je définis les champs de la table.
     id_paiem_prem_ac = models.AutoField(primary_key = True)
     int_paiem_prem_ac = models.CharField(max_length = 255, verbose_name = 'Intitulé')
 
     class Meta :
         db_table = 't_paiement_premier_acompte'
         ordering = ['int_paiem_prem_ac']
-        verbose_name = 'Paiement du premier acompte'
-        verbose_name_plural = 'Paiements du premier acompte'
+        verbose_name = 'T_PAIEMENT_PREMIER_ACOMPTE'
+        verbose_name_plural = 'T_PAIEMENT_PREMIER_ACOMPTE'
 
     def __str__(self) :
         return self.int_paiem_prem_ac
 
 class TFinancement(models.Model) :
 
-    # Je définis les champs de la table.
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_fich_pdf
+    from app.validators import val_mont_pos
+    from app.validators import val_pourc
+
+    def set_chem_pj_fin_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'dossiers/financements/{0}'.format(new_fn)
+
     id_fin = models.AutoField(primary_key = True)
-    chem_pj_fin = models.CharField(max_length = 255, null = True, blank = True)
-    comm_fin = models.CharField(max_length = 255, null = True, blank = True)
-    dt_deb_elig_fin = models.DateField(null = True, blank = True)
-    dt_lim_deb_oper_fin = models.DateField(null = True, blank = True)
-    dt_lim_prem_ac_fin = models.DateField(null = True, blank = True)
-    duree_pror_fin = models.IntegerField()
-    duree_valid_fin = models.IntegerField()
-    mont_ht_elig_fin = models.FloatField(null = True, blank = True)
-    mont_ht_part_fin = models.FloatField()
-    mont_ttc_elig_fin = models.FloatField(null = True, blank = True)
-    mont_ttc_part_fin = models.FloatField()
-    num_arr_fin = models.CharField(max_length = 255, null = True, blank = True)
-    pourc_elig_fin = models.FloatField(null = True, blank = True)
-    pourc_real_fin = models.FloatField(null = True, blank = True)
-    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, db_column = 'id_doss')
-    id_org_fin = models.ForeignKey(TFinanceur, models.DO_NOTHING, db_column = 'id_org_fin')
+    chem_pj_fin = models.FileField(
+        blank = True, 
+        null = True, 
+        upload_to = set_chem_pj_fin_upload_to,
+        validators = [val_fich_pdf],
+        verbose_name = 'Insérer l\'arrêté de subvention <span class="field-complement">(fichier PDF)</span>'
+    )
+    comm_fin = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
+    dt_deb_elig_fin = models.DateField(blank = True, null = True, verbose_name = 'Date de début d\'éligibilité')
+    dt_lim_deb_oper_fin = models.DateField(
+        blank = True, null = True, verbose_name = 'Date limite du début de l\'opération'
+    )
+    dt_lim_prem_ac_fin = models.DateField(blank = True, null = True, verbose_name = 'Date limite du premier acompte')
+    duree_pror_fin = models.IntegerField(default = 0, verbose_name = 'Durée de la prorogation (en mois)')
+    duree_valid_fin = models.IntegerField(default = 0, verbose_name = 'Durée de validité de l\'aide (en mois)')
+    mont_elig_fin = models.FloatField(
+        blank = True, 
+        null = True, 
+        validators = [val_mont_pos],
+        verbose_name = 'Montant [ht_ou_ttc] de l\'assiette éligible de la subvention (en €)'
+    )
+    mont_part_fin = models.FloatField(
+        validators = [val_mont_pos], verbose_name = 'Montant [ht_ou_ttc] total de la participation (en €)'
+    )
+    num_arr_fin = models.CharField(
+        blank = True, 
+        max_length = 255, 
+        null = True, 
+        validators = [val_cdc], 
+        verbose_name = 'Numéro de l\'arrêté ou convention'
+    )
+    pourc_elig_fin = models.FloatField(
+        blank = True, null = True, validators = [val_pourc], verbose_name = 'Pourcentage de l\'assiette éligible'
+    )
+    pourc_real_fin = models.FloatField(
+        blank = True, null = True, validators = [val_pourc], verbose_name = 'Pourcentage de réalisation des travaux'
+    )
+    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
+    id_org_fin = models.ForeignKey(TFinanceur, models.DO_NOTHING, verbose_name = 'Organisme financeur')
     id_paiem_prem_ac = models.ForeignKey(
-        TPaiementPremierAcompte, models.DO_NOTHING, db_column = 'id_paiem_prem_ac', null = True, blank = True
+        TPaiementPremierAcompte,
+        models.DO_NOTHING, 
+        blank = True, 
+        null = True, 
+        verbose_name = 'Premier acompte payé en fonction de'
     )
 
     class Meta :
         db_table = 't_financement'
+        verbose_name = 'T_FINANCEMENT'
+        verbose_name_plural = 'T_FINANCEMENT'
+
+    def __str__(self) :
+        return str(self.id_fin)
 
 class TTypeVersement(models.Model) :
 
-    # Je définis les champs de la table.
     id_type_vers = models.AutoField(primary_key = True)
     int_type_vers = models.CharField(max_length = 255, verbose_name = 'Intitulé')
 
     class Meta :
         db_table = 't_type_versement'
         ordering = ['int_type_vers']
-        verbose_name = 'Type de versement'
-        verbose_name_plural = 'Types de versements'
+        verbose_name = 'T_TYPE_VERSEMENT'
+        verbose_name_plural = 'T_TYPE_VERSEMENT'
 
     def __str__(self) :
         return self.int_type_vers
 
 class TDemandeVersement(models.Model) :
 
-    # Je définis les champs de la table.
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_fich_pdf
+    from app.validators import val_mont_nul
+    from app.validators import val_mont_pos
+
+    def set_chem_pj_ddv_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'dossiers/demandes_de_versements/{0}'.format(new_fn)
+
     id_ddv = models.AutoField(primary_key = True)
-    chem_pj_ddv = models.CharField(max_length = 255, null = True, blank = True)
-    comm_ddv = models.CharField(max_length = 255, null = True, blank = True)
-    dt_ddv = models.DateField(null = True, blank = True)
-    dt_vers_ddv = models.DateField(null = True, blank = True)
-    int_ddv = models.CharField(max_length = 255)
-    mont_ht_ddv = models.FloatField()
-    mont_ht_verse_ddv = models.FloatField()
-    mont_ttc_ddv = models.FloatField()
-    mont_ttc_verse_ddv = models.FloatField()
-    id_fin = models.ForeignKey(TFinancement, models.DO_NOTHING, db_column = 'id_fin')
-    id_type_vers = models.ForeignKey(TTypeVersement, models.DO_NOTHING, db_column = 'id_type_vers')
+    chem_pj_ddv = models.FileField(
+        blank = True,
+        null = True,
+        upload_to = set_chem_pj_ddv_upload_to,
+        validators = [val_fich_pdf],
+        verbose_name = '''
+        Insérer le courrier scanné de la demande de versement <span class="field-complement">(fichier PDF)</span>
+        '''
+    )
+    comm_ddv = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
+    dt_ddv = models.DateField(verbose_name = 'Date de la demande de versement')
+    dt_vers_ddv = models.DateField(blank = True, null = True, verbose_name = 'Date de versement')
+    int_ddv = models.CharField(
+        max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la demande de versement'
+    )
+    mont_ht_ddv = models.FloatField(
+        validators = [val_mont_pos], verbose_name = 'Montant HT de la demande de versement (en €)'
+    )
+    mont_ht_verse_ddv = models.FloatField(
+        default = 0, validators = [val_mont_nul], verbose_name = 'Montant HT versé (en €)'
+    )
+    mont_ttc_ddv = models.FloatField(
+        validators = [val_mont_pos], verbose_name = 'Montant TTC de la demande de versement (en €)'
+    )
+    mont_ttc_verse_ddv = models.FloatField(
+        default = 0, validators = [val_mont_nul], verbose_name = 'Montant TTC versé (en €)'
+    )
+    id_fin = models.ForeignKey(TFinancement, models.DO_NOTHING)
+    id_type_vers = models.ForeignKey(TTypeVersement, models.DO_NOTHING, verbose_name = 'Type de demande de versement')
     fact = models.ManyToManyField(TFacture, through = 'TFacturesDemandeVersement')
 
     class Meta :
         db_table = 't_demande_versement'
+        verbose_name = 'T_DEMANDE_VERSEMENT'
+        verbose_name_plural = 'T_DEMANDE_VERSEMENT'
+
+    def __str__(self) :
+        return self.int_ddv
 
 class TFacturesDemandeVersement(models.Model) :
 
-    # Je définis les champs de la table.
-    id_ddv = models.ForeignKey(TDemandeVersement, models.DO_NOTHING, db_column = 'id_ddv')
-    id_fact = models.ForeignKey(TFacture, models.DO_NOTHING, db_column = 'id_fact')
+    id_ddv = models.ForeignKey(TDemandeVersement, models.DO_NOTHING)
+    id_fact = models.ForeignKey(TFacture, models.DO_NOTHING)
 
     class Meta :
         db_table = 't_factures_demande_versement'
-
-class TDossierGeom(gismodels.Model) :
-
-    # Je définis les champs de la table.
-    gid = models.UUIDField(primary_key = True, default = uuid.uuid4, editable = False)
-    geom_lin = gismodels.LineStringField(srid = 2154, null = True, blank = True)
-    geom_pct = gismodels.PointField(srid = 2154, null = True, blank = True)
-    geom_pol = gismodels.PolygonField(srid = 2154, null = True, blank = True)
-    objects = gismodels.GeoManager()
-    id_doss = models.ForeignKey(TDossier, on_delete = models.CASCADE)
-
-    class Meta :
-        db_table = 't_dossier_geom'
-
-class TTypeGeom(models.Model) :
-
-    # Je définis les champs de la table.
-    id_type_geom = models.AutoField(primary_key = True)
-    int_type_geom = models.CharField(max_length = 255)
-
-    class Meta :
-        db_table = 't_type_geom'
-        ordering = ['int_type_geom']
+        verbose_name = 'T_FACTURES_DEMANDE_VERSEMENT'
+        verbose_name_plural = 'T_FACTURES_DEMANDE_VERSEMENT'
 
     def __str__(self) :
-        return self.int_type_geom
-
-class TTypesGeomTypeDossier(models.Model) :
-
-    # Je définis les champs de la table.
-    id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING, db_column = 'id_type_doss')
-    id_type_geom = models.ForeignKey(
-        TTypeGeom, models.DO_NOTHING, db_column = 'id_type_geom', verbose_name = 'Type de géométrie'
-    )
-
-    class Meta :
-        db_table = 't_types_geom_type_dossier'
-        verbose_name = 'Types de géométries par type de dossier'
-
-    def __str__(self) :
-        return '{0} ({1})'.format(self.id_type_doss.int_type_doss, self.id_type_geom.int_type_geom)
+        return str(self.pk)

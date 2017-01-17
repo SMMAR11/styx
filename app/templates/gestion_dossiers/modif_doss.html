@@ -1,0 +1,73 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_doss' d.pk %}" class="icon-link previous-icon">Revenir au dossier</a>
+	</div>
+</div>
+<form action="" enctype="multipart/form-data" method="post" name="f_modif_doss" onsubmit="soum_f(event)">
+	{% csrf_token %}
+	<fieldset class="my-fieldset">
+		<legend>Modifier un dossier</legend>
+		<div>
+			{{ f_modif_doss.za_num_doss }}
+			<div class="row">
+				<div class="col-sm-6">{{ f_modif_doss.za_doss_ass }}</div>
+				<div class="align-icon-link-xs col-sm-3 col-xs-6 text-center">
+					<span class="icon-link modify-icon" data-target="#fm_ch_doss" data-toggle="modal">Modifier</span>
+				</div>
+				<div class="align-icon-link-xs col-sm-3 col-xs-6 text-center">
+					<span class="delete-icon icon-link" id="bt_suppr_doss_ass">Supprimer</span>
+				</div>
+			</div>
+			{{ f_modif_doss.zl_org_moa }}
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_doss.id_progr }}</div>
+				<div class="col-md-2">{{ f_modif_doss.zl_axe }}</div>
+				<div class="col-md-2">{{ f_modif_doss.zl_ss_axe }}</div>
+				<div class="col-md-2">{{ f_modif_doss.zl_act }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_doss.id_nat_doss }}</div>
+				<div class="col-md-6">{{ f_modif_doss.zl_type_doss }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_doss.terr_doss }}</div>
+				<div class="col-md-6">{{ f_modif_doss.ld_doss }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_doss.zl_techn }}</div>
+				<div class="col-md-6">{{ f_modif_doss.id_sage }}</div>
+			</div>
+			{% if t_fin_length > 0 or t_prest_doss_length > 0 %}
+			{{ f_modif_doss.mont_doss }}
+			{% else %}
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_doss.mont_doss }}</div>
+				<div class="col-md-6">{{ f_modif_doss.rb_est_ttc_doss }}</div>
+			</div>
+			{% endif %}
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_doss.id_av }}</div>
+				<div class="col-md-6">{{ f_modif_doss.dt_delib_moa_doss }}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_doss.id_av_cp }}</div>
+				<div class="col-md-6">{{ f_modif_doss.dt_av_cp_doss }}</div>
+			</div>
+			{{ f_modif_doss.chem_pj_doss }}
+			{{ f_modif_doss.comm_doss }}
+			<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		</div>
+		<div class="form-remark">
+			**
+			<br/>
+			La date de délibération au maître d'ouvrage doit être renseignée lorsque l'état d'avancement choisi est différent de « En projet ».
+			<br/>
+			La date de l'avis du comité de programmation doit être renseignée lorsque l'avis du comité de programmation est différent de « En attente » ou de « Sans objet ».
+		</div>
+	</fieldset>
+</form>
+{% endblock content %}

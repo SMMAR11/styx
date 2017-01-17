@@ -1,0 +1,52 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="br-md-after col-md-4">
+		<form action="?action=filtrer-dossiers" method="post" name="f_ch_doss">
+			{% csrf_token %}
+			<fieldset class="my-fieldset" style="padding-bottom: 0;">
+				<legend>Choisir un dossier</legend>
+				<div>
+					{{ f_ch_doss.zl_org_moa }}
+					{{ f_ch_doss.zl_progr }}
+					<div class="row">
+						<div class="col-sm-4">{{ f_ch_doss.zl_axe }}</div>
+						<div class="col-sm-4">{{ f_ch_doss.zl_ss_axe }}</div>
+						<div class="col-sm-4">{{ f_ch_doss.zl_act }}</div>
+					</div>
+					{{ f_ch_doss.zl_nat_doss }}
+					{{ f_ch_doss.zl_ann_delib_moa_doss }}
+				</div>
+			</fieldset>
+		</form>
+	</div>
+	<div class="col-md-8">
+		<div class="my-table" id="t_ch_doss">
+			<table>
+				<thead>
+					<tr>
+						<th>N° du dossier</th>
+						<th>Maître d'ouvrage</th>
+						<th>Date de délibération au maître d'ouvrage</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for d in t_doss %}
+					<tr>
+						<td class="b">{{ d.num_doss }}</td>
+						<td>{{ d.n_org }}</td>
+						<td>{{ d.dt_delib_moa_doss }}</td>
+						<td>
+							<a href="{% url 'cons_doss' d.pk %}" class="consult-icon pull-right" title="Consulter le dossier"></a>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock content %}

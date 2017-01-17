@@ -1,0 +1,49 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_doss' f.id_doss.pk %}" class="icon-link previous-icon">Revenir au dossier</a>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		<div class="main-title">Financement {{ f.id_doss }} - {{ f.id_org_fin }}</div>
+		<div class="row">
+			{% if forbidden == True %}
+			<div class="col-sm-9">
+			{% else %}
+			<div class="col-sm-12">
+			{% endif %}
+				{{ t_attrs_fin.id_doss }}
+				{{ t_attrs_fin.id_org_fin }}
+				{{ t_attrs_fin.num_arr_fin }}
+				{{ t_attrs_fin.mont_elig_fin }}
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_fin.pourc_elig_fin }}</div>
+					<div class="col-sm-6">{{ t_attrs_fin.pourc_glob_fin }}</div>
+				</div>
+				{{ t_attrs_fin.mont_part_fin }}
+				{{ t_attrs_fin.dt_deb_elig_fin }}
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_fin.duree_valid_fin }}</div>
+					<div class="col-sm-6">{{ t_attrs_fin.duree_pror_fin }}</div>
+				</div>
+				{{ t_attrs_fin.dt_fin_elig_fin }}
+				{{ t_attrs_fin.dt_lim_deb_oper_fin }}
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_fin.dt_lim_prem_ac_fin }}</div>
+					<div class="col-sm-6">{{ t_attrs_fin.id_paiem_prem_ac }}</div>
+				</div>
+				{{ t_attrs_fin.pourc_real_fin }}
+				{{ t_attrs_fin.chem_pj_fin }}
+				{{ t_attrs_fin.comm_fin }}
+			</div>
+			<div class="col-sm-3 forbidden">
+				<a href="{% url 'modif_fin' f.pk %}" class="icon-link modify-icon">Modifier</a>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}

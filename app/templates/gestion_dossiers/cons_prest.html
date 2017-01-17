@@ -1,0 +1,136 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_doss' pd.id_doss.pk %}" class="icon-link previous-icon">Revenir au dossier</a>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		<div class="main-title">Prestation {{ pd.id_doss }} - {{ pd.id_prest }}</div>
+		<ul class="my-nav-tabs nav nav-tabs" id="tab_prest">
+			<li><a href="#ong_prest" data-toggle="tab">Caractéristiques</a></li>
+			<li><a href="#ong_aven" data-toggle="tab">Avenants</a></li>
+		</ul>
+		<div class="tab-content">
+			<div id="ong_prest" class="fade tab-pane">
+				<div class="row">
+					{% if forbidden == True %}
+					<div class="col-sm-9">
+					{% else %}
+					<div class="col-sm-12">
+					{% endif %}
+						<fieldset class="my-div-fieldset">
+							<legend>Caractéristiques générales de la prestation</legend>
+							<div>
+								{{ t_attrs_prest_doss.id_org_prest }}
+								{{ t_attrs_prest_doss.int_prest }}
+								{{ t_attrs_prest_doss.ref_prest }}
+								<div class="attribute-wrapper">
+									<span class="attribute-label">Autres dossiers reliés à la prestation</span>
+									<div class="my-table" id="t_cons_doss_prest">
+										<table>
+											<thead>
+												<tr>
+													<th>N° du dossier</th>
+													<th>Montant {{ ht_ou_ttc }} de la prestation (en €)</th>
+													<th>Somme {{ ht_ou_ttc }} des avenants (en €)</th>
+													<th></th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for d in t_doss %}
+												<tr>
+													<td class="b">{{ d.id_doss }}</td>
+													<td>{{ d.mont_prest_doss }}</td>
+													<td>{{ d.mont_aven_sum }}</td>
+													<td>
+														<a href="{% url 'cons_prest' d.pk %}" class="consult-icon pull-right" title="Consulter la prestation pour ce dossier"></a>
+													</td>
+												</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+									</div>
+								</div>
+								{{ t_attrs_prest_doss.mont_prest }}
+								<div class="row">
+									<div class="col-sm-6">{{ t_attrs_prest_doss.dt_notif_prest }}</div>
+									<div class="col-sm-6">{{ t_attrs_prest_doss.dt_fin_prest }}</div>
+								</div>
+								{{ t_attrs_prest_doss.id_nat_prest }}
+								{{ t_attrs_prest_doss.chem_pj_prest }}
+								{{ t_attrs_prest_doss.comm_prest }}
+							</div>
+						</fieldset>
+						<div class="br"></div>
+						<fieldset class="my-div-fieldset">
+							<legend>Caractéristiques spécifiques de la prestation sur ce dossier</legend>
+							<div>
+								{{ t_attrs_prest_doss.mont_prest_doss }}
+								<div class="row">
+									<div class="col-sm-6">{{ t_attrs_prest_doss.nb_aven }}</div>
+									<div class="col-sm-6">{{ t_attrs_prest_doss.mont_aven_sum }}</div>
+								</div>
+								{{ t_attrs_prest_doss.mont_fact_sum }}
+								{{ t_attrs_prest_doss.mont_raf }}
+							</div>
+						</fieldset>
+					</div>
+					<div class="br-sm-before col-sm-3 forbidden">
+						<a href="{% url 'modif_prest' pd.pk %}" class="icon-link modify-icon">Modifier</a>
+					</div>
+				</div>
+			</div>
+			<div id="ong_aven" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_ajout_aven" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter un avenant</span>
+				</div>
+				<div class="my-table" id="t_cons_aven">
+					<table>
+						<thead>
+							<tr>
+								<th>N° de l'avenant</th>
+								<th>Intitulé</th>
+								<th>Date de fin</th>
+								<th>Montant {{ ht_ou_ttc }} (en €)</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for a in t_aven %}
+							<tr>
+								<td>{{ a.num_aven }}</td>
+								<td>{{ a.int_aven }}</td>
+								<td>{{ a.dt_aven }}</td>
+								<td>{{ a.mont_aven }}</td>
+								<td>
+									<a href="{% url 'cons_aven' a.pk %}" class="consult-icon pull-right" title="Consulter l'avenant"></a>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+
+		/**
+		 * Ce script permet d'activer un onglet du navigateur à onglets relatif à une prestation.
+		 */
+		$(document).ready(function() {
+			var ong_tab_prest = '{{ request.session.tab_prest.0 }}';
+			if (ong_tab_prest == '') {
+				ong_tab_prest = '#ong_prest';
+			}
+			$('#tab_prest').find('a[href="' + ong_tab_prest + '"]').parent().addClass('active');
+			$('#tab_prest').next().find(ong_tab_prest).addClass('active in');
+		});
+
+		</script>
+	</div>
+</div>
+{% endblock content %}

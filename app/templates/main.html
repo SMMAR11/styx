@@ -1,44 +1,40 @@
-{% extends 'gabarit.html' %}
+{% extends 'template.html' %}
 {% load static %}
 
 {% block content %}
 {% if user.is_authenticated %}
-<div class="row">
-	<div class="col-md-4 saut-md">
-		<a href="http://carto.smmar.fr/" target="blank" class="thumbnail to-unfocus">
-			<img src="{% static './images/pictos/portail_carto/main.jpg' %}" class="vignette-md"/>
-			<div class="caption">Portail cartographique</div>
-		</a>
-	</div>
-	<div class="col-md-4 saut-md">
-		<a href="{% url 'gestion_dossiers' %}" class="thumbnail to-unfocus">
-			<img src="{% static './images/pictos/gestion_dossiers/main.png' %}" class="vignette-md"/>
-			<div class="caption">Gestion des dossiers</div>
+<div class="row thumbnails-row">
+	<div class="col-md-4">
+		<a class="my-thumbnail" href="http://carto.smmar.fr/" target="blank">
+			<img src="{% static './pics/thumbnails/portail_cartographique/main.jpg' %}">
+			<div>Portail cartographique</div>
 		</a>
 	</div>
 	<div class="col-md-4">
-		<a href="{% url 'realisation_etats' %}" class="thumbnail to-unfocus">
-			<img src="{% static './images/pictos/realisation_etats/main.png' %}" class="vignette-md"/>
-			<div class="caption">Réalisation d'états</div>
+		<a class="my-thumbnail" href="{% url 'gest_doss' %}">
+			<img src="{% static './pics/thumbnails/gestion_dossiers/main.png' %}">
+			<div>Gestion des dossiers</div>
+		</a>
+	</div>
+	<div class="col-md-4">
+		<a class="my-thumbnail" href="#">
+			<img src="{% static './pics/thumbnails/realisation_etats/main.png' %}">
+			<div>Réalisation d'états</div>
 		</a>
 	</div>
 </div>
 {% else %}
 <div class="row">
 	<div class="col-md-offset-6">
-		<form action="{% url 'index' %}?action=identifier" method="post" name="form_identification" class="c-theme">
+		<form action="?action=identifier" method="post" name="f_id" onsubmit="soum_f(event)">
 			{% csrf_token %}
-			<fieldset>
+			<fieldset class="my-fieldset">
 				<legend>Identification</legend>
-				<div class="form-content">
-					{{ f1.zs_pseudo_util }}
-					{{ f1.zs_mdp_util }}
-					<button type="submit" class="bt-vert btn center-block to-unfocus" data-target="#fm_identification">Valider</button>
-					<div class="c-police text-center">
-						Oubli de votre mot de passe
-						<button class="bt-orange btn to-block to-unfocus" style="border-radius: 50%; margin-left: 5px;" data-toggle="modal" data-target="#fm_oublier_mdp">?</button>
-					</div>
+				<div>
+					{{ f_id.zs_username }}
+					{{ f_id.zs_password }}
 				</div>
+				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 			</fieldset>
 		</form>
 	</div>

@@ -1,0 +1,34 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_arr' a.pk %}" class="icon-link previous-icon">Revenir à l'arrêté</a>
+	</div>
+</div>
+<form action="" enctype="multipart/form-data" method="post" name="f_modif_arr" onsubmit="soum_f(event)">
+	{% csrf_token %}
+	<fieldset class="my-fieldset">
+		<legend>Modifier un arrêté</legend>
+		<div>
+			<div class="row">
+				<div class="col-sm-6">{{ f_modif_arr.za_num_doss }}</div>
+				<div class="col-sm-6">{{ f_modif_arr.zl_type_decl }}</div>
+			</div>
+			{{ f_modif_arr.id_type_av_arr }}
+			{{ f_modif_arr.num_arr }}
+			{{ f_modif_arr.dt_sign_arr }}
+			{{ f_modif_arr.dt_lim_encl_trav_arr }}
+			{{ f_modif_arr.chem_pj_arr }}
+			{{ f_modif_arr.comm_arr }}
+			<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		</div>
+		<div class="form-remark">
+			**
+			<br/>
+			Le numéro de l'arrêté, la date de signature de l'arrêté, la date limite d'enclenchement des travaux et le fichier scanné de l'arrêté sont obligatoires si et seulement si l'avancement de l'arrêté est « Validé ».
+		</div>
+	</fieldset>
+</form>
+{% endblock content %}

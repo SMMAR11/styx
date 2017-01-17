@@ -1,0 +1,38 @@
+{% load static %}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="author" content="SMMAR"/>
+		<title>STYX 2.0 - {{ title }}</title>
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/bootstrap/css/bootstrap.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './css/handlers.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './css/styles.css' %}">
+		<script type="text/javascript" src="{% static './vendors/bootstrap/js/jquery.js' %}"></script>
+		<script type="text/javascript" src="{% static './vendors/bootstrap/js/bootstrap.js' %}"></script>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row text-center">
+				<div class="col-md-8 row-col">
+					<img src="{% static './pics/logos/styx.png' %}" style="height: 60px;"/>
+				</div>
+				<div class="col-md-4 row-col">
+					<div class="row-col-wrapper">
+						<span class="b large">{{ title }}</span>
+						<br/>
+						{{ message }}
+						<div class="br"></div>
+						<a class="green-btn my-btn" href="{% url 'index' %}" style="display: inline-block;">
+							<span class="glyphicon glyphicon-home" style="padding-right: 5px;"></span>
+							Page d'accueil
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

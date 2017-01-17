@@ -1,18 +1,18 @@
-{% extends 'main.html' %}
+{% extends 'template.html' %}
 {% load static %}
 
 {% block content %}
-<div class="row">
-	<div class="col-sm-6 saut-sm">
-		<a href="{% url 'creer_dossier' %}" class="thumbnail to-unfocus">
-			<img src="{% static './images/pictos/gestion_dossiers/ajouter.png' %}" class="vignette-md"/>
-			<div class="caption">Créer un dossier</div>
+<div class="row thumbnails-row">
+	<div class="col-md-6">
+		<a class="my-thumbnail" href="{% url 'cr_doss' %}">
+			<img src="{% static './pics/thumbnails/gestion_dossiers/insert.png' %}">
+			<div>Créer un dossier</div>
 		</a>
 	</div>
-	<div class="col-sm-6">
-		<a href="{% url 'choisir_dossier' %}" class="thumbnail to-unfocus">
-			<img src="{% static './images/pictos/gestion_dossiers/consulter.png' %}" class="vignette-md"/>
-			<div class="caption">Consulter un dossier</div>
+	<div class="col-md-6">
+		<a class="my-thumbnail" href="{% url 'ch_doss' %}">
+			<img src="{% static './pics/thumbnails/gestion_dossiers/select.png' %}">
+			<div>Consulter un dossier</div>
 		</a>
 	</div>
 </div>

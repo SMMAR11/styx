@@ -1,0 +1,77 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_doss' d.id_fin.id_doss.pk %}" class="icon-link previous-icon">Revenir au dossier</a>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		<div class="main-title">Demande de versement {{ d }}</div>
+		<div class="row">
+			{% if forbidden == True %}
+			<div class="col-sm-9">
+			{% else %}
+			<div class="col-sm-12">
+			{% endif %}
+				{{ t_attrs_ddv.id_doss }}
+				{{ t_attrs_ddv.id_org_fin }}
+				{{ t_attrs_ddv.id_type_vers }}
+				{{ t_attrs_ddv.int_ddv }}
+				<div class="attribute-wrapper">
+					<span class="attribute-label">Factures reliées à la demande de versement </span>
+					<div class="my-table" id="t_cons_fact_ddv">
+						<table>
+							<thead>
+								<tr>
+									<th>Prestation</th>
+									<th>N° de facture</th>
+									<th>Date de mandatement par le maître d'ouvrage</th>
+									<th>Montant {{ ht_ou_ttc }} (en €)</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for fd in t_fact_ddv %}
+								<tr>
+									<td>{{ fd.id_prest }}</td>
+									<td>{{ fd.num_fact }}</td>
+									<td>{{ fd.dt_mand_moa_fact }}</td>
+									<td>{{ fd.mont_fact }}</td>
+									<td>
+										<a href="{% url 'cons_fact' fd.id_fact__pk %}" class="consult-icon pull-right" title="Consulter la facture"></a>
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_ddv.mont_ht_ddv }}</div>
+					<div class="col-sm-6">{{ t_attrs_ddv.mont_ttc_ddv }}</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_ddv.dt_ddv }}</div>
+					<div class="col-sm-6">{{ t_attrs_ddv.dt_vers_ddv }}</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_ddv.mont_ht_verse_ddv }}</div>
+					<div class="col-sm-6">{{ t_attrs_ddv.mont_ttc_verse_ddv }}</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_ddv.map_ht_ddv }}</div>
+					<div class="col-sm-6">{{ t_attrs_ddv.map_ttc_ddv }}</div>
+				</div>
+				{{ t_attrs_ddv.chem_pj_ddv }}
+				{{ t_attrs_ddv.comm_ddv }}
+			</div>
+			<div class="col-sm-3 forbidden">
+				<a href="{% url 'modif_ddv' d.pk %}" class="icon-link modify-icon">Modifier</a>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}

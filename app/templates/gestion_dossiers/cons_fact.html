@@ -1,0 +1,42 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_doss' f.id_doss.pk %}" class="icon-link previous-icon">Revenir au dossier</a>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		<div class="main-title">Facture N°{{ f }}</div>
+		<div class="row">
+			{% if forbidden == True %}
+			<div class="col-sm-9">
+			{% else %}
+			<div class="col-sm-12">
+			{% endif %}
+				{{ t_attrs_fact.id_doss }}
+				{{ t_attrs_fact.id_prest }}
+				{{ t_attrs_fact.num_fact }}
+				{{ t_attrs_fact.dt_mand_moa_fact }}
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_fact.mont_ht_fact }}</div>
+					<div class="col-sm-6">{{ t_attrs_fact.mont_ttc_fact }}</div>
+				</div>
+				{{ t_attrs_fact.dt_rec_fact }}
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_fact.num_mandat_fact }}</div>
+					<div class="col-sm-6">{{ t_attrs_fact.num_bord_fact }}</div>
+				</div>
+				{{ t_attrs_fact.suivi_fact }}
+				{{ t_attrs_fact.chem_pj_fact }}
+				{{ t_attrs_fact.comm_fact }}
+			</div>
+			<div class="col-sm-3 forbidden">
+				<a href="{% url 'modif_fact' f.pk %}" class="icon-link modify-icon">Modifier</a>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}

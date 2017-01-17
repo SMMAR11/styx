@@ -1,0 +1,374 @@
+{% extends 'template.html' %}
+{% load static %}
+{% load leaflet_tags %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'ch_doss' %}" class="icon-link previous-icon">Revenir à la liste des dossiers</a>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		<div class="main-title">Dossier {{ d }}</div>
+		<ul class="my-nav-tabs nav nav-tabs" id="tab_doss">
+			<li><a href="#ong_doss" data-toggle="tab">Caractéristiques</a></li>
+			{% if d.id_av.int_av != 'En projet' %}
+			<li><a href="#ong_fin" data-toggle="tab">Plan de financement</a></li>
+			<li><a href="#ong_prest" data-toggle="tab">Prestations</a></li>
+			<li><a href="#ong_fact" data-toggle="tab">Factures</a></li>
+			<li><a href="#ong_ddv" data-toggle="tab">Demandes de versements</a></li>
+			{% endif %}
+			<li><a href="#ong_arr" data-toggle="tab">Réglementations</a></li>
+			<li><a href="#ong_ph" data-toggle="tab">Photos</a></li>
+			<li><a href="#ong_carto" data-toggle="tab">Cartographie</a></li>
+		</ul>
+		<div class="tab-content">
+			<div id="ong_doss" class="fade tab-pane">
+				<div class="row">
+					<div class="col-sm-9">
+						{{ t_attrs_doss.num_doss }}
+						{{ t_attrs_doss.int_doss }}
+						<div class="attribute-wrapper">
+							<span class="attribute-label">Dossier(s) associé(s)</span>
+							<div class="my-table" id="t_cons_doss_fam">
+								<table>
+									<thead>
+										<tr>
+											<th>N° du dossier</th>
+											<th>Maître d'ouvrage</th>
+											<th>Date de délibération au maître d'ouvrage</th>
+											<th>Programme</th>
+											<th>Nature du dossier</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for df in t_doss_fam %}
+										{% if d.id_doss_ass.pk == df.pk %}
+										<tr style="background-color: #F8B862;">
+										{% else %}
+										<tr>
+										{% endif %}
+											<td class="b">{{ df.num_doss }}</td>
+											<td>{{ df.id_org_moa }}</td>
+											<td>{{ df.dt_delib_moa_doss }}</td>
+											<td>{{ df.id_progr }}</td>
+											<td>{{ df.id_nat_doss }}</td>
+											<td>
+												<a href="{% url 'cons_doss' df.pk %}" class="consult-icon pull-right" title="Consulter le dossier"></a>
+											</td>
+										</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+						</div>
+						{{ t_attrs_doss.id_org_moa }}
+						<div class="row">
+							<div class="col-sm-6">{{ t_attrs_doss.id_progr }}</div>
+							<div class="col-sm-2 col-xs-4">{{ t_attrs_doss.num_axe }}</div>
+							<div class="col-sm-2 col-xs-4">{{ t_attrs_doss.num_ss_axe }}</div>
+							<div class="col-sm-2 col-xs-4">{{ t_attrs_doss.num_act }}</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-6">{{ t_attrs_doss.id_nat_doss }}</div>
+							<div class="col-sm-6">{{ t_attrs_doss.id_type_doss }}</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-6">{{ t_attrs_doss.id_techn }}</div>
+							<div class="col-sm-6">{{ t_attrs_doss.id_sage }}</div>
+						</div>
+						{{ t_attrs_doss.mont_doss }}
+						<div class="row">
+							<div class="col-sm-6">{{ t_attrs_doss.id_av }}</div>
+							<div class="col-sm-6">{{ t_attrs_doss.dt_delib_moa_doss }}</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-6">{{ t_attrs_doss.id_av_cp }}</div>
+							<div class="col-sm-6">{{ t_attrs_doss.dt_av_cp_doss }}</div>
+						</div>
+						{{ t_attrs_doss.chem_pj_doss }}
+						{{ t_attrs_doss.comm_doss }}
+					</div>
+					<div class="col-sm-3">
+						<a href="{% url 'modif_doss' d.pk %}" class="forbidden icon-link modify-icon">Modifier</a>
+					</div>
+				</div>
+			</div>
+			{% if d.id_av.int_av != 'En projet' %}
+			<div id="ong_fin" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_ajout_fin" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter un organisme financier</span>
+				</div>
+				<div class="my-table" id="t_cons_fin">
+					<table>
+						<thead>
+							<tr>
+								<th>Organisme financier</th>
+								<th>Montant {{ ht_ou_ttc }} de participation (en €)</th>
+								<th>Pourcentage éligible</th>
+								<th>Pourcentage global</th>
+								<th>Date de début d'éligibilité</th>
+								<th>Date de fin d'éligibilité</th>
+								<th>Montant {{ ht_ou_ttc }} restant à demander (en €)</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for f in t_fin %}
+							<tr>
+								<td>{{ f.n_org }}</td>
+								<td>{{ f.mont_part_fin }}</td>
+								<td>{{ f.pourc_elig_fin }}</td>
+								<td>{{ f.pourc_glob_fin }}</td>
+								<td>{{ f.dt_deb_elig_fin }}</td>
+								<td>{{ f.dt_fin_elig_fin }}</td>
+								<td>{{ f.mont_rad }}</td>
+								<td>
+									{% if f.pk %}
+									<a href="{% url 'cons_fin' f.pk %}" class="consult-icon pull-right" title="Consulter le financement"></a>
+									{% endif %}
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div id="ong_prest" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_ajout_prest" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter/relier une prestation</span>
+				</div>
+				<div class="my-table" id="t_cons_prest">
+					<table>
+						<thead>
+							<tr>
+								<th>Entreprise</th>
+								<th>Montant {{ ht_ou_ttc }} de la prestation (en €)</th>
+								<th>Nombre d'avenants</th>
+								<th>Somme {{ ht_ou_ttc }} des avenants (en €)</th>
+								<th>Somme {{ ht_ou_ttc }} des factures émises (en €)</th>
+								<th>Reste à facturer {{ ht_ou_ttc }} (en €)</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for p in t_prest %}
+							<tr>
+								<td>{{ p.n_org }}</td>
+								<td>{{ p.mont_prest_doss }}</td>
+								<td>{{ p.nb_aven }}</td>
+								<td>{{ p.mont_aven_sum }}</td>
+								<td>{{ p.mont_fact_sum }}</td>
+								<td>{{ p.mont_raf }}</td>
+								<td>
+									<a href="{% url 'cons_prest' p.pk %}" class="consult-icon pull-right" title="Consulter la prestation"></a>
+									<span action="?action=afficher-form-avenant&prestation={{ p.pk }}" class="add_aven-icon pointer forbidden pull-right" onclick="html_ds_fm(event, 'ajout_aven');" style="margin-right: 5px;" title="Ajouter un avenant"></span>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+						{% if t_prest_length > 0 %}
+						<tfoot>
+							<tr>
+								<td>Total</td>
+								{% for i in t_prest_sum %}
+								<td>{{ i }}</td>
+								{% endfor %}
+								<td></td>
+							</tr>
+						</tfoot>
+						{% endif %}
+					</table>
+				</div>
+				<div class="b red-color text-center">Le reste à engager {{ ht_ou_ttc }} pour ce dossier est de {{ mont_rae }} €.</div>
+			</div>
+			<div id="ong_fact" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_ajout_fact" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter une facture</span>
+				</div>
+				<div class="my-table" id="t_cons_fact">
+					<table>
+						<thead>
+							<tr>
+								<th>Prestation</th>
+								<th>N° de facture</th>
+								<th>Date de mandatement par le maître d'ouvrage</th>
+								<th>Montant {{ ht_ou_ttc }} (en €)</th>
+								<th>N° de mandat</th>
+								<th>N° de bordereau</th>
+								<th>Suivi de la facturation</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for f in t_fact %}
+							<tr>
+								<td>{{ f.id_prest }}</td>
+								<td>{{ f.num_fact }}</td>
+								<td>{{ f.dt_mand_moa_fact }}</td>
+								<td>{{ f.mont_fact }}</td>
+								<td>{{ f.num_mandat_fact }}</td>
+								<td>{{ f.num_bord_fact }}</td>
+								<td>{{ f.suivi_fact }}</td>
+								<td>
+									<a href="{% url 'cons_fact' f.pk %}" class="consult-icon pull-right" title="Consulter la facture"></a>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div id="ong_ddv" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_ger_ddv" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter une demande de versement</span>
+				</div>
+				<div class="my-table" id="t_cons_ddv">
+					<table>
+						<thead>
+							<tr>
+								<th>Partenaire financier</th>
+								<th>Montant {{ ht_ou_ttc }} demandé (en €)</th>
+								<th>Date de demande de versement</th>
+								<th>Date de versement</th>
+								<th>Manque à percevoir {{ ht_ou_ttc }} (en €)</th>
+								<th>Type de versement</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for ddv in t_ddv %}
+							<tr>
+								<td>{{ ddv.id_org_fin }}</td>
+								<td>{{ ddv.mont_ddv }}</td>
+								<td>{{ ddv.dt_ddv }}</td>
+								<td>{{ ddv.dt_vers_ddv }}</td>
+								<td>{{ ddv.map_ddv }}</td>
+								<td>{{ ddv.id_type_vers }}</td>
+								<td>
+									<a href="{% url 'cons_ddv' ddv.pk %}" class="consult-icon pull-right" title="Consulter la demande de versement"></a>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			{% endif %}
+			<div id="ong_arr" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_ajout_arr" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter un arrêté</span>
+				</div>
+				<div class="my-table" id="t_cons_arr">
+					<table>
+						<thead>
+							<tr>
+								<th>Type de déclaration</th>
+								<th>Avancement</th>
+								<th>N° de l'arrêté</th>
+								<th>Date de signature</th>
+								<th>Date limite d'enclenchement des travaux</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for a in t_arr %}
+							<tr>
+								<td>{{ a.id_type_decl }}</td>
+								<td>{{ a.id_type_av_arr }}</td>
+								<td>{{ a.num_arr }}</td>
+								<td>{{ a.dt_sign_arr }}</td>
+								<td>{{ a.dt_lim_encl_trav_arr }}</td>
+								<td>
+									<a href="{% url 'cons_arr' a.pk %}" class="consult-icon pull-right" title="Consulter l'arrêté"></a>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				<div class="br"></div>
+				<form action="?action=modifier-reglementation" method="post" name="f_modif_doss_regl" onsubmit="soum_f(event)">
+					{{ f_modif_doss_regl.comm_regl_doss }}
+					<button class="center-block forbidden green-btn my-btn" type="submit">Mettre à jour le commentaire</button>
+				</form>
+			</div>
+			<div id="ong_ph" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_ajout_ph" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter une photo</span>
+				</div>
+				<div class="my-table" id="t_cons_ph">
+					<table>
+						<thead>
+							<tr>
+								<th>Visualisation</th>
+								<th>Intitulé</th>
+								<th>Période de la prise de vue</th>
+								<th>Date de la prise de vue</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for p in t_ph %}
+							<tr>
+								<td>
+									<img action="?action=consulter-photo&photo={{ p.pk }}" onclick="html_ds_fm(event, 'cons_ph');" src="{{ MEDIA_URL }}{{ p.chem_ph }}" title="Consulter la photo" width="100">
+								</td>
+								<td>{{ p.int_ph }}</td>
+								<td>{{ p.int_ppv_ph }}</td>
+								<td>{{ p.dt_pv_ph }}</td>
+								<td>
+									<span action="?action=supprimer-photo&photo={{ p.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_ph');" title="Supprimer la photo"></span>
+									<a class="forbidden modify-icon pull-right" href="{% url 'modif_ph' p.pk %}" title="Modifier la photo" style="margin-right: 5px;"></a>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div id="ong_carto" class="fade tab-pane">
+				<form action="{% url 'modif_doss' d.pk %}?action=modifier-geom" method="post" name="f_modif_carto" onsubmit="soum_f(event)">
+					{% csrf_token %}			
+					<!-- Je stocke la géométrie définie pour le dossier. -->
+					<input id="edit-geom" name="edit-geom" type="hidden">
+					<!-- Je stocke les types de géométries autorisés. -->
+					<input id="types_geom_doss" type="hidden">
+					<script type="text/javascript">
+
+						// Je charge les géométries déjà stockées pour le dossier.
+						{% for gd in t_geom_doss %}
+						g = new L.geoJson({{ gd | safe }});
+						lyr = g.getLayers()[0];
+						editableLayers.addLayer(lyr);
+						{% endfor %}
+
+						// Je récupère les types de géométries autorisés pour le filtrage des outils d'édition.
+						var types_geom_doss = "{{ t_types_geom_doss | safe }}";
+						$('#types_geom_doss').val(types_geom_doss);
+
+					</script>
+					{% leaflet_map 'styx-map' %}
+				</form>
+			</div>
+		</div>
+		<script type="text/javascript">
+
+		/**
+		 * Ce script permet d'activer un onglet du navigateur à onglets relatif à un dossier.
+		 */
+		$(document).ready(function() {
+			var ong_tab_doss = '{{ request.session.tab_doss.0 }}';
+			if (ong_tab_doss == '') {
+				ong_tab_doss = '#ong_doss';
+			}
+			$('#tab_doss').find('a[href="' + ong_tab_doss + '"]').parent().addClass('active');
+			$('#tab_doss').next().find(ong_tab_doss).addClass('active in');
+		});
+
+		</script>
+	</div>
+</div>
+{% endblock content %}

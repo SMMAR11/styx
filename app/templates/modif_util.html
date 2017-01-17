@@ -1,0 +1,25 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<form action="#" method="post" name="f_modif_util" onsubmit="soum_f(event)">
+	{% csrf_token %}
+	<fieldset class="my-fieldset">
+		<legend>Modifier son compte</legend>
+		<div>
+			{{ t_attrs_util.username }}
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_util.last_name }}</div>
+				<div class="col-md-6">{{ f_modif_util.first_name }}</div>
+			</div>
+			{{ f_modif_util.email }}
+			{{ t_attrs_util.id_org }}
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_util.tel_util }}</div>
+				<div class="col-md-6">{{ f_modif_util.port_util }}</div>
+			</div>
+		</div>
+		<button class="center-block green-btn my-btn" type="submit">Valider</button>
+	</fieldset>
+</form>
+{% endblock content %}

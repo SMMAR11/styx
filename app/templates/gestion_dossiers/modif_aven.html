@@ -1,0 +1,27 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_aven' a.pk %}" class="icon-link previous-icon">Revenir à l'avenant</a>
+	</div>
+</div>
+<form action="" method="post" name="f_modif_aven" onsubmit="soum_f(event)">
+	{% csrf_token %}
+	<fieldset class="my-fieldset">
+		<legend>Modifier un avenant</legend>
+		<div>
+			<div class="row">
+				<div class="col-sm-6">{{ f_modif_aven.za_num_doss }}</div>
+				<div class="col-sm-6">{{ f_modif_aven.zl_prest }}</div>
+			</div>
+			{{ f_modif_aven.int_aven }}
+			{{ f_modif_aven.dt_aven }}
+			{{ f_modif_aven.mont_aven }}
+			{{ f_modif_aven.comm_aven }}
+			<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		</div>
+	</fieldset>
+</form>
+{% endblock content %}
