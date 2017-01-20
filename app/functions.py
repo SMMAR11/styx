@@ -163,7 +163,10 @@ def filtr_doss(request, _d_excl = None) :
 		if _d_excl :
 			qs_doss = qs_doss.exclude(pk = _d_excl)
 
-		return qs_doss
+	else :
+		qs_doss = []
+		
+	return qs_doss
 
 '''
 Cette fonction génère une chaîne de caractères selon le datetime courant.
@@ -350,18 +353,8 @@ def gen_t_html_fact_doss(_f, _i = None, _c = False) :
 		if o_doss.est_ttc_doss == True :
 			ht_ou_ttc = 'TTC'
 
-		# Je stocke le jeu de données des factures disponibles pour la demande de versement.
-		qs_fact = TFacture.objects.filter(id_doss = o_doss).exclude(pk__in = TFacturesDemandeVersement.objects.filter(
-			id_ddv__id_fin = _f
-		).values_list('id_fact', flat = True))
-		if _i :
-			qs_fact_ddv = TFacture.objects.filter(pk__in = TFacturesDemandeVersement.objects.filter(
-				id_ddv__id_fin = _f, id_ddv = _i
-			).values_list('id_fact', flat = True))
-			qs_fact = list(chain(qs_fact, qs_fact_ddv))
-
 		t_lg = []
-		for index, f in enumerate(qs_fact) :
+		for index, f in enumerate(TFacture.objects.filter(id_doss = o_doss)) :
 
 			# Je définis les factures cochées par défaut.
 			checked = ''
@@ -377,6 +370,20 @@ def gen_t_html_fact_doss(_f, _i = None, _c = False) :
 			if o_doss.est_ttc_doss == True :
 				mont_fact = f.mont_ttc_fact
 
+			# Je définis les factures pouvant être encore liées à une demande de versement.
+			peut_coch = False
+			if len(TFacturesDemandeVersement.objects.filter(id_ddv__id_fin = o_fin, id_fact = f)) == 0 :
+				peut_coch = True
+			if _i :
+				peut_coch = True
+			if peut_coch == True :
+				cb_fact = '''
+				<input type="checkbox" class="pull-right" id="id_GererDemandeVersement-cbsm_fact_{0}" montant="{1}"
+				name="GererDemandeVersement-cbsm_fact" pourcentage="{2}" taxe={3} value="{4}" {5}>
+				'''.format(index, mont_fact, o_fin.pourc_elig_fin or '', ht_ou_ttc, f.pk, checked)
+			else :
+				cb_fact = ''
+
 			lg = '''
 			<tr>
 				<td>{0}</td>
@@ -387,13 +394,10 @@ def gen_t_html_fact_doss(_f, _i = None, _c = False) :
 			</tr>
 			'''.format(
 				f.id_prest,
+				obt_mont(mont_fact),
 				f.num_fact, 
 				dt_fr(f.dt_mand_moa_fact), 
-				obt_mont(mont_fact),
-				'''
-				<input type="checkbox" class="pull-right" id="id_GererDemandeVersement-cbsm_fact_{0}" 
-				montant="{1}" name="GererDemandeVersement-cbsm_fact" pourcentage="{2}" value="{3}" {4}>
-				'''.format(index, mont_fact, o_fin.pourc_elig_fin or '', f.pk, checked)
+				cb_fact
 			)
 
 			# J'empile le tableau des lignes du tableau HTML.
@@ -411,9 +415,9 @@ def gen_t_html_fact_doss(_f, _i = None, _c = False) :
 					<thead>
 						<tr>
 							<th>Prestation</th>
+							<th>Montant {0} (en €)</th>
 							<th>N° de facture</th>
 							<th>Date de mandatement par le maître d'ouvrage</th>
-							<th>Montant {0} (en €)</th>
 							<th></th>
 						</tr>
 					</thead>
@@ -653,6 +657,7 @@ def init_fm(_s, _h, _b = '') :
 					<span id="za_{s}">
 						{b}
 					</span>
+					<div class="modal-padding-bottom"></div>
 				</div>
 			</div>
 		</div>

@@ -27,9 +27,9 @@
 							<thead>
 								<tr>
 									<th>Prestation</th>
+									<th>Montant {{ ht_ou_ttc }} (en €)</th>
 									<th>N° de facture</th>
 									<th>Date de mandatement par le maître d'ouvrage</th>
-									<th>Montant {{ ht_ou_ttc }} (en €)</th>
 									<th></th>
 								</tr>
 							</thead>
@@ -37,9 +37,9 @@
 								{% for fd in t_fact_ddv %}
 								<tr>
 									<td>{{ fd.id_prest }}</td>
+									<td>{{ fd.mont_fact }}</td>
 									<td>{{ fd.num_fact }}</td>
 									<td>{{ fd.dt_mand_moa_fact }}</td>
-									<td>{{ fd.mont_fact }}</td>
 									<td>
 										<a href="{% url 'cons_fact' fd.id_fact__pk %}" class="consult-icon pull-right" title="Consulter la facture"></a>
 									</td>

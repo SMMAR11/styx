@@ -244,7 +244,13 @@ fieldset.my-div-fieldset > div {
 
 .my-modal .modal-body {
 	background-color: #EBF0F7;
-	padding: 20px 15px;
+	padding: 20px 15px 0 15px;
+	max-height: calc(100vh - 75px);
+	overflow-y: auto;
+}
+
+.my-modal .modal-padding-bottom {
+	padding-bottom: 20px;
 }
 
 /* Formulaires */
@@ -295,7 +301,7 @@ form > fieldset.my-fieldset > div {
 
 .field-remark:before {
 	content: ' **';
-	color: #FF0921;
+	color: #555;
 }
 
 .field-complement {
@@ -304,7 +310,7 @@ form > fieldset.my-fieldset > div {
 }
 
 .form-remark {
-	color: #FF0921;
+	color: #555;
 	font-size: 12px;
 	font-weight: bold;
 	text-align: center;
@@ -407,6 +413,15 @@ form > fieldset.my-fieldset > div {
 
 .add_aven-icon {
 	background-image: url('../pics/icons/add_aven.png');
+	background-size: 20px;
+	-webkit-background-size: 19px;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 20px;
+}
+
+.add-company-icon {
+	background-image: url('../pics/icons/add_company.png');
 	background-size: 20px;
 	-webkit-background-size: 19px;
 	background-repeat: no-repeat;

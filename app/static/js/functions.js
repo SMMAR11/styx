@@ -329,7 +329,7 @@ function soum_f(_e, _s = function(){}, _u = null) {
 
 			if (data['success']) {
 
-				// Je traite le cas où je dois effectuer une opération (ajout, mise à jour, suppression...).
+				// Je traite le cas où je dois effectuer une opération avec rafraîchissement (ajout, mise à jour).
 				if (data['success']['message'] && data['success']['redirect']) {
 
 					var suff_modal = suff;
@@ -395,6 +395,35 @@ function soum_f(_e, _s = function(){}, _u = null) {
 
 					// J'initialise la nouvelle datatable.
 					var datat = init_datat($('#t_' + suff + '_next'), []);
+				}
+
+				// Je traite le cas où je dois effectuer une opération sans rafraîchissement (ajout, mise à jour).
+				if (data['success']['message'] && data['success']['display']) {
+
+					// Je cache le contenu de la fenêtre modale.
+					$('#fm_' + suff).find('.close').hide();
+					$('#za_' + suff).hide();
+
+					// J'insère un nouveau contenu dans la fenêtre modale.
+					var div = $('<div/>', { 'class' : 'b red-color text-center', html : data['success']['message'] });
+					$(div).insertAfter($('#za_' + suff));
+
+					// Je transvase une donnée de l'instance créée vers le formulaire principal si besoin.
+					$(data['success']['display'][0]).val(data['success']['display'][1]);
+
+					setTimeout(function() {
+
+						// Je ferme la fenêtre modale.
+						$('#fm_' + suff).modal('hide');
+
+						// Je vide le formulaire.
+						o_f[0].reset();
+
+						// Je reviens à l'état initial du sous-formulaire.
+						div.remove();
+						$('#fm_' + suff).find('.close').show();
+						$('#za_' + suff).show();
+					}, 2000);
 				}
 			}
 			else {

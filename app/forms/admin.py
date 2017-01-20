@@ -134,32 +134,34 @@ class MAction(forms.ModelForm) :
 
 class MUtilisateurCreate(forms.ModelForm) :
 
-    arr_org = [
-        DEFAULT_OPTION,
-        (
-            'Financeurs', (
-                [(f.id_org_fin.id_org, f.id_org_fin) for f in TFinanceur.objects.all()]
-            )
-        ),
-        (
-            'Maîtres d\'ouvrages', (
-                [(m.id_org_moa.id_org, m.id_org_moa) for m in TMoa.objects.all()]
-            )
-        ),
-        (
-            'Prestataires', (
-                [(p.id_org_prest.id_org, p.id_org_prest) for p in TPrestataire.objects.all()]
-            )
-        )
-    ]
-
-    zl_org = forms.ChoiceField(choices = arr_org, label = 'Organisme')
+    zl_org = forms.ChoiceField(label = 'Organisme')
     zs_pwd1 = forms.CharField(label = 'Mot de passe', max_length = 255, widget = forms.PasswordInput())
     zs_pwd2 = forms.CharField(label = 'Confirmation du mot de passe', max_length = 255, widget = forms.PasswordInput())
 
     class Meta :
         fields = '__all__'
-        model = TUtilisateur   
+        model = TUtilisateur 
+
+    def __init__(self, *args, **kwargs) :
+        super(MUtilisateurCreate, self).__init__(*args, **kwargs)
+        self.fields['zl_org'].choices = [
+            DEFAULT_OPTION,
+            (
+                'Financeurs', (
+                    [(f.id_org_fin.id_org, f.id_org_fin) for f in TFinanceur.objects.all()]
+                )
+            ),
+            (
+                'Maîtres d\'ouvrages', (
+                    [(m.id_org_moa.id_org, m.id_org_moa) for m in TMoa.objects.all()]
+                )
+            ),
+            (
+                'Prestataires', (
+                    [(p.id_org_prest.id_org, p.id_org_prest) for p in TPrestataire.objects.all()]
+                )
+            )
+        ]
 
     def clean_zs_pwd2(self) :
 
@@ -184,25 +186,6 @@ class MUtilisateurUpdate(forms.ModelForm) :
     # Imports
     from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
-    arr_org = [
-        DEFAULT_OPTION,
-        (
-            'Financeurs', (
-                [(f.id_org_fin.id_org, f.id_org_fin) for f in TFinanceur.objects.all()]
-            )
-        ),
-        (
-            'Maîtres d\'ouvrages', (
-                [(m.id_org_moa.id_org, m.id_org_moa) for m in TMoa.objects.all()]
-            )
-        ),
-        (
-            'Prestataires', (
-                [(p.id_org_prest.id_org, p.id_org_prest) for p in TPrestataire.objects.all()]
-            )
-        )
-    ]
-
     password = ReadOnlyPasswordHashField(
         help_text = '''
         Les mots de passe ne sont pas enregistrés en clair, ce qui ne permet pas d\'afficher le mot de passe de cet
@@ -210,7 +193,7 @@ class MUtilisateurUpdate(forms.ModelForm) :
         ''',
         label = 'Mot de passe'
     )
-    zl_org = forms.ChoiceField(choices = arr_org, label = 'Organisme')
+    zl_org = forms.ChoiceField(label = 'Organisme')
 
     class Meta :
         fields = '__all__'
@@ -218,6 +201,24 @@ class MUtilisateurUpdate(forms.ModelForm) :
 
     def __init__(self, *args, **kwargs) :
         super(MUtilisateurUpdate, self).__init__(*args, **kwargs)
+        self.fields['zl_org'].choices = [
+            DEFAULT_OPTION,
+            (
+                'Financeurs', (
+                    [(f.id_org_fin.id_org, f.id_org_fin) for f in TFinanceur.objects.all()]
+                )
+            ),
+            (
+                'Maîtres d\'ouvrages', (
+                    [(m.id_org_moa.id_org, m.id_org_moa) for m in TMoa.objects.all()]
+                )
+            ),
+            (
+                'Prestataires', (
+                    [(p.id_org_prest.id_org, p.id_org_prest) for p in TPrestataire.objects.all()]
+                )
+            )
+        ]
         self.fields['zl_org'].initial = self.instance.id_org.pk
 
     def clean_password(self) :

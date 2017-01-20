@@ -67,10 +67,11 @@ class TAvancement(models.Model) :
 
     id_av = models.AutoField(primary_key = True)
     int_av = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    ordre_av = models.IntegerField(verbose_name = 'Ordre dans la liste déroulante')
 
     class Meta :
         db_table = 't_avancement'
-        ordering = ['int_av']
+        ordering = ['ordre_av']
         verbose_name = 'T_AVANCEMENT'
         verbose_name_plural = 'T_AVANCEMENT'
 
@@ -284,6 +285,10 @@ class TCommunesCp(models.Model) :
 
 class TOrganisme(models.Model):
 
+    # Imports
+    from app.validators import val_courr
+    from app.validators import val_tel
+
     id_org = models.AutoField(primary_key = True)
     adr_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Adresse (ligne 1)')
     bp_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Boîte postale')
@@ -291,14 +296,22 @@ class TOrganisme(models.Model):
     comm_org = models.TextField(blank = True, null = True, verbose_name = 'Commentaire')
     compl_adr_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Adresse (ligne 2)')
     cont_org = models.CharField(blank = True, max_length = 255, null = True)
-    courr_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Adresse électronique')
+    courr_org = models.CharField(
+        blank = True, max_length = 255, null = True, validators = [val_courr], verbose_name = 'Adresse électronique'
+    )
     cp_org = models.CharField(blank = True, max_length = 5, null = True, verbose_name = 'Code postal')
     n_org = models.CharField(max_length = 255, verbose_name = 'Nom')
     port_org = models.CharField(
-        blank = True, max_length = 10, null = True, verbose_name = 'Numéro de téléphone portable'
+        blank = True, 
+        max_length = 10, 
+        null = True, 
+        validators = [val_tel],
+        verbose_name = 'Numéro de téléphone portable'
     )
     site_web_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Site web')
-    tel_org = models.CharField(blank = True, max_length = 10, null = True, verbose_name = 'Numéro de téléphone')
+    tel_org = models.CharField(
+        blank = True, max_length = 10, null = True, validators = [val_tel], verbose_name = 'Numéro de téléphone'
+    )
     num_comm = models.ForeignKey(TCommune, models.DO_NOTHING, blank = True, null = True, verbose_name = 'Commune')
 
     class Meta :
@@ -466,11 +479,11 @@ class TDossier(models.Model) :
 
         # Je vérifie l'existence d'un objet TAvisCp dont son intitulé est "En attente".
         try :
-            o_av_cp = TAvisCp.objects.get(int_av_cp = 'En attente')
+            v_av_cp = TAvisCp.objects.get(int_av_cp = 'En attente').pk
         except :
-            o_av_cp = None
+            v_av_cp = None
 
-        return o_av_cp
+        return v_av_cp
 
     id_doss = models.AutoField(primary_key = True)
     chem_pj_doss = models.FileField(
@@ -500,7 +513,10 @@ class TDossier(models.Model) :
     id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, verbose_name = 'Programme')
     id_av = models.ForeignKey(TAvancement, models.DO_NOTHING, verbose_name = 'État d\'avancement')
     id_av_cp = models.ForeignKey(
-        TAvisCp, models.DO_NOTHING, default = set_id_av_cp_default, verbose_name = 'Avis du comité de programmation'
+        TAvisCp, 
+        models.DO_NOTHING, 
+        default = set_id_av_cp_default, 
+        verbose_name = 'Avis du comité de programmation - CD GEMAPI'
     )
     id_doss_ass = models.ForeignKey('self', models.DO_NOTHING, blank = True, null = True)
     id_fam = models.ForeignKey(TFamille, models.DO_NOTHING)
@@ -789,7 +805,9 @@ class TPrestation(models.Model) :
     mont_prest = models.FloatField(
         validators = [val_mont_pos], verbose_name = 'Montant [ht_ou_ttc] total de la prestation'
     )
-    ref_prest = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Référence de la prestation')
+    ref_prest = models.CharField(
+        blank = True, max_length = 255, null = True, validators = [val_cdc], verbose_name = 'Référence de la prestation'
+    )
     id_nat_prest = models.ForeignKey(TNaturePrestation, models.DO_NOTHING, verbose_name = 'Nature de la prestation')
     id_org_prest = models.ForeignKey(TPrestataire, models.DO_NOTHING)
     doss = models.ManyToManyField(TDossier, through = 'TPrestationsDossier')
@@ -815,6 +833,7 @@ class TPrestationsDossier(models.Model) :
     id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING)
     mont_prest_doss = models.FloatField(validators = [val_mont_pos])
     seq_ac_prest_doss = models.IntegerField(default = 1)
+    seq_aven_prest_doss = models.IntegerField(default = 1)
 
     class Meta :
         db_table = 't_prestations_dossier'
@@ -837,6 +856,7 @@ class TAvenant(models.Model) :
     mont_aven = models.FloatField(
         validators = [val_mont_nul], verbose_name = 'Montant [ht_ou_ttc] de l\'avenant (en €)'
     )
+    num_aven = models.IntegerField()
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
     id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING)
 
@@ -874,9 +894,13 @@ class TFacture(models.Model) :
     comm_fact = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
     dt_mand_moa_fact = models.DateField(verbose_name = 'Date de mandatement par le maître d\'ouvrage'
     )
-    dt_rec_fact = models.DateField(verbose_name = 'Date de réception de la facture')
-    mont_ht_fact = models.FloatField(validators = [val_mont_pos], verbose_name = 'Montant HT de la facture (en €)')
-    mont_ttc_fact = models.FloatField(validators = [val_mont_pos], verbose_name = 'Montant TTC de la facture (en €)')
+    dt_rec_fact = models.DateField(blank = True, null = True, verbose_name = 'Date de réception de la facture')
+    mont_ht_fact = models.FloatField(
+        blank = True, null = True, validators = [val_mont_pos], verbose_name = 'Montant HT de la facture (en €)'
+    )
+    mont_ttc_fact = models.FloatField(
+        blank = True, null = True, validators = [val_mont_pos], verbose_name = 'Montant TTC de la facture (en €)'
+    )
     num_bord_fact = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Numéro de bordereau')
     num_fact = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Numéro de facture')
     num_mandat_fact = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Numéro de mandat')
@@ -1025,13 +1049,19 @@ class TDemandeVersement(models.Model) :
         max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la demande de versement'
     )
     mont_ht_ddv = models.FloatField(
-        validators = [val_mont_pos], verbose_name = 'Montant HT de la demande de versement (en €)'
+        blank = True, 
+        null = True, 
+        validators = [val_mont_pos], 
+        verbose_name = 'Montant HT de la demande de versement (en €)'
     )
     mont_ht_verse_ddv = models.FloatField(
         default = 0, validators = [val_mont_nul], verbose_name = 'Montant HT versé (en €)'
     )
     mont_ttc_ddv = models.FloatField(
-        validators = [val_mont_pos], verbose_name = 'Montant TTC de la demande de versement (en €)'
+        blank = True, 
+        null = True, 
+        validators = [val_mont_pos], 
+        verbose_name = 'Montant TTC de la demande de versement (en €)'
     )
     mont_ttc_verse_ddv = models.FloatField(
         default = 0, validators = [val_mont_nul], verbose_name = 'Montant TTC versé (en €)'

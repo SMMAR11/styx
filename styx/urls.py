@@ -62,7 +62,8 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/consulter-arrete/([0-9]+)/$', gestion_dossiers.cons_arr, name = 'cons_arr'),
     url(r'^modules/gestion-dossiers/ajouter-photo/$', gestion_dossiers.ajout_ph, name = 'ajout_ph'),
     url(r'^modules/gestion-dossiers/modifier-photo/([0-9]+)/$', gestion_dossiers.modif_ph, name = 'modif_ph'),
-    url(r'^modules/gestion-dossiers/supprimer-photo/([0-9]+)/$', gestion_dossiers.suppr_ph, name = 'suppr_ph')
+    url(r'^modules/gestion-dossiers/supprimer-photo/([0-9]+)/$', gestion_dossiers.suppr_ph, name = 'suppr_ph'),
+    url(r'^modules/gestion-dossiers/ajouter-prestataire/$', gestion_dossiers.ajout_org_prest, name = 'ajout_org_prest')
 ]
 
 handler403 = main.h_403

@@ -90,13 +90,14 @@ class AAvancement(admin.ModelAdmin) :
 
 	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
-	list_display = ['int_av']	
+	list_display = ['int_av', 'ordre_av']	
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
 		('Informations générales', {
 			'fields' : (
 				('int_av'),
+				('ordre_av')
 			)
 		}),
 	)

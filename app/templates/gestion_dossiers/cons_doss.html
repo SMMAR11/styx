@@ -133,6 +133,12 @@
 							</tr>
 							{% endfor %}
 						</tbody>
+						<tfoot>
+							<tr>
+								<td>Total</td>
+								<td colspan="7">{{ mont_doss }}</td>
+							</tr>
+						</tfoot>
 					</table>
 				</div>
 			</div>
@@ -193,9 +199,9 @@
 						<thead>
 							<tr>
 								<th>Prestation</th>
+								<th>Montant {{ ht_ou_ttc }} (en €)</th>
 								<th>N° de facture</th>
 								<th>Date de mandatement par le maître d'ouvrage</th>
-								<th>Montant {{ ht_ou_ttc }} (en €)</th>
 								<th>N° de mandat</th>
 								<th>N° de bordereau</th>
 								<th>Suivi de la facturation</th>
@@ -206,9 +212,9 @@
 							{% for f in t_fact %}
 							<tr>
 								<td>{{ f.id_prest }}</td>
+								<td>{{ f.mont_fact }}</td>
 								<td>{{ f.num_fact }}</td>
 								<td>{{ f.dt_mand_moa_fact }}</td>
-								<td>{{ f.mont_fact }}</td>
 								<td>{{ f.num_mandat_fact }}</td>
 								<td>{{ f.num_bord_fact }}</td>
 								<td>{{ f.suivi_fact }}</td>
@@ -218,6 +224,14 @@
 							</tr>
 							{% endfor %}
 						</tbody>
+						{% if mont_fact_sum > 0 %}
+						<tfoot>
+							<tr>
+								<td>Total payé</td>
+								<td colspan="7">{{ mont_fact_sum_str }}</td>
+							</tr>
+						</tfoot>
+						{% endif %}
 					</table>
 				</div>
 			</div>
@@ -253,6 +267,14 @@
 							</tr>
 							{% endfor %}
 						</tbody>
+						{% if mont_ddv_sum > 0 %}
+						<tfoot>
+							<tr>
+								<td>Total demandé</td>
+								<td colspan="6">{{ mont_ddv_sum_str }}</td>
+							</tr>
+						</tfoot>
+						{% endif %}
 					</table>
 				</div>
 			</div>

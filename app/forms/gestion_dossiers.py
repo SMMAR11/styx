@@ -7,16 +7,6 @@ from django import forms
 
 class GererDossier(forms.ModelForm) :
 
-	# Imports
-	from app.models import TMoa
-	from app.models import TTechnicien
-
-	# J'initialise le tableau des choix de chaque liste déroulante personalisée.
-	t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(en_act_org_moa = True)]
-	t_org_moa.insert(0, DEFAULT_OPTION)
-	t_techn = [(t.pk, t) for t in TTechnicien.objects.filter(en_act_techn = True)]
-	t_techn.insert(0, DEFAULT_OPTION)
-
 	za_num_doss = forms.CharField(
 		label = 'Numéro du dossier', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
 	)
@@ -30,7 +20,7 @@ class GererDossier(forms.ModelForm) :
 	za_doss_ass = forms.CharField(
 		label = 'Dossier associé', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
 	)
-	zl_org_moa = forms.ChoiceField(choices = t_org_moa, label = 'Maître d\'ouvrage', widget = forms.Select())
+	zl_org_moa = forms.ChoiceField(label = 'Maître d\'ouvrage', widget = forms.Select())
 	zl_axe = forms.ChoiceField(
 		choices = [DEFAULT_OPTION],
 		label = 'Axe',
@@ -50,7 +40,7 @@ class GererDossier(forms.ModelForm) :
 		widget = forms.Select(attrs = { 'class' : 'hide-field' })
 	)
 	zl_type_doss = forms.ChoiceField(choices = [DEFAULT_OPTION], label = 'Type de dossier', widget = forms.Select())
-	zl_techn = forms.ChoiceField(choices = t_techn, label = 'Technicien', widget = forms.Select())
+	zl_techn = forms.ChoiceField(label = 'Technicien', widget = forms.Select())
 	rb_est_ttc_doss = forms.ChoiceField(
 		choices = [(True, 'Oui'), (False, 'Non')],
 		initial = True,
@@ -83,7 +73,9 @@ class GererDossier(forms.ModelForm) :
 		# Imports
 		from app.models import TAction
 		from app.models import TAxe
+		from app.models import TMoa
 		from app.models import TSousAxe
+		from app.models import TTechnicien
 
 		# Je déclare le tableau des arguments.
 		self.k_util = kwargs.pop('k_util', None)
@@ -100,6 +92,16 @@ class GererDossier(forms.ModelForm) :
 		# J'ajoute un double astérisque au label de certains champs.
 		self.fields['dt_delib_moa_doss'].label += REMARK
 		self.fields['dt_av_cp_doss'].label += REMARK
+
+		# J'alimente la liste déroulante des maîtres d'ouvrages.
+		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(en_act_org_moa = True)]
+		t_org_moa.insert(0, DEFAULT_OPTION)
+		self.fields['zl_org_moa'].choices = t_org_moa
+
+		# J'alimente la liste déroulante des techniciens.
+		t_techn = [(t.pk, t) for t in TTechnicien.objects.filter(en_act_techn = True)]
+		t_techn.insert(0, DEFAULT_OPTION)
+		self.fields['zl_techn'].choices = t_techn
 
 		# Je passe en lecture seule le champ relatif à la date de l'avis du comité de programmation car "En attente"
 		# est l'avis du comité de programmation sélectionné par défaut.
@@ -349,26 +351,8 @@ class GererDossier(forms.ModelForm) :
 
 class ChoisirDossier(forms.ModelForm) :
 
-	# Imports
-	from app.models import TMoa
-	from app.models import TNatureDossier
-	from app.models import TProgramme
-	from datetime import date
-
-	# J'initialise le tableau des choix de chaque liste déroulante personalisée.
-	t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(en_act_org_moa = True)]
-	t_org_moa.insert(0, DEFAULT_OPTION)
-	t_progr = [(p.pk, p) for p in TProgramme.objects.all()]
-	t_progr.insert(0, DEFAULT_OPTION)
-	t_nat_doss = [(nd.pk, nd) for nd in TNatureDossier.objects.all()]
-	t_nat_doss.insert(0, DEFAULT_OPTION)
-	t_ann_delib_moa_doss = [(i, i) for i in range(1999, date.today().year + 1)]
-	t_ann_delib_moa_doss.insert(0, DEFAULT_OPTION)
-
-	zl_org_moa = forms.ChoiceField(
-		choices = t_org_moa, label = 'Maître d\'ouvrage', required = False, widget = forms.Select()
-	)
-	zl_progr = forms.ChoiceField(choices = t_progr, label = 'Programme', required = False, widget = forms.Select())
+	zl_org_moa = forms.ChoiceField(label = 'Maître d\'ouvrage', required = False, widget = forms.Select())
+	zl_progr = forms.ChoiceField(label = 'Programme', required = False, widget = forms.Select())
 	zl_axe = forms.ChoiceField(
 		choices = [DEFAULT_OPTION],
 		label = 'Axe',
@@ -387,14 +371,9 @@ class ChoisirDossier(forms.ModelForm) :
 		required = False,
 		widget = forms.Select(attrs = { 'class' : 'hide-field' })
 	)
-	zl_nat_doss = forms.ChoiceField(
-		choices = t_nat_doss, label = 'Nature du dossier', required = False, widget = forms.Select()
-	)
+	zl_nat_doss = forms.ChoiceField(label = 'Nature du dossier', required = False, widget = forms.Select())
 	zl_ann_delib_moa_doss = forms.ChoiceField(
-		choices = t_ann_delib_moa_doss,
-		label = 'Année de délibération au maître d\'ouvrage',
-		required = False,
-		widget = forms.Select()
+		label = 'Année de délibération au maître d\'ouvrage', required = False, widget = forms.Select()
 	)
 
 	class Meta :
@@ -407,11 +386,37 @@ class ChoisirDossier(forms.ModelForm) :
 
 	def __init__(self, *args, **kwargs) :
 
+		# Imports
+		from app.models import TMoa
+		from app.models import TNatureDossier
+		from app.models import TProgramme
+		from datetime import date
+
 		super(ChoisirDossier, self).__init__(*args, **kwargs)
 
 		# Je définis les messages d'erreurs personnalisés à chaque champ.
 		for cle, valeur in self.fields.items() :
 			self.fields[cle].error_messages = ERROR_MESSAGES
+
+		# J'alimente la liste déroulante des maîtres d'ouvrages.
+		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(en_act_org_moa = True)]
+		t_org_moa.insert(0, DEFAULT_OPTION)
+		self.fields['zl_org_moa'].choices = t_org_moa
+
+		# J'alimente la liste déroulante des programmes.
+		t_progr = [(p.pk, p) for p in TProgramme.objects.all()]
+		t_progr.insert(0, DEFAULT_OPTION)
+		self.fields['zl_progr'].choices = t_progr
+
+		# J'alimente la liste déroulante des natures de dossiers.
+		t_nat_doss = [(nd.pk, nd) for nd in TNatureDossier.objects.all()]
+		t_nat_doss.insert(0, DEFAULT_OPTION)
+		self.fields['zl_nat_doss'].choices = t_nat_doss
+
+		# J'alimente la liste déroulante des années.
+		t_ann_delib_moa_doss = [(i, i) for i in range(1999, date.today().year + 1)]
+		t_ann_delib_moa_doss.insert(0, DEFAULT_OPTION)
+		self.fields['zl_ann_delib_moa_doss'].choices = t_ann_delib_moa_doss
 
 class GererFinancement(forms.ModelForm) :
 
@@ -732,25 +737,17 @@ class GererPrestation(forms.ModelForm) :
 
 class ChoisirPrestation(forms.Form) :
 
-	# Imports
-	from app.models import TPrestataire
-	from app.models import TProgramme
-
-	# J'initialise le tableau des choix de chaque liste déroulante personalisée.
-	t_progr = [(p.pk, p) for p in TProgramme.objects.all()]
-	t_progr.insert(0, DEFAULT_OPTION)
-	t_org_prest = [(p.pk, p) for p in TPrestataire.objects.all()]
-	t_org_prest.insert(0, DEFAULT_OPTION)
-
-	zl_progr = forms.ChoiceField(choices = t_progr, label = 'Programme', required = False, widget = forms.Select())
+	zl_progr = forms.ChoiceField(label = 'Programme', required = False, widget = forms.Select())
 	za_org_moa = forms.CharField(
 		label = 'Maître d\'ouvrage', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
 	)
-	zl_org_prest = forms.ChoiceField(
-		choices = t_org_prest, label = 'Prestataire', required = False, widget = forms.Select()
-	)
+	zl_org_prest = forms.ChoiceField(label = 'Prestataire', required = False, widget = forms.Select())
 
 	def __init__(self, *args, **kwargs) :
+
+		# Imports
+		from app.models import TPrestataire
+		from app.models import TProgramme
 
 		# Je déclare le tableau des arguments.
 		k_org_moa = kwargs.pop('k_org_moa', None)
@@ -763,6 +760,16 @@ class ChoisirPrestation(forms.Form) :
 			self.fields[cle].error_messages = ERROR_MESSAGES
 			if self.fields[cle].required == True :
 				self.fields[cle].label += REQUIRED
+
+		# J'alimente la liste déroulante des programmes.
+		t_progr = [(p.pk, p) for p in TProgramme.objects.all()]
+		t_progr.insert(0, DEFAULT_OPTION)
+		self.fields['zl_progr'].choices = t_progr
+
+		# J'alimente la liste déroulante des prestataires.
+		t_org_prest = [(p.pk, p) for p in TPrestataire.objects.all()]
+		t_org_prest.insert(0, DEFAULT_OPTION)
+		self.fields['zl_org_prest'].choices = t_org_prest
 
 		# J'affiche la valeur initiale de certains champs personnalisés.
 		self.fields['za_org_moa'].initial = k_org_moa
@@ -900,6 +907,7 @@ class GererFacture(forms.ModelForm) :
 	def __init__(self, *args, **kwargs) :
 
 		# Imports
+		from app.models import TFacturesDemandeVersement
 		from app.models import TPrestationsDossier
 
 		# Je déclare le tableau des arguments.
@@ -916,7 +924,6 @@ class GererFacture(forms.ModelForm) :
 
 		# J'initialise certaines variables par précaution.
 		num_doss = None
-		ht_ou_ttc = 'HT'
 
 		i = self.instance
 		if i.pk :
@@ -928,6 +935,13 @@ class GererFacture(forms.ModelForm) :
 		# J'affiche le numéro du dossier lié à la facture (ou prochainement lié).
 		self.fields['za_num_doss'].initial = num_doss
 
+		# J'ajoute un astérisque au label du champ de montant obligatoire.
+		if num_doss :
+			if num_doss.est_ttc_doss == True :
+				self.fields['mont_ttc_fact'].label += REQUIRED
+			else :
+				self.fields['mont_ht_fact'].label += REQUIRED
+
 		if i.pk :
 
 			# J'affiche la valeur initiale de chaque champ personnalisé.
@@ -936,6 +950,10 @@ class GererFacture(forms.ModelForm) :
 			if i.suivi_fact == 'Solde' :
 				v_suivi_fact = 'Solde'
 			self.fields['zl_suivi_fact'].initial = v_suivi_fact
+
+			if len(TFacturesDemandeVersement.objects.filter(id_fact = i)) > 0 :
+				self.fields['mont_ht_fact'].widget.attrs['readonly'] = True
+				self.fields['mont_ttc_fact'].widget.attrs['readonly'] = True
 
 		# J'alimente la liste déroulante des prestations du dossier.
 		t_prest_doss = [(pd.id_prest.pk, pd.id_prest) for pd in TPrestationsDossier.objects.filter(id_doss = num_doss)]
@@ -948,12 +966,15 @@ class GererFacture(forms.ModelForm) :
 		from app.functions import obt_mont
 		from app.models import TDossier
 		from app.models import TFacture
+		from app.models import TFacturesDemandeVersement
 		from app.sql_views import VSuiviPrestationsDossier
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererFacture, self).clean()
 		v_num_doss = cleaned_data.get('za_num_doss')
 		v_prest = cleaned_data.get('zl_prest')
+		v_mont_ht_fact = cleaned_data.get('mont_ht_fact')
+		v_mont_ttc_fact = cleaned_data.get('mont_ttc_fact')
 		v_suivi_fact = cleaned_data.get('zl_suivi_fact')
 
 		i = self.instance
@@ -994,11 +1015,14 @@ class GererFacture(forms.ModelForm) :
 
 			# Je gère la contrainte suivante : le montant de la facture ne doit pas être supérieur au reste à facturer
 			# de la prestation.
-			if valeur and float(valeur) > mont_raf_max :
-				self.add_error(
-					cle, 
-					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_raf_max))
-				)
+			if valeur :
+				if float(valeur) > mont_raf_max :
+					self.add_error(
+						cle, 
+						'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_raf_max))
+					)
+			else :
+				self.add_error(cle, ERROR_MESSAGES['required'])
 
 			# Je récupère les factures soldées du couple prestation/dossier.
 			qs_fact = TFacture.objects.filter(
@@ -1019,6 +1043,24 @@ class GererFacture(forms.ModelForm) :
 						err = True
 				if err == True :
 					self.add_error('zl_suivi_fact', 'Vous avez déjà émis une facture soldée pour cette prestation.')
+
+			# Je renvoie une erreur si le montant de la facture est modifié.
+			if v_mont_ht_fact and i.pk and float(v_mont_ht_fact) != i.mont_ht_fact :
+				self.add_error(
+					'mont_ht_fact', 
+					'''
+					Vous ne pouvez pas modifier le montant HT de la facture car elle est reliée à une demande de
+					versement.
+					'''
+				)
+			if v_mont_ttc_fact and i.pk and float(v_mont_ttc_fact) != i.mont_ttc_fact :
+				self.add_error(
+					'mont_ttc_fact', 
+					'''
+					Vous ne pouvez pas modifier le montant TTC de la facture car elle est reliée à une demande de 
+					versement.
+					'''
+				)
 
 	def save(self, commit = True) :
 
@@ -1087,6 +1129,14 @@ class GererDemandeVersement(forms.ModelForm) :
 		# J'affiche le numéro du dossier lié à l'arrêté (ou prochainement lié).
 		self.fields['za_num_doss'].initial = num_doss
 
+		# J'ajoute un astérisque au label du champ de montant obligatoire.
+		if num_doss :
+			if num_doss.est_ttc_doss == True :
+				self.fields['mont_ttc_ddv'].label += REQUIRED
+			else :
+				self.fields['mont_ht_ddv'].label += REQUIRED
+
+		# J'alimente la liste déroulante des financements du dossier.
 		o_doss = num_doss
 		if o_doss :
 			t_fin = [(f.pk, f.id_org_fin) for f in TFinancement.objects.filter(id_doss = o_doss).order_by(
@@ -1148,11 +1198,14 @@ class GererDemandeVersement(forms.ModelForm) :
 					mont_rad += i.mont_ht_ddv
 				if 'ttc' in cle :
 					mont_rad += i.mont_ttc_ddv
-			if valeur and float(valeur) > mont_rad :
-				self.add_error(
-					cle, 
-					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_rad))
-				)
+			if valeur :
+				if float(valeur) > mont_rad :
+					self.add_error(
+						cle, 
+						'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_rad))
+					)
+			else :
+				self.add_error(cle, ERROR_MESSAGES['required'])
 
 			# Je renvoie une erreur si aucune facture n'a été reliée à une demande de versement dont le type de 
 			# versement est différent de "Avance forfaitaire".
@@ -1411,7 +1464,7 @@ class GererAvenant(forms.ModelForm) :
 		# Imports
 		from app.models import TAvenant
 
-		exclude = ['id_doss', 'id_prest']
+		exclude = ['id_doss', 'id_prest', 'num_aven']
 		fields = '__all__'
 		model = TAvenant
 
@@ -1497,7 +1550,7 @@ class GererAvenant(forms.ModelForm) :
 					# Je stocke le jeu de données des avenants du couple prestation/dossier.
 					qs_aven = TAvenant.objects.filter(
 						id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest
-					).order_by('dt_aven')
+					).order_by('num_aven')
 
 					# Je récupère l'index de l'avenant.
 					ind = None
@@ -1505,41 +1558,17 @@ class GererAvenant(forms.ModelForm) :
 						if a.pk == i.pk :
 							ind = index
 
-					# Je vérifie l'existence d'un objet TAvenant correspondant à la "borne minimale".
-					o_aven_prec = None
-					try :
-						qs_aven_prec = TAvenant.objects.filter(
-							id_doss = o_prest_doss.id_doss, 
-							id_prest = o_prest_doss.id_prest, 
-							dt_aven__lt = qs_aven[ind].dt_aven
-						).order_by('-dt_aven')
-						if len(qs_aven_prec) > 0 :
-							o_aven_prec = qs_aven_prec[0]
-					except :
-						pass
-
-					# Je vérifie l'existence d'un objet TAvenant correspondant à la "borne maximale".
-					o_aven_suiv = None
-					try :
-						qs_aven_suiv = TAvenant.objects.filter(
-							id_doss = o_prest_doss.id_doss, 
-							id_prest = o_prest_doss.id_prest, 
-							dt_aven__gt = qs_aven[ind].dt_aven
-						).order_by('dt_aven')
-						if len(qs_aven_suiv) > 0 :
-							o_aven_suiv = qs_aven_suiv[0]
-					except :
-						pass
-
-					# Je borne les possibilités de la date de fin de l'avenant.
-					if o_aven_prec :
-						dt_aven_min = o_aven_prec.dt_aven
-					else :
+					# J'initialise la date de fin minimale de l'avenant.
+					if ind == 0 :
 						dt_aven_min = o_prest_doss.id_prest.dt_fin_prest
-					if o_aven_suiv :
-						dt_aven_max = o_aven_suiv.dt_aven
 					else :
+						dt_aven_min = qs_aven[ind - 1].dt_aven
+
+					# J'initialise la date de fin maximale de l'avenant.
+					if ind == len(qs_aven) - 1 :
 						dt_aven_max = None
+					else :
+						dt_aven_max = qs_aven[ind + 1].dt_aven
 
 					# Je renvoie une erreur si la date de fin de l'avenant n'est pas conforme.
 					if dt_aven_max :
@@ -1563,15 +1592,21 @@ class GererAvenant(forms.ModelForm) :
 
 					# Je récupère la date de fin de la prestation (soit celle indiquée lors de la création de celle-ci, soit la
 					# date de l'avenant la plus grande).
-					qs_aven_aggr = TAvenant.objects.filter(
+					num_aven_max = TAvenant.objects.filter(
 						id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest
-					).aggregate(Max('dt_aven'))
-					dt_fin_prest = qs_aven_aggr['dt_aven__max'] or o_prest_doss.id_prest.dt_fin_prest
+					).aggregate(Max('num_aven'))['num_aven__max']
+
+					if num_aven_max :
+						dt_fin_prest = TAvenant.objects.get(
+							id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest, num_aven = num_aven_max
+						).dt_aven
+					else :
+						dt_fin_prest = o_prest_doss.id_prest.dt_fin_prest
 
 					# Je renvoie une erreur si la date de fin de l'avenant n'est pas conforme.
 					if v_dt_aven < dt_fin_prest :
 						self.add_error(
-							'dt_aven', 
+							'dt_aven',
 							'''
 							La date de fin de l\'avenant doit être postérieure ou égale au {0}.
 							'''.format(dt_fr(dt_fin_prest))
@@ -1607,3 +1642,24 @@ class GererAvenant(forms.ModelForm) :
 			o.save()
 
 		return o
+
+class AjouterPrestataire(forms.ModelForm) :
+
+	class Meta :
+
+		# Imports
+		from app.models import TPrestataire
+
+		fields = ['comm_org', 'n_org', 'num_dep', 'siret_org_prest']
+		model = TPrestataire
+
+	def __init__(self, *args, **kwargs) :
+
+		super(AjouterPrestataire, self).__init__(*args, **kwargs)
+
+		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
+		# personnalisés à chaque champ.
+		for cle, valeur in self.fields.items() :
+			self.fields[cle].error_messages = ERROR_MESSAGES
+			if self.fields[cle].required == True :
+				self.fields[cle].label += REQUIRED

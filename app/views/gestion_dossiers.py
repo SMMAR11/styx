@@ -462,6 +462,7 @@ request : Objet requête
 def cons_doss(request, _d) :
 
 	# Imports
+	from app.forms.gestion_dossiers import AjouterPrestataire
 	from app.forms.gestion_dossiers import ChoisirPrestation
 	from app.forms.gestion_dossiers import GererArrete
 	from app.forms.gestion_dossiers import GererDemandeVersement
@@ -563,7 +564,7 @@ def cons_doss(request, _d) :
 			'dt_delib_moa_doss' : { 
 				'label' : 'Date de délibération au maître d\'ouvrage', 'value' : dt_fr(o_doss.dt_delib_moa_doss) or ''
 			},
-			'id_av_cp' : { 'label' : 'Avis du comité de programmation', 'value' : o_doss.id_av_cp },
+			'id_av_cp' : { 'label' : 'Avis du comité de programmation - CD GEMAPI', 'value' : o_doss.id_av_cp },
 			'dt_av_cp_doss' : { 
 				'label' : 'Date de l\'avis du comité de programmation', 'value' : dt_fr(o_doss.dt_av_cp_doss) or ''
 			},
@@ -694,6 +695,7 @@ def cons_doss(request, _d) :
 
 		# J'initialise le tableau des factures.
 		t_fact = []
+		mont_fact_sum = 0
 		for f in TFacture.objects.filter(id_doss = o_doss) :
 
 			if ht_ou_ttc == 'TTC' :
@@ -712,8 +714,11 @@ def cons_doss(request, _d) :
 				'pk' : f.pk
 			})
 
+			mont_fact_sum += mont_fact
+
 		# J'initialise le tableau des demandes de versements.
 		t_ddv = []
+		mont_ddv_sum = 0
 		for d in VDemandeVersement.objects.filter(id_doss = o_doss) :
 
 			if ht_ou_ttc == 'TTC' :
@@ -732,6 +737,8 @@ def cons_doss(request, _d) :
 				'id_type_vers' : d.id_type_vers,
 				'pk' : d.pk
 			})
+
+			mont_ddv_sum += mont_ddv
 
 		# J'initialise le tableau des arrêtés du dossier.
 		t_arr = [{
@@ -778,6 +785,7 @@ def cons_doss(request, _d) :
 		f_ajout_arr = GererArrete(prefix = 'GererArrete', k_doss = o_doss)
 		f_modif_doss_regl = GererDossier_Reglementations(prefix = 'GererDossier', instance = o_doss)
 		f_ajout_ph = GererPhoto(prefix = 'GererPhoto', k_doss = o_doss)
+		f_ajout_org_prest = AjouterPrestataire(prefix = 'AjouterPrestataire')
 
 		# J'initialise le gabarit de chaque champ de chaque formulaire.
 		t_ajout_fin = init_f(f_ajout_fin)
@@ -787,6 +795,7 @@ def cons_doss(request, _d) :
 		t_ajout_ddv = init_f(f_ajout_ddv)
 		t_ajout_arr = init_f(f_ajout_arr)
 		t_ajout_ph = init_f(f_ajout_ph)
+		t_ajout_org_prest = init_f(f_ajout_org_prest)
 
 		# Je déclare un tableau qui stocke le contenu de certaines fenêtres modales.
 		t_cont_fm = {
@@ -957,6 +966,25 @@ def cons_doss(request, _d) :
 				t_ajout_fin['chem_pj_fin'],
 				t_ajout_fin['comm_fin']
 			),
+			'ajout_org_prest' : '''
+			<form action="{0}" name="f_ajout_org_prest" method="post" onsubmit="soum_f(event)">
+				<input name="csrfmiddlewaretoken" type="hidden" value="{1}">
+				<div class="row">
+					<div class="col-sm-6">{2}</div>
+					<div class="col-sm-6">{3}</div>
+				</div>
+				{4}
+				{5}
+				<button class="center-block green-btn my-btn" type="submit">Valider</button>
+			</form>
+			'''.format(
+				reverse('ajout_org_prest'),
+				csrf(request)['csrf_token'],
+				t_ajout_org_prest['n_org'],
+				t_ajout_org_prest['siret_org_prest'],
+				t_ajout_org_prest['num_dep'],
+				t_ajout_org_prest['comm_org']
+			),
 			'ajout_prest' : '''
 			{0}
 			<div id="za_nvelle_prest">
@@ -964,7 +992,10 @@ def cons_doss(request, _d) :
 					<input name="csrfmiddlewaretoken" type="hidden" value="{2}">
 					{3}
 					<div class="row">
-						<div class="col-sm-6">{4}</div>
+						<div class="col-xs-6">{4}</div>
+						<div class="col-xs-6" style="margin-top: 20px;">
+							<span class="add-company-icon icon-link" id="bt_ajout_org_prest">Ajouter un prestataire</span>
+						</div>
 					</div>
 					{5}
 					{6}
@@ -1061,12 +1092,13 @@ def cons_doss(request, _d) :
 		t_fm = [
 			init_fm('ajout_arr', 'Ajouter un arrêté', t_cont_fm['ajout_arr']),
 			init_fm('ajout_aven', 'Ajouter un avenant'),
-			init_fm('ger_ddv', 'Ajouter une demande de versement', t_cont_fm['ajout_ddv']),
 			init_fm('ajout_fact', 'Ajouter une facture', t_cont_fm['ajout_fact']),
 			init_fm('ajout_fin', 'Ajouter un organisme financier', t_cont_fm['ajout_fin']),
+			init_fm('ajout_org_prest', 'Ajouter un prestataire', t_cont_fm['ajout_org_prest']),
 			init_fm('ajout_ph', 'Ajouter une photo', t_cont_fm['ajout_ph']),
 			init_fm('ajout_prest', 'Ajouter/relier une prestation', t_cont_fm['ajout_prest']),
 			init_fm('cons_ph', 'Consulter une photo'),
+			init_fm('ger_ddv', 'Ajouter une demande de versement', t_cont_fm['ajout_ddv']),
 			init_fm('modif_carto', 'Modifier un dossier'),
 			init_fm('modif_doss_regl', 'Modifier un dossier'),
 			init_fm('suppr_ph', 'Supprimer une photo')
@@ -1081,6 +1113,11 @@ def cons_doss(request, _d) :
 				'f_modif_doss_regl' : init_f(f_modif_doss_regl),
 				'forbidden' : ger_droits(request.user, o_doss, False, False),
 				'ht_ou_ttc' : ht_ou_ttc,
+				'mont_ddv_sum' : mont_ddv_sum,
+				'mont_ddv_sum_str' : obt_mont(mont_ddv_sum),
+				'mont_doss' : obt_mont(o_doss.mont_doss),
+				'mont_fact_sum' : mont_fact_sum,
+				'mont_fact_sum_str' : obt_mont(mont_fact_sum),
 				'mont_rae' : obt_mont(o_suivi_doss.mont_rae),
 				't_arr' : t_arr,
 				't_attrs_doss' : init_pg_cons(t_attrs_doss),
@@ -2198,7 +2235,7 @@ def cons_prest(request, _pd) :
 			'pk' : a.pk
 		} for index, a in enumerate(TAvenant.objects.filter(
 			id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest
-		).order_by('dt_aven'))]
+		).order_by('num_aven'))]
 
 		# Je déclare un tableau qui stocke le contenu de certaines fenêtres modales.
 		t_cont_fm = {
@@ -2267,9 +2304,22 @@ def ajout_aven(request, _r) :
 
 		if f_ajout_aven.is_valid() :
 
+			# Je récupère les données du formulaire valide.
+			cleaned_data = f_ajout_aven.cleaned_data
+			v_num_doss = cleaned_data.get('za_num_doss')
+			v_prest = cleaned_data.get('zl_prest')
+
+			# Je pointe vers l'objet TPrestationsDossier.
+			o_prest_doss = TPrestationsDossier.objects.get(id_doss__num_doss = v_num_doss, id_prest = v_prest)
+
 			# Je créé la nouvelle instance TAvenant.
 			o_nv_aven = f_ajout_aven.save(commit = False)
+			o_nv_aven.num_aven = o_prest_doss.seq_aven_prest_doss
 			o_nv_aven.save()
+
+			# Je mets à jour l'objet TPrestationsDossier.
+			o_prest_doss.seq_aven_prest_doss += 1
+			o_prest_doss.save()
 
 			if _r == 'cons_prest' :
 				url = reverse(
@@ -3461,5 +3511,50 @@ def suppr_ph(request, _p) :
 
 		# Je renseigne l'onglet actif après rechargement de la page.
 		request.session['tab_doss'] = ['#ong_ph', -1]
+
+	return output
+
+'''
+Cette vue permet de traiter le formulaire d'ajout d'un prestataire.
+request : Objet requête
+'''
+@verif_acc
+@nett_f
+def ajout_org_prest(request) :
+
+	# Imports
+	from app.forms.gestion_dossiers import AjouterPrestataire
+	from django.http import HttpResponse
+	import json
+
+	output = HttpResponse()
+
+	if request.method == 'POST' :
+
+		# Je soumets le formulaire.
+		f_ajout_org_prest = AjouterPrestataire(request.POST, prefix = 'AjouterPrestataire')
+
+		if f_ajout_org_prest.is_valid() :
+
+			# Je créé la nouvelle instance TPrestataire.
+			o_nv_org_prest = f_ajout_org_prest.save(commit = False)
+			o_nv_org_prest.save()
+
+			# J'affiche le message de succès.
+			output = HttpResponse(
+				json.dumps({ 'success' : {
+					'message' : 'Le prestataire {0} a été créé avec succès.'.format(o_nv_org_prest),
+					'display' : ['#id_GererPrestation-zsac_siret_org_prest', o_nv_org_prest.siret_org_prest]
+				}}), 
+				content_type = 'application/json'
+			)
+
+		else :
+
+			# J'affiche les erreurs.
+			t_err = {}
+			for k, v in f_ajout_org_prest.errors.items() :
+				t_err['AjouterPrestataire-{0}'.format(k)] = v
+			output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
 
 	return output

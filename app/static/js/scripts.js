@@ -607,6 +607,11 @@ $(document).on('change', 'input[name="GererDemandeVersement-cbsm_fact"]', functi
 	// J'initialise le montant de la demande de versement.
 	var mont_ddv = 0;
 
+	// J'initialise certaines variables "compteurs".
+	var cpt = 0;
+	var cpt_ht = 0;
+	var cpt_ttc = 0;
+
 	$('input[name="GererDemandeVersement-cbsm_fact"]').each(function() {
 		if ($(this).is(':checked')) {
 
@@ -626,7 +631,16 @@ $(document).on('change', 'input[name="GererDemandeVersement-cbsm_fact"]', functi
 			}
 
 			// Je calcule le montant de la demande de versement.
-			mont_ddv += v_mont_fact * v_pourc_elig_fin
+			mont_ddv += v_mont_fact * v_pourc_elig_fin;
+		}
+
+		// Je vérifie que toutes les cases à cocher ont le même mode de taxe.
+		cpt += 1;
+		if ($(this).attr('taxe') == 'HT') {
+			cpt_ht += 1;
+		}
+		if ($(this).attr('taxe') == 'TTC') {
+			cpt_ttc += 1;
 		}
 	});
 
@@ -639,6 +653,23 @@ $(document).on('change', 'input[name="GererDemandeVersement-cbsm_fact"]', functi
 	}
 	
 	// J'affiche le montant de la demande de versement.
-	$('#id_GererDemandeVersement-mont_ht_ddv').val(mont_ddv);
-	$('#id_GererDemandeVersement-mont_ttc_ddv').val(mont_ddv);
+	if (cpt == cpt_ht) {
+		$('#id_GererDemandeVersement-mont_ht_ddv').val(mont_ddv);
+	}
+	if (cpt == cpt_ttc) {
+		$('#id_GererDemandeVersement-mont_ttc_ddv').val(mont_ddv);
+	}
+});
+
+/**
+ * Ces deux scripts permettent la gestion d'affichage des fenêtres modales d'ajout d'une prestation et d'un 
+ * prestataire.
+ */
+$('#bt_ajout_org_prest').on('click', function() {
+	$('#fm_ajout_prest').modal('hide');
+	$('#fm_ajout_org_prest').modal('show');
+});
+
+$('#fm_ajout_org_prest').on('hidden.bs.modal', function() {
+	$('#fm_ajout_prest').modal('show');
 });
