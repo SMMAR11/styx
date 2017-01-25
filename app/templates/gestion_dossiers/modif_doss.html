@@ -34,20 +34,24 @@
 				<div class="col-md-6">{{ f_modif_doss.zl_type_doss }}</div>
 			</div>
 			<div class="row">
-				<div class="col-md-6">{{ f_modif_doss.terr_doss }}</div>
-				<div class="col-md-6">{{ f_modif_doss.ld_doss }}</div>
+				<div class="col-md-6">{{ f_modif_doss.lib_1_doss }}</div>
+				<div class="col-md-6">{{ f_modif_doss.lib_2_doss }}</div>
 			</div>
 			<div class="row">
 				<div class="col-md-6">{{ f_modif_doss.zl_techn }}</div>
 				<div class="col-md-6">{{ f_modif_doss.id_sage }}</div>
 			</div>
 			{% if t_fin_length > 0 or t_prest_doss_length > 0 %}
-			{{ f_modif_doss.mont_doss }}
+			<div class="row">
+				<div class="col-md-6">{{ f_modif_doss.mont_doss }}</div>
+				<div class="col-md-6">{{ f_modif_doss.mont_suppl_doss }}</div>
+			</div>
 			{% else %}
 			<div class="row">
 				<div class="col-md-6">{{ f_modif_doss.mont_doss }}</div>
 				<div class="col-md-6">{{ f_modif_doss.rb_est_ttc_doss }}</div>
 			</div>
+			{{ f_modif_doss.mont_suppl_doss }}
 			{% endif %}
 			<div class="row">
 				<div class="col-md-6">{{ f_modif_doss.id_av }}</div>
@@ -63,6 +67,8 @@
 		</div>
 		<div class="form-remark">
 			**
+			<br/>
+			Le montant du dossier présenté au CD GEMAPI n'est pas modifiable lorsque l'avis du comité de programmation est « Accordé ». Dans les autres cas, le montant de dépassement du dossier n'est pas modifiable.
 			<br/>
 			La date de délibération au maître d'ouvrage doit être renseignée lorsque l'état d'avancement choisi est différent de « En projet ».
 			<br/>

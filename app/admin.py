@@ -526,60 +526,6 @@ class ATypeAvancementArrete(admin.ModelAdmin) :
 # Je peux désormais gérer les types d'avancements d'un arrêté.
 admin.site.register(TTypeAvancementArrete, ATypeAvancementArrete)
 
-class ARiviere(admin.ModelAdmin) :
-
-	# J'initialise les paramètres.
-	actions = [admin.actions.delete_selected]
-	list_display = ['n_riv']
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('n_riv'),
-			)
-		}),
-	)
-
-# Je peux désormais gérer les rivières.
-admin.site.register(TRiviere, ARiviere)
-
-class AUnite(admin.ModelAdmin) :
-
-	# J'initialise les paramètres.
-	actions = [admin.actions.delete_selected]
-	list_display = ['int_unit']
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('int_unit'),
-			)
-		}),
-	)
-
-# Je peux désormais gérer les unités de mesures.
-admin.site.register(TUnite, AUnite)
-
-class AInstanceConcertation(admin.ModelAdmin) :
-
-	# J'initialise les paramètres.
-	actions = [admin.actions.delete_selected]
-	list_display = ['int_inst_conc']
-
-	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('int_inst_conc'),
-			)
-		}),
-	)
-
-# Je peux désormais gérer les instances de concertation.
-admin.site.register(TInstanceConcertation, AInstanceConcertation)
-
 class APeriodePriseVuePhoto(admin.ModelAdmin) :
 
 	# J'initialise les paramètres.

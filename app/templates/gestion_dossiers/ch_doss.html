@@ -28,6 +28,7 @@
 				<thead>
 					<tr>
 						<th>N° du dossier</th>
+						<th>Intitulé du dossier</th>
 						<th>Maître d'ouvrage</th>
 						<th>Date de délibération au maître d'ouvrage</th>
 						<th></th>
@@ -37,6 +38,7 @@
 					{% for d in t_doss %}
 					<tr>
 						<td class="b">{{ d.num_doss }}</td>
+						<td>{{ d.int_doss }}</td>
 						<td>{{ d.n_org }}</td>
 						<td>{{ d.dt_delib_moa_doss }}</td>
 						<td>

@@ -525,6 +525,7 @@ form > fieldset.my-fieldset > div {
 .my-table {
 	overflow: auto;
 	border: 1px solid #DDD;
+	font-size: 12px;
 }
 
 .my-table table.dataTable.no-footer {
@@ -539,13 +540,12 @@ form > fieldset.my-fieldset > div {
 .my-table thead > tr > th {
 	font-weight: normal;
 	font-style: italic;
-	font-size: 12px;
-	padding: 5px 15px;
+	padding: 2.5px 15px;
 	border: none;
 }
 
 .my-table tbody > tr > td {
-	padding: 5px 15px;
+	padding: 2.5px 15px;
 	color: #555;
 }
 
@@ -562,7 +562,7 @@ form > fieldset.my-fieldset > div {
 }
 
 .my-table tfoot > tr > td {
-	padding: 5px 15px;
+	padding: 2.5px 15px;
 	background-color: #3770B1;
 	color: #FFF;
 	border: none;
@@ -571,7 +571,6 @@ form > fieldset.my-fieldset > div {
 .my-table tfoot > tr > td:first-child {
 	font-weight: normal;
 	font-style: italic;
-	font-size: 12px;
 }
 
 /* Vignettes */

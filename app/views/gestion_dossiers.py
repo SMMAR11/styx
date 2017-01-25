@@ -41,6 +41,7 @@ def cr_doss(request) :
 	from app.functions import gen_t_ch_doss
 	from app.functions import init_f
 	from app.functions import init_fm
+	from app.functions import rempl_fich_log
 	from app.models import TAction
 	from app.models import TAxe
 	from app.models import TDossier
@@ -98,6 +99,7 @@ def cr_doss(request) :
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
 					d.num_doss,
+					'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>'
@@ -173,6 +175,9 @@ def cr_doss(request) :
 					content_type = 'application/json'
 				)
 
+				# Je complète le fichier log.
+				rempl_fich_log([request.user.pk, request.user, 'C', 'Dossier', o_nv_doss.pk])
+
 			else :
 
 				# J'affiche les erreurs.
@@ -202,6 +207,7 @@ def modif_doss(request, _d) :
 	from app.functions import ger_droits
 	from app.functions import init_f
 	from app.functions import init_fm
+	from app.functions import rempl_fich_log
 	from app.models import TAction
 	from app.models import TAxe
 	from app.models import TDossier
@@ -273,6 +279,7 @@ def modif_doss(request, _d) :
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
 					d.num_doss,
+					'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>'
@@ -314,6 +321,9 @@ def modif_doss(request, _d) :
 					}}), 
 					content_type = 'application/json'
 				)
+
+				# Je complète le fichier log.
+				rempl_fich_log([request.user.pk, request.user, 'U', 'Géométrie d\'un dossier', o_doss.pk])
 
 		else :
 
@@ -367,6 +377,9 @@ def modif_doss(request, _d) :
 					content_type = 'application/json'
 				)
 
+				# Je complète le fichier log.
+				rempl_fich_log([request.user.pk, request.user, 'U', 'Dossier', o_doss_modif.pk])
+
 			else :
 
 				# J'affiche les erreurs.
@@ -408,6 +421,7 @@ def ch_doss(request) :
 		t_doss = [{
 			'pk' : d.pk,
 			'num_doss' : d,
+			'int_doss' : '{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
 			'n_org' : d.id_org_moa,
 			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-'
 		} for d in TDossier.objects.all()]
@@ -438,6 +452,7 @@ def ch_doss(request) :
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
 					d.num_doss,
+					'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					'<a href="{0}" class="consult-icon pull-right" title="Consulter le dossier"></a>'.format(
@@ -480,6 +495,7 @@ def cons_doss(request, _d) :
 	from app.functions import init_pg_cons
 	from app.functions import obt_mont
 	from app.functions import obt_pourc
+	from app.functions import rempl_fich_log
 	from app.functions import suppr
 	from app.models import TArretesDossier
 	from app.models import TDossier
@@ -524,6 +540,9 @@ def cons_doss(request, _d) :
 		if o_doss.est_ttc_doss == True :
 			ht_ou_ttc = 'TTC'
 
+		# Je pointe vers l'objet VSuiviDossier.
+		o_suivi_doss = VSuiviDossier.objects.get(id_doss = o_doss.pk)
+
 		# Je prépare l'onglet "Caractéristiques".
 		t_attrs_doss = {
 			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
@@ -539,15 +558,15 @@ def cons_doss(request, _d) :
 						{1}
 					</div>
 					<div class="col-xs-6">
-						<span class="red-color small u">Territoire :</span>
+						<span class="red-color small u">Territoire ou caractéristique :</span>
 						{2}
 						<br/>
-						<span class="red-color small u">Lieu-dit précis :</span>
+						<span class="red-color small u">Territoire ou lieu-dit précis :</span>
 						{3}
 					</div>
 				</div>
 				'''.format(
-					o_doss.id_nat_doss, o_doss.id_type_doss, o_doss.terr_doss, o_doss.ld_doss
+					o_doss.id_nat_doss, o_doss.id_type_doss, o_doss.lib_1_doss, o_doss.lib_2_doss
 				)
 			},
 			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
@@ -557,9 +576,20 @@ def cons_doss(request, _d) :
 			'num_act' : { 'label' : 'Action', 'value' : o_doss.num_act or '' },
 			'id_nat_doss' : { 'label' : 'Nature du dossier', 'value' : o_doss.id_nat_doss },
 			'id_type_doss' : { 'label' : 'Type de dossier', 'value' : o_doss.id_type_doss },
-			'id_techn' : { 'label' : 'Technicien', 'value' : o_doss.id_techn },
+			'id_techn' : { 'label' : 'Agent responsable', 'value' : o_doss.id_techn },
 			'id_sage' : { 'label' : 'SAGE', 'value' : o_doss.id_sage or '' },
-			'mont_doss' : { 'label' : 'Montant {0} (en €)'.format(ht_ou_ttc), 'value' : obt_mont(o_doss.mont_doss) },
+			'mont_doss' : {
+				'label' : 'Montant {0} du dossier présenté au CD GEMAPI (en €)'.format(ht_ou_ttc),
+				'value' : obt_mont(o_doss.mont_doss)
+			},
+			'mont_suppl_doss' : {
+				'label' : 'Dépassement {0} du dossier (en €)'.format(ht_ou_ttc),
+				'value' : obt_mont(o_doss.mont_suppl_doss)
+			},
+			'mont_tot_doss' : {
+				'label' : 'Montant {0} total du dossier (en €)'.format(ht_ou_ttc),
+				'value' : obt_mont(o_suivi_doss.mont_tot_doss)
+			},
 			'id_av' : { 'label' : 'État d\'avancement', 'value' : o_doss.id_av },
 			'dt_delib_moa_doss' : { 
 				'label' : 'Date de délibération au maître d\'ouvrage', 'value' : dt_fr(o_doss.dt_delib_moa_doss) or ''
@@ -579,21 +609,18 @@ def cons_doss(request, _d) :
 		# J'initialise le tableau des dossiers de la famille.
 		t_doss_fam = [{
 			'num_doss' : d,
+			'int_doss' : '{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
 			'id_org_moa' : d.id_org_moa,
 			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-',
-			'id_progr' : d.id_progr,
-			'id_nat_doss' : d.id_nat_doss,
 			'pk' : d.pk
 		} for d in TDossier.objects.filter(id_fam = o_doss.id_fam).exclude(pk = o_doss.pk)]
-
-		# Je pointe vers l'objet VSuiviDossier.
-		o_suivi_doss = VSuiviDossier.objects.get(id_doss = o_doss.pk)
 		
 		# J'initialise le tableau des financements du dossier.
 		t_fin = [{
 			'n_org' : f.id_org_fin.n_org,
-			'mont_part_fin' : obt_mont(f.mont_part_fin),
+			'mont_elig_fin' : obt_mont(f.mont_elig_fin) or '-',
 			'pourc_elig_fin' : obt_pourc(f.pourc_elig_fin) or '-',
+			'mont_part_fin' : obt_mont(f.mont_part_fin),
 			'pourc_glob_fin' : obt_pourc(f.pourc_glob_fin),
 			'dt_deb_elig_fin' : dt_fr(f.dt_deb_elig_fin) or '-',
 			'dt_fin_elig_fin' : dt_fr(f.dt_fin_elig_fin) or '-',
@@ -605,8 +632,9 @@ def cons_doss(request, _d) :
 		if o_suivi_doss.mont_raf > 0 :
 			t_fin.append({
 				'n_org' : 'Autofinancement - {0}'.format(o_doss.id_org_moa),
-				'mont_part_fin' : obt_mont(o_suivi_doss.mont_raf),
+				'mont_elig_fin' : '-',
 				'pourc_elig_fin' : '-',
+				'mont_part_fin' : obt_mont(o_suivi_doss.mont_raf),
 				'pourc_glob_fin' : obt_pourc(o_suivi_doss.mont_raf / o_suivi_doss.mont_doss * 100),
 				'dt_deb_elig_fin' : '-',
 				'dt_fin_elig_fin' : '-',
@@ -1224,6 +1252,11 @@ def cons_doss(request, _d) :
 					# Je renseigne l'onglet actif après rechargement de la page.
 					request.session['tab_doss'] = ['#ong_arr', -1]
 
+					# Je complète le fichier log.
+					rempl_fich_log(
+						[request.user.pk, request.user, 'U', 'Réglementation d\'un dossier', o_doss_regl_modif.pk]
+					)
+
 				else :
 
 					# J'affiche les erreurs.
@@ -1534,6 +1567,16 @@ def cons_doss(request, _d) :
 
 						if 'relier-prestation' in request.session :
 							del request.session['relier-prestation']
+
+						# Je complète le fichier log.
+						rempl_fich_log([
+							request.user.pk,
+							request.user,
+							'C',
+							'Couple prestation/dossier (reliage)',
+							t_inst_prest_doss[-1].pk
+						])
+
 					else :
 
 						# J'affiche l'erreur groupée.
@@ -1556,6 +1599,7 @@ def ajout_fin(request) :
 	# Imports
 	from app.forms.gestion_dossiers import GererFinancement
 	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -1596,6 +1640,9 @@ def ajout_fin(request) :
 			# Je renseigne l'onglet actif après rechargement de la page.
 			request.session['tab_doss'] = ['#ong_fin', -1]
 
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'C', 'Financement', o_nv_fin.pk])
+
 		else :
 
 			# J'affiche les erreurs.
@@ -1621,6 +1668,7 @@ def modif_fin(request, _f) :
 	from app.functions import ger_droits
 	from app.functions import init_f
 	from app.functions import init_fm
+	from app.functions import rempl_fich_log
 	from app.models import TFinancement
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -1674,6 +1722,9 @@ def modif_fin(request, _f) :
 				}}), 
 				content_type = 'application/json'
 			)
+
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'U', 'Financement', o_fin_modif.pk])
 
 		else :
 
@@ -1797,6 +1848,7 @@ def ajout_prest(request) :
 	# Imports
 	from app.forms.gestion_dossiers import GererPrestation
 	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from app.models import TPrestationsDossier
 	from django.core.urlresolvers import reverse
@@ -1849,6 +1901,12 @@ def ajout_prest(request) :
 			# Je renseigne l'onglet actif après rechargement de la page.
 			request.session['tab_doss'] = ['#ong_prest', -1]
 
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'C', 'Prestation', o_nvelle_prest.pk])
+			rempl_fich_log(
+				[request.user.pk, request.user, 'C', 'Couple prestation/dossier (ajout)', o_nvelle_prest_doss.pk]
+			)
+
 		else :
 
 			# J'affiche les erreurs.
@@ -1876,6 +1934,7 @@ def modif_prest(request, _pd) :
 	from app.functions import init_f
 	from app.functions import init_fm
 	from app.functions import obt_mont
+	from app.functions import rempl_fich_log
 	from app.models import TPrestationsDossier
 	from app.sql_views import VSuiviDossier
 	from app.sql_views import VSuiviPrestationsDossier
@@ -2103,6 +2162,9 @@ def modif_prest(request, _pd) :
 							content_type = 'application/json'
 						)
 
+						# Je complète le fichier log.
+						rempl_fich_log([request.user.pk, request.user, 'U', 'Prestation', o_prest_modif.pk])
+
 					else :
 
 						# J'affiche l'erreur groupée.
@@ -2276,6 +2338,7 @@ def ajout_aven(request, _r) :
 	# Imports
 	from app.forms.gestion_dossiers import GererAvenant
 	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from app.models import TPrestationsDossier
 	from django.core.urlresolvers import reverse
@@ -2352,6 +2415,9 @@ def ajout_aven(request, _r) :
 			# Je renseigne l'onglet actif après rechargement de la page.
 			request.session[tab] = [ong, -1]
 
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'C', 'Avenant', o_nv_aven.pk])
+
 		else :
 
 			# J'affiche les erreurs.
@@ -2377,6 +2443,7 @@ def modif_aven(request, _a) :
 	from app.functions import ger_droits
 	from app.functions import init_f
 	from app.functions import init_fm
+	from app.functions import rempl_fich_log
 	from app.models import TAvenant
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -2428,6 +2495,9 @@ def modif_aven(request, _a) :
 				}}), 
 				content_type = 'application/json'
 			)
+
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'U', 'Avenant', o_aven_modif.pk])
 
 		else :
 
@@ -2514,6 +2584,7 @@ def ajout_fact(request) :
 	# Imports
 	from app.forms.gestion_dossiers import GererFacture
 	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from app.models import TPrestation
 	from app.models import TPrestationsDossier
@@ -2579,6 +2650,9 @@ def ajout_fact(request) :
 			# Je renseigne l'onglet actif après rechargement de la page.
 			request.session['tab_doss'] = ['#ong_fact', -1]
 
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'C', 'Facture', o_nvelle_fact.pk])
+
 		else :
 
 			# J'affiche les erreurs.
@@ -2604,6 +2678,7 @@ def modif_fact(request, _f) :
 	from app.functions import ger_droits
 	from app.functions import init_f
 	from app.functions import init_fm
+	from app.functions import rempl_fich_log
 	from app.models import TFacture
 	from app.models import TPrestationsDossier
 	from django.core.urlresolvers import reverse
@@ -2685,6 +2760,9 @@ def modif_fact(request, _f) :
 				}}), 
 				content_type = 'application/json'
 			)
+
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'U', 'Facture', o_fact_modif.pk])
 
 		else :
 
@@ -2771,6 +2849,7 @@ def ajout_ddv(request) :
 	from app.forms.gestion_dossiers import GererDemandeVersement
 	from app.functions import gen_t_html_fact_doss
 	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from app.models import TFacture
 	from app.models import TFacturesDemandeVersement
@@ -2849,6 +2928,9 @@ def ajout_ddv(request) :
 				# Je renseigne l'onglet actif après rechargement de la page.
 				request.session['tab_doss'] = ['#ong_ddv', -1]
 
+				# Je complète le fichier log.
+				rempl_fich_log([request.user.pk, request.user, 'C', 'Demande de versement', o_nvelle_ddv.pk])
+
 			else :
 
 				# J'affiche les erreurs.
@@ -2876,6 +2958,7 @@ def modif_ddv(request, _d) :
 	from app.functions import ger_droits
 	from app.functions import init_f
 	from app.functions import init_fm
+	from app.functions import rempl_fich_log
 	from app.models import TDemandeVersement
 	from app.models import TFacture
 	from app.models import TFacturesDemandeVersement
@@ -2958,6 +3041,9 @@ def modif_ddv(request, _d) :
 					}}), 
 					content_type = 'application/json'
 				)
+
+				# Je complète le fichier log.
+				rempl_fich_log([request.user.pk, request.user, 'U', 'Demande de versement', o_ddv_modif.pk])
 
 			else :
 
@@ -3076,6 +3162,7 @@ def ajout_arr(request) :
 	# Imports
 	from app.forms.gestion_dossiers import GererArrete
 	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -3116,6 +3203,9 @@ def ajout_arr(request) :
 			# Je renseigne l'onglet actif après rechargement de la page.
 			request.session['tab_doss'] = ['#ong_arr', -1]
 
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'C', 'Arrêté', o_nv_arr.pk])
+
 		else :
 
 			# J'affiche les erreurs.
@@ -3140,6 +3230,7 @@ def modif_arr(request, _a) :
 	from app.functions import ger_droits
 	from app.functions import init_f
 	from app.functions import init_fm
+	from app.functions import rempl_fich_log
 	from app.models import TArretesDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -3194,6 +3285,9 @@ def modif_arr(request, _a) :
 				content_type = 'application/json'
 			)
 
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'U', 'Arrêté', o_arr_modif.pk])
+
 		else :
 
 			# J'affiche les erreurs.
@@ -3215,6 +3309,7 @@ def suppr_arr(request, _a) :
 
 	# Imports
 	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
 	from app.models import TArretesDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -3235,7 +3330,10 @@ def suppr_arr(request, _a) :
 		o_doss = o_arr.id_doss
 		o_type_decl = o_arr.id_type_decl
 
-		# Je supprime l'objet TPhoto.
+		# Je récupère l'identifiant de l'arrêté afin de le renseigner dans le fichier log.
+		v_id_arr_doss = o_arr.pk
+
+		# Je supprime l'objet TArretesDossier.
 		o_arr.delete()
 
 		# J'affiche le message de succès.
@@ -3251,6 +3349,9 @@ def suppr_arr(request, _a) :
 
 		# Je renseigne l'onglet actif après rechargement de la page.
 		request.session['tab_doss'] = ['#ong_arr', -1]
+
+		# Je complète le fichier log.
+		rempl_fich_log([request.user.pk, request.user, 'D', 'Arrêté', v_id_arr_doss])
 
 	return output
 
@@ -3339,6 +3440,7 @@ def ajout_ph(request) :
 	# Imports
 	from app.forms.gestion_dossiers import GererPhoto
 	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -3377,6 +3479,9 @@ def ajout_ph(request) :
 			# Je renseigne l'onglet actif après rechargement de la page.
 			request.session['tab_doss'] = ['#ong_ph', -1]
 
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'C', 'Photo', o_nvelle_ph.pk])
+
 		else :
 
 			# J'affiche les erreurs.
@@ -3402,6 +3507,7 @@ def modif_ph(request, _p) :
 	from app.functions import ger_droits
 	from app.functions import init_f
 	from app.functions import init_fm
+	from app.functions import rempl_fich_log
 	from django.core.urlresolvers import reverse
 	from app.models import TPhoto
 	from django.http import HttpResponse
@@ -3457,6 +3563,9 @@ def modif_ph(request, _p) :
 			# Je renseigne l'onglet actif après rechargement de la page.
 			request.session['tab_doss'] = ['#ong_ph', -1]
 
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'U', 'Photo', o_ph_modif.pk])
+
 		else :
 
 			# J'affiche les erreurs.
@@ -3478,6 +3587,7 @@ def suppr_ph(request, _p) :
 
 	# Imports
 	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
 	from app.models import TPhoto
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -3497,6 +3607,9 @@ def suppr_ph(request, _p) :
 		# Je pointe vers l'objet TDossier lié à l'objet TPhoto.
 		o_doss = o_ph.id_doss
 
+		# Je récupère l'identifiant de la photo afin de le renseigner dans le fichier log.
+		v_id_ph = o_ph.pk
+
 		# Je supprime l'objet TPhoto.
 		o_ph.delete()
 
@@ -3512,6 +3625,9 @@ def suppr_ph(request, _p) :
 		# Je renseigne l'onglet actif après rechargement de la page.
 		request.session['tab_doss'] = ['#ong_ph', -1]
 
+		# Je complète le fichier log.
+		rempl_fich_log([request.user.pk, request.user, 'D', 'Photo', v_id_ph])
+
 	return output
 
 '''
@@ -3524,6 +3640,7 @@ def ajout_org_prest(request) :
 
 	# Imports
 	from app.forms.gestion_dossiers import AjouterPrestataire
+	from app.functions import rempl_fich_log
 	from django.http import HttpResponse
 	import json
 
@@ -3548,6 +3665,9 @@ def ajout_org_prest(request) :
 				}}), 
 				content_type = 'application/json'
 			)
+
+			# Je complète le fichier log.
+			rempl_fich_log([request.user.pk, request.user, 'C', 'Prestataire', o_nv_org_prest.pk])
 
 		else :
 

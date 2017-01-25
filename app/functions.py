@@ -264,9 +264,15 @@ def gen_t_ch_doss(request, _d_excl = None) :
 			<td class="b">{0}</td>
 			<td>{1}</td>
 			<td>{2}</td>
+			<td>{3}</td>
 			<td><span class="choose-icon pointer pull-right" title="Choisir le dossier"></span></td>
 		</tr>
-		'''.format(d, d.id_org_moa, dt_fr(d.dt_delib_moa_doss) or '-')
+		'''.format(
+			d,
+			'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+			d.id_org_moa,
+			dt_fr(d.dt_delib_moa_doss) or '-'
+		)
 		t_lg.append(lg)
 
 	return '''
@@ -297,6 +303,7 @@ def gen_t_ch_doss(request, _d_excl = None) :
 			<thead>
 				<tr>
 					<th>N° du dossier</th>
+					<th>Intitulé du dossier</th>
 					<th>Maître d'ouvrage</th>
 					<th>Date de délibération au maître d'ouvrage</th>
 					<th></th>
@@ -775,6 +782,37 @@ def obt_pourc(_v) :
 			output = output[:-1]
 			
 	return output
+
+'''
+Cette procédure permet de mettre à jour un fichier log.
+_t : Tableau de données à renseigner dans le fichier log
+'''
+def rempl_fich_log(_t) :
+
+	# Imports
+	from styx.settings import MEDIA_ROOT
+	import csv
+	import time
+
+	try :
+
+		# J'ouvre (ou je créé) le fichier log.
+		with open('{0}\log.csv'.format(MEDIA_ROOT), 'a', newline = '') as fich :
+
+			# Je définis le délimiteur.
+			writer = csv.writer(fich, delimiter = ';')
+
+			# J'ajoute en fin de tableau la date et l'heure de l'opération.
+			_t.append(time.strftime('%d/%m/%Y %H:%M:%S'))
+
+			# J'ajoute une ligne au fichier log.
+			writer.writerow(_t)
+
+			# Je ferme le fichier log.
+			fich.close()
+
+	except :
+		pass
 
 '''
 Cette fonction retourne une demande de confirmation de suppression d'un élément.

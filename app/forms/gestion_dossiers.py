@@ -40,10 +40,10 @@ class GererDossier(forms.ModelForm) :
 		widget = forms.Select(attrs = { 'class' : 'hide-field' })
 	)
 	zl_type_doss = forms.ChoiceField(choices = [DEFAULT_OPTION], label = 'Type de dossier', widget = forms.Select())
-	zl_techn = forms.ChoiceField(label = 'Technicien', widget = forms.Select())
+	zl_techn = forms.ChoiceField(label = 'Agent responsable', widget = forms.Select())
 	rb_est_ttc_doss = forms.ChoiceField(
 		choices = [(True, 'Oui'), (False, 'Non')],
-		initial = True,
+		initial = False,
 		label = 'Le montant est-il en TTC ?',
 		required = False,
 		widget = forms.RadioSelect()
@@ -91,6 +91,8 @@ class GererDossier(forms.ModelForm) :
 
 		# J'ajoute un double astérisque au label de certains champs.
 		self.fields['dt_delib_moa_doss'].label += REMARK
+		self.fields['mont_doss'].label += REMARK
+		self.fields['mont_suppl_doss'].label += REMARK
 		self.fields['dt_av_cp_doss'].label += REMARK
 
 		# J'alimente la liste déroulante des maîtres d'ouvrages.
@@ -108,6 +110,11 @@ class GererDossier(forms.ModelForm) :
 		self.fields['dt_av_cp_doss'].widget.attrs['readonly'] = True
 
 		i = self.instance
+
+		# J'exclus le champ relatif aux dépenses supplémentaires lorsque je veux créer un dossier.
+		if not i.pk :
+			del self.fields['mont_suppl_doss']
+
 		if i.pk :
 
 			# Je réinitialise le tableau des choix de certaines listes déroulantes.
@@ -171,6 +178,10 @@ class GererDossier(forms.ModelForm) :
 				self.fields['dt_delib_moa_doss'].widget.attrs['readonly'] = True
 			if i.id_av_cp.int_av_cp in ['Accordé', 'Refusé'] :
 				self.fields['dt_av_cp_doss'].widget.attrs['readonly'] = False
+			if i.id_av_cp.int_av_cp == 'Accordé' :
+				self.fields['mont_doss'].widget.attrs['readonly'] = True
+			else :
+				self.fields['mont_suppl_doss'].widget.attrs['readonly'] = True
 
 	def clean(self) :
 
@@ -195,6 +206,7 @@ class GererDossier(forms.ModelForm) :
 		v_act = cleaned_data.get('zl_act')
 		v_type_doss = cleaned_data.get('zl_type_doss')
 		v_mont_doss = cleaned_data.get('mont_doss')
+		v_mont_suppl_doss = cleaned_data.get('mont_suppl_doss')
 		v_av = cleaned_data.get('id_av')
 		v_dt_delib_moa_doss = cleaned_data.get('dt_delib_moa_doss')
 		v_av_cp = cleaned_data.get('id_av_cp')
@@ -272,12 +284,23 @@ class GererDossier(forms.ModelForm) :
 			# Je trie les deux valeurs dans l'ordre afin de récupérer le montant minimum du dossier.
 			t_mont_doss = sorted([mont_elig_fin_max, mont_part_fin_sum, mont_tot_prest_doss])
 
-			# Je gère la contrainte suivante : le nouveau montant du dossier dépend de son plan de financement.
-			if v_mont_doss and float(v_mont_doss) < t_mont_doss[2] :
-				self.add_error(
-					'mont_doss', 
-					'Veuillez saisir un montant supérieur ou égal à {0} €.'.format(obt_mont(t_mont_doss[2]))
-				)
+			# Je gère la contrainte suivante : les montants du dossier dépendent des éléments comptables de celui-ci.
+			if v_mont_doss is not None and v_mont_suppl_doss is not None :
+				if v_av_cp :
+					if v_av_cp.int_av_cp == 'Accordé' :
+						if t_mont_doss[2] > i.mont_doss :
+							mont_min = t_mont_doss[2] - i.mont_doss
+							if float(v_mont_suppl_doss) < mont_min :
+								self.add_error(
+									'mont_suppl_doss', 
+									'Veuillez saisir un montant supérieur ou égal à {0} €.'.format(obt_mont(mont_min))
+								)
+					else :
+						if float(v_mont_doss) < t_mont_doss[2] :
+							self.add_error(
+								'mont_doss', 
+								'Veuillez saisir un montant supérieur ou égal à {0} €.'.format(obt_mont(t_mont_doss[2]))
+							)
 
 			# Je renvoie une erreur si je passe un dossier en projet alors que des éléments comptables ont déjà été
 			# saisis.
@@ -289,6 +312,15 @@ class GererDossier(forms.ModelForm) :
 					mess = 'Une prestation a déjà été lancée pour ce dossier.'
 				if mess :
 					self.add_error('id_av', mess)
+
+			# Je renvoie une erreur si le montant de dépassement d'un dossier dont l'avis du comité de programmation
+			# est différent de "Accordé" est strictement positif.
+			if v_av_cp and v_av_cp.int_av_cp != 'Accordé' :
+				if v_mont_suppl_doss and float(v_mont_suppl_doss) > 0 :
+					self.add_error('mont_suppl_doss', ERROR_MESSAGES['invalid'])
+			else :
+				if v_mont_doss and v_mont_doss != i.mont_doss :
+					self.add_error('mont_doss', ERROR_MESSAGES['invalid'])
 
 	def save(self, commit = True) :
 

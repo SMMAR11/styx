@@ -9,6 +9,8 @@ class VSuiviDossier(models.Model) :
 
     id_doss = models.IntegerField(primary_key = True)
     mont_doss = models.FloatField()
+    mont_suppl_doss = models.FloatField()
+    mont_tot_doss = models.FloatField()
     est_ttc_doss = models.BooleanField()
     mont_part_fin_sum = models.FloatField()
     mont_prest_doss_sum = models.FloatField()

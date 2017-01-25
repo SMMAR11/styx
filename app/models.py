@@ -461,6 +461,7 @@ class TDossier(models.Model) :
     # Imports
     from app.validators import val_cdc
     from app.validators import val_fich_pdf
+    from app.validators import val_mont_nul
     from app.validators import val_mont_pos
     from datetime import date
 
@@ -503,13 +504,22 @@ class TDossier(models.Model) :
     )
     dt_int_doss = models.DateField(default = date.today())
     est_ttc_doss = models.BooleanField()
-    ld_doss = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Lieu-dit précis')
-    mont_doss = models.FloatField(validators = [val_mont_pos], verbose_name = 'Montant (en €)')
+    lib_1_doss = models.CharField(
+        max_length = 255, validators = [val_cdc], verbose_name = 'Territoire ou caractéristique'
+    )
+    lib_2_doss = models.CharField(
+        max_length = 255, validators = [val_cdc], verbose_name = 'Territoire ou lieu-dit précis'
+    )
+    mont_doss = models.FloatField(
+        validators = [val_mont_pos], verbose_name = 'Montant du dossier présenté au CD GEMAPI (en €)'
+    )
+    mont_suppl_doss = models.FloatField(
+        default = 0, verbose_name = 'Dépassement du dossier (en €)', validators = [val_mont_nul]
+    )
     num_act = models.CharField(blank = True, max_length = 1, null = True)
     num_axe = models.IntegerField(blank = True, null = True)
     num_doss = models.CharField(max_length = 255, unique = True)
     num_ss_axe = models.IntegerField(blank = True, null = True)
-    terr_doss = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Territoire')
     id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, verbose_name = 'Programme')
     id_av = models.ForeignKey(TAvancement, models.DO_NOTHING, verbose_name = 'État d\'avancement')
     id_av_cp = models.ForeignKey(
@@ -523,7 +533,7 @@ class TDossier(models.Model) :
     id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, verbose_name = 'Nature du dossier')
     id_org_moa = models.ForeignKey(TMoa, models.DO_NOTHING)
     id_sage = models.ForeignKey(TSage, models.DO_NOTHING, blank = True, null = True, verbose_name = 'SAGE')
-    id_techn = models.ForeignKey(TTechnicien, models.DO_NOTHING, verbose_name = 'Technicien')
+    id_techn = models.ForeignKey(TTechnicien, models.DO_NOTHING)
     id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING)
     type_decl = models.ManyToManyField(TTypeDeclaration, through = 'TArretesDossier')
 
@@ -535,14 +545,6 @@ class TDossier(models.Model) :
 
     def __str__(self) :
         return self.num_doss
-
-    def clean(self) :
-
-        # Imports
-        from django.core.exceptions import ValidationError
-
-        if self.terr_doss == 'Aaa' :
-            raise ValidationError({ 'terr_doss' : 'Ok' })
 
 class TDossierGeom(gismodels.Model) :
 
@@ -560,75 +562,6 @@ class TDossierGeom(gismodels.Model) :
 
     def __str__(self) :
         return self.gid
-
-class TRiviere(models.Model) :
-
-    id_riv = models.AutoField(primary_key = True)
-    n_riv = models.CharField(max_length = 255, verbose_name = 'Nom')
-
-    class Meta :
-        db_table = 't_riviere'
-        ordering = ['n_riv']
-        verbose_name = 'T_RIVIERE'
-        verbose_name_plural = 'T_RIVIERE'
-
-    def __str__(self) :
-        return self.n_riv
-
-class TUnite(models.Model) :
-
-    id_unit = models.AutoField(primary_key = True)
-    int_unit = models.CharField(max_length = 255, verbose_name = 'Intitulé')
-
-    class Meta :
-        db_table = 't_unite'
-        ordering = ['int_unit']
-        verbose_name = 'T_UNITE'
-        verbose_name_plural = 'T_UNITE'
-
-    def __str__(self) :
-        return self.int_unit
-
-class TInstanceConcertation(models.Model) :
-
-    id_inst_conc = models.AutoField(primary_key = True)
-    int_inst_conc = models.CharField(max_length = 255, verbose_name = 'Intitulé')
-
-    class Meta :
-        db_table = 't_instance_concertation'
-        ordering = ['int_inst_conc']
-        verbose_name = 'T_INSTANCE_CONCERTATION'
-        verbose_name_plural = 'T_INSTANCE_CONCERTATION'
-
-    def __str__(self) :
-        return self.int_inst_conc
-
-class TPgre(TDossier) :
-
-    id_pgre = models.OneToOneField(TDossier)
-    quant_objs_pgre = models.FloatField(blank = True, null = True)
-    quant_real_pgre = models.FloatField(blank = True, null = True)
-    id_inst_conc = models.ForeignKey(TInstanceConcertation, models.DO_NOTHING, blank = True, null = True)
-    id_unit = models.ForeignKey(TUnite, models.DO_NOTHING, blank = True, null = True)
-    riv = models.ManyToManyField(TRiviere, through = 'TRivieresDossier')
-
-    class Meta :
-        db_table = 't_pgre'
-        verbose_name = 'T_PGRE'
-        verbose_name_plural = 'T_PGRE'
-
-class TRivieresDossier(models.Model) :
-
-    id_pgre = models.ForeignKey(TPgre, models.DO_NOTHING)
-    id_riv = models.ForeignKey(TRiviere, models.DO_NOTHING)
-
-    class Meta :
-        db_table = 't_rivieres_dossier'
-        verbose_name = 'T_RIVIERES_DOSSIER'
-        verbose_name_plural = 'T_RIVIERES_DOSSIER'
-
-    def __str__(self) :
-        return str(self.pk)
 
 class TPeriodePriseVuePhoto(models.Model) :
 

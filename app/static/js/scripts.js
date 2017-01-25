@@ -1,12 +1,12 @@
 // Variables globales
 var t_datat = {
-	'ch_doss' : init_datat($('#t_ch_doss'), [3]),
+	'ch_doss' : init_datat($('#t_ch_doss'), [4]),
 	'ch_fact_ddv' : init_datat($('#t_ch_fact_ddv'), [4]),
 	'ch_prest' : init_datat($('#t_ch_prest'), [5]),
 	'cons_arr' : init_datat($('#t_cons_arr'), [5]),
 	'cons_aven' : init_datat($('#t_cons_aven'), [4]),
 	'cons_ddv' : init_datat($('#t_cons_ddv'), [6]),
-	'cons_doss_fam' : init_datat($('#t_cons_doss_fam'), [5]),
+	'cons_doss_fam' : init_datat($('#t_cons_doss_fam'), [4]),
 	'cons_doss_prest' : init_datat($('#t_cons_doss_prest'), [3]),
 	'cons_fact' : init_datat($('#t_cons_fact'), [7]),
 	'cons_fact_ddv' : init_datat($('#t_cons_fact_ddv'), [4]),
@@ -672,4 +672,20 @@ $('#bt_ajout_org_prest').on('click', function() {
 
 $('#fm_ajout_org_prest').on('hidden.bs.modal', function() {
 	$('#fm_ajout_prest').modal('show');
+});
+
+/**
+ * Ce script permet de gérer l'état des contrôles relatifs à un montant du formulaire de modification d'un dossier.
+ */
+$('form[name="f_modif_doss"] #id_GererDossier-id_av_cp').on('change', function() {
+	var v_int_av_cp = $('#id_GererDossier-id_av_cp option:selected').text();
+	if (v_int_av_cp == 'Accordé') {
+		$('#id_GererDossier-mont_doss').attr('readonly', true);
+		$('#id_GererDossier-mont_suppl_doss').removeAttr('readonly');
+	}
+	else {
+		$('#id_GererDossier-mont_doss').removeAttr('readonly');
+		$('#id_GererDossier-mont_suppl_doss').attr('readonly', true);
+		$('#id_GererDossier-mont_suppl_doss').val(0);
+	}
 });

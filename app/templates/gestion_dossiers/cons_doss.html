@@ -36,10 +36,9 @@
 									<thead>
 										<tr>
 											<th>N° du dossier</th>
+											<th>Intitulé du dossier</th>
 											<th>Maître d'ouvrage</th>
 											<th>Date de délibération au maître d'ouvrage</th>
-											<th>Programme</th>
-											<th>Nature du dossier</th>
 											<th></th>
 										</tr>
 									</thead>
@@ -51,10 +50,9 @@
 										<tr>
 										{% endif %}
 											<td class="b">{{ df.num_doss }}</td>
+											<td>{{ df.int_doss }}</td>
 											<td>{{ df.id_org_moa }}</td>
 											<td>{{ df.dt_delib_moa_doss }}</td>
-											<td>{{ df.id_progr }}</td>
-											<td>{{ df.id_nat_doss }}</td>
 											<td>
 												<a href="{% url 'cons_doss' df.pk %}" class="consult-icon pull-right" title="Consulter le dossier"></a>
 											</td>
@@ -79,7 +77,11 @@
 							<div class="col-sm-6">{{ t_attrs_doss.id_techn }}</div>
 							<div class="col-sm-6">{{ t_attrs_doss.id_sage }}</div>
 						</div>
-						{{ t_attrs_doss.mont_doss }}
+						<div class="row">
+							<div class="col-sm-6">{{ t_attrs_doss.mont_doss }}</div>
+							<div class="col-sm-6">{{ t_attrs_doss.mont_suppl_doss }}</div>
+						</div>
+						{{ t_attrs_doss.mont_tot_doss }}
 						<div class="row">
 							<div class="col-sm-6">{{ t_attrs_doss.id_av }}</div>
 							<div class="col-sm-6">{{ t_attrs_doss.dt_delib_moa_doss }}</div>
@@ -106,8 +108,9 @@
 						<thead>
 							<tr>
 								<th>Organisme financier</th>
-								<th>Montant {{ ht_ou_ttc }} de participation (en €)</th>
+								<th>Montant {{ ht_ou_ttc }} de l'assiette éligible (en €)</th>
 								<th>Pourcentage éligible</th>
+								<th>Montant {{ ht_ou_ttc }} de participation (en €)</th>
 								<th>Pourcentage global</th>
 								<th>Date de début d'éligibilité</th>
 								<th>Date de fin d'éligibilité</th>
@@ -119,8 +122,9 @@
 							{% for f in t_fin %}
 							<tr>
 								<td>{{ f.n_org }}</td>
-								<td>{{ f.mont_part_fin }}</td>
+								<td>{{ f.mont_elig_fin }}</td>
 								<td>{{ f.pourc_elig_fin }}</td>
+								<td>{{ f.mont_part_fin }}</td>
 								<td>{{ f.pourc_glob_fin }}</td>
 								<td>{{ f.dt_deb_elig_fin }}</td>
 								<td>{{ f.dt_fin_elig_fin }}</td>
@@ -135,8 +139,8 @@
 						</tbody>
 						<tfoot>
 							<tr>
-								<td>Total</td>
-								<td colspan="7">{{ mont_doss }}</td>
+								<td colspan="3">Total</td>
+								<td colspan="6">{{ mont_doss }}</td>
 							</tr>
 						</tfoot>
 					</table>
@@ -170,7 +174,7 @@
 								<td>{{ p.mont_raf }}</td>
 								<td>
 									<a href="{% url 'cons_prest' p.pk %}" class="consult-icon pull-right" title="Consulter la prestation"></a>
-									<span action="?action=afficher-form-avenant&prestation={{ p.pk }}" class="add_aven-icon pointer forbidden pull-right" onclick="html_ds_fm(event, 'ajout_aven');" style="margin-right: 5px;" title="Ajouter un avenant"></span>
+									<span action="?action=afficher-form-avenant&prestation={{ p.pk }}" class="add_aven-icon pointer forbidden pull-right" onclick="html_ds_fm(event, 'ajout_aven');" title="Ajouter un avenant"></span>
 								</td>
 							</tr>
 							{% endfor %}
@@ -343,7 +347,7 @@
 								<td>{{ p.dt_pv_ph }}</td>
 								<td>
 									<span action="?action=supprimer-photo&photo={{ p.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_ph');" title="Supprimer la photo"></span>
-									<a class="forbidden modify-icon pull-right" href="{% url 'modif_ph' p.pk %}" title="Modifier la photo" style="margin-right: 5px;"></a>
+									<a class="forbidden modify-icon pull-right" href="{% url 'modif_ph' p.pk %}" title="Modifier la photo"></a>
 								</td>
 							</tr>
 							{% endfor %}
