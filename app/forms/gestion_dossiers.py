@@ -988,7 +988,9 @@ class GererFacture(forms.ModelForm) :
 				self.fields['mont_ttc_fact'].widget.attrs['readonly'] = True
 
 		# J'alimente la liste déroulante des prestations du dossier.
-		t_prest_doss = [(pd.id_prest.pk, pd.id_prest) for pd in TPrestationsDossier.objects.filter(id_doss = num_doss)]
+		t_prest_doss = [(pd.id_prest.pk, pd.id_prest) for pd in TPrestationsDossier.objects.filter(
+			id_doss = num_doss
+		).order_by('id_prest')]
 		t_prest_doss.insert(0, DEFAULT_OPTION)
 		self.fields['zl_prest'].choices = t_prest_doss
 

@@ -153,7 +153,10 @@ def cr_doss(request) :
 
 				# Je prépare la valeur de chaque constituant du numéro de dossier.
 				dim_progr = v_progr.dim_progr
-				dim_org_moa = o_org_moa.dim_org_moa
+				if o_org_moa.dim_org_moa :
+					dim_org_moa = o_org_moa.dim_org_moa
+				else :
+					dim_org_moa = 'X'
 				seq_progr = str(v_progr.seq_progr).zfill(2)
 
 				# Je créé la nouvelle instance TDossier.
@@ -677,7 +680,7 @@ def cons_doss(request, _d) :
 		# Je stocke le jeu de données des prestations du maître d'ouvrage du dossier.
 		qs_prest_moa_doss = TPrestation.objects.filter(
 			tprestationsdossier__id_doss__id_org_moa = o_doss.id_org_moa
-		).exclude(tprestationsdossier__id_doss = o_doss).distinct().order_by('id_org_prest', 'int_prest')
+		).exclude(tprestationsdossier__id_doss = o_doss).distinct()
 		
 		# J'initialise le tableau des prestations du maître d'ouvrage du dossier.
 		t_prest_moa_doss = []
@@ -1147,6 +1150,7 @@ def cons_doss(request, _d) :
 				'mont_fact_sum' : mont_fact_sum,
 				'mont_fact_sum_str' : obt_mont(mont_fact_sum),
 				'mont_rae' : obt_mont(o_suivi_doss.mont_rae),
+				'mont_suppl_doss' : obt_mont(o_doss.mont_suppl_doss),
 				't_arr' : t_arr,
 				't_attrs_doss' : init_pg_cons(t_attrs_doss),
 				't_ddv' : t_ddv,

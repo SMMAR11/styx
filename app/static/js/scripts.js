@@ -10,14 +10,11 @@ var t_datat = {
 	'cons_doss_prest' : init_datat($('#t_cons_doss_prest'), [3]),
 	'cons_fact' : init_datat($('#t_cons_fact'), [7]),
 	'cons_fact_ddv' : init_datat($('#t_cons_fact_ddv'), [4]),
-	'cons_fin' : init_datat($('#t_cons_fin'), [7]),
+	'cons_fin' : init_datat($('#t_cons_fin'), [8]),
 	'cons_ph' : init_datat($('#t_cons_ph'), [4]),
 	'cons_prest' : init_datat($('#t_cons_prest'), [6])
 };
 var submit = false;
-var t_submit = {
-	'ajout_ddv' : false
-};
 
 /**
  * Ce script permet l'affichage d'un loader dès la fin du chargement du DOM.

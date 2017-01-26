@@ -34,8 +34,8 @@ window.addEventListener('map:init', function(e) {
     // J'ajoute la couche des géométries.
     map.addLayer(editableLayers);
 
+    // J'ajoute la barre d'édition.
     if (forbidden == false) {
-        // J'ajoute la barre d'édition.
         map.addControl(drawControl);
     }
 
@@ -47,6 +47,8 @@ window.addEventListener('map:init', function(e) {
     });
 
     if (forbidden == false) {
+
+        // J'ajoute le bouton de sauvegarde de la géométrie.
         L.easyButton('fa-floppy-o', function() {
 
             // J'extrais le GeoJSON du FeatureGroup.
@@ -63,15 +65,38 @@ window.addEventListener('map:init', function(e) {
             // Je soumets le formulaire.
             $('form[name="f_modif_carto"]').submit();
 
-        }).addTo(map);
+        }, 'Mettre à jour la géométrie du dossier').addTo(map);
     }
+
+    // J'ajoute un bouton permettant d'agrandir ou de réduire la hauteur de la carte.
+    L.easyButton({
+        position : 'topright',
+        states : [{
+            stateName : 'normal-map',
+            icon : 'glyphicon glyphicon-resize-full',
+            title : 'Agrandir la carte',
+            onClick : function(_c) {
+                $('#styx-map').css('min-height', '768px');
+                map.invalidateSize();
+                _c.state('large-map');
+            }
+        },{
+            stateName : 'large-map',
+            icon : 'glyphicon glyphicon-resize-small',
+            title : 'Réduire la carte',
+            onClick : function(_c) {
+                $('#styx-map').css('min-height', '300px');
+                map.invalidateSize();
+                _c.state('normal-map');
+            }
+        }]
+    }).addTo(map);
+
 }, false);
 
 $(function() {
     $('body').on('shown.bs.tab', 'a[href="#ong_carto"]', function() {
 
-        // Je calcule la hauteur de la carte.
-        $('#styx-map').css('min-height', 'calc(100vh - 382px)');
         map.invalidateSize();
 
         // Je centre la carte sur les objets géométriques.

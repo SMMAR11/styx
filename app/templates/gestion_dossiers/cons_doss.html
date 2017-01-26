@@ -145,6 +145,9 @@
 						</tfoot>
 					</table>
 				</div>
+				{% if d.mont_suppl_doss > 0 %}
+				<div class="b red-color text-center">Attention, le maître d'ouvrage doit assumer en plus {{ mont_suppl_doss }} €.</div>
+				{% endif %}
 			</div>
 			<div id="ong_prest" class="fade tab-pane">
 				<div class="right">
@@ -172,9 +175,9 @@
 								<td>{{ p.mont_aven_sum }}</td>
 								<td>{{ p.mont_fact_sum }}</td>
 								<td>{{ p.mont_raf }}</td>
-								<td>
-									<a href="{% url 'cons_prest' p.pk %}" class="consult-icon pull-right" title="Consulter la prestation"></a>
-									<span action="?action=afficher-form-avenant&prestation={{ p.pk }}" class="add_aven-icon pointer forbidden pull-right" onclick="html_ds_fm(event, 'ajout_aven');" title="Ajouter un avenant"></span>
+								<td class="my-pull-right">
+									<span action="?action=afficher-form-avenant&prestation={{ p.pk }}" class="add_aven-icon forbidden pointer" onclick="html_ds_fm(event, 'ajout_aven');" title="Ajouter un avenant"></span>
+									<a href="{% url 'cons_prest' p.pk %}" class="consult-icon" title="Consulter la prestation"></a>
 								</td>
 							</tr>
 							{% endfor %}
@@ -345,9 +348,9 @@
 								<td>{{ p.int_ph }}</td>
 								<td>{{ p.int_ppv_ph }}</td>
 								<td>{{ p.dt_pv_ph }}</td>
-								<td>
-									<span action="?action=supprimer-photo&photo={{ p.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_ph');" title="Supprimer la photo"></span>
-									<a class="forbidden modify-icon pull-right" href="{% url 'modif_ph' p.pk %}" title="Modifier la photo"></a>
+								<td class="my-pull-right">
+									<a class="forbidden modify-icon" href="{% url 'modif_ph' p.pk %}" title="Modifier la photo"></a>
+									<span action="?action=supprimer-photo&photo={{ p.pk }}" class="delete-icon forbidden pointer" onclick="html_ds_fm(event, 'suppr_ph');" title="Supprimer la photo"></span>	
 								</td>
 							</tr>
 							{% endfor %}

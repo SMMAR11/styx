@@ -67,6 +67,7 @@ class VSuiviPrestationsDossier(models.Model) :
     class Meta :
         db_table = 'v_suivi_prestations_dossier'
         managed = False
+        ordering = ['id_prest__id_org_prest', 'id_prest__dt_notif_prest', 'id_prest__int_prest']
 
 class VDemandeVersement(models.Model) :
 

@@ -333,7 +333,9 @@ class TMoa(TOrganisme) :
         return 'logos/{0}'.format(new_fn)
 
     id_org_moa = models.OneToOneField(TOrganisme)
-    dim_org_moa = models.CharField(max_length = 255, unique = True, verbose_name = 'Diminutif')
+    dim_org_moa = models.CharField(
+        blank = True, max_length = 255, null = True, unique = True, verbose_name = 'Diminutif'
+    )
     en_act_org_moa = models.BooleanField(default = True, verbose_name = 'En activité')
     logo_org_moa = models.FileField(
         blank = True, 
@@ -747,6 +749,7 @@ class TPrestation(models.Model) :
 
     class Meta :
         db_table = 't_prestation'
+        ordering = ['id_org_prest', 'dt_notif_prest', 'int_prest']
         verbose_name = 'T_PRESTATION'
         verbose_name_plural = 'T_PRESTATION'
 
@@ -843,6 +846,7 @@ class TFacture(models.Model) :
 
     class Meta :
         db_table = 't_facture'
+        ordering = ['id_prest']
         verbose_name = 'T_FACTURE'
         verbose_name_plural = 'T_FACTURE'
 

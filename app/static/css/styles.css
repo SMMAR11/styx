@@ -71,6 +71,11 @@ fieldset.my-div-fieldset > div {
 	background-color: #C7944F;
 }
 
+/* Cartographie */
+#styx-map {
+	min-height: 300px;
+}
+
 /* Contrôles */
 .attribute-wrapper,
 .field-wrapper {
@@ -283,13 +288,13 @@ form > fieldset.my-fieldset > div {
 
 .field-error > ul > li,
 .form-grouped-error > ul > li {
-	margin-bottom : -15.6px;
+	margin-bottom: -15.6px;
 	font-size : 12px;
 	color : #FF0921;
 }
 
 .invalid-field {
-	border-color: #FF0921;
+	border: solid 1px #FF0921;
 	-webkit-box-shadow : inset 0 1px 1px rgba(0, 0, 0, 0), 0 0 5px rgba(255, 9, 33, 0.8);
 	box-shadow : inset 0 1px 1px rgba(0, 0, 0, 0), 0 0 5px rgba(255, 9, 33, 0.8);
 }
@@ -370,6 +375,15 @@ form > fieldset.my-fieldset > div {
 
 .my-label {
 	color: #3770B1;
+}
+
+.my-pull-right a,
+.my-pull-right span {
+	display: inline-block;
+}
+
+.my-pull-right {
+	text-align: right;
 }
 
 /* Onglets */
@@ -540,13 +554,27 @@ form > fieldset.my-fieldset > div {
 .my-table thead > tr > th {
 	font-weight: normal;
 	font-style: italic;
-	padding: 2.5px 15px;
+	padding: 2.5px 7.5px;
 	border: none;
+	text-align: inherit;
+}
+
+.my-table table.dataTable > thead .sorting,
+.my-table table.dataTable > thead .sorting_asc,
+.my-table table.dataTable > thead .sorting_desc {
+	background-image: none;
+}
+
+.my-table thead .sorting:hover,
+.my-table thead .sorting_asc,
+.my-table thead .sorting_desc {
+	background-color: #2C5A8E;
 }
 
 .my-table tbody > tr > td {
-	padding: 2.5px 15px;
+	padding: 2.5px 7.5px;
 	color: #555;
+	width: 0;
 }
 
 .my-table tbody > tr {
@@ -562,7 +590,7 @@ form > fieldset.my-fieldset > div {
 }
 
 .my-table tfoot > tr > td {
-	padding: 2.5px 15px;
+	padding: 2.5px 7.5px;
 	background-color: #3770B1;
 	color: #FFF;
 	border: none;

@@ -415,7 +415,7 @@ def gen_t_html_fact_doss(_f, _i = None, _c = False) :
 		<div class="field-wrapper">
 			<span class="field-label">
 				Facture(s) pouvant être reliée(s) à la demande de versement
-				<span class="field-remark"></span>
+				<span class="required-field"></span>
 			</span>
 			<div class="my-table" id="t_ch_fact_ddv">
 				<table id="id_GererDemandeVersement-cbsm_fact">
@@ -795,9 +795,14 @@ def rempl_fich_log(_t) :
 	import time
 
 	try :
+		
+		# Je mets en forme le chemin du fichier log.
+		chem_fich = '{0}/log.csv'.format(MEDIA_ROOT)
+		chem_fich = chem_fich.replace('\\', '/')
+		chem_fich = chem_fich.replace('//', '/')
 
 		# J'ouvre (ou je créé) le fichier log.
-		with open('{0}\log.csv'.format(MEDIA_ROOT), 'a', newline = '') as fich :
+		with open(chem_fich, 'a', newline = '') as fich :
 
 			# Je définis le délimiteur.
 			writer = csv.writer(fich, delimiter = ';')
