@@ -1,0 +1,229 @@
+{% load static %}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+	<head>
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/bootstrap/css/bootstrap.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './css/pdf_template.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './css/styles.css' %}">
+	</head>
+	<body>
+		<div class="pdf-title-1">Fiche du dossier {{ d }}</div>
+		<div class="pdf-title-2">Caractéristiques</div>
+		{{ t_attrs_doss.num_doss }}
+		{{ t_attrs_doss.int_doss }}
+		<div class="pdf-attribute-wrapper">
+			<span class="pdf-attribute-label">Dossier(s) associé(s)</span>
+			{% if t_doss_fam_length > 0 %}
+			<table class="pdf-table">
+				<thead>
+					<tr>
+						<th>N° du dossier</th>
+						<th>Intitulé du dossier</th>
+						<th>Maître d'ouvrage</th>
+						<th>Date de délibération au maître d'ouvrage</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for df in t_doss_fam %}
+					{% if d.id_doss_ass.pk == df.pk %}
+					<tr style="background-color: #DDD;">
+					{% else %}
+					<tr>
+					{% endif %}
+						<td class="b">{{ df.num_doss }}</td>
+						<td>{{ df.int_doss }}</td>
+						<td>{{ df.id_org_moa }}</td>
+						<td>{{ df.dt_delib_moa_doss }}</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			{% else %}
+			<span class="pdf-attribute-value">Aucun</span>
+			{% endif %}
+		</div>
+		{{ t_attrs_doss.id_org_moa }}
+		<div class="pdf-lg">
+			<div class="pdf-col-6">{{ t_attrs_doss.id_progr }}</div>
+			<div class="pdf-col-2">{{ t_attrs_doss.num_axe }}</div>
+			<div class="pdf-col-2">{{ t_attrs_doss.num_ss_axe }}</div>
+			<div class="pdf-col-2">{{ t_attrs_doss.num_act }}</div>
+		</div>
+		<div class="pdf-lg">
+			<div class="pdf-col-6">{{ t_attrs_doss.id_nat_doss }}</div>
+			<div class="pdf-col-6">{{ t_attrs_doss.id_type_doss }}</div>
+		</div>
+		<div class="pdf-lg">
+			<div class="pdf-col-6">{{ t_attrs_doss.id_techn }}</div>
+			<div class="pdf-col-6">{{ t_attrs_doss.id_sage }}</div>
+		</div>
+		<div class="pdf-lg">
+			<div class="pdf-col-6">{{ t_attrs_doss.mont_doss }}</div>
+			<div class="pdf-col-6">{{ t_attrs_doss.mont_suppl_doss }}</div>
+		</div>
+		{{ t_attrs_doss.mont_tot_doss }}
+		<div class="pdf-lg">
+			<div class="pdf-col-6">{{ t_attrs_doss.id_av }}</div>
+			<div class="pdf-col-6">{{ t_attrs_doss.dt_delib_moa_doss }}</div>
+		</div>
+		<div class="pdf-lg">
+			<div class="pdf-col-6">{{ t_attrs_doss.id_av_cp }}</div>
+			<div class="pdf-col-6">{{ t_attrs_doss.dt_av_cp_doss }}</div>
+		</div>
+		{{ t_attrs_doss.chem_pj_doss }}
+		{{ t_attrs_doss.comm_doss }}
+		<div class="pdf-title-2">Plan de financement</div>
+		<table class="pdf-table">
+			<thead>
+				<tr>
+					<th>Organisme financier</th>
+					<th>Montant {{ ht_ou_ttc }} de l'assiette éligible (en €)</th>
+					<th>Pourcentage éligible</th>
+					<th>Montant {{ ht_ou_ttc }} de participation (en €)</th>
+					<th>Pourcentage global</th>
+					<th>Date de début d'éligibilité	</th>
+					<th>Date de fin d'éligibilité</th>
+					<th>Montant {{ ht_ou_ttc }} restant à demander (en €)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for f in t_fin %}
+				<tr>
+					<td>{{ f.n_org }}</td>
+					<td>{{ f.mont_elig_fin }}</td>
+					<td>{{ f.pourc_elig_fin }}</td>
+					<td>{{ f.mont_part_fin }}</td>
+					<td>{{ f.pourc_glob_fin }}</td>
+					<td>{{ f.dt_deb_elig_fin }}</td>
+					<td>{{ f.dt_fin_elig_fin }}</td>
+					<td>{{ f.mont_rad }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="3">Total {{ ht_ou_ttc }} (en €)</td>
+					<td colspan="5">{{ mont_doss }}</td>
+				</tr>
+			</tfoot>
+		</table>
+		{% if d.mont_suppl_doss > 0 %}
+		<div class="i text-center">Attention, le maître d'ouvrage doit assumer en plus {{ mont_suppl_doss }} € {{ ht_ou_ttc }}.</div>
+		{% endif %}
+		<div class="br"></div>
+		<div class="pdf-title-2">Prestations</div>
+		{% if t_prest_length > 0 %}
+		<table class="pdf-table">
+			<thead>
+				<tr>
+					<th>Entreprise</th>
+					<th>Montant {{ ht_ou_ttc }} de la prestation (en €)</th>
+					<th>Nombre d'avenants</th>
+					<th>Somme {{ ht_ou_ttc }} des avenants (en €)</th>
+					<th>Somme {{ ht_ou_ttc }} des factures émises (en €)</th>
+					<th>Reste à facturer {{ ht_ou_ttc }} (en €)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for p in t_prest %}
+				<tr>
+					<td>{{ p.n_org }}</td>
+					<td>{{ p.mont_prest_doss }}</td>
+					<td>{{ p.nb_aven }}</td>
+					<td>{{ p.mont_aven_sum }}</td>
+					<td>{{ p.mont_fact_sum }}</td>
+					<td>{{ p.mont_raf }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td>Total {{ ht_ou_ttc }} (en €)</td>
+					{% for i in t_prest_sum %}
+					<td>{{ i }}</td>
+					{% endfor %}
+				</tr>
+			</tfoot>
+		</table>
+		<div class="i text-center">Le reste à engager {{ ht_ou_ttc }} pour ce dossier est de {{ mont_rae }} €.</div>
+		<div class="br"></div>
+		{% endif %}
+		<div class="pdf-title-2">Factures</div>
+		{% if t_fact_length > 0 %}
+		<table class="pdf-table">
+			<thead>
+				<tr>
+					<th>Prestation</th>
+					<th>Montant {{ ht_ou_ttc }} (en €)</th>
+					<th>N° de facture</th>
+					<th>Date de mandatement par le maître d'ouvrage</th>
+					<th>N° de mandat</th>
+					<th>N° de bordereau</th>
+					<th>Suivi de la facturation</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for f in t_fact %}
+				<tr>
+					<td>{{ f.id_prest }}</td>
+					<td>{{ f.mont_fact }}</td>
+					<td>{{ f.num_fact }}</td>
+					<td>{{ f.dt_mand_moa_fact }}</td>
+					<td>{{ f.num_mandat_fact }}</td>
+					<td>{{ f.num_bord_fact }}</td>
+					<td>{{ f.suivi_fact }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td>Total {{ ht_ou_ttc }} payé (en €)</td>
+					<td colspan="6">{{ mont_fact_sum_str }}</td>
+				</tr>
+			</tfoot>
+		</table>
+		<div class="br"></div>
+		{% endif %}
+		<div class="pdf-title-2">Demandes de versements</div>
+		{% if t_ddv_length > 0 %}
+		<table class="pdf-table">
+			<thead>
+				<tr>
+					<th>Partenaire financier</th>
+					<th>Montant {{ ht_ou_ttc }} demandé (en €)</th>
+					<th>Date de demande de versement</th>
+					<th>Date de versement</th>
+					<th>Manque à percevoir {{ ht_ou_ttc }} (en €)</th>
+					<th>Type de versement</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for ddv in t_ddv %}
+				<tr>
+					<td>{{ ddv.id_org_fin }}</td>
+					<td>{{ ddv.mont_ddv }}</td>
+					<td>{{ ddv.dt_ddv }}</td>
+					<td>{{ ddv.dt_vers_ddv }}</td>
+					<td>{{ ddv.map_ddv }}</td>
+					<td>{{ ddv.id_type_vers }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td>Total {{ ht_ou_ttc }} demandé (en €)</td>
+					<td colspan="5">{{ mont_ddv_sum_str }}</td>
+				</tr>
+			</tfoot>
+		</table>
+		{% endif %}
+		<script type="text/javascript">
+			window.onload = function() {
+				window.print();
+			}
+		</script>
+	</body>
+</html>

@@ -553,14 +553,14 @@ def cons_doss(request, _d) :
 				'label' : 'Intitulé du dossier',
 				'value' : '''
 				<div class="row">
-					<div class="col-xs-6">
+					<div class="col-md-6">
 						<span class="red-color small u">Nature du dossier :</span>
 						{0}
 						<br/>
 						<span class="red-color small u">Type de dossier :</span>
 						{1}
 					</div>
-					<div class="col-xs-6">
+					<div class="col-md-6">
 						<span class="red-color small u">Territoire ou caractéristique :</span>
 						{2}
 						<br/>
@@ -651,12 +651,10 @@ def cons_doss(request, _d) :
 		t_prest = []
 		t_prest_sum = [0, 0, 0, 0, 0]
 		for p in VSuiviPrestationsDossier.objects.filter(id_doss = o_doss) :
-
 			if ht_ou_ttc == 'TTC' :
 				mont_fact_sum = p.mont_ttc_fact_sum
 			else :
 				mont_fact_sum = p.mont_ht_fact_sum
-
 			t_prest.append({
 				'n_org' : p.id_prest.id_org_prest,
 				'mont_prest_doss' : obt_mont(p.mont_prest_doss),
@@ -666,13 +664,11 @@ def cons_doss(request, _d) :
 				'mont_raf' : obt_mont(p.mont_raf),
 				'pk' : p.pk
 			})
-
 			t_prest_sum[0] += p.mont_prest_doss
 			t_prest_sum[1] += p.nb_aven
 			t_prest_sum[2] += p.mont_aven_sum
 			t_prest_sum[3] += mont_fact_sum
 			t_prest_sum[4] += p.mont_raf
-
 		for i in range(0, len(t_prest_sum)) :
 			if i != 1 :
 				t_prest_sum[i] = obt_mont(t_prest_sum[i])
@@ -728,12 +724,10 @@ def cons_doss(request, _d) :
 		t_fact = []
 		mont_fact_sum = 0
 		for f in TFacture.objects.filter(id_doss = o_doss) :
-
 			if ht_ou_ttc == 'TTC' :
 				mont_fact = f.mont_ttc_fact
 			else :
 				mont_fact = f.mont_ht_fact
-
 			t_fact.append({
 				'id_prest' : f.id_prest,
 				'num_fact' : f.num_fact,
@@ -744,21 +738,18 @@ def cons_doss(request, _d) :
 				'suivi_fact' : f.suivi_fact,
 				'pk' : f.pk
 			})
-
 			mont_fact_sum += mont_fact
 
 		# J'initialise le tableau des demandes de versements.
 		t_ddv = []
 		mont_ddv_sum = 0
 		for d in VDemandeVersement.objects.filter(id_doss = o_doss) :
-
 			if ht_ou_ttc == 'TTC' :
 				mont_ddv = d.mont_ttc_ddv
 				map_ddv = d.map_ttc_ddv
 			else :
 				mont_ddv = d.mont_ht_ddv
 				map_ddv = d.map_ht_ddv
-
 			t_ddv.append({
 				'id_org_fin' : d.id_org_fin,
 				'mont_ddv' : obt_mont(mont_ddv),
@@ -768,7 +759,6 @@ def cons_doss(request, _d) :
 				'id_type_vers' : d.id_type_vers,
 				'pk' : d.pk
 			})
-
 			mont_ddv_sum += mont_ddv
 
 		# J'initialise le tableau des arrêtés du dossier.
@@ -3680,5 +3670,226 @@ def ajout_org_prest(request) :
 			for k, v in f_ajout_org_prest.errors.items() :
 				t_err['AjouterPrestataire-{0}'.format(k)] = v
 			output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
+
+	return output
+
+'''
+Cette vue permet d'afficher la page relative à un dossier qui sera par la suite convertie en PDF.
+request : Objet requête
+_d : Identifiant d'un dossier
+'''
+@verif_acc
+def impr_doss(request, _d) :
+
+	# Imports
+	from app.functions import dt_fr
+	from app.functions import ger_droits
+	from app.functions import init_pg_cons
+	from app.functions import obt_mont
+	from app.functions import obt_pourc
+	from app.models import TDossier
+	from app.models import TFacture
+	from app.sql_views import VDemandeVersement
+	from app.sql_views import VFinancement
+	from app.sql_views import VSuiviDossier
+	from app.sql_views import VSuiviPrestationsDossier
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	from django.shortcuts import render
+
+	output = HttpResponse()
+
+	# Je vérifie l'existence d'un objet TDossier.
+	o_doss = get_object_or_404(TDossier, pk = _d)
+
+	if request.method == 'GET' :
+
+		# Je vérifie le droit de lecture.
+		ger_droits(request.user, o_doss)
+
+		# Je pointe vers l'objet VSuiviDossier.
+		o_suivi_doss = VSuiviDossier.objects.get(pk = o_doss.pk)
+
+		# Je définis le mode de taxe du dossier.
+		ht_ou_ttc = 'HT'
+		if o_doss.est_ttc_doss == True :
+			ht_ou_ttc = 'TTC'
+
+		# Je prépare le bloc "Caractéristiques".
+		t_attrs_doss = {
+			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
+			'int_doss' : {
+				'label' : 'Intitulé du dossier',
+				'value' : '''
+				<span class="red-color u">Nature du dossier :</span>
+				{0}
+				<br/>
+				<span class="red-color u">Type de dossier :</span>
+				{1}
+				<br/>
+				<span class="red-color u">Territoire ou caractéristique :</span>
+				{2}
+				<br/>
+				<span class="red-color u">Territoire ou lieu-dit précis :</span>
+				{3}
+				'''.format(o_doss.id_nat_doss, o_doss.id_type_doss, o_doss.lib_1_doss, o_doss.lib_2_doss)
+			},
+			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
+			'id_progr' : { 'label' : 'Programme', 'value' : o_doss.id_progr },
+			'num_axe' : { 'label' : 'Axe', 'value' : o_doss.num_axe or '-' },
+			'num_ss_axe' : { 'label' : 'Sous-axe', 'value' : o_doss.num_ss_axe or '-' },
+			'num_act' : { 'label' : 'Action', 'value' : o_doss.num_act or '-' },
+			'id_nat_doss' : { 'label' : 'Nature du dossier', 'value' : o_doss.id_nat_doss },
+			'id_type_doss' : { 'label' : 'Type de dossier', 'value' : o_doss.id_type_doss },
+			'id_techn' : { 'label' : 'Agent responsable', 'value' : o_doss.id_techn },
+			'id_sage' : { 'label' : 'SAGE', 'value' : o_doss.id_sage or '-' },
+			'mont_doss' : {
+				'label' : 'Montant {0} du dossier présenté au CD GEMAPI (en €)'.format(ht_ou_ttc),
+				'value' : obt_mont(o_doss.mont_doss)
+			},
+			'mont_suppl_doss' : {
+				'label' : 'Dépassement {0} du dossier (en €)'.format(ht_ou_ttc),
+				'value' : obt_mont(o_doss.mont_suppl_doss)
+			},
+			'mont_tot_doss' : {
+				'label' : 'Montant {0} total du dossier (en €)'.format(ht_ou_ttc),
+				'value' : obt_mont(o_suivi_doss.mont_tot_doss)
+			},
+			'id_av' : { 'label' : 'État d\'avancement', 'value' : o_doss.id_av },
+			'dt_delib_moa_doss' : { 
+				'label' : 'Date de délibération au maître d\'ouvrage', 'value' : dt_fr(o_doss.dt_delib_moa_doss) or '-'
+			},
+			'id_av_cp' : { 'label' : 'Avis du comité de programmation - CD GEMAPI', 'value' : o_doss.id_av_cp },
+			'dt_av_cp_doss' : { 
+				'label' : 'Date de l\'avis du comité de programmation', 'value' : dt_fr(o_doss.dt_av_cp_doss) or '-'
+			},
+			'chem_pj_doss' : {
+				'label' : 'Fichier scanné du mémoire technique',
+				'value' : o_doss.chem_pj_doss,
+				'pdf' : True 
+			},
+			'comm_doss' : { 'label' : 'Commentaire', 'value' : o_doss.comm_doss or '-' }
+		}
+		t_doss_fam = [{
+			'num_doss' : d,
+			'int_doss' : '{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+			'id_org_moa' : d.id_org_moa,
+			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-',
+			'pk' : d.pk
+		} for d in TDossier.objects.filter(id_fam = o_doss.id_fam).exclude(pk = o_doss.pk)]
+
+		# Je prépare le bloc "Plan de financement".
+		t_fin = [{
+			'n_org' : f.id_org_fin.n_org,
+			'mont_elig_fin' : obt_mont(f.mont_elig_fin) or '-',
+			'pourc_elig_fin' : obt_pourc(f.pourc_elig_fin) or '-',
+			'mont_part_fin' : obt_mont(f.mont_part_fin),
+			'pourc_glob_fin' : obt_pourc(f.pourc_glob_fin),
+			'dt_deb_elig_fin' : dt_fr(f.dt_deb_elig_fin) or '-',
+			'dt_fin_elig_fin' : dt_fr(f.dt_fin_elig_fin) or '-',
+			'mont_rad' : obt_mont(f.mont_rad),
+		} for f in VFinancement.objects.filter(id_doss = o_doss)]
+		if o_suivi_doss.mont_raf > 0 :
+			t_fin.append({
+				'n_org' : 'Autofinancement - {0}'.format(o_doss.id_org_moa),
+				'mont_elig_fin' : '-',
+				'pourc_elig_fin' : '-',
+				'mont_part_fin' : obt_mont(o_suivi_doss.mont_raf),
+				'pourc_glob_fin' : obt_pourc(o_suivi_doss.mont_raf / o_suivi_doss.mont_doss * 100),
+				'dt_deb_elig_fin' : '-',
+				'dt_fin_elig_fin' : '-',
+				'mont_rad' : '-',
+			})
+		t_fin = sorted(t_fin, key = lambda l : l['n_org'])
+
+		# Je prépare le bloc "Prestations".
+		t_prest = []
+		t_prest_sum = [0, 0, 0, 0, 0]
+		for p in VSuiviPrestationsDossier.objects.filter(id_doss = o_doss) :
+			if ht_ou_ttc == 'TTC' :
+				mont_fact_sum = p.mont_ttc_fact_sum
+			else :
+				mont_fact_sum = p.mont_ht_fact_sum
+			t_prest.append({
+				'n_org' : p.id_prest.id_org_prest,
+				'mont_prest_doss' : obt_mont(p.mont_prest_doss),
+				'nb_aven' : p.nb_aven,
+				'mont_aven_sum' : obt_mont(p.mont_aven_sum),
+				'mont_fact_sum' :  obt_mont(mont_fact_sum),
+				'mont_raf' : obt_mont(p.mont_raf),
+			})
+			t_prest_sum[0] += p.mont_prest_doss
+			t_prest_sum[1] += p.nb_aven
+			t_prest_sum[2] += p.mont_aven_sum
+			t_prest_sum[3] += mont_fact_sum
+			t_prest_sum[4] += p.mont_raf
+		for i in range(0, len(t_prest_sum)) :
+			if i != 1 :
+				t_prest_sum[i] = obt_mont(t_prest_sum[i])
+
+		# Je prépare le bloc "Factures".
+		t_fact = []
+		mont_fact_sum = 0
+		for f in TFacture.objects.filter(id_doss = o_doss) :
+			if ht_ou_ttc == 'TTC' :
+				mont_fact = f.mont_ttc_fact
+			else :
+				mont_fact = f.mont_ht_fact
+			t_fact.append({
+				'id_prest' : f.id_prest,
+				'num_fact' : f.num_fact,
+				'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact),
+				'mont_fact' : obt_mont(mont_fact),
+				'num_mandat_fact' : f.num_mandat_fact,
+				'num_bord_fact' : f.num_bord_fact,
+				'suivi_fact' : f.suivi_fact,
+			})
+			mont_fact_sum += mont_fact
+
+		# Je prépare le bloc "Demandes de versements".
+		t_ddv = []
+		mont_ddv_sum = 0
+		for d in VDemandeVersement.objects.filter(id_doss = o_doss) :
+			if ht_ou_ttc == 'TTC' :
+				mont_ddv = d.mont_ttc_ddv
+				map_ddv = d.map_ttc_ddv
+			else :
+				mont_ddv = d.mont_ht_ddv
+				map_ddv = d.map_ht_ddv
+			t_ddv.append({
+				'id_org_fin' : d.id_org_fin,
+				'mont_ddv' : obt_mont(mont_ddv),
+				'dt_ddv' : dt_fr(d.dt_ddv),
+				'dt_vers_ddv' : dt_fr(d.dt_vers_ddv) or '-',
+				'map_ddv' : obt_mont(map_ddv),
+				'id_type_vers' : d.id_type_vers
+			})
+			mont_ddv_sum += mont_ddv
+
+		# J'affiche le template.
+		output = render(
+			request, 
+			'./gestion_dossiers/impr_doss.html',
+			{
+				'd' : o_doss,
+				'ht_ou_ttc' : ht_ou_ttc,
+				'mont_ddv_sum_str' : obt_mont(mont_ddv_sum),
+				'mont_doss' : obt_mont(o_doss.mont_doss),
+				'mont_fact_sum_str' : obt_mont(mont_fact_sum),
+				'mont_rae' : obt_mont(o_suivi_doss.mont_rae),
+				'mont_suppl_doss' : obt_mont(o_doss.mont_suppl_doss),
+				't_attrs_doss' : init_pg_cons(t_attrs_doss, True),
+				't_ddv' : t_ddv,
+				't_ddv_length' : len(t_ddv),
+				't_doss_fam' : t_doss_fam,
+				't_doss_fam_length' : len(t_doss_fam),
+				't_fact' : t_fact,
+				't_fact_length' : len(t_fact),
+				't_fin' : t_fin,
+				't_prest' : t_prest,
+				't_prest_length' : len(t_prest),
+				't_prest_sum' : t_prest_sum
+			}
+		)
 
 	return output

@@ -95,6 +95,10 @@
 					</div>
 					<div class="col-sm-3">
 						<a href="{% url 'modif_doss' d.pk %}" class="forbidden icon-link modify-icon">Modifier</a>
+						{% if forbidden == True %}
+						<div class="br"></div>
+						{% endif %}
+						<a href="{% url 'impr_doss' d.pk %}" target="blank" class="icon-link print-icon">Imprimer le dossier</a>
 					</div>
 				</div>
 			</div>
@@ -139,14 +143,14 @@
 						</tbody>
 						<tfoot>
 							<tr>
-								<td colspan="3">Total</td>
+								<td colspan="3">Total {{ ht_ou_ttc }} (en €)</td>
 								<td colspan="6">{{ mont_doss }}</td>
 							</tr>
 						</tfoot>
 					</table>
 				</div>
 				{% if d.mont_suppl_doss > 0 %}
-				<div class="b red-color text-center">Attention, le maître d'ouvrage doit assumer en plus {{ mont_suppl_doss }} €.</div>
+				<div class="b red-color text-center">Attention, le maître d'ouvrage doit assumer en plus {{ mont_suppl_doss }} € {{ ht_ou_ttc }}.</div>
 				{% endif %}
 			</div>
 			<div id="ong_prest" class="fade tab-pane">
@@ -185,7 +189,7 @@
 						{% if t_prest_length > 0 %}
 						<tfoot>
 							<tr>
-								<td>Total</td>
+								<td>Total {{ ht_ou_ttc }} (en €)</td>
 								{% for i in t_prest_sum %}
 								<td>{{ i }}</td>
 								{% endfor %}
@@ -234,7 +238,7 @@
 						{% if mont_fact_sum > 0 %}
 						<tfoot>
 							<tr>
-								<td>Total payé</td>
+								<td>Total {{ ht_ou_ttc }} payé (en €)</td>
 								<td colspan="7">{{ mont_fact_sum_str }}</td>
 							</tr>
 						</tfoot>
@@ -277,7 +281,7 @@
 						{% if mont_ddv_sum > 0 %}
 						<tfoot>
 							<tr>
-								<td>Total demandé</td>
+								<td>Total {{ ht_ou_ttc }} demandé (en €)</td>
 								<td colspan="6">{{ mont_ddv_sum_str }}</td>
 							</tr>
 						</tfoot>

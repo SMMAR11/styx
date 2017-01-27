@@ -506,6 +506,15 @@ form > fieldset.my-fieldset > div {
 	height: 20px;
 }
 
+.print-icon {
+	background-image: url('../pics/icons/print.png');
+	background-size: 20px;
+	-webkit-background-size: 19px;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 20px;
+}
+
 .icon-link {
 	padding-left: 25px;
 	color: #555;
@@ -525,6 +534,10 @@ form > fieldset.my-fieldset > div {
 
 .u {
 	text-decoration: underline;
+}
+
+.i {
+	font-style: italic;
 }
 
 .small {

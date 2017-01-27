@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/modifier-dossier/([0-9]+)/$', gestion_dossiers.modif_doss, name = 'modif_doss'),
     url(r'^modules/gestion-dossiers/choisir-dossier/$', gestion_dossiers.ch_doss, name = 'ch_doss'),
     url(r'^modules/gestion-dossiers/consulter-dossier/([0-9]+)/$', gestion_dossiers.cons_doss, name = 'cons_doss'),
+    url(r'^modules/gestion-dossiers/imprimer-dossier/([0-9]+)/$', gestion_dossiers.impr_doss, name = 'impr_doss'),
     url(r'^modules/gestion-dossiers/ajouter-financement/$', gestion_dossiers.ajout_fin, name = 'ajout_fin'),
     url(r'^modules/gestion-dossiers/modifier-financement/([0-9]+)/$', gestion_dossiers.modif_fin, name = 'modif_fin'),
     url(r'^modules/gestion-dossiers/consulter-financement/([0-9]+)/$', gestion_dossiers.cons_fin, name = 'cons_fin'),

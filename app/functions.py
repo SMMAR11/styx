@@ -676,9 +676,10 @@ def init_fm(_s, _h, _b = '') :
 '''
 Cette fonction retourne le gabarit de chaque attribut d'une instance.
 _t : Tableau d'attributs
+_pdf : La sortie est-elle au format PDF ?
 Retourne un tableau associatif
 '''
-def init_pg_cons(_t) :
+def init_pg_cons(_t, _pdf = False) :
 
 	# Imports
 	from django.template.defaultfilters import safe
@@ -692,41 +693,73 @@ def init_pg_cons(_t) :
 		err = False
 
 		if 'label' in v and 'value' in v :
+			if _pdf == False :
 
-			# J'initialise le contenu du conteneur.
-			contr = '''
-			<span class="attribute-label">{0}</span>
-			<div class="attribute-control">{1}</div>
-			'''.format(v['label'], v['value'])
+				# J'initialise le contenu du conteneur.
+				contr = '''
+				<span class="attribute-label">{0}</span>
+				<div class="attribute-control">{1}</div>
+				'''.format(v['label'], v['value'])
 
-			# Je surcharge le contenu du conteneur dans le cas d'un fichier PDF.
-			if 'pdf' in v :
-				if v['pdf'] == True :
-					if v['value'] :
-						contr = '''
-						<a href="{0}{1}" target="blank" class="icon-link pdf-icon">{2}</a>
-						'''.format(MEDIA_URL, v['value'], v['label'])
+				# Je surcharge le contenu du conteneur dans le cas d'un fichier PDF.
+				if 'pdf' in v :
+					if v['pdf'] == True :
+						if v['value'] :
+							contr = '''
+							<a href="{0}{1}" target="blank" class="icon-link pdf-icon">{2}</a>
+							'''.format(MEDIA_URL, v['value'], v['label'])
+						else :
+							contr = None
 					else :
-						contr = None
+						err = True
+
+				# Je complète le contenu du conteneur si besoin.
+				if 'help-text' in v and contr != '' :
+					contr += '''
+					<span class="attribute-help-text">{0}</span>
+					'''.format(v['help-text'])
+
+				# J'initialise le gabarit.
+				if contr :
+					cont = '''
+					<div class="attribute-wrapper">
+						{0}
+					</div>
+					'''.format(contr)
 				else :
-					err = True
+					cont = ''
 
-			# Je complète le contenu du conteneur si besoin.
-			if 'help-text' in v and contr != '' :
-				contr += '''
-				<span class="attribute-help-text">{0}</span>
-				'''.format(v['help-text'])
-
-			# J'initialise le gabarit.
-			if contr :
-				cont = '''
-				<div class="attribute-wrapper">
-					{0}
-				</div>
-				'''.format(contr)
 			else :
-				cont = ''
-			
+
+				# J'initialise le contenu du conteneur.
+				contr = '''
+				<span class="pdf-attribute-label">{0}</span>
+				<span class="pdf-attribute-value">{1}</span>
+				'''.format(v['label'], v['value'])
+
+				# Je surcharge le contenu du conteneur dans le cas d'un fichier PDF.
+				if 'pdf' in v :
+					if v['pdf'] == True :
+						if v['value'] :
+							contr = '''
+							<span class="pdf-attribute-label">{label}</span>
+							<a href="{value}" class="pdf-attribute-value">{value}</a>
+							'''.format(label = v['label'], value = '{0}{1}'.format(MEDIA_URL, v['value']))
+						else :
+							contr = None
+					else :
+						err = True
+
+				# J'initialise le gabarit.
+				if contr :
+					cont = '''
+					<div class="pdf-attribute-wrapper">
+						{0}
+					</div>
+					'''.format(contr)
+				else :
+					cont = ''
+
 		else :
 			err = True
 
