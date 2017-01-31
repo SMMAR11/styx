@@ -41,7 +41,9 @@
 				{{ t_attrs_fin.comm_fin }}
 			</div>
 			<div class="col-sm-3 forbidden">
-				<a href="{% url 'modif_fin' f.pk %}" class="icon-link modify-icon">Modifier</a>
+				<a href="{% url 'modif_fin' f.pk %}" class="icon-link modify-icon">Modifier le financement</a>
+				<br/>
+				<span action="?action=supprimer-financement" class="delete-icon icon-link" onclick="html_ds_fm(event, 'suppr_fin');">Supprimer le financement</span>
 			</div>
 		</div>
 	</div>

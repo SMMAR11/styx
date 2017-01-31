@@ -324,7 +324,6 @@ function soum_f(_e, _s = function(){}, _u = null) {
 
 			// Je retire toutes les erreurs du formulaire.
 			o_f.find('.field-error').empty();
-			o_f.find('.form-grouped-error').empty();
 			ret_errs(o_f);
 
 			if (data['success']) {
@@ -341,7 +340,7 @@ function soum_f(_e, _s = function(){}, _u = null) {
 					$('#za_' + suff_modal).empty();
 
 					// J'insère un nouveau contenu dans la fenêtre modale.
-					var div = $('<div/>', { 'class' : 'b red-color text-center', html : data['success']['message'] });
+					var div = $('<div/>', { 'class' : 'b green-color text-center', html : data['success']['message'] });
 					$('#za_' + suff_modal).append(div);
 
 					// J'affiche la fenêtre modale.
@@ -379,24 +378,6 @@ function soum_f(_e, _s = function(){}, _u = null) {
 					_s();
 				}
 
-				// Je traite le cas où je dois afficher un nouveau formulaire.
-				if (data['success']['next']) {
-
-					// Je retire le formulaire de l'étape actuelle.
-					$('#za_' + suff + '_next').remove();
-
-					// Je cache le formulaire de l'étape précédente.
-					o_f.hide();
-
-					// J'affiche le nouveau formulaire.
-					var div = $('<div/>', { 'id' : 'za_' + suff + '_next' });
-					$(div).append(data['success']['next']);
-					$(div).insertAfter('form[name="' + get_f_name + '"]');
-
-					// J'initialise la nouvelle datatable.
-					var datat = init_datat($('#t_' + suff + '_next'), []);
-				}
-
 				// Je traite le cas où je dois effectuer une opération sans rafraîchissement (ajout, mise à jour).
 				if (data['success']['message'] && data['success']['display']) {
 
@@ -405,7 +386,7 @@ function soum_f(_e, _s = function(){}, _u = null) {
 					$('#za_' + suff).hide();
 
 					// J'insère un nouveau contenu dans la fenêtre modale.
-					var div = $('<div/>', { 'class' : 'b red-color text-center', html : data['success']['message'] });
+					var div = $('<div/>', { 'class' : 'b green-color text-center', html : data['success']['message'] });
 					$(div).insertAfter($('#za_' + suff));
 
 					// Je transvase une donnée de l'instance créée vers le formulaire principal si besoin.
@@ -427,36 +408,24 @@ function soum_f(_e, _s = function(){}, _u = null) {
 				}
 			}
 			else {
-				if (data['errors']) {
+				for (var i in data) {
+
+					// Je pointe vers le contrôle soumis à une erreur.
+					var span = point_fw($('#id_' + i)).find('.field-error');
 
 					// Je prépare le message d'erreur.
 					var ul = $('<ul/>');
-					var li = $('<li/>', { html : data['errors'][0] });
+					var li = $('<li/>', { html : data[i][0] });
 
 					// J'affiche l'erreur.
-					o_f.find('.form-grouped-error').append(ul);
+					span.append(ul);
 					ul.append(li);
-				}
-				else {
-					for (var i in data) {
+					aj_err($('#id_' + i));
 
-						// Je pointe vers le contrôle soumis à une erreur.
-						var span = point_fw($('#id_' + i)).find('.field-error');
-
-						// Je prépare le message d'erreur.
-						var ul = $('<ul/>');
-						var li = $('<li/>', { html : data[i][0] });
-
-						// J'affiche l'erreur.
-						span.append(ul);
-						ul.append(li);
-						aj_err($('#id_' + i));
-
-						// Je cache le message d'erreur si et seulement si un message d'erreur porte sur plusieurs champs à
-						// la fois (cas exceptionnel).
-						if (data[i][0] == 'None') {
-							li.css('visibility', 'hidden');
-						}
+					// Je cache le message d'erreur si et seulement si un message d'erreur porte sur plusieurs champs à
+					// la fois (cas exceptionnel).
+					if (data[i][0] == 'None') {
+						li.css('visibility', 'hidden');
 					}
 				}
 			}
@@ -504,7 +473,7 @@ function suppr(_e)
 					$('#za_' + suff).empty();
 
 					// J'insère un nouveau contenu dans la fenêtre modale.
-					var div = $('<div/>', { 'class' : 'b red-color text-center', html : data['success']['message'] });
+					var div = $('<div/>', { 'class' : 'b green-color text-center', html : data['success']['message'] });
 					$('#za_' + suff).append(div);
 
 					// J'affiche la fenêtre modale.
@@ -516,6 +485,18 @@ function suppr(_e)
 						window.location.href = data['success']['redirect'];
 					}, 2000);
 				}
+			}
+			else {
+
+				// Je vide le contenu de la fenêtre modale.
+				$('#za_' + suff).empty();
+
+				// J'insère un nouveau contenu dans la fenêtre modale.
+				var div = $('<div/>', { 'class' : 'b red-color text-center', html : data });
+				$('#za_' + suff).append(div);
+
+				// J'affiche la fenêtre modale.
+				$('#fm_' + suff).modal();
 			}
 		},
 		error : function(xhr) {

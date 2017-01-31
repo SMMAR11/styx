@@ -217,6 +217,7 @@ def gen_f_ajout_aven(request, _pd, _u) :
 		{5}
 		{6}
 		{7}
+		{8}
 		<button class="center-block green-btn my-btn" type="submit">Valider</button>
 	</form>
 	'''.format(
@@ -227,6 +228,7 @@ def gen_f_ajout_aven(request, _pd, _u) :
 		t['int_aven'],
 		t['dt_aven'],
 		t['mont_aven'],
+		t['chem_pj_aven'],
 		t['comm_aven']
 	)
 
@@ -243,18 +245,29 @@ def gen_t_ch_doss(request, _d_excl = None) :
 	from app.functions import dt_fr
 	from app.functions import init_f
 	from app.models import TDossier
+	from app.models import TMoa
+	from app.models import TUtilisateur
 	from django.template.context_processors import csrf
 
+	# J'initialise la valeur de l'argument "k_org_moa".
+	try :
+		v_org_moa = TMoa.objects.get(pk = TUtilisateur.objects.get(pk = request.user.pk).id_org).pk
+	except :
+		v_org_moa = None
+
 	# J'instancie un objet "formulaire".
-	f_ch_doss = ChoisirDossier(prefix = 'ChoisirDossier')
+	f_ch_doss = ChoisirDossier(prefix = 'ChoisirDossier', k_org_moa = v_org_moa)
 
 	# J'initialise le gabarit de chaque champ du formulaire.
 	t_ch_doss = init_f(f_ch_doss)
 
 	# J'initialise la requête.
-	qs_doss = TDossier.objects.all()
+	if v_org_moa :
+		qs_doss = TDossier.objects.filter(id_org_moa = v_org_moa)
+	else :
+		qs_doss = TDossier.objects.all()
 	if _d_excl :
-		qs_doss = TDossier.objects.exclude(pk = _d_excl)
+		qs_doss = qs_doss.exclude(pk = _d_excl)
 
 	# J'empile le tableau des lignes du tableau HTML.
 	t_lg = []
@@ -743,8 +756,8 @@ def init_pg_cons(_t, _pdf = False) :
 						if v['value'] :
 							contr = '''
 							<span class="pdf-attribute-label">{label}</span>
-							<a href="{value}" class="pdf-attribute-value">{value}</a>
-							'''.format(label = v['label'], value = '{0}{1}'.format(MEDIA_URL, v['value']))
+							<span class="pdf-attribute-value">{value}</span>
+							'''.format(label = v['label'], value = v['value'])
 						else :
 							contr = None
 					else :

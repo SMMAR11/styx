@@ -94,7 +94,9 @@
 						{{ t_attrs_doss.comm_doss }}
 					</div>
 					<div class="col-sm-3">
-						<a href="{% url 'modif_doss' d.pk %}" class="forbidden icon-link modify-icon">Modifier</a>
+						<a href="{% url 'modif_doss' d.pk %}" class="forbidden icon-link modify-icon">Modifier le dossier</a>
+						<br/>
+						<span action="?action=supprimer-dossier" class="delete-icon forbidden icon-link" onclick="html_ds_fm(event, 'suppr_doss');">Supprimer le dossier</span>
 						{% if forbidden == True %}
 						<div class="br"></div>
 						{% endif %}

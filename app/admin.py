@@ -33,13 +33,13 @@ admin.site.register(TNatureDossier, ANatureDossier)
 class ATechnicien(admin.ModelAdmin) :
 
 	# Je déclare les actions supplémentaires.
-	def set_en_act_on(_madm, _r, _qs) :
+	def set_en_act_techn_on(_madm, _r, _qs) :
 		_qs.update(en_act_techn = True)
-	set_en_act_on.short_description = 'Rendre les T_TECHNICIEN sélectionnés actifs'
+	set_en_act_techn_on.short_description = 'Rendre les T_TECHNICIEN sélectionnés actifs'
 
-	def set_en_act_off(_madm, _r, _qs) :
+	def set_en_act_techn_off(_madm, _r, _qs) :
 		_qs.update(en_act_techn = False)
-	set_en_act_off.short_description = 'Rendre les T_TECHNICIEN sélectionnés inactifs'
+	set_en_act_techn_off.short_description = 'Rendre les T_TECHNICIEN sélectionnés inactifs'
 
 	# Je mets en forme la première colonne du tableau.
 	def n_comp_techn(self, _o) :
@@ -48,7 +48,7 @@ class ATechnicien(admin.ModelAdmin) :
 	n_comp_techn.short_description = 'Nom complet'
 
 	# J'initialise les paramètres.
-	actions = [set_en_act_on, set_en_act_off, admin.actions.delete_selected]
+	actions = [set_en_act_techn_on, set_en_act_techn_off, admin.actions.delete_selected]
 	list_display = ('n_comp_techn', 'en_act_techn')
 	list_filter = (
 		('en_act_techn', admin.BooleanFieldListFilter),
@@ -183,10 +183,22 @@ admin.site.register(TTypeDossier, ATypeDossier)
 
 class AProgramme(admin.ModelAdmin) :
 
+	# Je déclare les actions supplémentaires.
+	def set_en_act_progr_on(_madm, _r, _qs) :
+		_qs.update(en_act_progr = True)
+	set_en_act_progr_on.short_description = 'Rendre les T_PROGRAMME sélectionnés actifs'
+
+	def set_en_act_progr_off(_madm, _r, _qs) :
+		_qs.update(en_act_progr = False)
+	set_en_act_progr_off.short_description = 'Rendre les T_PROGRAMME sélectionnés inactifs'
+
 	# J'initialise les paramètres.
-	actions = [admin.actions.delete_selected]
-	list_display = ['int_progr', 'id_type_progr']
-	list_filter = ['id_type_progr']
+	actions = [set_en_act_progr_on, set_en_act_progr_off, admin.actions.delete_selected]
+	list_display = ['int_progr', 'id_type_progr', 'en_act_progr']
+	list_filter = (
+		'id_type_progr',
+		('en_act_progr', admin.BooleanFieldListFilter),
+	)
 
 	# Je déclare les champs en lecture seule lors d'une mise à jour.
 	def get_readonly_fields(self, _r, _o = None) :
@@ -350,10 +362,22 @@ class AMoaInline(admin.TabularInline) :
 
 class AMoa(admin.ModelAdmin) :
 
+	# Je déclare les actions supplémentaires.
+	def set_en_act_org_moa_on(_madm, _r, _qs) :
+		_qs.update(en_act_org_moa = True)
+	set_en_act_org_moa_on.short_description = 'Rendre les T_MOA sélectionnés actifs'
+
+	def set_en_act_org_moa_off(_madm, _r, _qs) :
+		_qs.update(en_act_org_moa = False)
+	set_en_act_org_moa_off.short_description = 'Rendre les T_MOA sélectionnés inactifs'
+
 	# J'initialise les paramètres.
-	actions = [admin.actions.delete_selected]
+	actions = [set_en_act_org_moa_on, set_en_act_org_moa_off, admin.actions.delete_selected]
 	inlines = [AMoaInline]
-	list_display = ['n_org']
+	list_display = ['n_org', 'en_act_org_moa']
+	list_filter = (
+		('en_act_org_moa', admin.BooleanFieldListFilter),
+	)
 
 	# Je mets en forme le formulaire.
 	fieldsets = (

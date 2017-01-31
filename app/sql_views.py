@@ -71,7 +71,6 @@ class VSuiviPrestationsDossier(models.Model) :
 
 class VDemandeVersement(models.Model) :
 
-    # Je définis les champs de la table.
     id_ddv = models.IntegerField(primary_key = True)
     chem_pj_ddv = models.CharField(max_length = 255)
     comm_ddv = models.TextField()
@@ -91,4 +90,21 @@ class VDemandeVersement(models.Model) :
 
     class Meta :
         db_table = 'v_demande_versement'
+        managed = False
+
+class VPrestation(models.Model) :
+
+    id_prest = models.IntegerField(primary_key = True)
+    chem_pj_prest = models.CharField(max_length = 255)
+    comm_prest = models.TextField()
+    dt_fin_prest = models.DateField()
+    dt_notif_prest = models.DateField()
+    int_prest = models.CharField(max_length = 255)
+    mont_prest = models.FloatField()
+    ref_prest = models.CharField(max_length = 255)
+    id_nat_prest = models.ForeignKey(TNaturePrestation, models.DO_NOTHING)
+    id_org_prest = models.ForeignKey(TPrestataire, models.DO_NOTHING)
+
+    class Meta :
+        db_table = 'v_prestation'
         managed = False

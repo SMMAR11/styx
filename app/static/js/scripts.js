@@ -12,7 +12,8 @@ var t_datat = {
 	'cons_fact_ddv' : init_datat($('#t_cons_fact_ddv'), [4]),
 	'cons_fin' : init_datat($('#t_cons_fin'), [8]),
 	'cons_ph' : init_datat($('#t_cons_ph'), [4]),
-	'cons_prest' : init_datat($('#t_cons_prest'), [6])
+	'cons_prest' : init_datat($('#t_cons_prest'), [6]),
+	'modif_prest_doss' : init_datat($('#t_modif_prest_doss'), [0, 1, 2, 3, 4])
 };
 var submit = false;
 
@@ -220,11 +221,11 @@ $('form[name="f_ch_doss"]').on('submit', function(_e) {
  * des types de dossiers des formulaires de gestion d'un dossier.
  * _e : Objet DOM
  */
-$('#id_GererDossier-id_progr, #id_GererDossier-zl_axe, #id_GererDossier-zl_ss_axe').on('change', function(_e) {
+$('#id_GererDossier-zl_progr, #id_GererDossier-zl_axe, #id_GererDossier-zl_ss_axe').on('change', function(_e) {
 	submit = alim_ld(
 		_e,
 		[
-			'id_GererDossier-id_progr',
+			'id_GererDossier-zl_progr',
 			['id_GererDossier-zl_axe', 'id_GererDossier-zl_type_doss'],
 			'id_GererDossier-zl_ss_axe',
 			'id_GererDossier-zl_act'
@@ -490,17 +491,9 @@ $.typeahead({
 });
 
 /**
- * Ce script permet de repasser à l'étape antérieure lors de la procédure de modification d'une prestation.
- */
-$(document).on('click', '#bt_modif_prest_etape_2_previous', function() {
-	$('#za_modif_prest_etape_1_next').remove();
-	$('form[name="f_modif_prest_etape_1"]').show();
-});
-
-/**
  * Ce script permet de retourner le nom d'un fichier uploadé.
  */
-$('input[type="file"]').change(function() {
+$(document).on('change', 'input[type="file"]', function() {
 
 	// Je pointe vers la racine du contrôle.
 	var fw = point_fw($(this));

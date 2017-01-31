@@ -18,11 +18,13 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/$', gestion_dossiers.index, name = 'gest_doss'),
     url(r'^modules/gestion-dossiers/creer-dossier/$', gestion_dossiers.cr_doss, name = 'cr_doss'),
     url(r'^modules/gestion-dossiers/modifier-dossier/([0-9]+)/$', gestion_dossiers.modif_doss, name = 'modif_doss'),
+    url(r'^modules/gestion-dossiers/supprimer-dossier/([0-9]+)/$', gestion_dossiers.suppr_doss, name = 'suppr_doss'),
     url(r'^modules/gestion-dossiers/choisir-dossier/$', gestion_dossiers.ch_doss, name = 'ch_doss'),
     url(r'^modules/gestion-dossiers/consulter-dossier/([0-9]+)/$', gestion_dossiers.cons_doss, name = 'cons_doss'),
     url(r'^modules/gestion-dossiers/imprimer-dossier/([0-9]+)/$', gestion_dossiers.impr_doss, name = 'impr_doss'),
     url(r'^modules/gestion-dossiers/ajouter-financement/$', gestion_dossiers.ajout_fin, name = 'ajout_fin'),
     url(r'^modules/gestion-dossiers/modifier-financement/([0-9]+)/$', gestion_dossiers.modif_fin, name = 'modif_fin'),
+    url(r'^modules/gestion-dossiers/supprimer-financement/([0-9]+)/$', gestion_dossiers.suppr_fin, name = 'suppr_fin'),
     url(r'^modules/gestion-dossiers/consulter-financement/([0-9]+)/$', gestion_dossiers.cons_fin, name = 'cons_fin'),
     url(r'^modules/gestion-dossiers/ajouter-prestation/$', gestion_dossiers.ajout_prest, name = 'ajout_prest'),
     url(

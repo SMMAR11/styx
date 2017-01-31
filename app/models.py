@@ -465,7 +465,7 @@ class TDossier(models.Model) :
     from app.validators import val_fich_pdf
     from app.validators import val_mont_nul
     from app.validators import val_mont_pos
-    from datetime import date
+    from django.utils import timezone
 
     def set_chem_pj_doss_upload_to(_i, _fn) :
 
@@ -504,7 +504,7 @@ class TDossier(models.Model) :
     dt_delib_moa_doss = models.DateField(
         blank = True, null = True, verbose_name = 'Date de délibération au maître d\'ouvrage'
     )
-    dt_int_doss = models.DateField(default = date.today())
+    dt_int_doss = models.DateField(default = timezone.now())
     est_ttc_doss = models.BooleanField()
     lib_1_doss = models.CharField(
         max_length = 255, validators = [val_cdc], verbose_name = 'Territoire ou caractéristique'
@@ -522,7 +522,7 @@ class TDossier(models.Model) :
     num_axe = models.IntegerField(blank = True, null = True)
     num_doss = models.CharField(max_length = 255, unique = True)
     num_ss_axe = models.IntegerField(blank = True, null = True)
-    id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, verbose_name = 'Programme')
+    id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING)
     id_av = models.ForeignKey(TAvancement, models.DO_NOTHING, verbose_name = 'État d\'avancement')
     id_av_cp = models.ForeignKey(
         TAvisCp, 
@@ -715,7 +715,6 @@ class TPrestation(models.Model) :
     # Imports
     from app.validators import val_cdc
     from app.validators import val_fich_pdf
-    from app.validators import val_mont_pos
 
     def set_chem_pj_prest_upload_to(_i, _fn) :
 
@@ -737,9 +736,6 @@ class TPrestation(models.Model) :
     dt_fin_prest = models.DateField(verbose_name = 'Date de fin de la prestation')
     dt_notif_prest = models.DateField(verbose_name = 'Date de notification de la prestation')
     int_prest = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la prestation')
-    mont_prest = models.FloatField(
-        validators = [val_mont_pos], verbose_name = 'Montant [ht_ou_ttc] total de la prestation'
-    )
     ref_prest = models.CharField(
         blank = True, max_length = 255, null = True, validators = [val_cdc], verbose_name = 'Référence de la prestation'
     )
@@ -783,9 +779,25 @@ class TAvenant(models.Model) :
 
     # Imports
     from app.validators import val_cdc
+    from app.validators import val_fich_pdf
     from app.validators import val_mont_nul
 
+    def set_chem_pj_aven_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'dossiers/avenants/{0}'.format(new_fn)
+
     id_aven = models.AutoField(primary_key = True)
+    chem_pj_aven = models.FileField(
+        blank = True, 
+        null = True, 
+        upload_to = set_chem_pj_aven_upload_to,
+        validators = [val_fich_pdf],
+        verbose_name = 'Insérer le fichier scanné de l\'avenant <span class="field-complement">(fichier PDF)</span>'
+    )
     comm_aven = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
     dt_aven = models.DateField(verbose_name = 'Date de fin de l\'avenant')
     int_aven = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de l\'avenant')

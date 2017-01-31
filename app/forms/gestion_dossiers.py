@@ -20,6 +20,7 @@ class GererDossier(forms.ModelForm) :
 	za_doss_ass = forms.CharField(
 		label = 'Dossier associé', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
 	)
+	zl_progr = forms.ChoiceField(label = 'Programme', widget = forms.Select())
 	zl_org_moa = forms.ChoiceField(label = 'Maître d\'ouvrage', widget = forms.Select())
 	zl_axe = forms.ChoiceField(
 		choices = [DEFAULT_OPTION],
@@ -60,6 +61,7 @@ class GererDossier(forms.ModelForm) :
 			'est_ttc_doss', 
 			'id_fam',
 			'id_org_moa',
+			'id_progr',
 			'id_techn',
 			'id_type_doss', 
 			'num_doss', 
@@ -74,6 +76,7 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TAction
 		from app.models import TAxe
 		from app.models import TMoa
+		from app.models import TProgramme
 		from app.models import TSousAxe
 		from app.models import TTechnicien
 
@@ -100,6 +103,11 @@ class GererDossier(forms.ModelForm) :
 		t_org_moa.insert(0, DEFAULT_OPTION)
 		self.fields['zl_org_moa'].choices = t_org_moa
 
+		# J'alimente la liste déroulante des programmes.
+		t_progr = [(p.pk, p) for p in TProgramme.objects.filter(en_act_progr = True)]
+		t_progr.insert(0, DEFAULT_OPTION)
+		self.fields['zl_progr'].choices = t_progr
+
 		# J'alimente la liste déroulante des techniciens.
 		t_techn = [(t.pk, t) for t in TTechnicien.objects.filter(en_act_techn = True)]
 		t_techn.insert(0, DEFAULT_OPTION)
@@ -119,7 +127,7 @@ class GererDossier(forms.ModelForm) :
 
 			# Je réinitialise le tableau des choix de certaines listes déroulantes.
 			self.fields['zl_org_moa'].choices = [(i.id_org_moa.pk, i.id_org_moa)]
-			self.fields['id_progr'].choices = [(i.id_progr.pk, i.id_progr)]
+			self.fields['zl_progr'].choices = [(i.id_progr.pk, i.id_progr)]
 			self.fields['zl_type_doss'].choices = [(i.id_type_doss.pk, i.id_type_doss)]
 			if i.id_techn.en_act_techn == False :
 				self.fields['zl_techn'].choices += [(i.id_techn.pk, i.id_techn)]
@@ -192,6 +200,7 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TFinancement
 		from app.models import TMoa
 		from app.models import TPrestationsDossier
+		from app.models import TProgramme
 		from app.sql_views import VSuiviDossier
 		from django.db.models import Max
 		from django.db.models import Sum
@@ -200,7 +209,7 @@ class GererDossier(forms.ModelForm) :
 		cleaned_data = super(GererDossier, self).clean()
 		v_doss_ass = cleaned_data.get('za_doss_ass')
 		v_org_moa = cleaned_data.get('zl_org_moa')
-		v_progr = cleaned_data.get('id_progr')
+		v_progr = cleaned_data.get('zl_progr')
 		v_axe = cleaned_data.get('zl_axe')
 		v_ss_axe = cleaned_data.get('zl_ss_axe')
 		v_act = cleaned_data.get('zl_act')
@@ -256,10 +265,11 @@ class GererDossier(forms.ModelForm) :
 		# Je renvoie une erreur si l'utilisateur n'a pas les droits pour créer un dossier spécifique.
 		if not i.pk and v_org_moa and v_progr :
 			o_org_moa = TMoa.objects.get(pk = v_org_moa)
-			if ger_droits(self.k_util, [o_org_moa.pk, v_progr.id_type_progr.pk], False, False) == False :
+			o_progr = TProgramme.objects.get(pk = v_progr)
+			if ger_droits(self.k_util, [o_org_moa.pk, o_progr.id_type_progr.pk], False, False) == False :
 				self.add_error('zl_org_moa', None)
 				self.add_error(
-					'id_progr',
+					'zl_progr',
 					'''
 					Vous n\'avez pas les permissions requises pour créer un dossier du programme « {0} » pour le maître
 					d\'ouvrage « {1} ».
@@ -267,10 +277,6 @@ class GererDossier(forms.ModelForm) :
 				)
 
 		if i.pk :
-
-			# Je gère la contrainte suivante : le programme doit rester inchangé.
-			if v_progr and i.id_progr != v_progr :
-				self.add_error('id_progr', ERROR_MESSAGES['invalid'])
 
 			# Je récupère trois valeurs : le montant de l'assiette éligible maximum, la somme des montants de la 
 			# participation et la somme des prestations.
@@ -329,6 +335,7 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TAxe
 		from app.models import TDossier
 		from app.models import TMoa
+		from app.models import TProgramme
 		from app.models import TSousAxe
 		from app.models import TTechnicien
 		from app.models import TTypeDossier
@@ -372,6 +379,7 @@ class GererDossier(forms.ModelForm) :
 			o_doss = None
 
 		o.id_doss_ass = o_doss
+		o.id_progr = TProgramme.objects.get(pk = self.cleaned_data.get('zl_progr'))
 		o.id_org_moa = TMoa.objects.get(pk = self.cleaned_data.get('zl_org_moa'))
 		o.id_techn = TTechnicien.objects.get(pk = self.cleaned_data.get('zl_techn'))
 		o.id_type_doss = TTypeDossier.objects.get(pk = self.cleaned_data.get('zl_type_doss'))
@@ -424,11 +432,17 @@ class ChoisirDossier(forms.ModelForm) :
 		from app.models import TProgramme
 		from datetime import date
 
+		# Je déclare le tableau des arguments.
+		k_org_moa = kwargs.pop('k_org_moa', None)
+
 		super(ChoisirDossier, self).__init__(*args, **kwargs)
 
 		# Je définis les messages d'erreurs personnalisés à chaque champ.
 		for cle, valeur in self.fields.items() :
 			self.fields[cle].error_messages = ERROR_MESSAGES
+
+		if k_org_moa :
+			self.fields['zl_org_moa'].initial = k_org_moa
 
 		# J'alimente la liste déroulante des maîtres d'ouvrages.
 		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(en_act_org_moa = True)]
@@ -636,6 +650,7 @@ class GererFinancement(forms.ModelForm) :
 class GererPrestation(forms.ModelForm) :
 
 	# Imports
+	from app.validators import val_mont_pos
 	from app.validators import val_siret
 
 	rb_prest_exist = forms.ChoiceField(
@@ -653,6 +668,11 @@ class GererPrestation(forms.ModelForm) :
 		validators = [val_siret], 
 		widget = forms.TextInput(attrs = { 'autocomplete' : 'off', 'maxlength' : 14 })
 	)
+	zs_mont_prest = forms.FloatField(
+		label = 'Montant [ht_ou_ttc] de la prestation', 
+        validators = [val_mont_pos],
+        widget = forms.TextInput()
+    )
 
 	class Meta :
 
@@ -696,8 +716,12 @@ class GererPrestation(forms.ModelForm) :
 					ht_ou_ttc = 'TTC'
 
 		# Je complète le label de chaque champ demandant un montant.
-		lab_mont_prest = self.fields['mont_prest'].label.replace('[ht_ou_ttc]', ht_ou_ttc)
-		self.fields['mont_prest'].label = lab_mont_prest
+		lab_mont_prest = self.fields['zs_mont_prest'].label.replace('[ht_ou_ttc]', ht_ou_ttc)
+		self.fields['zs_mont_prest'].label = lab_mont_prest
+
+		# J'exclus le champ personnalisé lié au montant de la prestation lorsque je suis en phase de modification.
+		if i.pk :
+			del self.fields['zs_mont_prest']
 
 	def clean(self) :
 
@@ -714,7 +738,7 @@ class GererPrestation(forms.ModelForm) :
 		cleaned_data = super(GererPrestation, self).clean()
 		v_num_doss = cleaned_data.get('za_num_doss')
 		v_siret_org_prest = cleaned_data.get('zsac_siret_org_prest')
-		v_mont_prest = cleaned_data.get('mont_prest')
+		v_mont_prest = cleaned_data.get('zs_mont_prest')
 		v_dt_fin_prest = cleaned_data.get('dt_fin_prest')
 
 		i = self.instance
@@ -739,10 +763,11 @@ class GererPrestation(forms.ModelForm) :
 		if o_doss and o_suivi_doss :
 			if v_mont_prest and float(v_mont_prest) > o_suivi_doss.mont_rae :
 				self.add_error(
-					'mont_prest', 
+					'zs_mont_prest', 
 					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(o_suivi_doss.mont_rae))
 				)
 
+		# Je renvoie une erreur si la date de fin de prestation est supérieure à la date du premier avenant.
 		if i.pk :
 			qs_aven_aggr = TAvenant.objects.filter(id_prest = i).aggregate(Min('dt_aven'))
 			dt_aven_min = qs_aven_aggr['dt_aven__min']
@@ -821,7 +846,6 @@ class RedistribuerPrestation(forms.ModelForm) :
 		# Je déclare le tableau des arguments.
 		self.k_doss = kwargs.pop('k_doss', None)
 		self.k_prest = kwargs.pop('k_prest', None)
-		self.k_mont_prest = kwargs.pop('k_mont_prest', None)
 		
 		super(RedistribuerPrestation, self).__init__(*args, **kwargs)
 
@@ -856,38 +880,20 @@ class RedistribuerPrestation(forms.ModelForm) :
 			if o_suivi_doss.est_ttc_doss == True :
 				v_mont_fact_sum = o_suivi_prest_doss.mont_ttc_fact_sum
 
-			# Je définis le montant minimum.
+			# Je définis les montants minimum et maximum.
 			mont_prest_doss_min = v_mont_fact_sum - o_suivi_prest_doss.mont_aven_sum
 			if mont_prest_doss_min < 0 :
 				mont_prest_doss_min = 0
-
-			# Je définis le montant maximum.
-			mont_prest = i.id_prest.mont_prest
-			if self.k_mont_prest :
-				mont_prest = self.k_mont_prest
-			t_bornes_max = sorted([
-				i.mont_prest_doss + o_suivi_doss.mont_rae,
-				mont_prest
-			])
-			mont_prest_doss_max = t_bornes_max[0]
+			mont_prest_doss_max = i.mont_prest_doss + o_suivi_doss.mont_rae
 
 		else :
 
 			# Je pointe vers l'objet VSuiviDossier.
 			o_suivi_doss = VSuiviDossier.objects.get(pk = self.k_doss.pk)
 
-			# Je définis le montant minimum.
+			# Je définis les montants minimum et maximum.
 			mont_prest_doss_min = 0
-
-			# Je définis le montant maximum.
-			mont_prest = self.k_prest.mont_prest
-			if self.k_mont_prest :
-				mont_prest = self.k_mont_prest
-			t_bornes_max = sorted([
-				o_suivi_doss.mont_rae,
-				mont_prest
-			])
-			mont_prest_doss_max = t_bornes_max[0]
+			mont_prest_doss_max = o_suivi_doss.mont_rae
 
 		# Je renvoie une erreur si le montant saisi n'est pas inclus dans l'intervalle de valeurs autorisées.
 		if v_mont_prest_doss and not mont_prest_doss_min <= float(v_mont_prest_doss) <= mont_prest_doss_max :
