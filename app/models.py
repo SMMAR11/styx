@@ -333,9 +333,7 @@ class TMoa(TOrganisme) :
         return 'logos/{0}'.format(new_fn)
 
     id_org_moa = models.OneToOneField(TOrganisme)
-    dim_org_moa = models.CharField(
-        blank = True, max_length = 255, null = True, unique = True, verbose_name = 'Diminutif'
-    )
+    dim_org_moa = models.CharField(max_length = 255, unique = True, verbose_name = 'Diminutif')
     en_act_org_moa = models.BooleanField(default = True, verbose_name = 'En activité')
     logo_org_moa = models.FileField(
         blank = True, 
@@ -494,7 +492,9 @@ class TDossier(models.Model) :
         null = True,
         upload_to = set_chem_pj_doss_upload_to,
         validators = [val_fich_pdf],
-        verbose_name = 'Insérer le fichier scanné du mémoire technique'
+        verbose_name = '''
+        Insérer le fichier scanné du mémoire technique <span class="field-complement">(fichier PDF)</span>
+        '''
     )
     comm_doss = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
     comm_regl_doss = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')

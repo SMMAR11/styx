@@ -232,6 +232,27 @@ def h_404(request) :
 	return output
 
 '''
+Cette vue permet d'afficher la page relative à une erreur 500.
+request : Objet requête
+'''
+def h_500(request) :
+
+	# Imports
+	from django.shortcuts import render_to_response
+	from django.template import RequestContext
+
+	# J'affiche le template.
+	output = render_to_response(
+		'./handlers/template.html', 
+		RequestContext(request, { 
+			'message' : 'Erreur interne du serveur.', 'title' : 'Erreur 500'
+		})
+	)
+	output.status_code = 500
+
+	return output
+
+'''
 Cette vue permet l'autocomplétion d'une zone de saisie à partir de données stockées dans la base de données.
 request : Objet requête
 '''

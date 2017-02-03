@@ -425,14 +425,22 @@ class ADroitInline(admin.TabularInline) :
 
 class AUtilisateur(UserAdmin) :
 
+	# Je déclare les actions supplémentaires.
+	def set_is_active_on(_madm, _r, _qs) :
+		_qs.update(is_active = True)
+	set_is_active_on.short_description = 'Rendre les T_UTILISATEUR sélectionnés actifs'
+
+	def set_is_active_off(_madm, _r, _qs) :
+		_qs.update(is_active = False)
+	set_is_active_off.short_description = 'Rendre les T_UTILISATEUR sélectionnés inactifs'
+
 	# J'initialise les paramètres.
-	actions = [admin.actions.delete_selected]
+	actions = [set_is_active_on, set_is_active_off, admin.actions.delete_selected]
 	inlines = [ADroitInline]
-	list_display = ['username', 'last_name', 'first_name', 'email', 'is_staff', 'last_login']
+	list_display = ['username', 'last_name', 'first_name', 'email', 'id_org', 'is_active', 'is_superuser', 'last_login']
 	list_filter = (
-		('is_staff', admin.BooleanFieldListFilter),
-		('is_superuser', admin.BooleanFieldListFilter),
-		('is_active', admin.BooleanFieldListFilter)
+		('is_active', admin.BooleanFieldListFilter),
+		('is_superuser', admin.BooleanFieldListFilter)
 	)
 	search_fields = ('username',)
 

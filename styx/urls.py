@@ -4,6 +4,7 @@ from app.views import main
 from django.conf import settings
 from django.conf.urls import handler403
 from django.conf.urls import handler404
+from django.conf.urls import handler500
 from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -71,6 +72,7 @@ urlpatterns = [
 
 handler403 = main.h_403
 handler404 = main.h_404
+handler500 = main.h_500
 
 if settings.DEBUG is True :
     urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

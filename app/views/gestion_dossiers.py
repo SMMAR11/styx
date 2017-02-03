@@ -180,7 +180,7 @@ def cr_doss(request) :
 				)
 
 				# Je complète le fichier log.
-				rempl_fich_log([request.user.pk, request.user, 'C', 'Dossier', o_nv_doss.pk])
+				rempl_fich_log([request.user.pk, request.user, o_nv_doss.pk, o_nv_doss, 'C', 'Dossier', o_nv_doss.pk])
 
 			else :
 
@@ -327,7 +327,9 @@ def modif_doss(request, _d) :
 				)
 
 				# Je complète le fichier log.
-				rempl_fich_log([request.user.pk, request.user, 'U', 'Géométrie d\'un dossier', o_doss.pk])
+				rempl_fich_log([
+					request.user.pk, request.user, o_doss.pk, o_doss, 'U', 'Géométrie d\'un dossier', o_doss.pk
+				])
 
 		else :
 
@@ -382,7 +384,9 @@ def modif_doss(request, _d) :
 				)
 
 				# Je complète le fichier log.
-				rempl_fich_log([request.user.pk, request.user, 'U', 'Dossier', o_doss_modif.pk])
+				rempl_fich_log([
+					request.user.pk, request.user, o_doss_modif.pk, o_doss_modif, 'U', 'Dossier', o_doss_modif.pk
+				])
 
 			else :
 
@@ -471,7 +475,7 @@ def suppr_doss(request, _d) :
 			)
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'D', 'Dossier', v_id_doss])
+			rempl_fich_log([request.user.pk, request.user, v_id_doss, o_doss_suppr, 'D', 'Dossier', v_id_doss])
 
 		else :
 
@@ -501,6 +505,7 @@ def ch_doss(request) :
 	from app.functions import dt_fr
 	from app.functions import filtr_doss
 	from app.functions import init_f
+	from app.functions import obt_doss_regr
 	from app.models import TDossier
 	from app.models import TMoa
 	from app.models import TUtilisateur
@@ -524,7 +529,7 @@ def ch_doss(request) :
 
 		# Je prépare le tableau des dossiers.
 		if v_org_moa :
-			qs_doss = TDossier.objects.filter(id_org_moa = v_org_moa)
+			qs_doss = obt_doss_regr(v_org_moa)
 		else :
 			qs_doss = TDossier.objects.all()
 		t_doss = [{
@@ -1356,9 +1361,15 @@ def cons_doss(request, _d) :
 					request.session['tab_doss'] = ['#ong_arr', -1]
 
 					# Je complète le fichier log.
-					rempl_fich_log(
-						[request.user.pk, request.user, 'U', 'Réglementation d\'un dossier', o_doss_regl_modif.pk]
-					)
+					rempl_fich_log([
+						request.user.pk, 
+						request.user, 
+						o_doss_regl_modif.pk, 
+						o_doss_regl_modif, 
+						'U', 
+						'Réglementation d\'un dossier', 
+						o_doss_regl_modif.pk
+					])
 
 				else :
 
@@ -1669,8 +1680,10 @@ def cons_doss(request, _d) :
 					rempl_fich_log([
 						request.user.pk,
 						request.user,
+						o_doss.pk,
+						o_doss,
 						'C',
-						'Couple prestation/dossier (reliage)',
+						'Reliage d\'une prestation',
 						t_inst_prest_doss[-1].pk
 					])
 
@@ -1732,7 +1745,9 @@ def ajout_fin(request) :
 			request.session['tab_doss'] = ['#ong_fin', -1]
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'C', 'Financement', o_nv_fin.pk])
+			rempl_fich_log([
+				request.user.pk, request.user, o_nv_fin.id_doss.pk, o_nv_fin.id_doss, 'C', 'Financement', o_nv_fin.pk
+			])
 
 		else :
 
@@ -1815,7 +1830,15 @@ def modif_fin(request, _f) :
 			)
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'U', 'Financement', o_fin_modif.pk])
+			rempl_fich_log([
+				request.user.pk,
+				request.user,
+				o_fin_modif.id_doss.pk,
+				o_fin_modif.id_doss,
+				'U',
+				'Financement',
+				o_fin_modif.pk
+			])
 
 		else :
 
@@ -1884,7 +1907,15 @@ def suppr_fin(request, _f) :
 			request.session['tab_doss'] = ['#ong_fin', -1]
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'D', 'Financement', v_id_fin])
+			rempl_fich_log([
+				request.user.pk,
+				request.user, 
+				o_fin_suppr.id_doss.pk, 
+				o_fin_suppr.id_doss, 
+				'D', 
+				'Financement', 
+				v_id_fin
+			])
 
 		else :
 			cle = 'Demande de versement'
@@ -2089,10 +2120,15 @@ def ajout_prest(request) :
 			request.session['tab_doss'] = ['#ong_prest', -1]
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'C', 'Prestation', o_nvelle_prest.pk])
-			rempl_fich_log(
-				[request.user.pk, request.user, 'C', 'Couple prestation/dossier (ajout)', o_nvelle_prest_doss.pk]
-			)
+			rempl_fich_log([
+				request.user.pk,
+				request.user, 
+				o_nvelle_prest_doss.id_doss.pk, 
+				o_nvelle_prest_doss.id_doss, 
+				'C', 
+				'Ajout d\'une prestation', 
+				o_nvelle_prest_doss.pk
+			])
 
 		else :
 
@@ -2274,7 +2310,9 @@ def modif_prest(request, _pd) :
 			)
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'U', 'Prestation', o_prest.pk])
+			rempl_fich_log([
+				request.user.pk, request.user, o_prest.id_doss.pk, o_prest.id_doss, 'U', 'Prestation', o_prest.pk
+			])
 
 	return output
 
@@ -2519,7 +2557,9 @@ def ajout_aven(request, _r) :
 			request.session[tab] = [ong, -1]
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'C', 'Avenant', o_nv_aven.pk])
+			rempl_fich_log([
+				request.user.pk, request.user, o_nv_aven.id_doss.pk, o_nv_aven.id_doss, 'C', 'Avenant', o_nv_aven.pk
+			])
 
 		else :
 
@@ -2600,7 +2640,15 @@ def modif_aven(request, _a) :
 			)
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'U', 'Avenant', o_aven_modif.pk])
+			rempl_fich_log([
+				request.user.pk, 
+				request.user, 
+				o_aven_modif.id_doss.pk, 
+				o_aven_modif.id_doss, 
+				'U', 
+				'Avenant', 
+				o_aven_modif.pk
+			])
 
 		else :
 
@@ -2757,7 +2805,15 @@ def ajout_fact(request) :
 			request.session['tab_doss'] = ['#ong_fact', -1]
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'C', 'Facture', o_nvelle_fact.pk])
+			rempl_fich_log([
+				request.user.pk, 
+				request.user, 
+				o_nvelle_fact.id_doss.pk, 
+				o_nvelle_fact.id_doss, 
+				'C', 
+				'Facture', 
+				o_nvelle_fact.pk
+			])
 
 		else :
 
@@ -2868,7 +2924,15 @@ def modif_fact(request, _f) :
 			)
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'U', 'Facture', o_fact_modif.pk])
+			rempl_fich_log([
+				request.user.pk, 
+				request.user, 
+				o_fact_modif.id_doss.pk, 
+				o_fact_modif.id_doss, 
+				'U', 
+				'Facture', 
+				o_fact_modif.pk
+			])
 
 		else :
 
@@ -3035,7 +3099,15 @@ def ajout_ddv(request) :
 				request.session['tab_doss'] = ['#ong_ddv', -1]
 
 				# Je complète le fichier log.
-				rempl_fich_log([request.user.pk, request.user, 'C', 'Demande de versement', o_nvelle_ddv.pk])
+				rempl_fich_log([
+					request.user.pk, 
+					request.user, 
+					o_nvelle_ddv.id_fin.id_doss.pk, 
+					o_nvelle_ddv.id_fin.id_doss, 
+					'C', 
+					'Demande de versement', 
+					o_nvelle_ddv.id_fin.pk
+				])
 
 			else :
 
@@ -3149,7 +3221,15 @@ def modif_ddv(request, _d) :
 				)
 
 				# Je complète le fichier log.
-				rempl_fich_log([request.user.pk, request.user, 'U', 'Demande de versement', o_ddv_modif.pk])
+				rempl_fich_log([
+					request.user.pk, 
+					request.user, 
+					o_ddv_modif.id_fin.id_doss.pk, 
+					o_ddv_modif.id_fin.id_doss, 
+					'U', 
+					'Demande de versement', 
+					o_ddv_modif.id_fin.pk
+				])
 
 			else :
 
@@ -3310,7 +3390,9 @@ def ajout_arr(request) :
 			request.session['tab_doss'] = ['#ong_arr', -1]
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'C', 'Arrêté', o_nv_arr.pk])
+			rempl_fich_log([
+				request.user.pk, request.user, o_nv_arr.id_doss.pk, o_nv_arr.id_doss, 'C', 'Arrêté', o_nv_arr.pk
+			])
 
 		else :
 
@@ -3392,7 +3474,15 @@ def modif_arr(request, _a) :
 			)
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'U', 'Arrêté', o_arr_modif.pk])
+			rempl_fich_log([
+				request.user.pk, 
+				request.user, 
+				o_arr_modif.id_doss.pk, 
+				o_arr_modif.id_doss, 
+				'U', 
+				'Arrêté', 
+				o_arr_modif.pk
+			])
 
 		else :
 
@@ -3457,7 +3547,7 @@ def suppr_arr(request, _a) :
 		request.session['tab_doss'] = ['#ong_arr', -1]
 
 		# Je complète le fichier log.
-		rempl_fich_log([request.user.pk, request.user, 'D', 'Arrêté', v_id_arr_doss])
+		rempl_fich_log([request.user.pk, request.user, o_doss.pk, o_doss, 'D', 'Arrêté', v_id_arr_doss])
 
 	return output
 
@@ -3586,7 +3676,15 @@ def ajout_ph(request) :
 			request.session['tab_doss'] = ['#ong_ph', -1]
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'C', 'Photo', o_nvelle_ph.pk])
+			rempl_fich_log([
+				request.user.pk, 
+				request.user, 
+				o_nvelle_ph.id_doss.pk,
+				o_nvelle_ph.id_doss, 
+				'C', 
+				'Photo', 
+				o_nvelle_ph.pk
+			])
 
 		else :
 
@@ -3670,7 +3768,9 @@ def modif_ph(request, _p) :
 			request.session['tab_doss'] = ['#ong_ph', -1]
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'U', 'Photo', o_ph_modif.pk])
+			rempl_fich_log([
+				request.user.pk, request.user, o_ph_modif.id_doss.pk, o_ph_modif.id_doss, 'U', 'Photo', o_ph_modif.pk
+			])
 
 		else :
 
@@ -3732,7 +3832,7 @@ def suppr_ph(request, _p) :
 		request.session['tab_doss'] = ['#ong_ph', -1]
 
 		# Je complète le fichier log.
-		rempl_fich_log([request.user.pk, request.user, 'D', 'Photo', v_id_ph])
+		rempl_fich_log([request.user.pk, request.user, o_doss.pk, o_doss, 'D', 'Photo', v_id_ph])
 
 	return output
 
@@ -3773,7 +3873,7 @@ def ajout_org_prest(request) :
 			)
 
 			# Je complète le fichier log.
-			rempl_fich_log([request.user.pk, request.user, 'C', 'Prestataire', o_nv_org_prest.pk])
+			rempl_fich_log([request.user.pk, request.user, None, None, 'C', 'Prestataire', o_nv_org_prest.pk])
 
 		else :
 

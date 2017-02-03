@@ -35,6 +35,10 @@ class Identifier(forms.Form) :
 			if o_util is None :
 				self.add_error('zs_username', None)
 				self.add_error('zs_password', 'Les identifiants rentrés sont incorrects.')
+			else :
+				if not o_util.is_active :
+					self.add_error('zs_username', None)
+					self.add_error('zs_password', 'Votre compte est désactivé.')
 
 class GererUtilisateur(forms.ModelForm) :
 

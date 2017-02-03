@@ -273,7 +273,7 @@ class GererDossier(forms.ModelForm) :
 					'''
 					Vous n\'avez pas les permissions requises pour créer un dossier du programme « {0} » pour le maître
 					d\'ouvrage « {1} ».
-					'''.format(v_progr, o_org_moa)
+					'''.format(o_progr, o_org_moa)
 				)
 
 		if i.pk :
@@ -906,6 +906,9 @@ class RedistribuerPrestation(forms.ModelForm) :
 				err_mess = '''
 				Veuillez saisir un montant inférieur ou égal à {0} €.
 				'''.format(obt_mont(mont_prest_doss_max))
+
+			if mont_prest_doss_min == mont_prest_doss_max :
+				err_mess = 'Veuillez saisir un montant égal à {0} €.'.format(obt_mont(mont_prest_doss_max))
 
 			self.add_error('mont_prest_doss', err_mess)
 

@@ -97,14 +97,11 @@ def filtr_doss(request, _d_excl = None) :
 
 	# Imports
 	from app.forms.gestion_dossiers import ChoisirDossier
+	from app.functions import obt_doss_regr
 	from app.models import TAction
 	from app.models import TAxe
 	from app.models import TDossier
-	from app.models import TRegroupementsMoa
 	from app.models import TSousAxe
-	from django.db.models import Q
-	from functools import reduce
-	import operator
 
 	# Je soumets le formulaire.
 	f_chois_doss = ChoisirDossier(request.POST, prefix = 'ChoisirDossier')
@@ -135,13 +132,6 @@ def filtr_doss(request, _d_excl = None) :
 
 		# J'initialise les conditions de la requête.
 		t_sql = { 'and' : {}, 'or' : [] }
-		if v_org_moa :
-			for rm in TRegroupementsMoa.objects.filter(id_org_moa_fil = v_org_moa) :
-				t_sql['or'].append(Q(**{ 'id_org_moa' : rm.id_org_moa_anc }))
-			if len(t_sql['or']) > 0 :
-				t_sql['or'].append(Q(**{ 'id_org_moa' : v_org_moa }))
-			else :
-				t_sql['and']['id_org_moa'] = v_org_moa
 		if v_progr :
 			t_sql['and']['id_progr'] = v_progr
 			if v_axe :
@@ -156,8 +146,8 @@ def filtr_doss(request, _d_excl = None) :
 			t_sql['and']['dt_delib_moa_doss__year'] = v_ann_delib_moa_doss
 
 		# J'initialise la requête.
-		if len(t_sql['or']) > 0 :
-			qs_doss = TDossier.objects.filter(reduce(operator.or_, t_sql['or']), **t_sql['and'])
+		if v_org_moa :
+			qs_doss = obt_doss_regr(v_org_moa).filter(**t_sql['and'])
 		else :
 			qs_doss = TDossier.objects.filter(**t_sql['and'])
 		if _d_excl :
@@ -244,6 +234,7 @@ def gen_t_ch_doss(request, _d_excl = None) :
 	from app.forms.gestion_dossiers import ChoisirDossier
 	from app.functions import dt_fr
 	from app.functions import init_f
+	from app.functions import obt_doss_regr
 	from app.models import TDossier
 	from app.models import TMoa
 	from app.models import TUtilisateur
@@ -263,7 +254,7 @@ def gen_t_ch_doss(request, _d_excl = None) :
 
 	# J'initialise la requête.
 	if v_org_moa :
-		qs_doss = TDossier.objects.filter(id_org_moa = v_org_moa)
+		qs_doss = obt_doss_regr(v_org_moa)
 	else :
 		qs_doss = TDossier.objects.all()
 	if _d_excl :
@@ -783,6 +774,38 @@ def init_pg_cons(_t, _pdf = False) :
 			raise ValueError('Aucun gabarit n\'est disponible pour l\'attribut « {0} ».'.format(c))
 
 	return t_attrs
+
+'''
+Cette fonction permet d'obtenir les dossiers d'un maître d'ouvrage ainsi que les dossiers des maîtres d'ouvrages reliés
+au maître d'ouvrage.
+_m : Identifiant du maître d'ouvrage
+Retourne un jeu de données
+'''
+def obt_doss_regr(_m) :
+
+	# Imports
+	from app.models import TDossier
+	from app.models import TRegroupementsMoa
+	from django.db.models import Q
+	from functools import reduce
+	import operator
+
+	# J'initialise les conditions de la requête.
+	t_sql = { 'and' : {}, 'or' : [] }
+	for rm in TRegroupementsMoa.objects.filter(id_org_moa_fil = _m) :
+		t_sql['or'].append(Q(**{ 'id_org_moa' : rm.id_org_moa_anc }))
+	if len(t_sql['or']) > 0 :
+		t_sql['or'].append(Q(**{ 'id_org_moa' : _m }))
+	else :
+		t_sql['and']['id_org_moa'] = _m
+
+	# J'initialise la requête.
+	if len(t_sql['or']) > 0 :
+		qs_doss = TDossier.objects.filter(reduce(operator.or_, t_sql['or']), **t_sql['and'])
+	else :
+		qs_doss = TDossier.objects.filter(**t_sql['and'])
+
+	return qs_doss
 	
 '''
 Cette fonction retourne un entier ou un nombre décimal sous forme de montant.

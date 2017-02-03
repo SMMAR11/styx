@@ -44,6 +44,12 @@ def val_fich_img(_v) :
 	if verif_ext_fich(_v, ('.bmp', '.gif', '.jpg', '.jpeg', '.png')) == True :
 		raise ValidationError('Veuillez choisir un fichier au format BMP, GIF, JPG, JPEG ou PNG.')
 
+	t = 3
+	if _v.size > t * 1048576 :
+		raise ValidationError(
+			'Veuillez choisir un fichier dont la taille est inférieure ou égale à {0} Mo.'.format(t)
+		)
+
 	return _v
 
 '''
@@ -58,6 +64,12 @@ def val_fich_pdf(_v) :
 
 	if verif_ext_fich(_v, '.pdf') == True :
 		raise ValidationError('Veuillez choisir un fichier au format PDF.')
+
+	t = 20
+	if _v.size > t * 1048576 :
+		raise ValidationError(
+			'Veuillez choisir un fichier dont la taille est inférieure ou égale à {0} Mo.'.format(t)
+		)
 
 	return _v
 
@@ -126,25 +138,6 @@ def val_siret(_v) :
 		raise ValidationError(ERROR_MESSAGES['invalid'])
 
 	return _v
-
-'''
-Ce validateur renvoie une erreur si la taille d'un fichier uploadé n'est pas conforme.
-_t : Taille du fichier uploadé en Mo
-_v : Fichier uploadé
-'''
-def val_taille_fich(_t) :
-	def f(_v) :
-
-		# Imports
-		from django.core.exceptions import ValidationError
-		import os
-
-		if _v.size > _t * 1048576 :
-			raise ValidationError(
-				'Veuillez choisir un fichier dont la taille est inférieure ou égale à {0} Mo.'.format(_t)
-			)
-			
-	return f
 
 '''
 Ce validateur renvoie une erreur si la valeur saisie ne ressemble pas à un numéro de téléphone.
