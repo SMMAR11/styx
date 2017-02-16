@@ -1,4 +1,3 @@
-styx/settings.py
 *.pyc
 media/
 app/migrations/
