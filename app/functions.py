@@ -458,15 +458,17 @@ def ger_droits(_u, _d, _g = True, _h = True) :
 	# Imports
 	from app.models import TDroit
 	from app.models import TMoa
+	from app.models import TRegroupementsMoa
 	from app.models import TTypeProgramme
 	from django.core.exceptions import PermissionDenied
 
 	t_coupl = []
-	for d in TDroit.objects.filter(id_util = _u).order_by('-id_org_moa', '-id_type_progr') :
+	for d in TDroit.objects.filter(id_util = _u).order_by('id') :
 
 		# J'initialise le tableau des maîtres d'ouvrages (identifiants).
 		if d.id_org_moa :
-			t_org_moa = [d.id_org_moa.pk]
+			t_org_moa = [rm.id_org_moa_anc.pk for rm in TRegroupementsMoa.objects.filter(id_org_moa_fil = d.id_org_moa)]
+			t_org_moa.append(d.id_org_moa.pk)
 		else :
 			t_org_moa = [m.pk for m in TMoa.objects.all()]
 
@@ -481,10 +483,10 @@ def ger_droits(_u, _d, _g = True, _h = True) :
 		if _g == False :
 			attr = d.en_ecr
 
-		# J'empile le tableau des couples valides.
-		for i in range(0, len(t_org_moa)) :
-			for j in range(0, len(t_type_progr)) :
-				coupl = (t_org_moa[i], t_type_progr[j])
+		# Je prépare le tableau des couples valides.
+		for i in t_org_moa :
+			for j in t_type_progr :
+				coupl = (i, j)
 				if attr == True :
 					t_coupl.append(coupl)
 				else :
@@ -510,7 +512,7 @@ def ger_droits(_u, _d, _g = True, _h = True) :
 			raise PermissionDenied
 	else :
 		return trouve
-		
+
 '''
 Cette fonction retourne le gabarit de chaque champ d'un formulaire.
 _f : Formulaire traité
@@ -629,6 +631,57 @@ def init_f(_f) :
 
 		if bal == '<select/>' :
 			gab = gab_base.format(c.label, c)
+			if 'multiple="multiple"' in c_to_html :
+
+				# Je récupère la valeur de l'attribut "name".
+				split_name = c_to_html.split('name="')
+				name = split_name[1].split('"')[0]
+
+				# Je prépare la balise <thead/> du tableau HTML.
+				split_thead = c.label.split(';')
+				thead = ['<th>{0}</th>'.format(i) for i in split_thead[1:]]
+
+				# Je prépare la balise <tbody/> du tableau HTML.
+				split_tbody = []
+				for index, i in enumerate(c_to_html.split('<')[2:-1]) :
+					if index % 2 == 0 :
+						split_value = i.split('"')
+						split_text = i.split('>')
+						split_tbody.append({ 'value' : split_value[1],  'text' : split_text[1] })
+				tbody = []
+				for index, i in enumerate(split_tbody) :
+					tr = '''
+					<tr>
+						<td>{text}</td>
+						<td>
+							<input type="checkbox" class="pull-right" id="id_{name}_{index}" name="{name}" 
+							value="{value}">
+						</td>
+					</tr>
+					'''.format(text = i['text'], name = name, index = index, value = i['value'])
+					tbody.append(tr)
+
+				gab = '''
+				<div class="field-wrapper">
+					<span class="field-label">{0}</span>
+					<div class="my-table" id="t_ch_{1}">
+						<table id="id_{2}">
+							<thead>
+								<tr>
+									{3}
+									<th>
+										<input type="checkbox" class="pull-right" id="id_{4}__all" value="all">
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								{5}
+							</tbody>
+						</table>
+					</div>
+					<span class="field-error"></span>
+				</div>
+				'''.format(split_thead[0], c.name, name, '\n'.join(thead), name, '\n'.join(tbody))
 
 		if bal == '<textarea/>' :
 			gab = gab_base.format(c.label, c)
@@ -791,19 +844,18 @@ def obt_doss_regr(_m) :
 	import operator
 
 	# J'initialise les conditions de la requête.
-	t_sql = { 'and' : {}, 'or' : [] }
-	for rm in TRegroupementsMoa.objects.filter(id_org_moa_fil = _m) :
-		t_sql['or'].append(Q(**{ 'id_org_moa' : rm.id_org_moa_anc }))
-	if len(t_sql['or']) > 0 :
-		t_sql['or'].append(Q(**{ 'id_org_moa' : _m }))
+	qs_regr_moa = TRegroupementsMoa.objects.filter(id_org_moa_fil = _m)
+	if len(qs_regr_moa) > 0 :
+		t_sql = [Q(**{ 'id_org_moa' : rm.id_org_moa_anc }) for rm in qs_regr_moa]
+		t_sql.append(Q(**{ 'id_org_moa' : _m }))
 	else :
-		t_sql['and']['id_org_moa'] = _m
+		t_sql = { 'id_org_moa' : _m }
 
 	# J'initialise la requête.
-	if len(t_sql['or']) > 0 :
-		qs_doss = TDossier.objects.filter(reduce(operator.or_, t_sql['or']), **t_sql['and'])
+	if len(t_sql) == 1 :
+		qs_doss = TDossier.objects.filter(**t_sql)
 	else :
-		qs_doss = TDossier.objects.filter(**t_sql['and'])
+		qs_doss = TDossier.objects.filter(reduce(operator.or_, t_sql))
 
 	return qs_doss
 	

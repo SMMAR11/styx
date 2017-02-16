@@ -1,0 +1,33 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-sm-6">
+		<div class="main-title">Chargés d'assistance</div>
+		<div class="profile-widget">
+			<div>CLARAC Rémy (assistance fonctionnelle)</div>
+			<a href="mailto:remy.clarac@smmar.fr" class="icon-link mail-icon">remy.clarac@smmar.fr</a>
+			<br/>
+			<span class="icon-link no-link phone-icon">04 68 11 06 48</span>
+		</div>
+		<div class="profile-widget">
+			<div>MAYSONOVE Alexis (assistance technique)</div>
+			<a href="mailto:a.maysonove@laposte.net" class="icon-link mail-icon">a.maysonove@laposte.net</a>
+			<br/>
+			<span class="icon-link no-link phone-icon">Aucun</span>
+		</div>
+	</div>
+	<div class="col-sm-6">
+		<div class="main-title">Horaires d'ouverture</div>
+		Du lundi au vendredi (hors jours fériés) de :
+		<ul class="my-list-style">
+			<li>8h30 à 12h</li>
+			<li>13h30 à 17h30</li>
+		</ul>
+		<div class="br"></div>
+		<div class="main-title">Centre de téléchargement</div>
+		<!--<a href="#" class="icon-link pdf-icon">Télécharger le manuel utilisateur</a>-->
+	</div>
+</div>
+{% endblock content %}

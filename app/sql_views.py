@@ -16,6 +16,7 @@ class VSuiviDossier(models.Model) :
     mont_prest_doss_sum = models.FloatField()
     mont_aven_sum = models.FloatField()
     mont_tot_prest_doss = models.FloatField()
+    mont_fact_sum = models.FloatField()
     mont_raf = models.FloatField()
     mont_rae = models.FloatField()
 

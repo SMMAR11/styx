@@ -27,7 +27,9 @@
 				{{ t_attrs_aven.comm_aven }}
 			</div>
 			<div class="col-sm-3 forbidden">
-				<a href="{% url 'modif_aven' a.pk %}" class="icon-link modify-icon">Modifier</a>
+				<a href="{% url 'modif_aven' a.pk %}" class="icon-link modify-icon">Modifier l'avenant</a>
+				<br/>
+				<span action="?action=supprimer-avenant" class="delete-icon icon-link" onclick="html_ds_fm(event, 'suppr_aven');">Supprimer l'avenant</span>
 			</div>
 		</div>
 	</div>

@@ -12,7 +12,7 @@ request : Objet requête
 @verif_acc
 def index(request) :
 
-	''' Imports '''
+	# Imports
 	from django.http import HttpResponse
 	from django.shortcuts import render
 
@@ -630,6 +630,7 @@ def cons_doss(request, _d) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	from django.template.context_processors import csrf
+	from styx.settings import EP_STR
 	from styx.settings import MEDIA_URL
 	import json
 
@@ -668,21 +669,23 @@ def cons_doss(request, _d) :
 					<div class="col-md-6">
 						<span class="red-color small u">Nature du dossier :</span>
 						{0}
-						<br/>
-						<span class="red-color small u">Type de dossier :</span>
-						{1}
 					</div>
 					<div class="col-md-6">
 						<span class="red-color small u">Territoire ou caractéristique :</span>
+						{1}
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-6">
+						<span class="red-color small u">Type de dossier :</span>
 						{2}
-						<br/>
+					</div>
+					<div class="col-md-6">
 						<span class="red-color small u">Territoire ou lieu-dit précis :</span>
 						{3}
 					</div>
 				</div>
-				'''.format(
-					o_doss.id_nat_doss, o_doss.id_type_doss, o_doss.lib_1_doss, o_doss.lib_2_doss
-				)
+				'''.format(o_doss.id_nat_doss, o_doss.lib_1_doss, o_doss.id_type_doss, o_doss.lib_2_doss)
 			},
 			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
 			'id_progr' : { 'label' : 'Programme', 'value' : o_doss.id_progr },
@@ -883,6 +886,9 @@ def cons_doss(request, _d) :
 			'pk' : a.pk
 		} for a in TArretesDossier.objects.filter(id_doss = o_doss).order_by('id_type_decl')]
 
+		# Je stocke le jeu de données des photos du dossier.
+		qs_ph = TPhoto.objects.filter(id_doss = o_doss).order_by('-dt_pv_ph')
+
 		# J'initialise le tableau des photos du dossier.
 		t_ph = [{
 			'id_doss' : p.id_doss.pk,
@@ -891,7 +897,28 @@ def cons_doss(request, _d) :
 			'int_ppv_ph' : p.id_ppv_ph,
 			'dt_pv_ph' : dt_fr(p.dt_pv_ph),
 			'pk' : p.pk
-		} for p in TPhoto.objects.filter(id_doss = o_doss).order_by('-dt_pv_ph')]
+		} for p in qs_ph]
+
+		# Je prépare la fenêtre modale relative au diaporama des photos du dossier.
+		t_ph_diap = { 'li' : [], 'div' : [] }
+		for index, p in enumerate(qs_ph) :
+
+			t_attrs_li = ['data-target="#my-carousel"', 'data-slide-to="{0}"'.format(index)]
+			if index == 0 :
+				t_attrs_li.append('class="active"')
+			li = '<li {0}></li>'.format(' '.join(t_attrs_li))
+
+			class_div = 'item'
+			if index == 0 :
+				class_div += ' active'
+			div = '''
+			<div class="{0}">
+				<img src="{1}">
+			</div>
+			'''.format(class_div, MEDIA_URL + str(p.chem_ph))
+
+			t_ph_diap['li'].append(li)
+			t_ph_diap['div'].append(div)
 
 		# J'initialise le tableau des géométries du dossier.
 		qs_geom_doss = TDossierGeom.objects.filter(id_doss = o_doss)
@@ -974,8 +1001,8 @@ def cons_doss(request, _d) :
 				{4}
 				{5}
 				<div class="row">
-					<div class="col-sm-6">{6}</div>
-					<div class="col-sm-6">{7}</div>
+					<div class="col-md-6">{6}</div>
+					<div class="col-md-6">{7}</div>
 				</div>
 				<div class="row">
 					<div class="col-sm-6">{8}</div>
@@ -985,9 +1012,19 @@ def cons_doss(request, _d) :
 					<div class="col-sm-6">{10}</div>
 					<div class="col-sm-6">{11}</div>
 				</div>
-				{12}
-				{13}
+				<div class="row">
+					<div class="col-sm-6">{12}</div>
+					<div class="col-sm-6">{13}</div>
+				</div>
+				{14}
+				{15}
 				<button class="center-block green-btn my-btn" type="submit">Valider</button>
+				<div class="form-remark">
+					**
+					<br/>
+					Il est impossible de renseigner un numéro de bordereau et un numéro de titre de recette tant qu'une
+					date de versement n'a pas été renseignée.
+				</div>
 			</form>
 			'''.format(
 				reverse('ajout_ddv'),
@@ -1000,6 +1037,8 @@ def cons_doss(request, _d) :
 				t_ajout_ddv['mont_ttc_ddv'],
 				t_ajout_ddv['dt_ddv'],
 				t_ajout_ddv['dt_vers_ddv'],
+				t_ajout_ddv['num_bord_ddv'],
+				t_ajout_ddv['num_titre_rec_ddv'],
 				t_ajout_ddv['mont_ht_verse_ddv'],
 				t_ajout_ddv['mont_ttc_verse_ddv'],
 				t_ajout_ddv['chem_pj_ddv'],
@@ -1049,8 +1088,8 @@ def cons_doss(request, _d) :
 				{3}
 				{4}
 				<div class="row">
-					<div class="col-sm-6">{5}</div>
-					<div class="col-sm-6">{6}</div>
+					<div class="col-md-6">{5}</div>
+					<div class="col-md-6">{6}</div>
 				</div>
 				{7}
 				{8}
@@ -1125,8 +1164,8 @@ def cons_doss(request, _d) :
 					<input name="csrfmiddlewaretoken" type="hidden" value="{2}">
 					{3}
 					<div class="row">
-						<div class="col-xs-6">{4}</div>
-						<div class="col-xs-6" style="margin-top: 20px;">
+						<div class="col-sm-6">{4}</div>
+						<div class="col-sm-6" style="margin: 20px 0;">
 							<span class="add-company-icon icon-link" id="bt_ajout_org_prest">Ajouter un prestataire</span>
 						</div>
 					</div>
@@ -1166,12 +1205,12 @@ def cons_doss(request, _d) :
 								<th>Prestataire</th>
 								<th>Intitulé de la prestation</th>
 								<th>Date de notification</th>
-								<th>Montant {18} (en €)</th>
+								<th>Montant (en €)</th>
 								<th>Dossier(s)</th>
 								<th></th>
 							</tr>
 						</thead>
-						<tbody>{19}</tbody>
+						<tbody>{18}</tbody>
 					</table>
 				</div>
 			</div>
@@ -1193,7 +1232,6 @@ def cons_doss(request, _d) :
 				t_ch_prest['zl_progr'],
 				t_ch_prest['za_org_moa'],
 				t_ch_prest['zl_org_prest'],
-				ht_ou_ttc,
 				ht_ou_ttc,
 				'\n'.join(t_prest_moa_doss)
 			),
@@ -1219,25 +1257,48 @@ def cons_doss(request, _d) :
 				t_ajout_ph['id_ppv_ph'],
 				t_ajout_ph['dt_pv_ph'],
 				t_ajout_ph['chem_ph']
-			)
+			),
+			'lanc_diap' : '''
+			<div class="carousel my-carousel slide" data-interval="false" data-ride="carousel" id="my-carousel">
+				<ol class="carousel-indicators">{0}</ol>
+				<div class="carousel-inner" role="listbox">{1}</div>
+				<a href="#my-carousel" class="left carousel-control" data-slide="prev" role="button">
+					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+				</a>
+				<a href="#my-carousel" class="right carousel-control" data-slide="next" role="button">
+					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+				</a>
+			</div>
+			'''.format('\n'.join(t_ph_diap['li']), '\n'.join(t_ph_diap['div']))
 		}
 
 		# Je déclare un tableau de fenêtres modales.
 		t_fm = [
 			init_fm('ajout_arr', 'Ajouter un arrêté', t_cont_fm['ajout_arr']),
-			init_fm('ajout_aven', 'Ajouter un avenant'),
-			init_fm('ajout_fact', 'Ajouter une facture', t_cont_fm['ajout_fact']),
-			init_fm('ajout_fin', 'Ajouter un organisme financier', t_cont_fm['ajout_fin']),
-			init_fm('ajout_org_prest', 'Ajouter un prestataire', t_cont_fm['ajout_org_prest']),
 			init_fm('ajout_ph', 'Ajouter une photo', t_cont_fm['ajout_ph']),
-			init_fm('ajout_prest', 'Ajouter/relier une prestation', t_cont_fm['ajout_prest']),
 			init_fm('cons_ph', 'Consulter une photo'),
-			init_fm('ger_ddv', 'Ajouter une demande de versement', t_cont_fm['ajout_ddv']),
 			init_fm('modif_carto', 'Modifier un dossier'),
 			init_fm('modif_doss_regl', 'Modifier un dossier'),
 			init_fm('suppr_doss', 'Supprimer un dossier'),
 			init_fm('suppr_ph', 'Supprimer une photo')
 		]
+
+		# Je complète le tableau de fenêtres modales dans le cas où le dossier n'est pas en projet.
+		if o_doss.id_av.int_av != EP_STR :
+			t_fm += [	
+				init_fm('ajout_aven', 'Ajouter un avenant'),
+				init_fm('ajout_fact', 'Ajouter une facture', t_cont_fm['ajout_fact']),
+				init_fm('ajout_fin', 'Ajouter un organisme financier', t_cont_fm['ajout_fin']),
+				init_fm('ajout_org_prest', 'Ajouter un prestataire', t_cont_fm['ajout_org_prest']),
+				init_fm('ajout_prest', 'Ajouter/relier une prestation', t_cont_fm['ajout_prest']),
+				init_fm('ger_ddv', 'Ajouter une demande de versement', t_cont_fm['ajout_ddv']),
+			]
+
+		# Je complète le tableau de fenêtres modales dans le cas où le dossier comporte des photos.
+		if len(t_ph) > 0 :
+			t_fm += [	
+				init_fm('lanc_diap', 'Lancer le diaporama', t_cont_fm['lanc_diap'])
+			]
 
 		# J'affiche le template.
 		output = render(
@@ -1264,6 +1325,7 @@ def cons_doss(request, _d) :
 				't_fm' : t_fm,
 				't_geom_doss' : t_geom_doss,
 				't_ph' : t_ph,
+				't_ph_length' : len(t_ph),
 				't_prest' : t_prest,
 				't_prest_length' : len(t_prest),
 				't_prest_sum' : t_prest_sum,
@@ -1309,7 +1371,7 @@ def cons_doss(request, _d) :
 					<div style="margin-bottom: -20px;">
 						<div class="attribute-wrapper">
 							<span class="attribute-label">Visualisation</span>
-							<img src="{0}{1}" width="100%">
+							<img src="{0}{1}" style="display: block; margin: 0 auto; max-width: 100%;">
 						</div>
 						{2}
 						<div class="row">
@@ -1945,8 +2007,8 @@ _f : Identifiant d'un financement
 def cons_fin(request, _f) :
 
 	# Imports
-	from app.functions import init_pg_cons
 	from app.functions import dt_fr
+	from app.functions import init_pg_cons
 	from app.functions import ger_droits
 	from app.functions import init_f
 	from app.functions import init_fm
@@ -2317,21 +2379,127 @@ def modif_prest(request, _pd) :
 	return output
 
 '''
+Cette vue permet de traiter le formulaire de suppression d'une prestation.
+request : Objet requête
+_pd : Identifiant d'un couple prestation/dossier
+'''
+@verif_acc
+@csrf_exempt
+def suppr_prest(request, _pd) :
+
+	# Imports
+	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
+	from app.models import TAvenant
+	from app.models import TFacture
+	from app.models import TPrestationsDossier
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	import json
+
+	output = HttpResponse()
+
+	# Je vérifie l'existence d'un objet TPrestationsDossier.
+	o_prest_doss = get_object_or_404(TPrestationsDossier, pk = _pd)
+
+	if request.method == 'POST' :
+
+		# Je vérifie le droit d'écriture.
+		ger_droits(request.user, o_prest_doss.id_doss, False)
+
+		# J'initialise un tableau de jeu de données.
+		t_qs = [
+			['Avenant', TAvenant.objects.filter(id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest)],
+			['Facture', TFacture.objects.filter(id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest)]
+		]
+
+		# Je vérifie si je peux exécuter ou non la suppression du couple prestation/dossier.
+		peut_suppr = True
+		t_elem_a_suppr = []
+		for i in range(0, len(t_qs)) :
+			if len(t_qs[i][1]) > 0 :
+				peut_suppr = False
+				cle = t_qs[i][0]
+				if len(t_qs[i][1]) > 1 :
+					split = cle.split(' ')
+					for j in range(0, len(split)) :
+						split[j] += 's'
+					cle = ' '.join(split)
+				t_elem_a_suppr.append('{0} : {1}'.format(cle, len(t_qs[i][1])))
+
+		if peut_suppr == True :
+
+			# Je pointe vers l'objet TPrestationsDossier à supprimer.
+			o_prest_doss_suppr = o_prest_doss
+
+			# Je récupère l'identifiant du couple prestation/dossier afin de le renseigner dans le fichier log.
+			v_id_prest_doss = o_prest_doss.pk
+
+			# Je supprime l'objet TPrestationsDossier.
+			o_prest_doss.delete()
+
+			# Je supprime l'objet TPrestation s'il n'est lié à aucun autre objet TPrestationsDossier.
+			if len(TPrestationsDossier.objects.filter(id_prest = o_prest_doss_suppr.id_prest)) == 0 :
+				o_prest_doss.id_prest.delete()
+
+			# J'affiche le message de succès.
+			output = HttpResponse(
+				json.dumps({ 'success' : {
+					'message' : 'La prestation « {0} » a été supprimée avec succès.'.format(
+						o_prest_doss_suppr.id_prest
+					),
+					'redirect' : reverse('cons_doss', args = [o_prest_doss_suppr.id_doss.pk])
+				}}), 
+				content_type = 'application/json'
+			)
+
+			# Je renseigne l'onglet actif après rechargement de la page.
+			request.session['tab_doss'] = ['#ong_prest', -1]
+
+			# Je complète le fichier log.
+			rempl_fich_log([
+				request.user.pk, 
+				request.user, 
+				o_prest_doss_suppr.id_doss.pk, 
+				o_prest_doss_suppr.id_doss, 
+				'D', 
+				'Prestation', 
+				v_id_prest_doss
+			])
+
+		else :
+
+			# Je prépare le message d'alerte.
+			mess_html = 'Veuillez d\'abord supprimer le/les élément(s) suivant(s) :'
+			mess_html += '<ul class="list-inline">'
+			for i in range(0, len(t_elem_a_suppr)) :
+				mess_html += '<li>{0}</li>'.format(t_elem_a_suppr[i])
+			mess_html += '</ul>'
+
+			# J'affiche le message d'alerte.
+			output = HttpResponse(json.dumps([mess_html]), content_type = 'application/json')
+
+	return output
+
+'''
 Cette vue permet d'afficher la page de consultation d'une prestation.
 request : Objet requête
 _p : Identifiant d'une prestation
 '''
 @verif_acc
 @nett_f
+@csrf_exempt
 def cons_prest(request, _pd) :
 
 	# Imports
-	from app.functions import init_fm
-	from app.functions import init_pg_cons
 	from app.functions import dt_fr
 	from app.functions import gen_f_ajout_aven
 	from app.functions import ger_droits
+	from app.functions import init_fm
+	from app.functions import init_pg_cons
 	from app.functions import obt_mont
+	from app.functions import suppr
 	from app.models import TAvenant
 	from app.models import TPrestationsDossier
 	from app.sql_views import VPrestation
@@ -2448,6 +2616,7 @@ def cons_prest(request, _pd) :
 		# Je déclare un tableau de fenêtres modales.
 		t_fm = [
 			init_fm('ajout_aven', 'Ajouter un avenant', t_cont_fm['ajout_aven']),
+			init_fm('suppr_prest', 'Supprimer une prestation')
 		]
 
 		# J'affiche le template.
@@ -2465,6 +2634,22 @@ def cons_prest(request, _pd) :
 				'title' : 'Consulter une prestation'
 			}
 		)
+
+	else :
+		if 'action' in request.GET :
+
+			# Je traite le cas où je dois supprimer une prestation.
+			if request.GET['action'] == 'supprimer-prestation' :
+
+				# Je prépare un message d'avertissement au cas où la prestation est reliée à plusieurs dossiers.
+				avert = ''
+				if len(TPrestationsDossier.objects.filter(id_prest = o_prest_doss.id_prest)) > 1 :
+					avert = '''
+					La suppression de la prestation n\'entraînera pas la suppression totale de celle-ci car elle est 
+					reliée au minimum à un autre dossier.
+					'''
+
+				output = HttpResponse(suppr(reverse('suppr_prest', args = [o_prest_doss.pk]), avert))
 
 	return output
 
@@ -2661,21 +2846,91 @@ def modif_aven(request, _a) :
 	return output
 
 '''
+Cette vue permet de traiter le formulaire de suppression d'un avenant.
+request : Objet requête
+_a : Identifiant d'un avenant
+'''
+@verif_acc
+@csrf_exempt
+def suppr_aven(request, _a) :
+
+	# Imports
+	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
+	from app.models import TAvenant
+	from app.models import TPrestationsDossier
+	from app.sql_views import VSuiviPrestationsDossier
+	from django.core.urlresolvers import reverse
+	from django.db.models import F
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	import json
+
+	output = HttpResponse()
+
+	# Je vérifie l'existence d'un objet TAvenant.
+	o_aven = get_object_or_404(TAvenant, pk = _a)
+
+	if request.method == 'POST' :
+
+		# Je vérifie le droit d'écriture.
+		ger_droits(request.user, o_aven.id_doss, False)
+
+		# Je pointe vers l'objet VSuiviPrestationsDossier.
+		o_suivi_prest_doss = VSuiviPrestationsDossier.objects.get(id_doss = o_aven.id_doss, id_prest = o_aven.id_prest)
+
+		# Je mets à jour le montant de la prestation si incohérence il y a.
+		if o_suivi_prest_doss.mont_raf < o_aven.mont_aven :
+			TPrestationsDossier.objects.filter(pk = o_suivi_prest_doss.pk).update(
+				mont_prest_doss = F('mont_prest_doss') + o_aven.mont_aven
+			)
+
+		# Je pointe vers l'objet TAvenant à supprimer.
+		o_aven_suppr = o_aven
+
+		# Je récupère l'identifiant de l'avenant afin de le renseigner dans le fichier log.
+		v_id_aven = o_aven.pk
+
+		# Je supprime l'objet TAvenant.
+		o_aven.delete()
+
+		# J'affiche le message de succès.
+		output = HttpResponse(
+			json.dumps({ 'success' : {
+				'message' : 'L\'avenant a été supprimé avec succès.',
+				'redirect' : reverse('cons_prest', args = [o_suivi_prest_doss.pk])
+			}}), 
+			content_type = 'application/json'
+		)
+
+		# Je complète le fichier log.
+		rempl_fich_log([
+			request.user.pk, request.user, o_aven_suppr.id_doss.pk, o_aven_suppr.id_doss, 'D', 'Avenant', v_id_aven
+		])
+
+	return output
+
+'''
 Cette vue permet d'afficher la page de consultation d'un avenant.
 request : Objet requête
 _a : Identifiant d'un avenant
 '''
 @verif_acc
+@csrf_exempt
 def cons_aven(request, _a) :
 
 	# Imports
-	from app.functions import init_pg_cons
 	from app.functions import dt_fr
 	from app.functions import ger_droits
+	from app.functions import init_fm
+	from app.functions import init_pg_cons
 	from app.functions import obt_mont
+	from app.functions import suppr
 	from app.models import TAvenant
 	from app.models import TPrestationsDossier
+	from app.sql_views import VSuiviPrestationsDossier
 	from django.http import HttpResponse
+	from django.core.urlresolvers import reverse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	
@@ -2712,6 +2967,11 @@ def cons_aven(request, _a) :
 			'comm_aven' : { 'label' : 'Commentaire', 'value' : o_aven.comm_aven or '' }
 		}
 
+		# Je déclare un tableau de fenêtres modales.
+		t_fm = [
+			init_fm('suppr_aven', 'Supprimer un avenant')
+		]
+
 		# J'affiche le template.
 		output = render(
 			request, 
@@ -2722,9 +2982,33 @@ def cons_aven(request, _a) :
 				'ht_ou_ttc' : ht_ou_ttc,
 				'pd' : o_prest_doss,
 				't_attrs_aven' : init_pg_cons(t_attrs_aven),
+				't_fm' : t_fm,
 				'title' : 'Consulter un avenant'
 			}
 		)
+
+	else :
+		if 'action' in request.GET :
+
+			# Je traite le cas où je dois supprimer un avenant.
+			if request.GET['action'] == 'supprimer-avenant' :
+
+				# Je définis le mode de taxe du dossier.
+				ht_ou_ttc = 'HT'
+				if o_aven.id_doss.est_ttc_doss == True :
+					ht_ou_ttc = 'TTC'
+
+				# Je prépare un message d'avertissement au cas où l'avenant couvre la facturation.
+				avert = ''
+				if VSuiviPrestationsDossier.objects.get(pk = o_prest_doss.pk).mont_raf < o_aven.mont_aven :
+					avert = '''
+					Afin d'éviter une incohérence dans les chiffres, la suppression de l'avenant entraînera une
+					modification du montant {ht_ou_ttc} de la prestation « {prest} », causée par la facturation de 
+					celle-ci. Si vous supprimez cet avenant, alors le montant de celui-ci sera transféré vers la
+					prestation « {prest} ».
+					'''.format(ht_ou_ttc = ht_ou_ttc, prest = o_prest_doss.id_prest)
+
+				output = HttpResponse(suppr(reverse('suppr_aven', args = [o_aven.pk]), avert))
 
 	return output
 
@@ -2945,19 +3229,106 @@ def modif_fact(request, _f) :
 	return output
 
 '''
+Cette vue permet de traiter le formulaire de suppression d'une facture.
+request : Objet requête
+_f : Identifiant d'une facture
+'''
+@verif_acc
+@csrf_exempt
+def suppr_fact(request, _f) :
+
+	# Imports
+	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
+	from app.models import TFacture
+	from app.models import TFacturesDemandeVersement
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	import json
+
+	output = HttpResponse()
+
+	# Je vérifie l'existence d'un objet TFacture.
+	o_fact = get_object_or_404(TFacture, pk = _f)
+
+	if request.method == 'POST' :
+
+		# Je vérifie le droit d'écriture.
+		ger_droits(request.user, o_fact.id_doss, False)
+
+		# Je vérifie si je peux exécuter ou non la suppression de la facture.
+		qs_fddv = TFacturesDemandeVersement.objects.filter(id_fact = o_fact)
+		if len(qs_fddv) == 0 :
+
+			# Je pointe vers l'objet TFacture à supprimer.
+			o_fact_suppr = o_fact
+
+			# Je récupère l'identifiant de la facture afin de le renseigner dans le fichier log.
+			v_id_fact = o_fact.pk
+
+			# Je supprime l'objet TFacture.
+			o_fact.delete()
+
+			# J'affiche le message de succès.
+			output = HttpResponse(
+				json.dumps({ 'success' : {
+					'message' : 'La facture N°{0} a été supprimée avec succès.'.format(o_fact_suppr),
+					'redirect' : reverse('cons_doss', args = [o_fact_suppr.id_doss.pk])
+				}}), 
+				content_type = 'application/json'
+			)
+
+			# Je renseigne l'onglet actif après rechargement de la page.
+			request.session['tab_doss'] = ['#ong_fact', -1]
+
+			# Je complète le fichier log.
+			rempl_fich_log([
+				request.user.pk,
+				request.user, 
+				o_fact_suppr.id_doss.pk, 
+				o_fact_suppr.id_doss, 
+				'D', 
+				'Facture', 
+				v_id_fact
+			])
+
+		else :
+			cle = 'Demande de versement'
+			if len(qs_fddv) > 1 :
+				cle = 'Demandes de versements'
+
+			# Je prépare le message d'alerte.
+			mess_html = '''
+			Veuillez d'abord modifier ou supprimer le/les élément(s) suivant(s) :
+			<ul class="list-inline">
+				<li>{0} : {1}</li>
+			</ul>
+			'''.format(cle, len(qs_fddv))
+
+			# J'affiche le message d'alerte.
+			output = HttpResponse(json.dumps([mess_html]), content_type = 'application/json')
+
+	return output
+	
+'''
 Cette vue permet d'afficher la page de consultation d'une facture.
 request : Objet requête
 _f : Identifiant d'une facture
 '''
 @verif_acc
+@csrf_exempt
 def cons_fact(request, _f) :
 
 	# Imports
-	from app.functions import init_pg_cons
 	from app.functions import dt_fr
 	from app.functions import ger_droits
+	from app.functions import init_fm
+	from app.functions import init_pg_cons
 	from app.functions import obt_mont
+	from app.functions import suppr
 	from app.models import TFacture
+	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -2994,6 +3365,11 @@ def cons_fact(request, _f) :
 			'comm_fact' : { 'label' : 'Commentaire', 'value' : o_fact.comm_fact or '' },
 		} 
 
+		# Je déclare un tableau de fenêtres modales.
+		t_fm = [
+			init_fm('suppr_fact', 'Supprimer une facture')
+		]
+
 		# J'affiche le template.
 		output = render(
 			request, 
@@ -3002,9 +3378,17 @@ def cons_fact(request, _f) :
 				'f' : o_fact,
 				'forbidden' : ger_droits(request.user, o_fact.id_doss, False, False),
 				't_attrs_fact' : init_pg_cons(t_attrs_fact),
+				't_fm' : t_fm,
 				'title' : 'Consulter une facture'
 			}
 		)
+
+	else :
+		if 'action' in request.GET :
+
+			# Je traite le cas où je dois supprimer une facture.
+			if request.GET['action'] == 'supprimer-facture' :
+				output = HttpResponse(suppr(reverse('suppr_fact', args = [o_fact.pk])))
 
 	return output
 
@@ -3106,7 +3490,7 @@ def ajout_ddv(request) :
 					o_nvelle_ddv.id_fin.id_doss, 
 					'C', 
 					'Demande de versement', 
-					o_nvelle_ddv.id_fin.pk
+					o_nvelle_ddv.pk
 				])
 
 			else :
@@ -3228,7 +3612,7 @@ def modif_ddv(request, _d) :
 					o_ddv_modif.id_fin.id_doss, 
 					'U', 
 					'Demande de versement', 
-					o_ddv_modif.id_fin.pk
+					o_ddv_modif.pk
 				])
 
 			else :
@@ -3242,21 +3626,91 @@ def modif_ddv(request, _d) :
 	return output
 
 '''
+Cette vue permet de traiter le formulaire de suppression d'une demande de versement.
+request : Objet requête
+_d : Identifiant d'une demande de versement
+'''
+@verif_acc
+@csrf_exempt
+def suppr_ddv(request, _d) :
+
+	# Imports
+	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
+	from app.models import TDemandeVersement
+	from app.models import TFacturesDemandeVersement
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	import json
+
+	output = HttpResponse()
+
+	# Je vérifie l'existence d'un objet TDemandeVersement.
+	o_ddv = get_object_or_404(TDemandeVersement, pk = _d)
+
+	if request.method == 'POST' :
+
+		# Je vérifie le droit d'écriture.
+		ger_droits(request.user, o_ddv.id_fin.id_doss, False)
+
+		# Je supprime les enregistrements de la table TFacturesDemandeVersement relatifs à la demande de versement.
+		TFacturesDemandeVersement.objects.filter(id_ddv = o_ddv).delete()
+
+		# Je pointe vers l'objet TDemandeVersement à supprimer.
+		o_ddv_suppr = o_ddv
+
+		# Je récupère l'identifiant de la demande de versement afin de le renseigner dans le fichier log.
+		v_id_ddv = o_ddv.pk
+
+		# Je supprime l'objet TDemandeVersement.
+		o_ddv.delete()
+
+		# J'affiche le message de succès.
+		output = HttpResponse(
+			json.dumps({ 'success' : {
+				'message' : 'La demande de versement a été supprimée avec succès.',
+				'redirect' : reverse('cons_doss', args = [o_ddv_suppr.id_fin.id_doss.pk])
+			}}), 
+			content_type = 'application/json'
+		)
+
+		# Je renseigne l'onglet actif après rechargement de la page.
+		request.session['tab_doss'] = ['#ong_ddv', -1]
+
+		# Je complète le fichier log.
+		rempl_fich_log([
+			request.user.pk, 
+			request.user, 
+			o_ddv_suppr.id_fin.id_doss.pk, 
+			o_ddv_suppr.id_fin.id_doss, 
+			'D', 
+			'Demande de versement', 
+			v_id_ddv
+		])
+
+	return output
+
+'''
 Cette vue permet d'afficher la page de consultation d'une demande de versement.
 request : Objet requête
 _d : Identifiant d'une demande de versement
 '''
 @verif_acc
+@csrf_exempt
 def cons_ddv(request, _d) :
 
 	# Imports
-	from app.functions import init_pg_cons
 	from app.functions import dt_fr
 	from app.functions import ger_droits
+	from app.functions import init_fm
+	from app.functions import init_pg_cons
 	from app.functions import obt_mont
+	from app.functions import suppr
 	from app.models import TDemandeVersement
 	from app.models import TFacturesDemandeVersement
 	from app.sql_views import VDemandeVersement
+	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -3280,13 +3734,15 @@ def cons_ddv(request, _d) :
 			'id_type_vers' : { 'label' : 'Type de demande de versement', 'value' : o_ddv.id_type_vers },
 			'int_ddv' : { 'label' : 'Intitulé de la demande de versement', 'value' : o_ddv.int_ddv },
 			'mont_ht_ddv' : {
-				'label' : 'Montant HT de la demande de versement (en €)', 'value' : obt_mont(o_ddv.mont_ht_ddv)
+				'label' : 'Montant HT de la demande de versement (en €)', 'value' : obt_mont(o_ddv.mont_ht_ddv) or ''
 			},
 			'mont_ttc_ddv' : {
-				'label' : 'Montant TTC de la demande de versement (en €)', 'value' : obt_mont(o_ddv.mont_ttc_ddv)
+				'label' : 'Montant TTC de la demande de versement (en €)', 'value' : obt_mont(o_ddv.mont_ttc_ddv) or ''
 			},
 			'dt_ddv' : { 'label' : 'Date de la demande de versement', 'value' : dt_fr(o_ddv.dt_ddv) },
 			'dt_vers_ddv' : { 'label' : 'Date de versement', 'value' : dt_fr(o_ddv.dt_vers_ddv) or '' },
+			'num_bord_ddv' : { 'label' : 'Numéro de bordereau', 'value' : o_ddv.num_bord_ddv },
+			'num_titre_rec_ddv' : { 'label' : 'Numéro de titre de recette', 'value' : o_ddv.num_titre_rec_ddv },
 			'mont_ht_verse_ddv' : { 'label' : 'Montant HT versé (en €)', 'value' : obt_mont(o_ddv.mont_ht_verse_ddv) },
 			'mont_ttc_verse_ddv' : {
 				'label' : 'Montant TTC versé (en €)', 'value' : obt_mont(o_ddv.mont_ttc_verse_ddv)
@@ -3322,6 +3778,11 @@ def cons_ddv(request, _d) :
 		if o_ddv.id_fin.id_doss.est_ttc_doss == True :
 			ht_ou_ttc = 'TTC'
 
+		# Je déclare un tableau de fenêtres modales.
+		t_fm = [
+			init_fm('suppr_ddv', 'Supprimer une demande de versement')
+		]
+
 		# J'affiche le template.
 		output = render(
 			request, 
@@ -3332,9 +3793,17 @@ def cons_ddv(request, _d) :
 				'ht_ou_ttc' : ht_ou_ttc,
 				't_attrs_ddv' : init_pg_cons(t_attrs_ddv),
 				't_fact_ddv' : t_fact_ddv,
+				't_fm' : t_fm,
 				'title' : 'Consulter une demande de versement'
 			}
 		)
+
+	else :
+		if 'action' in request.GET :
+
+			# Je traite le cas où je dois supprimer une demande de versement.
+			if request.GET['action'] == 'supprimer-demande-versement' :
+				output = HttpResponse(suppr(reverse('suppr_ddv', args = [o_ddv.pk])))
 
 	return output
 
@@ -4077,9 +4546,13 @@ def impr_doss(request, _d) :
 				'ht_ou_ttc' : ht_ou_ttc,
 				'mont_ddv_sum_str' : obt_mont(mont_ddv_sum),
 				'mont_doss' : obt_mont(o_doss.mont_doss),
+				'mont_fact_sum' : obt_mont(o_suivi_doss.mont_fact_sum),
 				'mont_fact_sum_str' : obt_mont(mont_fact_sum),
+				'mont_tot_prest_doss' : obt_mont(o_suivi_doss.mont_tot_prest_doss),
 				'mont_rae' : obt_mont(o_suivi_doss.mont_rae),
 				'mont_suppl_doss' : obt_mont(o_doss.mont_suppl_doss),
+				'pourc_comm' : obt_pourc(o_suivi_doss.mont_tot_prest_doss / o_suivi_doss.mont_tot_doss * 100),
+				'pourc_paye' : obt_pourc(o_suivi_doss.mont_fact_sum / o_suivi_doss.mont_tot_doss * 100),
 				't_attrs_doss' : init_pg_cons(t_attrs_doss, True),
 				't_ddv' : t_ddv,
 				't_ddv_length' : len(t_ddv),
@@ -4093,5 +4566,244 @@ def impr_doss(request, _d) :
 				't_prest_sum' : t_prest_sum
 			}
 		)
+
+	return output
+
+'''
+Cette vue permet le téléchargement d'une lettre type de demande de versement au format DOCX.
+request : Objet requête
+_d : Identifiant d'une demande de versement
+'''
+def edit_lt_ddv(request, _d) :
+
+	# Imports
+	from app.functions import dt_fr
+	from app.functions import gen_cdc
+	from app.functions import ger_droits
+	from app.functions import obt_mont
+	from app.models import TDemandeVersement
+	from app.models import TFacturesDemandeVersement
+	from docx import Document
+	from docx.enum.text import WD_ALIGN_PARAGRAPH
+	from docx.oxml import parse_xml
+	from docx.oxml.ns import nsdecls
+	from docx.shared import Mm
+	from docx.shared import Pt
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	from styx.settings import MEDIA_ROOT
+	import time
+
+	output = HttpResponse()
+
+	# Je vérifie l'existence d'un objet TDemandeVersement.
+	o_ddv = get_object_or_404(TDemandeVersement, pk = _d)
+
+	# Je vérifie le droit d'écriture.
+	ger_droits(request.user, o_ddv.id_fin.id_doss, False)
+
+	if request.method == 'GET' :
+
+		# J'instancie un document Word.
+		document = Document()
+
+		# Je définis la police et la taille de celle-ci.
+		style = document.styles['Normal']
+		font = style.font
+		font.name = 'Calibri'
+		font.size = Pt(10)
+
+		# Je pointe vers l'objet TDossier.
+		o_doss = o_ddv.id_fin.id_doss
+
+		# Je déclare un tableau "en-tête" qui va contenir l'intitulé du dossier.
+		table = document.add_table(rows = 0, cols = 1, style = 'TableGrid')
+		row_cells = table.add_row().cells
+
+		# J'initialise le contenu du tableau "en-tête".
+		paragraph = row_cells[0].paragraphs[0]
+		run = paragraph.add_run('{0} - {1} - {2} - {3}'.format(
+			o_doss.id_nat_doss, o_doss.id_type_doss, o_doss.lib_1_doss, o_doss.lib_2_doss
+		).upper())
+
+		# J'applique des styles au tableau "en-tête".
+		run.font.size = Pt(8)
+		run.bold = True
+		paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+		paragraph = document.add_paragraph()
+		run1 = paragraph.add_run('Numéro du dossier : ')
+		run2 = paragraph.add_run(str(o_doss))
+		run2.bold = True
+		run2.add_break()
+		paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+		# Je déclare le tableau des factures.
+		table = document.add_table(rows = 1, cols = 7, style = 'TableGrid')
+
+		# Je prépare la ligne "en-tête".
+		header_cells = table.rows[0].cells
+		paragraph1 = header_cells[0].paragraphs[0]
+		run1 = paragraph1.add_run('Prestataire')
+		paragraph2 = header_cells[1].paragraphs[0]
+		run2 = paragraph2.add_run('Objet')
+		paragraph3 = header_cells[2].paragraphs[0]
+		run3 = paragraph3.add_run('Date de mandatement par le maître d\'ouvrage')
+		paragraph4 = header_cells[3].paragraphs[0]
+		run4 = paragraph4.add_run('N° de bordereau')
+		paragraph5 = header_cells[4].paragraphs[0]
+		run5 = paragraph5.add_run('N° de mandat')
+		paragraph6 = header_cells[5].paragraphs[0]
+		run6 = paragraph6.add_run('Montant HT (en €)')
+		paragraph7 = header_cells[6].paragraphs[0]
+		run7 = paragraph7.add_run('Montant TTC (en €)')
+
+		# Je mets en forme la ligne.
+		for r in [run1, run2, run3, run4, run5, run6, run7] :
+			r.font.size = Pt(8)
+			r.bold = True
+		for p in [paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
+			p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+		# Je vide les variables de type "paragraph" et "run" (précaution).
+		del paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
+		del run1, run2, run3, run4, run5, run6, run7
+
+		# Je parcours chaque facture.
+		mont_ht_fact_sum = 0
+		mont_ttc_fact_sum = 0
+		for fddv in TFacturesDemandeVersement.objects.filter(id_ddv = o_ddv) :
+
+			# Je pointe vers l'objet TFacture.
+			o_fact = fddv.id_fact
+
+			# Je prépare la ligne relative à la facture courante.
+			row_cells = table.add_row().cells
+			paragraph1 = row_cells[0].paragraphs[0]
+			run1 = paragraph1.add_run(str(o_fact.id_prest.id_org_prest))
+			paragraph2 = row_cells[1].paragraphs[0]
+			run2 = paragraph2.add_run(o_fact.id_prest.int_prest)
+			paragraph3 = row_cells[2].paragraphs[0]
+			run3 = paragraph3.add_run(dt_fr(o_fact.dt_mand_moa_fact))
+			paragraph4 = row_cells[3].paragraphs[0]
+			run4 = paragraph4.add_run(o_fact.num_bord_fact)
+			paragraph5 = row_cells[4].paragraphs[0]
+			run5 = paragraph5.add_run(o_fact.num_mandat_fact)
+			paragraph6 = row_cells[5].paragraphs[0]
+			run6 = paragraph6.add_run(obt_mont(o_fact.mont_ht_fact) or '-')
+			paragraph7 = row_cells[6].paragraphs[0]
+			run7 = paragraph7.add_run(obt_mont(o_fact.mont_ttc_fact) or '-')
+
+			# Je mets en forme la ligne.
+			for p in [paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
+				p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+			# Je vide les variables de type "paragraph" et "run" (précaution).
+			del paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
+			del run1, run2, run3, run4, run5, run6, run7
+
+			# Je calcule les sommes HT et TTC des factures du jeu de données.
+			mont_ht_fact_sum += o_fact.mont_ht_fact or 0
+			mont_ttc_fact_sum += o_fact.mont_ttc_fact or 0
+
+		# Je prépare la ligne "pied de page".
+		footer_cells = table.add_row().cells
+		paragraph1 = footer_cells[0].paragraphs[0]
+		run1 = paragraph1.add_run('Total (en €)')
+		run1.font.size = Pt(8)
+		paragraph2 = footer_cells[5].paragraphs[0]
+		run2 = paragraph2.add_run(obt_mont(mont_ht_fact_sum))
+		paragraph3 = footer_cells[6].paragraphs[0]
+		run3 = paragraph3.add_run(obt_mont(mont_ttc_fact_sum))
+
+		# Je mets en forme la ligne.
+		for r in [run1, run2, run3] :
+			r.bold = True
+		for p in [paragraph1, paragraph2, paragraph3] :
+			p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+		# Je vide les variables de type "paragraph" et "run" (précaution).
+		del paragraph1, paragraph2, paragraph3
+		del run1, run2, run3
+
+		# Je coloris le fond de chaque cellule "en-tête" et "pied de page" du tableau récapitulatif des factures.
+		for c in header_cells :
+			c._tc.get_or_add_tcPr().append(parse_xml(r'<w:shd {} w:fill="F6F6F6"/>'.format(nsdecls('w'))))
+		for c in footer_cells :
+			c._tc.get_or_add_tcPr().append(parse_xml(r'<w:shd {} w:fill="F6F6F6"/>'.format(nsdecls('w'))))
+
+		# Je saute une ligne.
+		document.add_paragraph()
+
+		# Je pointe vers l'objet TMoa.
+		o_org_moa = o_ddv.id_fin.id_doss.id_org_moa
+
+		# Je déclare un tableau qui va contenir les tampons de la trésorerie et du syndicat.
+		table = document.add_table(rows = 0, cols = 2)
+		row_cells = table.add_row().cells
+
+		# J'initialise le bloc trésorerie.
+		paragraph = row_cells[0].paragraphs[0]
+		run = paragraph.add_run('À [COMMUNE], le')
+		run.add_break()
+		run = paragraph.add_run('Le trésorier de [COMMUNE],')
+
+		# J'initialise le bloc syndicat.
+		paragraph = row_cells[1].paragraphs[0]
+		run = paragraph.add_run('À [COMMUNE], le')
+		run.add_break()
+		run = paragraph.add_run('Le président du/de la/de l\'/des {0},'.format(o_org_moa))
+
+		# Je saute une ligne.
+		document.add_paragraph()
+		document.add_paragraph()
+		document.add_paragraph()
+		document.add_paragraph()
+		document.add_paragraph()
+
+		# J'initialise les coordonées du maître d'ouvrage.
+		adr_org = o_org_moa.adr_org
+		if not adr_org :
+			adr_org = '[ADRESSE]'
+		cp_org = o_org_moa.cp_org
+		if not cp_org :
+			cp_org = '[CODE POSTAL]'
+		if o_org_moa.num_comm :
+			n_comm = o_org_moa.num_comm.n_comm
+		else :
+			n_comm = '[COMMUNE]'
+		tel_org = o_org_moa.tel_org
+		if not tel_org :
+			tel_org = '[TÉLÉPHONE]'
+		courr_org = o_org_moa.courr_org
+		if not courr_org :
+			courr_org = '[EMAIL]'
+
+		# J'importe les coordonnées initialisées du maître d'ouvrage.
+		paragraph = document.add_paragraph()
+		run1 = paragraph.add_run(str(o_org_moa))
+		run1.bold = True
+		run1.add_break()
+		run2 = paragraph.add_run('{0} - {1} {2}'.format(adr_org, cp_org, n_comm, tel_org, courr_org))
+		run2.add_break()
+		run3 = paragraph.add_run('Tél :')
+		run3.underline = True
+		run4 = paragraph.add_run(' {0} - '.format(tel_org))
+		run5 = paragraph.add_run('Email :')
+		run5.underline = True
+		run6 = paragraph.add_run(' {0}'.format(courr_org))
+
+		# Je mets en forme la cellule.
+		for r in [run1, run2, run3, run4, run5, run6] :
+			r.font.size = Pt(8)
+		paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+		# Je vide les variables de type "run" (précaution).
+		del run1, run2, run3, run4, run5, run6
+
+		# Je sauvegarde le document Word et je permets le téléchargement.
+		output = HttpResponse(content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+		output['Content-Disposition'] = 'attachment; filename={0}.docx'.format(gen_cdc())
+		document.save(output)
 
 	return output

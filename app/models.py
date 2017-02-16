@@ -23,6 +23,12 @@ class TNatureDossier(models.Model) :
 
     id_nat_doss = models.AutoField(primary_key = True)
     int_nat_doss = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    peu_doss = models.BooleanField(
+        verbose_name = 'Autorisée (gestion des dossiers)'
+    )
+    peu_doss_pgre = models.BooleanField(
+        verbose_name = 'Autorisée (gestion des actions PGRE)'
+    )
 
     class Meta :
         db_table = 't_nature_dossier'
@@ -36,7 +42,7 @@ class TNatureDossier(models.Model) :
 class TTechnicien(models.Model) :
 
     id_techn = models.AutoField(primary_key = True)
-    en_act_techn = models.BooleanField(default = True, verbose_name = 'En activité')
+    en_act = models.BooleanField(default = True, verbose_name = 'En activité')
     n_techn = models.CharField(max_length = 255, verbose_name = 'Nom de famille')
     pren_techn = models.CharField(max_length = 255, verbose_name = 'Prénom')
 
@@ -152,7 +158,7 @@ class TProgramme(models.Model) :
 
     id_progr = models.AutoField(primary_key = True)
     dim_progr = models.CharField(max_length = 255, unique = True, verbose_name = 'Diminutif')
-    en_act_progr = models.BooleanField(default = True, verbose_name = 'En activité')
+    en_act = models.BooleanField(default = True, verbose_name = 'En activité')
     int_progr = models.CharField(max_length = 255, verbose_name = 'Intitulé')
     seq_progr = models.IntegerField(default = 1, verbose_name = 'Séquentiel')
     id_type_progr = models.ForeignKey(TTypeProgramme, models.DO_NOTHING, verbose_name = 'Type de programme')
@@ -333,8 +339,8 @@ class TMoa(TOrganisme) :
         return 'logos/{0}'.format(new_fn)
 
     id_org_moa = models.OneToOneField(TOrganisme)
-    dim_org_moa = models.CharField(max_length = 255, unique = True, verbose_name = 'Diminutif')
-    en_act_org_moa = models.BooleanField(default = True, verbose_name = 'En activité')
+    dim_org_moa = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Diminutif')
+    en_act_doss = models.BooleanField(verbose_name = 'En activité (gestion des dossiers)')
     logo_org_moa = models.FileField(
         blank = True, 
         null = True, 
@@ -343,11 +349,27 @@ class TMoa(TOrganisme) :
         verbose_name = 'Logo'
     )
     moa = models.ManyToManyField('self', related_name = '+', symmetrical = False, through = 'TRegroupementsMoa')
+    en_act_doss_pgre = models.BooleanField(verbose_name = 'En activité (gestion des actions PGRE)')
+    peu_doss = models.BooleanField(verbose_name = 'Utilisé (gestion des dossiers)')
+    peu_doss_pgre = models.BooleanField(verbose_name = 'Utilisé (gestion des actions PGRE)')
 
     class Meta :
         db_table = 't_moa'
         verbose_name = 'T_MOA'
         verbose_name_plural = 'T_MOA'
+
+    def clean(self) :
+
+        # Imports
+        from app.models import TMoa
+        from django.core.exceptions import ValidationError
+
+        if self.dim_org_moa :
+            qs_moa = TMoa.objects.filter(dim_org_moa = self.dim_org_moa)
+            if self.pk :
+                qs_moa = qs_moa.exclude(pk = self.pk)
+            if len(qs_moa) > 0 :
+                raise ValidationError({ 'dim_org_moa' : 'Le diminutif {0} existe déjà.'.format(self.dim_org_moa) })
 
 class TRegroupementsMoa(models.Model) :
 
@@ -477,10 +499,11 @@ class TDossier(models.Model) :
 
         # Imports
         from app.models import TAvisCp
+        from styx.settings import EA_STR
 
         # Je vérifie l'existence d'un objet TAvisCp dont son intitulé est "En attente".
         try :
-            v_av_cp = TAvisCp.objects.get(int_av_cp = 'En attente').pk
+            v_av_cp = TAvisCp.objects.get(int_av_cp = EA_STR).pk
         except :
             v_av_cp = None
 
@@ -532,7 +555,7 @@ class TDossier(models.Model) :
     )
     id_doss_ass = models.ForeignKey('self', models.DO_NOTHING, blank = True, null = True)
     id_fam = models.ForeignKey(TFamille, models.DO_NOTHING)
-    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, verbose_name = 'Nature du dossier')
+    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING)
     id_org_moa = models.ForeignKey(TMoa, models.DO_NOTHING)
     id_sage = models.ForeignKey(TSage, models.DO_NOTHING, blank = True, null = True, verbose_name = 'SAGE')
     id_techn = models.ForeignKey(TTechnicien, models.DO_NOTHING)
@@ -1018,6 +1041,10 @@ class TDemandeVersement(models.Model) :
     id_fin = models.ForeignKey(TFinancement, models.DO_NOTHING)
     id_type_vers = models.ForeignKey(TTypeVersement, models.DO_NOTHING, verbose_name = 'Type de demande de versement')
     fact = models.ManyToManyField(TFacture, through = 'TFacturesDemandeVersement')
+    num_bord_ddv = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Numéro de bordereau')
+    num_titre_rec_ddv = models.CharField(
+        blank = True, max_length = 255, null = True, verbose_name = 'Numéro de titre de recette'
+    )
 
     class Meta :
         db_table = 't_demande_versement'
@@ -1039,3 +1066,217 @@ class TFacturesDemandeVersement(models.Model) :
 
     def __str__(self) :
         return str(self.pk)
+
+class TAvancementPgre(models.Model) :
+
+    id_av_pgre = models.AutoField(primary_key = True)
+    int_av_pgre = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    ordre_av_pgre = models.IntegerField(verbose_name = 'Ordre dans la liste déroulante')
+
+    class Meta :
+        db_table = 't_avancement_pgre'
+        ordering = ['ordre_av_pgre']
+        verbose_name = 'T_AVANCEMENT_PGRE'
+        verbose_name_plural = 'T_AVANCEMENT_PGRE'
+
+    def __str__(self) :
+        return self.int_av_pgre
+
+class TPrioritePgre(models.Model) :
+
+    id_pr_pgre = models.AutoField(primary_key = True)
+    int_pr_pgre = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+
+    class Meta :
+        db_table = 't_priorite_pgre'
+        ordering = ['int_pr_pgre']
+        verbose_name = 'T_PRIORITE_PGRE'
+        verbose_name_plural = 'T_PRIORITE_PGRE'
+
+    def __str__(self) :
+        return self.int_pr_pgre
+
+class TInstanceConcertationPgre(models.Model) :
+
+    id_ic_pgre = models.AutoField(primary_key = True)
+    int_ic_pgre = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+
+    class Meta :
+        db_table = 't_instance_concertation_pgre'
+        ordering = ['int_ic_pgre']
+        verbose_name = 'T_INSTANCE_CONCERTATION_PGRE'
+        verbose_name_plural = 'T_INSTANCE_CONCERTATION_PGRE'
+
+    def __str__(self) :
+        return self.int_ic_pgre
+
+class TAtelierPgre(models.Model) :
+
+    id_atel_pgre = models.AutoField(primary_key = True)
+    int_atel_pgre = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    ic_pgre = models.ManyToManyField(TInstanceConcertationPgre, through = 'TInstancesConcertationPgreAtelierPgre')
+
+    class Meta :
+        db_table = 't_atelier_pgre'
+        ordering = ['int_atel_pgre']
+        verbose_name = 'T_ATELIER_PGRE'
+        verbose_name_plural = 'T_ATELIER_PGRE'
+
+    def __str__(self) :
+        return self.int_atel_pgre
+
+class TInstancesConcertationPgreAtelierPgre(models.Model) :
+
+    id_atel_pgre = models.ForeignKey(TAtelierPgre, models.DO_NOTHING)
+    id_ic_pgre = models.ForeignKey(TInstanceConcertationPgre, models.DO_NOTHING)
+
+    class Meta :
+        db_table = 't_instances_concertation_pgre_atelier_pgre'
+        verbose_name = 'T_INSTANCES_CONCERTATION_PGRE_ATELIER_PGRE'
+        verbose_name_plural = 'T_INSTANCES_CONCERTATION_PGRE_ATELIER_PGRE'
+
+    def __str__(self) :
+        return '{0} ({1})'.format(self.id_atel_pgre, self.id_ic_pgre)
+
+class TDossierPgre(models.Model) :
+
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_fich_pdf
+
+    def set_chem_pj_doss_pgre_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'actions_pgre/caracteristiques/{0}'.format(new_fn)
+
+    id_doss_pgre = models.AutoField(primary_key = True)
+    ann_prev_deb_doss_pgre = models.IntegerField(verbose_name = 'Année prévisionnelle du début de l\'action PGRE')
+    chem_pj_doss_pgre = models.FileField(
+        blank = True, 
+        null = True, 
+        upload_to = set_chem_pj_doss_pgre_upload_to, 
+        validators = [val_fich_pdf],
+        verbose_name = 'Insérer la fiche action <span class="field-complement">(fichier PDF)</span>'
+    )
+    comm_doss_pgre = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
+    dt_deb_doss_pgre = models.DateField(verbose_name = 'Date de début de l\'action PGRE')
+    dt_fin_doss_pgre = models.DateField(verbose_name = 'Date de fin de l\'action PGRE')
+    int_doss_pgre = models.CharField(
+        max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de l\'action PGRE'
+    )
+    num_doss_pgre = models.CharField(
+        max_length = 255, unique = True, validators = [val_cdc], verbose_name = 'Numéro de l\'action PGRE'
+    )
+    obj_econ_ress_doss_pgre = models.FloatField(
+        verbose_name = 'Objectifs d\'économie de la ressource en eau (en m<sup>3</sup>)'
+    )
+    id_doss = models.ForeignKey(TDossier, models.DO_NOTHING, blank = True, null = True)
+    id_ic_pgre = models.ForeignKey(
+        TInstanceConcertationPgre, models.DO_NOTHING, verbose_name = 'Instance de concertation'
+    )
+    id_pr_pgre = models.ForeignKey(TPrioritePgre, models.DO_NOTHING, verbose_name = 'Priorité')
+    id_av_pgre = models.ForeignKey(TAvancementPgre, models.DO_NOTHING, verbose_name = 'État d\'avancement')
+    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, verbose_name = 'Nature de l\'action PGRE')
+    atel_pgre = models.ManyToManyField(TAtelierPgre, through = 'TAteliersPgreDossierPgre')
+    moa = models.ManyToManyField(TMoa, through = 'TMoaDossierPgre')
+
+    class Meta :
+        db_table = 't_dossier_pgre'
+        ordering = ['num_doss_pgre']
+        verbose_name = 'T_DOSSIER_PGRE'
+        verbose_name_plural = 'T_DOSSIER_PGRE'
+
+    def __str__(self) :
+        return self.num_doss_pgre
+
+class TAteliersPgreDossierPgre(models.Model) :
+
+    id_atel_pgre = models.ForeignKey(TAtelierPgre, models.DO_NOTHING)
+    id_doss_pgre = models.ForeignKey(TDossierPgre, models.DO_NOTHING)
+
+    class Meta :
+        db_table = 't_ateliers_pgre_dossier_pgre'
+        verbose_name = 'T_ATELIERS_PGRE_DOSSIER_PGRE'
+        verbose_name_plural = 'T_ATELIERS_PGRE_DOSSIER_PGRE'
+
+    def __str__(self) :
+        return str(self.pk)
+
+class TMoaDossierPgre(models.Model) :
+
+    id_doss_pgre = models.ForeignKey(TDossierPgre, models.DO_NOTHING)
+    id_org_moa = models.ForeignKey(TMoa, models.DO_NOTHING)
+
+    class Meta :
+        db_table = 't_moa_dossier_pgre'
+        verbose_name = 'T_MOA_DOSSIER_PGRE'
+        verbose_name_plural = 'T_MOA_DOSSIER_PGRE'
+
+    def __str__(self) :
+        return str(self.pk)
+
+class TControleDossierPgre(models.Model) :
+
+    id_contr_doss_pgre = models.AutoField(primary_key = True)
+    dt_contr_doss_pgre = models.DateField()
+    obj_real_contr_doss_pgre = models.FloatField()
+    id_doss_pgre = models.ForeignKey(TDossierPgre, models.DO_NOTHING)
+
+    class Meta :
+        db_table = 't_controle_dossier_pgre'
+        ordering = ['-dt_contr_doss_pgre']
+        verbose_name = 'T_CONTROLE_DOSSIER_PGRE'
+        verbose_name_plural = 'T_CONTROLE_DOSSIER_PGRE'
+
+    def __str__(self) :
+        return str(self.pk)
+
+class TDossierPgreGeom(gismodels.Model) :
+
+    gid = models.UUIDField(default = uuid.uuid4, editable = False, primary_key = True)
+    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 2154)
+    geom_pct = gismodels.PointField(blank = True, null = True, srid = 2154)
+    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 2154)
+    objects = gismodels.GeoManager()
+    id_doss_pgre = models.ForeignKey(TDossierPgre, on_delete = models.CASCADE)
+
+    class Meta :
+        db_table = 't_dossier_pgre_geom'
+        verbose_name = 'T_DOSSIER_PGRE_GEOM'
+        verbose_name_plural = 'T_DOSSIER_PGRE_GEOM'
+
+    def __str__(self) :
+        return self.gid
+
+class TPhotoPgre(models.Model) :
+
+    # Imports
+    from app.validators import val_cdc
+    from app.validators import val_fich_img
+
+    def set_chem_ph_pgre_upload_to(_i, _fn) :
+
+        # Imports
+        from app.functions import gen_cdc
+
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'actions_pgre/photos/{0}'.format(new_fn)
+
+    id_ph_pgre = models.AutoField(primary_key = True)
+    chem_ph_pgre = models.FileField(upload_to = set_chem_ph_pgre_upload_to, validators = [val_fich_img])
+    descr_ph_pgre = models.CharField(blank = True, max_length = 255, null = True, validators = [val_cdc])
+    dt_pv_ph_pgre = models.DateField()
+    int_ph_pgre = models.CharField(max_length = 255, validators = [val_cdc])
+    id_doss_pgre = models.ForeignKey(TDossier, models.DO_NOTHING)
+    id_ppv_ph = models.ForeignKey(TPeriodePriseVuePhoto, models.DO_NOTHING)
+
+    class Meta :
+        db_table = 't_photo_pgre'
+        verbose_name = 'T_PHOTO_PGRE'
+        verbose_name_plural = 'T_PHOTO_PGRE'
+
+    def __str__(self) :
+        return self.int_ph_pgre

@@ -14,9 +14,40 @@ admin.site.disable_action('delete_selected')
 
 class ANatureDossier(admin.ModelAdmin) :
 
+	# Je déclare les actions supplémentaires.
+	def set_peu_doss_on(_madm, _r, _qs) :
+		_qs.update(peu_doss = True)
+	set_peu_doss_on.short_description = '''
+	Rendre les T_NATURE_DOSSIER sélectionnés utilisables pour le module de gestion des dossiers
+	'''
+
+	def set_peu_doss_off(_madm, _r, _qs) :
+		_qs.update(peu_doss = False)
+	set_peu_doss_off.short_description = '''
+	Rendre les T_NATURE_DOSSIER sélectionnés inutilisables pour le module de gestion des dossiers
+	'''
+
+	def set_peu_doss_pgre_on(_madm, _r, _qs) :
+		_qs.update(peu_doss_pgre = True)
+	set_peu_doss_pgre_on.short_description = '''
+	Rendre les T_NATURE_DOSSIER sélectionnés utilisables pour le module de gestion des actions PGRE
+	'''
+
+	def set_peu_doss_pgre_off(_madm, _r, _qs) :
+		_qs.update(peu_doss_pgre = False)
+	set_peu_doss_pgre_off.short_description = '''
+	Rendre les T_NATURE_DOSSIER sélectionnés inutilisables pour le module de gestion des actions PGRE
+	'''
+
 	# J'initialise les paramètres.
-	actions = [admin.actions.delete_selected]
-	list_display = ['int_nat_doss']
+	actions = [
+		set_peu_doss_on,
+		set_peu_doss_off,
+		set_peu_doss_pgre_on,
+		set_peu_doss_pgre_off,
+		admin.actions.delete_selected
+	]
+	list_display = ['int_nat_doss', 'peu_doss', 'peu_doss_pgre']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (
@@ -25,6 +56,12 @@ class ANatureDossier(admin.ModelAdmin) :
 				('int_nat_doss'),
 			)
 		}),
+		('Options', {
+			'fields' : (
+				('peu_doss'),
+				('peu_doss_pgre')
+			)
+		})
 	)
 
 # Je peux désormais gérer les natures de dossiers.
@@ -33,13 +70,13 @@ admin.site.register(TNatureDossier, ANatureDossier)
 class ATechnicien(admin.ModelAdmin) :
 
 	# Je déclare les actions supplémentaires.
-	def set_en_act_techn_on(_madm, _r, _qs) :
-		_qs.update(en_act_techn = True)
-	set_en_act_techn_on.short_description = 'Rendre les T_TECHNICIEN sélectionnés actifs'
+	def set_en_act_on(_madm, _r, _qs) :
+		_qs.update(en_act = True)
+	set_en_act_on.short_description = 'Rendre les T_TECHNICIEN sélectionnés actifs'
 
-	def set_en_act_techn_off(_madm, _r, _qs) :
-		_qs.update(en_act_techn = False)
-	set_en_act_techn_off.short_description = 'Rendre les T_TECHNICIEN sélectionnés inactifs'
+	def set_en_act_off(_madm, _r, _qs) :
+		_qs.update(en_act = False)
+	set_en_act_off.short_description = 'Rendre les T_TECHNICIEN sélectionnés inactifs'
 
 	# Je mets en forme la première colonne du tableau.
 	def n_comp_techn(self, _o) :
@@ -48,10 +85,10 @@ class ATechnicien(admin.ModelAdmin) :
 	n_comp_techn.short_description = 'Nom complet'
 
 	# J'initialise les paramètres.
-	actions = [set_en_act_techn_on, set_en_act_techn_off, admin.actions.delete_selected]
-	list_display = ('n_comp_techn', 'en_act_techn')
+	actions = [set_en_act_on, set_en_act_off, admin.actions.delete_selected]
+	list_display = ('n_comp_techn', 'en_act')
 	list_filter = (
-		('en_act_techn', admin.BooleanFieldListFilter),
+		('en_act', admin.BooleanFieldListFilter),
 	)
 
 	# Je mets en forme le formulaire.
@@ -60,7 +97,7 @@ class ATechnicien(admin.ModelAdmin) :
 			'fields' : (
 				('n_techn'),
 				('pren_techn'),
-				('en_act_techn')
+				('en_act')
 			)
 		}),
 	)
@@ -184,20 +221,20 @@ admin.site.register(TTypeDossier, ATypeDossier)
 class AProgramme(admin.ModelAdmin) :
 
 	# Je déclare les actions supplémentaires.
-	def set_en_act_progr_on(_madm, _r, _qs) :
-		_qs.update(en_act_progr = True)
-	set_en_act_progr_on.short_description = 'Rendre les T_PROGRAMME sélectionnés actifs'
+	def set_en_act_on(_madm, _r, _qs) :
+		_qs.update(en_act = True)
+	set_en_act_on.short_description = 'Rendre les T_PROGRAMME sélectionnés actifs'
 
-	def set_en_act_progr_off(_madm, _r, _qs) :
-		_qs.update(en_act_progr = False)
-	set_en_act_progr_off.short_description = 'Rendre les T_PROGRAMME sélectionnés inactifs'
+	def set_en_act_off(_madm, _r, _qs) :
+		_qs.update(en_act = False)
+	set_en_act_off.short_description = 'Rendre les T_PROGRAMME sélectionnés inactifs'
 
 	# J'initialise les paramètres.
-	actions = [set_en_act_progr_on, set_en_act_progr_off, admin.actions.delete_selected]
-	list_display = ['int_progr', 'id_type_progr', 'en_act_progr']
+	actions = [set_en_act_on, set_en_act_off, admin.actions.delete_selected]
+	list_display = ['int_progr', 'id_type_progr', 'en_act']
 	list_filter = (
 		'id_type_progr',
-		('en_act_progr', admin.BooleanFieldListFilter),
+		('en_act', admin.BooleanFieldListFilter),
 	)
 
 	# Je déclare les champs en lecture seule lors d'une mise à jour.
@@ -212,7 +249,7 @@ class AProgramme(admin.ModelAdmin) :
 			'fields' : (
 				('int_progr'),
 				('id_type_progr'),
-				('en_act_progr')
+				('en_act')
 			)
 		}),
 		('Options', {
@@ -363,20 +400,73 @@ class AMoaInline(admin.TabularInline) :
 class AMoa(admin.ModelAdmin) :
 
 	# Je déclare les actions supplémentaires.
-	def set_en_act_org_moa_on(_madm, _r, _qs) :
-		_qs.update(en_act_org_moa = True)
-	set_en_act_org_moa_on.short_description = 'Rendre les T_MOA sélectionnés actifs'
+	def set_peu_doss_on(_madm, _r, _qs) :
+		_qs.update(peu_doss = True)
+	set_peu_doss_on.short_description = '''
+	Rendre les T_MOA sélectionnés utilisables pour le module de gestion des dossiers
+	'''
 
-	def set_en_act_org_moa_off(_madm, _r, _qs) :
-		_qs.update(en_act_org_moa = False)
-	set_en_act_org_moa_off.short_description = 'Rendre les T_MOA sélectionnés inactifs'
+	def set_peu_doss_off(_madm, _r, _qs) :
+		_qs.update(peu_doss = False)
+	set_peu_doss_off.short_description = '''
+	Rendre les T_MOA sélectionnés inutilisables pour le module de gestion des dossiers
+	'''
+
+	def set_en_act_doss_on(_madm, _r, _qs) :
+		_qs.update(en_act_doss = True)
+	set_en_act_doss_on.short_description = '''
+	Rendre les T_MOA sélectionnés actifs pour le module de gestion des dossiers
+	'''
+
+	def set_en_act_doss_off(_madm, _r, _qs) :
+		_qs.update(en_act_doss = False)
+	set_en_act_doss_off.short_description = '''
+	Rendre les T_MOA sélectionnés inactifs pour le module de gestion des dossiers
+	'''
+
+	def set_peu_doss_pgre_on(_madm, _r, _qs) :
+		_qs.update(peu_doss_pgre = True)
+	set_peu_doss_pgre_on.short_description = '''
+	Rendre les T_MOA sélectionnés utilisables pour le module de gestion des actions PGRE
+	'''
+
+	def set_peu_doss_pgre_off(_madm, _r, _qs) :
+		_qs.update(peu_doss_pgre = False)
+	set_peu_doss_pgre_off.short_description = '''
+	Rendre les T_MOA sélectionnés inutilisables pour le module de gestion des actions PGRE
+	'''
+
+	def set_en_act_doss_pgre_on(_madm, _r, _qs) :
+		_qs.update(en_act_doss_pgre = True)
+	set_en_act_doss_pgre_on.short_description = '''
+	Rendre les T_MOA sélectionnés actifs pour le module de gestion des actions PGRE
+	'''
+
+	def set_en_act_doss_pgre_off(_madm, _r, _qs) :
+		_qs.update(en_act_doss_pgre = False)
+	set_en_act_doss_pgre_off.short_description = '''
+	Rendre les T_MOA sélectionnés inactifs pour le module de gestion des actions PGRE
+	'''
 
 	# J'initialise les paramètres.
-	actions = [set_en_act_org_moa_on, set_en_act_org_moa_off, admin.actions.delete_selected]
+	actions = [
+		set_peu_doss_on,
+		set_peu_doss_off,
+		set_en_act_doss_on,
+		set_en_act_doss_off,
+		set_peu_doss_pgre_on,
+		set_peu_doss_pgre_off,
+		set_en_act_doss_pgre_on,
+		set_en_act_doss_pgre_off,
+		admin.actions.delete_selected
+	]
 	inlines = [AMoaInline]
-	list_display = ['n_org', 'en_act_org_moa']
+	list_display = ['n_org', 'peu_doss', 'en_act_doss', 'peu_doss_pgre', 'en_act_doss_pgre']
 	list_filter = (
-		('en_act_org_moa', admin.BooleanFieldListFilter),
+		('peu_doss', admin.BooleanFieldListFilter),
+		('en_act_doss', admin.BooleanFieldListFilter),
+		('peu_doss_pgre', admin.BooleanFieldListFilter),
+		('en_act_doss_pgre', admin.BooleanFieldListFilter)
 	)
 
 	# Je mets en forme le formulaire.
@@ -403,7 +493,10 @@ class AMoa(admin.ModelAdmin) :
 		('Options', {
 			'fields' : (
 				('dim_org_moa'),
-				('en_act_org_moa')
+				('peu_doss'),
+				('en_act_doss'),
+				('peu_doss_pgre'),
+				('en_act_doss_pgre')
 			)
 		}),
 		('Autres', {
@@ -488,6 +581,11 @@ class AUtilisateur(UserAdmin) :
 				('username'),
 				('zs_pwd1'),
 				('zs_pwd2')
+			)
+		}),
+		('Options', {
+			'fields' : (
+				('cb_est_techn'),
 			)
 		})
 	)
@@ -710,3 +808,83 @@ class ATypeVersement(admin.ModelAdmin) :
 
 # Je peux désormais gérer les types de versements.
 admin.site.register(TTypeVersement, ATypeVersement)
+
+class AAvancementPgre(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	list_display = ['int_av_pgre', 'ordre_av_pgre']	
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_av_pgre'),
+				('ordre_av_pgre')
+			)
+		}),
+	)
+
+# Je peux désormais gérer les états d'avancements d'une action PGRE.
+admin.site.register(TAvancementPgre, AAvancementPgre)
+
+class APrioritePgre(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	list_display = ['int_pr_pgre']	
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_pr_pgre'),
+			)
+		}),
+	)
+
+# Je peux désormais gérer les niveaux de priorité d'une action PGRE.
+admin.site.register(TPrioritePgre, APrioritePgre)
+
+class AInstanceConcertationPgre(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	list_display = ['int_ic_pgre']	
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_ic_pgre'),
+			)
+		}),
+	)
+
+# Je peux désormais gérer les instances de concertation PGRE.
+admin.site.register(TInstanceConcertationPgre, AInstanceConcertationPgre)
+
+class AInstanceConcertationPgreInline(admin.TabularInline) :
+
+	extra = 0
+	model = TAtelierPgre.ic_pgre.through
+	verbose_name = ''
+
+class AAtelierPgre(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	inlines = [AInstanceConcertationPgreInline]
+	list_display = ['int_atel_pgre']	
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('int_atel_pgre'),
+			)
+		}),
+	)
+
+# Je peux désormais gérer les ateliers PGRE.
+admin.site.register(TAtelierPgre, AAtelierPgre)

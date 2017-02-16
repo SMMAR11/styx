@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
+                'app.context_processors.global_settings'
             ],
         },
     },
@@ -138,3 +139,20 @@ LEAFLET_CONFIG = {
     'MIN_ZOOM' : 9,
     'MAX_ZOOM' : 20,
 }
+
+# Je déclare mes options personnelles.
+EP_STR = 'En projet'
+
+ACC_STR = 'Accordé'
+EA_STR = 'En attente'
+REF_STR = 'Refusé'
+SO_STR = 'Sans objet'
+
+PRT_STR = 'Pourcentage de réalisation des travaux'
+
+ACOMPT_STR = 'Acompte'
+SOLD_STR = 'Solde'
+
+VALID_STR = 'Validé'
+
+PGRE_PK = 4

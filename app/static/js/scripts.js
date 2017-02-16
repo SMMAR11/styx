@@ -1,5 +1,7 @@
 // Variables globales
 var t_datat = {
+	'ch_cbsm_atel_pgre' : init_datat($('#t_ch_cbsm_atel_pgre'), [1]),
+	'ch_cbsm_org_moa' : init_datat($('#t_ch_cbsm_org_moa'), [1]),
 	'ch_doss' : init_datat($('#t_ch_doss'), [4]),
 	'ch_fact_ddv' : init_datat($('#t_ch_fact_ddv'), [4]),
 	'ch_prest' : init_datat($('#t_ch_prest'), [5]),
@@ -8,10 +10,11 @@ var t_datat = {
 	'cons_ddv' : init_datat($('#t_cons_ddv'), [6]),
 	'cons_doss_fam' : init_datat($('#t_cons_doss_fam'), [4]),
 	'cons_doss_prest' : init_datat($('#t_cons_doss_prest'), [3]),
+	'cons_droit' : init_datat($('#t_cons_droit'), [0, 1, 2, 3]),
 	'cons_fact' : init_datat($('#t_cons_fact'), [7]),
 	'cons_fact_ddv' : init_datat($('#t_cons_fact_ddv'), [4]),
 	'cons_fin' : init_datat($('#t_cons_fin'), [8]),
-	'cons_ph' : init_datat($('#t_cons_ph'), [4]),
+	'cons_ph' : init_datat($('#t_cons_ph'), [0, 4]),
 	'cons_prest' : init_datat($('#t_cons_prest'), [6]),
 	'modif_prest_doss' : init_datat($('#t_modif_prest_doss'), [0, 1, 2, 3, 4])
 };
@@ -106,9 +109,9 @@ $(document).on('click', '.to-block', function(_e) {
 // Gestion des dossiers
 
 /**
- * Ce script permet l'affichage de la fenêtre modale d'ajout d'un dossier associé.
+ * Ce script permet l'affichage de la fenêtre modale d'ajout d'un dossier associé/de correspondance.
  */
-$('#id_GererDossier-rb_doss_ass_0').on('click', function() {
+$('#id_GererDossier-rb_doss_ass_0, #id_GererActionPgre-rb_doss_corr_0').on('click', function() {
 	$('#fm_ch_doss').modal();
 });
 
@@ -134,15 +137,17 @@ $(document).on('click', '#t_ch_doss .choose-icon', function() {
 
 	// Je transmets le numéro du dossier sélectionné au formulaire principal.
 	$('#id_GererDossier-za_doss_ass').val(v_num_doss);
+	$('#id_GererActionPgre-za_doss_corr').val(v_num_doss);
 
 	// Je ferme la fenêtre modale.
 	$('#fm_ch_doss').modal('hide');
 });
 
 /**
- * Ce script permet de réinitialiser la valeur du dossier associé.
+ * Ce script permet de réinitialiser la valeur du dossier associé/de correspondance.
  */
-$('#id_GererDossier-rb_doss_ass_1, #bt_suppr_doss_ass').on('click', function() {
+$('#id_GererDossier-rb_doss_ass_1, #id_GererActionPgre-rb_doss_corr_1, #bt_suppr_doss_ass').on(
+	'click', function() {
 
 	// Je réinitialise tous les pictogrammes.
 	$('#t_ch_doss .chosen-icon').each(function() {
@@ -152,6 +157,7 @@ $('#id_GererDossier-rb_doss_ass_1, #bt_suppr_doss_ass').on('click', function() {
 	});
 	
 	$('#id_GererDossier-za_doss_ass').val('');
+	$('#id_GererActionPgre-za_doss_corr').val('');
 });
 
 /**
@@ -248,12 +254,12 @@ $('#id_GererDossier-id_av, #id_GererDossier-id_av_cp').on('change', function(_e)
 		var o_dt_delib_moa_doss = $('#id_GererDossier-dt_delib_moa_doss');
 		var o_dt_av_cp_doss = $('#id_GererDossier-dt_av_cp_doss');
 
-		if (v_int_av == 'En projet') {
+		if (v_int_av == EP_STR) {
 			o_dt_delib_moa_doss.val('');
 			o_dt_delib_moa_doss.attr('readonly', true);
 
 			$('#id_GererDossier-id_av_cp option').each(function() {
-				if ($(this).text() == 'En attente') {
+				if ($(this).text() == EA_STR) {
 					$('#id_GererDossier-id_av_cp').val($(this).val());
 				}
 			});
@@ -262,7 +268,7 @@ $('#id_GererDossier-id_av, #id_GererDossier-id_av_cp').on('change', function(_e)
 			o_dt_delib_moa_doss.removeAttr('readonly');
 		}
 
-		if (v_int_av == 'En projet' || $.inArray(v_int_av_cp, ['En attente', 'Sans objet']) > -1) {
+		if (v_int_av == EP_STR || $.inArray(v_int_av_cp, [EA_STR, SO_STR]) > -1) {
 			o_dt_av_cp_doss.val('');
 			o_dt_av_cp_doss.attr('readonly', true);
 		}
@@ -293,6 +299,7 @@ $('#id_GererFinancement-mont_elig_fin, #id_GererFinancement-pourc_elig_fin').on(
 	// J'affiche le montant de la participation.
 	$('#id_GererFinancement-mont_part_fin').val(v_mont_part_fin);
 
+	/*
 	var t = new Array(v_mont_elig_fin, v_pourc_elig_fin);
 	var readonly = true;
 
@@ -310,6 +317,7 @@ $('#id_GererFinancement-mont_elig_fin, #id_GererFinancement-pourc_elig_fin').on(
 	else {
 		o_mont_part_fin.removeAttr('readonly');
 	}
+	*/
 });
 
 /**
@@ -323,7 +331,7 @@ $('#id_GererFinancement-id_paiem_prem_ac').on('change', function() {
 
 	// J'active ou je désactive la lecture seule du contrôle lié au pourcentage de réalisation des travaux.
 	var o_pourc_real_fin = $('#id_GererFinancement-pourc_real_fin');
-	if (v_paiem_prem_ac == 'Pourcentage de réalisation des travaux') {
+	if (v_paiem_prem_ac == PRT_STR) {
 		o_pourc_real_fin.removeAttr('readonly');
 	}
 	else {
@@ -524,7 +532,7 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 	var v_type_vers = $('#id_GererDemandeVersement-id_type_vers').val();
 	if (v_type_vers != '' && isNaN(v_type_vers) == false) {
 		var v_int_type_vers = $('#id_GererDemandeVersement-id_type_vers option:selected').text();
-		if ($.inArray(v_int_type_vers, ['Acompte', 'Solde']) > -1) {
+		if ($.inArray(v_int_type_vers, [ACOMPT_STR, SOLD_STR]) > -1) {
 			aff_t += 1;
 		}
 	}
@@ -586,6 +594,22 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 		catch (e) {
 
 		}
+	}
+});
+
+/**
+ * Ce script permet de gérer l'état de certains champs relatif à une demande de versement.
+ */
+$('#id_GererDemandeVersement-dt_vers_ddv').on('input', function() {
+	if ($(this).val() != '') {
+		$('#id_GererDemandeVersement-num_bord_ddv').removeAttr('readonly');
+		$('#id_GererDemandeVersement-num_titre_rec_ddv').removeAttr('readonly');
+	}
+	else {
+		$('#id_GererDemandeVersement-num_bord_ddv').attr('readonly', true);
+		$('#id_GererDemandeVersement-num_titre_rec_ddv').attr('readonly', true);
+		$('#id_GererDemandeVersement-num_bord_ddv').val('');
+		$('#id_GererDemandeVersement-num_titre_rec_ddv').val('');
 	}
 });
 
@@ -669,7 +693,7 @@ $('#fm_ajout_org_prest').on('hidden.bs.modal', function() {
  */
 $('form[name="f_modif_doss"] #id_GererDossier-id_av_cp').on('change', function() {
 	var v_int_av_cp = $('#id_GererDossier-id_av_cp option:selected').text();
-	if (v_int_av_cp == 'Accordé') {
+	if (v_int_av_cp == ACC_STR) {
 		$('#id_GererDossier-mont_doss').attr('readonly', true);
 		$('#id_GererDossier-mont_suppl_doss').removeAttr('readonly');
 	}
@@ -678,4 +702,38 @@ $('form[name="f_modif_doss"] #id_GererDossier-id_av_cp').on('change', function()
 		$('#id_GererDossier-mont_suppl_doss').attr('readonly', true);
 		$('#id_GererDossier-mont_suppl_doss').val(0);
 	}
+});
+
+/**
+ * Ce script permet de cocher/décocher automatiquement un groupe de cases à cocher.
+ */
+$('input[type="checkbox"]').on('change', function() {
+	var o = $(this);
+	if (o.val() == 'all') {
+		var name = o.attr('id').substr(3);
+		name = name.substr(0, name.length - 5);
+		$('input[name="' + name + '"]').each(function() {
+			if (o.is(':checked')) {
+				this.checked = true;
+			}
+			else {
+				this.checked = false;
+			}
+		});
+	}
+});
+
+/**
+ * Ce script permet de mettre à jour la datatable relative aux ateliers concernés par une instance de concertation
+ * sélectionnée.
+ * _e : Objet DOM
+ */
+$('#id_GererActionPgre-id_ic_pgre').on('change', function(_e) {
+	soum_f(
+		_e, 
+		function() {
+			$('#id_GererActionPgre-cbsm_atel_pgre__all').attr('checked', false);
+		},
+		[$('form[name="f_cr_act_pgre"]'), '?action=filtrer-ateliers']
+	);
 });

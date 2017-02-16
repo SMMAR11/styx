@@ -203,6 +203,10 @@ div#ajax-loader {
 	border-radius: 0;
 }
 
+#main-nav .dropdown-menu > li.dropdown-divider {
+	border-top: solid 1px #DDD;
+}
+
 #main-nav .dropdown-menu > li > a {
 	padding: 2.5px 15px;
 }
@@ -210,4 +214,47 @@ div#ajax-loader {
 #main-nav .caret {
 	margin-top: -2.5px;
 	margin-left: 0;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+	#main-nav .navbar-nav .open .dropdown-menu {
+		position: static;
+		float: none;
+		border: 0;
+		-webkit-box-shadow: none;
+		box-shadow: none;
+	}
+
+	#main-nav .dropdown-menu > li > a {
+		display: block;
+		line-height: 20px;
+	}
+
+	#main-nav .navbar-header {
+		float: none;
+	}
+
+	#main-nav .navbar-toggle {
+		display: block;
+	}
+
+	#main-nav .navbar-collapse.collapse {
+		display: none !important;
+	}
+
+	#main-nav .navbar-collapse.collapse.in { 
+		display: block !important;
+	}
+
+	#main-nav .collapsing {
+		overflow: hidden !important;
+	}
+
+	#main-nav .navbar-nav {
+		float: none !important;
+	}
+
+	#main-nav .navbar-nav > li {
+		float: none;
+	} 
 }

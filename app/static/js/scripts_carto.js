@@ -85,7 +85,7 @@ window.addEventListener('map:init', function(e) {
             icon : 'glyphicon glyphicon-resize-small',
             title : 'Réduire la carte',
             onClick : function(_c) {
-                $('#styx-map').css('min-height', '300px');
+                $('#styx-map').css('min-height', '320px');
                 map.invalidateSize();
                 _c.state('normal-map');
             }

@@ -137,6 +137,7 @@ class MUtilisateurCreate(forms.ModelForm) :
     zl_org = forms.ChoiceField(label = 'Organisme')
     zs_pwd1 = forms.CharField(label = 'Mot de passe', max_length = 255, widget = forms.PasswordInput())
     zs_pwd2 = forms.CharField(label = 'Confirmation du mot de passe', max_length = 255, widget = forms.PasswordInput())
+    cb_est_techn = forms.BooleanField(label = 'Est technicien', required = False)
 
     class Meta :
         fields = '__all__'
@@ -165,7 +166,7 @@ class MUtilisateurCreate(forms.ModelForm) :
 
     def clean_zs_pwd2(self) :
 
-        # Je récupère les mots de passe saisis0
+        # Je récupère les mots de passe saisis.
         v_pwd1 = self.cleaned_data.get('zs_pwd1')
         v_pwd2 = self.cleaned_data.get('zs_pwd2')
 
@@ -174,11 +175,23 @@ class MUtilisateurCreate(forms.ModelForm) :
                 raise forms.ValidationError('Les deux mots de passe ne correspondent pas.')
 
     def save(self, commit = True) :
+
+        # Imports
+        from app.models import TTechnicien
+
+        # Je créé l'instance TUtilisateur.
         o = super(MUtilisateurCreate, self).save(commit = False)
         o.set_password(self.cleaned_data.get('zs_pwd1'))
         o.id_org = TOrganisme.objects.get(id_org = self.cleaned_data.get('zl_org'))
-        if commit :
-            o.save()
+        o.save()
+
+        # Je créé l'instance TTechnicien si l'utilisateur est un technicien.
+        v_est_techn = self.cleaned_data.get('cb_est_techn')
+        if v_est_techn == True :
+            TTechnicien.objects.create(
+                n_techn = self.cleaned_data.get('last_name'), pren_techn = self.cleaned_data.get('first_name')
+            )
+            
         return o
 
 class MUtilisateurUpdate(forms.ModelForm) :

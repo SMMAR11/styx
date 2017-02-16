@@ -6,9 +6,24 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-		<meta name="author" content="SMMAR"/>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="author" content="SMMAR">
+		<meta name="rights" content="SMMAR">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>STYX 2.0 - {{ title }}</title>
+		<script type="text/javascript">
+
+			// Je déclare mes options personnelles.
+			const ACC_STR = '{{ ACC_STR }}';
+			const ACOMPT_STR = '{{ ACOMPT_STR }}';
+			const EA_STR = '{{ EA_STR }}';
+			const EP_STR = '{{ EP_STR }}';
+			const PRT_STR = '{{ PRT_STR }}';
+			const REF_STR = '{{ REF_STR }}';
+			const SO_STR = '{{ SO_STR }}';
+			const SOLD_STR = '{{ SOLD_STR }}';
+
+		</script>
 		<link rel="stylesheet" type="text/css" href="{% static './vendors/bootstrap/css/bootstrap.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static './vendors/DataTables/css/jquery.dataTables.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static './vendors/jquery-typeahead-2.7.6/dist/jquery.typeahead.min.css' %}">
@@ -60,7 +75,7 @@
 					<div id="my-navbar" class="collapse navbar-collapse">
 						<ul class="nav navbar-nav">
 							<li>
-								<a href="http://carto.smmar.fr/" target="blank">Portail cartographique</a>
+								<a href="http://carto.smmar.fr/styx" target="blank">Portail cartographique</a>
 							</li>
 							<li class="dropdown">
 								<a class="dropdown-toggle" data-toggle="dropdown" href="#">
@@ -93,13 +108,31 @@
 									</li>
 								</ul>
 							</li>
+							<li class="dropdown" style="display: none;">
+								<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+									PGRE
+									<span class="caret"></span>
+								</a>
+								<ul class="dropdown-menu">
+									<li>
+										<a href="{% url 'cr_act_pgre' %}">Créer une action PGRE</a>
+									</li>
+									<li>
+										<a href="#">Consulter une action PGRE</a>
+									</li>
+									<li>
+										<a href="#">Réalisation d'états</a>
+									</li>
+								</ul>
+							</li>
 						</ul>
 						<ul class="nav navbar-nav navbar-right">
-							<!--
 							<li>
-								<a href="#" class="glyphicon glyphicon-envelope"></a>
+								<a href="#">
+									Alertes
+									<span class="my-badge" id="za_alert"></span>
+								</a>
 							</li>
-							-->
 							<li class="dropdown">
 								<a class="dropdown-toggle" data-toggle="dropdown" href="#">
 									<span class="glyphicon glyphicon-user"></span>
@@ -108,10 +141,13 @@
 								</a>
 								<ul class="dropdown-menu">
 									<li>
-										<a href="{% url 'modif_util' %}">Modifier mon compte</a>
+										<a href="{% url 'cons_util' %}">Consulter mon compte</a>
 									</li>
 									<li>
 										<a href="{% url 'deconnect' %}">Se déconnecter</a>
+									</li>
+									<li class="dropdown-divider">
+										<a href="{% url 'assist' %}">Assistance</a>
 									</li>
 								</ul>
 							</li>

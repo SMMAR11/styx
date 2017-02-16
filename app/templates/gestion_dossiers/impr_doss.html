@@ -5,7 +5,6 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 	<head>
-		<link rel="stylesheet" type="text/css" href="{% static './vendors/bootstrap/css/bootstrap.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static './css/pdf_template.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static './css/styles.css' %}">
 	</head>
@@ -75,6 +74,24 @@
 		</div>
 		{{ t_attrs_doss.chem_pj_doss }}
 		{{ t_attrs_doss.comm_doss }}
+		<div class="pdf-title-2">Avancement du dossier</div>
+		<table class="pdf-table vertical-table">
+			<tbody>
+				<tr>
+					<th scope="row">État d'avancement</th>
+					<td>{{ d.id_av }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Montant commandé {{ ht_ou_ttc }}</th>
+					<td>{{ mont_tot_prest_doss }} € soit {{ pourc_comm }} % du montant total du dossier</td>
+				</tr>
+				<tr>
+					<th scope="row">Montant payé {{ ht_ou_ttc }}</th>
+					<td>{{ mont_fact_sum }} € soit {{ pourc_paye }} % du montant total du dossier</td>
+				</tr>
+			</tbody>
+		</table>
+		<div class="br"></div>
 		<div class="pdf-title-2">Plan de financement</div>
 		<table class="pdf-table">
 			<thead>
@@ -111,7 +128,7 @@
 			</tfoot>
 		</table>
 		{% if d.mont_suppl_doss > 0 %}
-		<div class="i text-center">Attention, le maître d'ouvrage doit assumer en plus {{ mont_suppl_doss }} € {{ ht_ou_ttc }}.</div>
+		<div class="pdf-table-remark">Attention, le maître d'ouvrage doit assumer en plus {{ mont_suppl_doss }} € {{ ht_ou_ttc }}.</div>
 		{% endif %}
 		<div class="br"></div>
 		<div class="pdf-title-2">Prestations</div>
@@ -148,7 +165,7 @@
 				</tr>
 			</tfoot>
 		</table>
-		<div class="i text-center">Le reste à engager {{ ht_ou_ttc }} pour ce dossier est de {{ mont_rae }} €.</div>
+		<div class="pdf-table-remark">Le reste à engager {{ ht_ou_ttc }} pour ce dossier est de {{ mont_rae }} €.</div>
 		<div class="br"></div>
 		{% endif %}
 		<div class="pdf-title-2">Factures</div>

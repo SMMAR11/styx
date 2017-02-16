@@ -57,8 +57,8 @@
 								</div>
 								{{ t_attrs_prest_doss.mont_prest }}
 								<div class="row">
-									<div class="col-sm-6">{{ t_attrs_prest_doss.dt_notif_prest }}</div>
-									<div class="col-sm-6">{{ t_attrs_prest_doss.dt_fin_prest }}</div>
+									<div class="col-md-6">{{ t_attrs_prest_doss.dt_notif_prest }}</div>
+									<div class="col-md-6">{{ t_attrs_prest_doss.dt_fin_prest }}</div>
 								</div>
 								{{ t_attrs_prest_doss.id_nat_prest }}
 								{{ t_attrs_prest_doss.chem_pj_prest }}
@@ -80,7 +80,9 @@
 						</fieldset>
 					</div>
 					<div class="br-sm-before col-sm-3 forbidden">
-						<a href="{% url 'modif_prest' pd.pk %}" class="icon-link modify-icon">Modifier</a>
+						<a href="{% url 'modif_prest' pd.pk %}" class="icon-link modify-icon">Modifier la prestation</a>
+						<br/>
+						<span action="?action=supprimer-prestation" class="delete-icon icon-link" onclick="html_ds_fm(event, 'suppr_prest');">Supprimer la prestation</span>
 					</div>
 				</div>
 			</div>

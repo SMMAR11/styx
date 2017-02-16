@@ -2,18 +2,21 @@
 {% load static %}
 
 {% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_util' %}" class="icon-link previous-icon">Revenir au compte utilisateur</a>
+	</div>
+</div>
 <form action="#" method="post" name="f_modif_util" onsubmit="soum_f(event)">
 	{% csrf_token %}
 	<fieldset class="my-fieldset">
-		<legend>Modifier son compte</legend>
+		<legend>Modifier mon compte</legend>
 		<div>
-			{{ t_attrs_util.username }}
 			<div class="row">
 				<div class="col-md-6">{{ f_modif_util.last_name }}</div>
 				<div class="col-md-6">{{ f_modif_util.first_name }}</div>
 			</div>
 			{{ f_modif_util.email }}
-			{{ t_attrs_util.id_org }}
 			<div class="row">
 				<div class="col-md-6">{{ f_modif_util.tel_util }}</div>
 				<div class="col-md-6">{{ f_modif_util.port_util }}</div>

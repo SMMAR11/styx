@@ -1,0 +1,65 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12">
+		<div class="main-title">Compte utilisateur {{ u }}</div>
+		<div class="row">
+			<div class="col-sm-9">
+				{{ t_attrs_util.username }}
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_util.last_name }}</div>
+					<div class="col-sm-6">{{ t_attrs_util.first_name }}</div>
+				</div>
+				{{ t_attrs_util.email }}
+				{{ t_attrs_util.id_org }}
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_util.tel_util }}</div>
+					<div class="col-sm-6">{{ t_attrs_util.port_util }}</div>
+				</div>
+				<div class="attribute-wrapper">
+					<span class="attribute-label">Droits</span>
+					<div class="my-table" id="t_cons_droit">
+						<table>
+							<thead>
+								<tr>
+									<th>Maître d'ouvrage</th>
+									<th>Type de programme</th>
+									<th>Écriture</th>
+									<th>Lecture</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for d in qs_droit %}
+								<tr>
+									<td>{{ d.id_org_moa | default_if_none:'Tous' }}</td>
+									<td>{{ d.id_type_progr | default_if_none:'Tous' }}</td>
+									<td>
+										{% if d.en_ecr == True %}
+										<span class="pull-left true-icon"></span>
+										{% else %}
+										<span class="false-icon pull-left"></span>
+										{% endif %}
+									</td>
+									<td>
+										{% if d.en_lect == True %}
+										<span class="pull-left true-icon"></span>
+										{% else %}
+										<span class="false-icon pull-left"></span>
+										{% endif %}
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-3">
+				<a href="{% url 'modif_util' %}" class="icon-link modify-icon">Modifier mon compte</a>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}

@@ -4,25 +4,30 @@
 {% block content %}
 {% if user.is_authenticated %}
 <div class="row thumbnails-row">
-	<div class="col-md-4">
-		<a class="my-thumbnail" href="http://carto.smmar.fr/" target="blank">
+	<div class="col-sm-4">
+		<a class="my-thumbnail" href="http://carto.smmar.fr/styx" target="blank">
 			<img src="{% static './pics/thumbnails/portail_cartographique/main.jpg' %}">
 			<div>Portail cartographique</div>
 		</a>
 	</div>
-	<div class="col-md-4">
+	<div class="col-sm-4">
 		<a class="my-thumbnail" href="{% url 'gest_doss' %}">
 			<img src="{% static './pics/thumbnails/gestion_dossiers/main.png' %}">
 			<div>Gestion des dossiers</div>
 		</a>
 	</div>
-	<div class="col-md-4">
-		<a class="my-thumbnail" href="#">
+	<div class="col-sm-4">
+		<a class="my-thumbnail" href="{% url 'real_etats' %}">
 			<img src="{% static './pics/thumbnails/realisation_etats/main.png' %}">
 			<div>Réalisation d'états</div>
 		</a>
 	</div>
 </div>
+<div class="br"></div>
+<a class="my-thumbnail" href="{% url 'gest_act_pgre' %}" style="display: none;">
+	<img src="{% static './pics/thumbnails/pgre/main.jpg' %}">
+	<div>PGRE</div>
+</a>
 {% else %}
 <div class="row">
 	<div class="col-md-offset-6">

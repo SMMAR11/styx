@@ -1,0 +1,25 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row thumbnails-row">
+	<div class="col-sm-4">
+		<a class="my-thumbnail" href="{% url 'cr_act_pgre' %}">
+			<img src="{% static './pics/thumbnails/pgre/add.jpg' %}">
+			<div>Créer une action PGRE</div>
+		</a>
+	</div>
+	<div class="col-sm-4">
+		<a class="my-thumbnail" href="#" style="opacity: 0.5;">
+			<img src="{% static './pics/thumbnails/pgre/consult.jpg' %}">
+			<div>Consulter une action PGRE</div>
+		</a>
+	</div>
+	<div class="col-sm-4">
+		<a class="my-thumbnail" href="#" style="opacity: 0.5;">
+			<img src="{% static './pics/thumbnails/pgre/realisation_etats.png' %}">
+			<div>Réalisation d'états</div>
+		</a>
+	</div>
+</div>
+{% endblock content %}

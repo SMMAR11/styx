@@ -1,0 +1,25 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row thumbnails-row">
+	<div class="col-sm-4">
+		<a class="my-thumbnail" href="#" style="opacity: 0.5;">
+			<img src="{% static './pics/thumbnails/realisation_etats/select_doss.png' %}">
+			<div>En sélectionnant des dossiers</div>
+		</a>
+	</div>
+	<div class="col-sm-4">
+		<a class="my-thumbnail" href="#" style="opacity: 0.5;">
+			<img src="{% static './pics/thumbnails/realisation_etats/cumul_doss.jpg' %}">
+			<div>En cumulant des dossiers</div>
+		</a>
+	</div>
+	<div class="col-sm-4">
+		<a class="my-thumbnail" href="#" style="opacity: 0.5;">
+			<img src="{% static './pics/thumbnails/realisation_etats/select_prest.jpg' %}">
+			<div>En sélectionnant des prestations</div>
+		</a>
+	</div>
+</div>
+{% endblock content %}

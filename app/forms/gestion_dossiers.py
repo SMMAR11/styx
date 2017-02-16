@@ -40,6 +40,7 @@ class GererDossier(forms.ModelForm) :
 		required = False,
 		widget = forms.Select(attrs = { 'class' : 'hide-field' })
 	)
+	zl_nat_doss = forms.ChoiceField(label = 'Nature du dossier', widget = forms.Select())
 	zl_type_doss = forms.ChoiceField(choices = [DEFAULT_OPTION], label = 'Type de dossier', widget = forms.Select())
 	zl_techn = forms.ChoiceField(label = 'Agent responsable', widget = forms.Select())
 	rb_est_ttc_doss = forms.ChoiceField(
@@ -60,6 +61,7 @@ class GererDossier(forms.ModelForm) :
 			'dt_int_doss', 
 			'est_ttc_doss', 
 			'id_fam',
+			'id_nat_doss',
 			'id_org_moa',
 			'id_progr',
 			'id_techn',
@@ -76,9 +78,13 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TAction
 		from app.models import TAxe
 		from app.models import TMoa
+		from app.models import TNatureDossier
 		from app.models import TProgramme
 		from app.models import TSousAxe
 		from app.models import TTechnicien
+		from styx.settings import ACC_STR
+		from styx.settings import EP_STR
+		from styx.settings import REF_STR
 
 		# Je déclare le tableau des arguments.
 		self.k_util = kwargs.pop('k_util', None)
@@ -99,17 +105,22 @@ class GererDossier(forms.ModelForm) :
 		self.fields['dt_av_cp_doss'].label += REMARK
 
 		# J'alimente la liste déroulante des maîtres d'ouvrages.
-		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(en_act_org_moa = True)]
+		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(peu_doss = True, en_act_doss = True)]
 		t_org_moa.insert(0, DEFAULT_OPTION)
 		self.fields['zl_org_moa'].choices = t_org_moa
 
 		# J'alimente la liste déroulante des programmes.
-		t_progr = [(p.pk, p) for p in TProgramme.objects.filter(en_act_progr = True)]
+		t_progr = [(p.pk, p) for p in TProgramme.objects.filter(en_act = True)]
 		t_progr.insert(0, DEFAULT_OPTION)
 		self.fields['zl_progr'].choices = t_progr
 
+		# J'alimente la liste déroulante des natures de dossiers.
+		t_nat_doss = [(nd.pk, nd) for nd in TNatureDossier.objects.filter(peu_doss = True)]
+		t_nat_doss.insert(0, DEFAULT_OPTION)
+		self.fields['zl_nat_doss'].choices = t_nat_doss
+
 		# J'alimente la liste déroulante des techniciens.
-		t_techn = [(t.pk, t) for t in TTechnicien.objects.filter(en_act_techn = True)]
+		t_techn = [(t.pk, t) for t in TTechnicien.objects.filter(en_act = True)]
 		t_techn.insert(0, DEFAULT_OPTION)
 		self.fields['zl_techn'].choices = t_techn
 
@@ -128,13 +139,16 @@ class GererDossier(forms.ModelForm) :
 			# Je réinitialise le tableau des choix de certaines listes déroulantes.
 			self.fields['zl_org_moa'].choices = [(i.id_org_moa.pk, i.id_org_moa)]
 			self.fields['zl_progr'].choices = [(i.id_progr.pk, i.id_progr)]
+			if i.id_nat_doss.peu_doss == False :
+				self.fields['zl_nat_doss'].choices += [(i.id_nat_doss.pk, i.id_nat_doss)]
 			self.fields['zl_type_doss'].choices = [(i.id_type_doss.pk, i.id_type_doss)]
-			if i.id_techn.en_act_techn == False :
+			if i.id_techn.en_act == False :
 				self.fields['zl_techn'].choices += [(i.id_techn.pk, i.id_techn)]
 
 			# J'affiche la valeur initiale de chaque champ personnalisé.
 			self.fields['za_num_doss'].initial = i
 			self.fields['za_doss_ass'].initial = i.id_doss_ass
+			self.fields['zl_nat_doss'].initial = i.id_nat_doss.pk
 			self.fields['zl_type_doss'].initial = i.id_type_doss.pk
 			self.fields['zl_techn'].initial = i.id_techn.pk
 			self.fields['rb_est_ttc_doss'].initial = i.est_ttc_doss
@@ -182,11 +196,11 @@ class GererDossier(forms.ModelForm) :
 						self.fields['zl_act'].widget.attrs['class'] += ' show-field'
 
 			# Je vérifie si certains champs doivent bénéficier ou non de la lecture seule.
-			if i.id_av.int_av == 'En projet' :
+			if i.id_av.int_av == EP_STR :
 				self.fields['dt_delib_moa_doss'].widget.attrs['readonly'] = True
-			if i.id_av_cp.int_av_cp in ['Accordé', 'Refusé'] :
+			if i.id_av_cp.int_av_cp in [ACC_STR, REF_STR] :
 				self.fields['dt_av_cp_doss'].widget.attrs['readonly'] = False
-			if i.id_av_cp.int_av_cp == 'Accordé' :
+			if i.id_av_cp.int_av_cp == ACC_STR :
 				self.fields['mont_doss'].widget.attrs['readonly'] = True
 			else :
 				self.fields['mont_suppl_doss'].widget.attrs['readonly'] = True
@@ -204,6 +218,10 @@ class GererDossier(forms.ModelForm) :
 		from app.sql_views import VSuiviDossier
 		from django.db.models import Max
 		from django.db.models import Sum
+		from styx.settings import ACC_STR
+		from styx.settings import EA_STR
+		from styx.settings import EP_STR
+		from styx.settings import SO_STR
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererDossier, self).clean()
@@ -239,12 +257,12 @@ class GererDossier(forms.ModelForm) :
 		# Je rends obligatoire la date de délibération au maître d'ouvrage si l'état d'avancement du dossier n'est pas
 		# en projet.
 		if v_av :
-			if v_av.int_av != 'En projet' and not v_dt_delib_moa_doss :
+			if v_av.int_av != EP_STR and not v_dt_delib_moa_doss :
 				self.add_error('dt_delib_moa_doss', ERROR_MESSAGES['required'])
 
 		# Je rends obligatoire la date de l'avis du comité de programmation si celui-ci est en attente ou sans objet.
 		if v_av_cp :
-			if not v_av_cp.int_av_cp in ['En attente', 'Sans objet'] and not v_av_cp_doss :
+			if not v_av_cp.int_av_cp in [EA_STR, SO_STR] and not v_av_cp_doss :
 				self.add_error('dt_av_cp_doss', ERROR_MESSAGES['required'])
 
 		# Je rends obligatoire l'axe, le sous-axe, l'action et le type de dossier sous certaines conditions.
@@ -293,7 +311,7 @@ class GererDossier(forms.ModelForm) :
 			# Je gère la contrainte suivante : les montants du dossier dépendent des éléments comptables de celui-ci.
 			if v_mont_doss is not None and v_mont_suppl_doss is not None :
 				if v_av_cp :
-					if v_av_cp.int_av_cp == 'Accordé' :
+					if v_av_cp.int_av_cp == ACC_STR :
 						if t_mont_doss[2] > i.mont_doss :
 							mont_min = t_mont_doss[2] - i.mont_doss
 							if float(v_mont_suppl_doss) < mont_min :
@@ -310,7 +328,7 @@ class GererDossier(forms.ModelForm) :
 
 			# Je renvoie une erreur si je passe un dossier en projet alors que des éléments comptables ont déjà été
 			# saisis.
-			if v_av and v_av.int_av == 'En projet' :
+			if v_av and v_av.int_av == EP_STR :
 				mess = None
 				if len(TFinancement.objects.filter(id_doss = i)) > 0 :
 					mess = 'Un financement a déjà été déclaré pour ce dossier.' 
@@ -321,7 +339,7 @@ class GererDossier(forms.ModelForm) :
 
 			# Je renvoie une erreur si le montant de dépassement d'un dossier dont l'avis du comité de programmation
 			# est différent de "Accordé" est strictement positif.
-			if v_av_cp and v_av_cp.int_av_cp != 'Accordé' :
+			if v_av_cp and v_av_cp.int_av_cp != ACC_STR :
 				if v_mont_suppl_doss and float(v_mont_suppl_doss) > 0 :
 					self.add_error('mont_suppl_doss', ERROR_MESSAGES['invalid'])
 			else :
@@ -335,6 +353,7 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TAxe
 		from app.models import TDossier
 		from app.models import TMoa
+		from app.models import TNatureDossier
 		from app.models import TProgramme
 		from app.models import TSousAxe
 		from app.models import TTechnicien
@@ -379,6 +398,7 @@ class GererDossier(forms.ModelForm) :
 			o_doss = None
 
 		o.id_doss_ass = o_doss
+		o.id_nat_doss = TNatureDossier.objects.get(pk = self.cleaned_data.get('zl_nat_doss'))
 		o.id_progr = TProgramme.objects.get(pk = self.cleaned_data.get('zl_progr'))
 		o.id_org_moa = TMoa.objects.get(pk = self.cleaned_data.get('zl_org_moa'))
 		o.id_techn = TTechnicien.objects.get(pk = self.cleaned_data.get('zl_techn'))
@@ -445,7 +465,7 @@ class ChoisirDossier(forms.ModelForm) :
 			self.fields['zl_org_moa'].initial = k_org_moa
 
 		# J'alimente la liste déroulante des maîtres d'ouvrages.
-		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(en_act_org_moa = True)]
+		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(peu_doss = True, en_act_doss = True)]
 		t_org_moa.insert(0, DEFAULT_OPTION)
 		self.fields['zl_org_moa'].choices = t_org_moa
 
@@ -483,6 +503,7 @@ class GererFinancement(forms.ModelForm) :
 
 		# Imports
 		from app.functions import obt_pourc
+		from styx.settings import PRT_STR
 
 		# Je déclare le tableau des arguments.
 		instance = kwargs.get('instance', None)
@@ -524,10 +545,12 @@ class GererFinancement(forms.ModelForm) :
 			num_doss = i.id_doss
 			if i.id_doss.est_ttc_doss == True :
 				ht_ou_ttc = 'TTC'
+			'''
 			if i.mont_elig_fin and i.pourc_elig_fin :
 				self.fields['mont_part_fin'].widget.attrs['readonly'] = True
+			'''
 			if i.id_paiem_prem_ac :
-				if i.id_paiem_prem_ac.int_paiem_prem_ac == 'Pourcentage de réalisation des travaux' :
+				if i.id_paiem_prem_ac.int_paiem_prem_ac == PRT_STR :
 					self.fields['pourc_real_fin'].widget.attrs['readonly'] = False
 		else :
 			if k_doss :
@@ -1159,6 +1182,10 @@ class GererDemandeVersement(forms.ModelForm) :
 			if self.fields[cle].required == True :
 				self.fields[cle].label += REQUIRED
 
+		# J'ajoute un double astérisque au label de certains champs.
+		self.fields['num_bord_ddv'].label += REMARK
+		self.fields['num_titre_rec_ddv'].label += REMARK
+
 		# J'initialise le numéro du dossier par précaution.
 		num_doss = None
 
@@ -1193,6 +1220,17 @@ class GererDemandeVersement(forms.ModelForm) :
 			self.fields['zl_fin'].initial = i.id_fin
 			self.fields['cbsm_fact'].choices = [(f.pk, f) for f in TFacture.objects.filter(id_doss = i.id_fin.id_doss)]
 
+		# Je gère l'état des champs suivants : numéro de bordereau et numéro de titre de recette.
+		ro = False
+		if not i.pk :
+			ro = True
+		else :
+			if not i.num_bord_ddv and not i.num_titre_rec_ddv :
+				ro = True
+		if ro == True :
+			self.fields['num_bord_ddv'].widget.attrs['readonly'] = True
+			self.fields['num_titre_rec_ddv'].widget.attrs['readonly'] = True
+
 	def clean(self) :
 
 		# Imports
@@ -1200,6 +1238,8 @@ class GererDemandeVersement(forms.ModelForm) :
 		from app.models import TDemandeVersement
 		from app.models import TDossier
 		from app.sql_views import VFinancement
+		from styx.settings import ACOMPT_STR
+		from styx.settings import SOLD_STR
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererDemandeVersement, self).clean()
@@ -1253,13 +1293,13 @@ class GererDemandeVersement(forms.ModelForm) :
 			# Je renvoie une erreur si aucune facture n'a été reliée à une demande de versement dont le type de 
 			# versement est différent de "Avance forfaitaire".
 			if v_type_vers :
-				if v_type_vers.int_type_vers in ['Acompte', 'Solde'] and not v_fact :
+				if v_type_vers.int_type_vers in [ACOMPT_STR, SOLD_STR] and not v_fact :
 					self.add_error('cbsm_fact', ERROR_MESSAGES['required'])
 
 			# Je récupère les demandes de versements soldées du financement.
 			qs_ddv = TDemandeVersement.objects.filter(
 				id_fin = o_suivi_fin.pk, 
-				id_type_vers__int_type_vers = 'Solde'
+				id_type_vers__int_type_vers = SOLD_STR
 			)
 
 			# Je renvoie une erreur si un financement admet déjà une demande de versement soldée.
@@ -1270,7 +1310,7 @@ class GererDemandeVersement(forms.ModelForm) :
 						err = True
 				else :
 					qs_ddv = qs_ddv.exclude(pk = i.pk)
-					if len(qs_ddv) > 0 and v_type_vers.int_type_vers == 'Solde' :
+					if len(qs_ddv) > 0 and v_type_vers.int_type_vers == SOLD_STR :
 						err = True
 				if err == True :
 					self.add_error(
@@ -1359,6 +1399,7 @@ class GererArrete(forms.ModelForm) :
 		# Imports
 		from app.models import TArretesDossier
 		from app.models import TDossier
+		from styx.settings import VALID_STR
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererArrete, self).clean()
@@ -1385,7 +1426,7 @@ class GererArrete(forms.ModelForm) :
 		if o_doss :
 
 			# Je rends certains champs obligatoires si et seulement si l'avancement de l'arrêté est "Validé".
-			if v_type_av_arr and v_type_av_arr.int_type_av_arr == 'Validé' :
+			if v_type_av_arr and v_type_av_arr.int_type_av_arr == VALID_STR :
 				if not v_num_arr :
 					self.add_error('num_arr', ERROR_MESSAGES['required'])
 				if not v_dt_sign_arr :

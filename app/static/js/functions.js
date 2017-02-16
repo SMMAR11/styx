@@ -286,26 +286,42 @@ function ret_errs(_f) {
  * Cette procédure permet de traiter un formulaire soumis.
  * _e : Objet DOM
  * _s : Styles post-traitement
- * _u : URL traitant le formulaire
+ * _t : Tableau de paramètres indépendants du paramètre "_e".
  */
-function soum_f(_e, _s = function(){}, _u = null) {
+function soum_f(_e, _s = function(){}, _t = []) {
 
 	// Je bloque le comportement par défaut du formulaire.
 	_e.preventDefault();
+
+	var est_conf = false;
+	if (_t.length > 0) {
+		if (_t.length == 2) {
+			est_conf = true;
+		}
+		else {
+			throw 'Le tableau n\'est pas conforme.';
+		}
+	}
 
 	// Je récupère la valeur de l'attribut "name".
 	var get_f_name = $(_e.target).attr('name');
 
 	// Je pointe vers l'objet "formulaire".
 	var o_f = $('form[name="' + get_f_name + '"]');
+	if (est_conf == true) {
+		o_f = _t[0];
+	}
 
 	// J'assigne le suffixe lié au formulaire (utile pour manipuler les contrôles liés à celui-ci).
 	var suff = get_f_name.substring(2);
 
 	// J'initialise l'URL traitant le formulaire.
 	var act = o_f.attr('action');
-	if (_u != null) {
-		act += _u;
+	if (act == undefined) {
+		act = '';
+	}
+	if (est_conf == true) {
+		act += _t[1];
 	}
 
 	// Je lance une requête AJAX.
@@ -323,8 +339,10 @@ function soum_f(_e, _s = function(){}, _u = null) {
 		success : function(data) {
 
 			// Je retire toutes les erreurs du formulaire.
-			o_f.find('.field-error').empty();
-			ret_errs(o_f);
+			if (!data['bypass'] || data['bypass'] == false) {
+				o_f.find('.field-error').empty();
+				ret_errs(o_f);
+			}
 
 			if (data['success']) {
 
@@ -356,8 +374,13 @@ function soum_f(_e, _s = function(){}, _u = null) {
 				// Je traite le cas où je dois actualiser une datatable.
 				if (data['success']['datatable']) {
 
+					var suff_datat = suff;
+					if (data['success']['datatable_name']) {
+						suff_datat = data['success']['datatable_name'];
+					}
+
 					// Je vide la datatable ("t_datat[]" est issue des variables globales de l'application).
-					t_datat[suff].clear().draw();
+					t_datat[suff_datat].clear().draw();
 
 					for (var i = 0; i < data['success']['datatable'].length; i += 1) {
 
@@ -371,7 +394,7 @@ function soum_f(_e, _s = function(){}, _u = null) {
 						}
 
 						// J'ajoute une ligne à la datatable.
-						t_datat[suff].row.add(lg).draw(true);
+						t_datat[suff_datat].row.add(lg).draw(true);
 					}
 
 					// J'applique les styles.

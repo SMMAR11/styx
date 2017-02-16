@@ -71,9 +71,61 @@ fieldset.my-div-fieldset > div {
 	background-color: #C7944F;
 }
 
+/* Carousels */
+.my-carousel .carousel-inner > .item > img {
+	margin: 0 auto;
+	line-height: 1.3;
+}
+
+.my-carousel .carousel-control {
+	width: 40px;
+	text-shadow: none;
+	background-color: rgba(85, 85, 85, 0);
+	filter: alpha(opacity=50);
+	opacity: 0.5;
+}
+
+.my-carousel .carousel-control .glyphicon-chevron-left,
+.my-carousel .carousel-control .glyphicon-chevron-right {
+	width: 20px;
+	height: 20px;
+	font-size: 20px;
+	top: 50%;
+	margin-top: -10px;
+}
+
+.my-carousel .carousel-control .glyphicon-chevron-left {
+	left: 0;
+	margin-left: 10px;
+}
+
+.my-carousel .carousel-control .glyphicon-chevron-right {
+	right: 0;
+	margin-right: 10px;
+}
+
+.my-carousel .carousel-indicators {
+	bottom: 0;
+	left: 0;
+	margin: 0;
+	width: 100%;
+}
+
+.my-carousel .carousel-indicators li {
+	width: 10px;
+	height: 10px;
+	margin: 0;
+	text-indent: initial;
+	border-color: #DDD;
+}
+
+.my-carousel .carousel-indicators .active {
+	background-color: #DDD;
+}
+
 /* Cartographie */
 #styx-map {
-	min-height: 300px;
+	min-height: 320px;
 }
 
 /* Contrôles */
@@ -351,8 +403,7 @@ form > fieldset.my-fieldset > div {
 	text-align: right;
 }
 
-.main-title
-{
+.main-title {
 	background-color: #94C054;
 	color: #FFF;
 	font-size: 24px;
@@ -367,8 +418,7 @@ form > fieldset.my-fieldset > div {
 	padding-top: 20px;
 }
 
-@media (max-width: 767px)
-{
+@media (max-width: 767px) {
 	.align-icon-link-xs {
 		padding-top: 0;
 		padding-bottom: 20px;
@@ -390,6 +440,24 @@ form > fieldset.my-fieldset > div {
 
 ul {
 	margin: 0;
+}
+
+ul.my-list-style {
+	list-style: none;
+	padding-left: 15px;
+}
+
+ul.my-list-style > li:before {
+	content: '-> ';
+}
+
+.my-badge {
+	display: inline-block;
+	width: 15px;
+	height: 15px;
+	vertical-align: middle;
+	background-color: #F8B862;
+	border-radius: 100%;
 }
 
 /* Onglets */
@@ -442,28 +510,28 @@ ul {
 
 .add-company-icon {
 	background-image: url('../pics/icons/add_company.png');
-	background-size: 20px;
-	-webkit-background-size: 19px;
+	background-size: 16.5px;
+	-webkit-background-size: 15.5px;
 	background-repeat: no-repeat;
-	width: 20px;
+	width: 16.5px;
 	height: 20px;
 }
 
 .choose-icon {
 	background-image: url('../pics/icons/choose.png');
-	background-size: 20px;
-	-webkit-background-size: 19px;
+	background-size: 23.7px;
+	-webkit-background-size: 22.7px;
 	background-repeat: no-repeat;
-	width: 20px;
+	width: 23.7px;
 	height: 20px;
 }
 
 .chosen-icon {
 	background-image: url('../pics/icons/chosen.png');
-	background-size: 20px;
-	-webkit-background-size: 19px;
+	background-size: 23.7px;
+	-webkit-background-size: 22.7px;
 	background-repeat: no-repeat;
-	width: 20px;
+	width: 23.7px;
 	height: 20px;
 }
 
@@ -485,6 +553,24 @@ ul {
 	height: 20px;
 }
 
+.false-icon {
+	background-image: url('../pics/icons/false.png');
+	background-size: 20px;
+	-webkit-background-size: 19px;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 20px;
+}
+
+.mail-icon {
+	background-image: url('../pics/icons/mail.png');
+	background-size: 20px;
+	-webkit-background-size: 19px;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 20px;
+}
+
 .modify-icon {
 	background-image: url('../pics/icons/modify.png');
 	background-size: 20px;
@@ -496,6 +582,24 @@ ul {
 
 .pdf-icon {
 	background-image: url('../pics/icons/pdf.png');
+	background-size: 17px;
+	-webkit-background-size: 16px;
+	background-repeat: no-repeat;
+	width: 17px;
+	height: 20px;
+}
+
+.phone-icon {
+	background-image: url('../pics/icons/phone.png');
+	background-size: 20px;
+	-webkit-background-size: 19px;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 20px;
+}
+
+.photo-icon {
+	background-image: url('../pics/icons/photo.png');
 	background-size: 20px;
 	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
@@ -514,10 +618,28 @@ ul {
 
 .print-icon {
 	background-image: url('../pics/icons/print.png');
+	background-size: 22.2px;
+	-webkit-background-size: 21.2px;
+	background-repeat: no-repeat;
+	width: 22.2px;
+	height: 20px;
+}
+
+.true-icon {
+	background-image: url('../pics/icons/true.png');
 	background-size: 20px;
 	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
+	height: 20px;
+}
+
+.word-icon {
+	background-image: url('../pics/icons/word.png');
+	background-size: 20.5px;
+	-webkit-background-size: 19.5px;
+	background-repeat: no-repeat;
+	width: 20.5px;
 	height: 20px;
 }
 
@@ -531,6 +653,12 @@ ul {
 	cursor: pointer;
 	text-decoration: underline;
 	color: #555;
+}
+
+.no-link:hover,
+.no-link:focus {
+	cursor: initial;
+	text-decoration: none;
 }
 
 /* Police */
@@ -593,7 +721,6 @@ ul {
 .my-table tbody > tr > td {
 	padding: 2.5px 7.5px;
 	color: #555;
-	width: 0;
 }
 
 .my-table tbody > tr {
@@ -634,6 +761,7 @@ ul {
 	-webkit-transition: border .2s ease-in-out;
 	-o-transition: border .2s ease-in-out;
 	transition: border .2s ease-in-out;
+	cursor: pointer;
 }
 
 .my-thumbnail,
@@ -644,11 +772,24 @@ ul {
 }
 
 .my-thumbnail > img {
-	max-height: 180px;
+	max-height: 120px;
 	margin-bottom: 20px;
 }
 
-@media (max-width: 991px) {
+.profile-widget {
+	display: block;
+	background-color: #FFF;
+	border: 1px solid #DDD;
+	padding: 20px 15px;
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+.profile-widget > div {
+	margin-bottom: 20px;
+}
+
+@media (max-width: 767px) {
 	.thumbnails-row > div:not(:last-child) {
 		margin-bottom: 20px;
 	}

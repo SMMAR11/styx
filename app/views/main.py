@@ -44,7 +44,7 @@ def index(request) :
 		# J'affiche le template.
 		output = render(
 			request,
-			'./main.html',
+			'./main/main.html',
 			{ 'f_id' : init_f(f_id), 't_fm' : t_fm, 'title' : title }
 		)
 
@@ -125,7 +125,6 @@ def modif_util(request) :
 	from app.forms.main import GererUtilisateur
 	from app.functions import init_f
 	from app.functions import init_fm
-	from app.functions import init_pg_cons
 	from app.models import TUtilisateur
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -142,12 +141,6 @@ def modif_util(request) :
 		# J'instancie un objet "formulaire".
 		f_modif_util = GererUtilisateur(instance = o_util)
 
-		# Je prépare les champs dont on veut seulement consulter.
-		t_attrs_util = {
-			'username' : { 'label' : 'Nom d\'utilisateur', 'value' : o_util.username },
-			'id_org' : { 'label' : 'Organisme', 'value' : o_util.id_org }
-		}
-
 		# Je déclare un tableau de fenêtres modales.
 		t_fm = [
 			init_fm('modif_util', 'Modifier son compte')
@@ -156,12 +149,8 @@ def modif_util(request) :
 		# J'affiche le template.
 		output = render(
 			request, 
-			'./modif_util.html',
-			{
-				'f_modif_util' : init_f(f_modif_util),
-				't_attrs_util' : init_pg_cons(t_attrs_util),
-				't_fm' : t_fm, 
-				'title' : 'Modifier son compte' }
+			'./main/modif_util.html',
+			{ 'f_modif_util' : init_f(f_modif_util), 't_fm' : t_fm, 'title' : 'Modifier mon compte' }
 		)
 
 	else :
@@ -179,7 +168,7 @@ def modif_util(request) :
 			output = HttpResponse(
 				json.dumps({ 'success' : {
 					'message' : 'L\'utilisateur {0} a été mis à jour avec succès.'.format(o_util.username),
-					'redirect' : reverse('modif_util')
+					'redirect' : reverse('cons_util')
 				}}), 
 				content_type = 'application/json'
 			)
@@ -188,6 +177,53 @@ def modif_util(request) :
 
 			# J'affiche les erreurs.
 			output = HttpResponse(json.dumps(f_modif_util.errors), content_type = 'application/json')
+
+	return output
+
+'''
+Cette vue permet d'afficher la page de consultation d'un compte utilisateur.
+request : Objet requête
+'''
+@verif_acc
+def cons_util(request) :
+
+	# Imports
+	from app.functions import init_pg_cons
+	from app.models import TDroit
+	from app.models import TUtilisateur
+	from django.http import HttpResponse
+	from django.shortcuts import render
+	import json
+	
+	output = HttpResponse()
+
+	# Je pointe vers l'objet TUtilisateur.
+	o_util = TUtilisateur.objects.get(pk = request.user.id)
+
+	if request.method == 'GET' :
+
+		# Je prépare les champs dont on veut seulement consulter.
+		t_attrs_util = {
+			'username' : { 'label' : 'Nom d\'utilisateur', 'value' : o_util.username },
+			'last_name' : { 'label' : 'Nom', 'value' : o_util.last_name },
+			'first_name' : { 'label' : 'Prénom', 'value' : o_util.first_name },
+			'email' : { 'label' : 'Adresse électronique', 'value' : o_util.email },
+			'id_org' : { 'label' : 'Organisme', 'value' : o_util.id_org },
+			'tel_util' : { 'label' : 'Numéro de téléphone', 'value' : o_util.tel_util or '' },
+			'port_util' : { 'label' : 'Numéro de téléphone portable', 'value' : o_util.port_util or '' }
+		}
+
+		# J'affiche le template.
+		output = render(
+			request, 
+			'./main/cons_util.html',
+			{
+				'qs_droit' : TDroit.objects.filter(id_util = o_util).order_by('id'),
+				't_attrs_util' : init_pg_cons(t_attrs_util),
+				'title' : 'Consulter mon compte',
+				'u' : o_util
+			}
+		)
 
 	return output
 
@@ -285,5 +321,29 @@ def autocompl(request) :
 				# J'envoie le tableau des prestataires.
 				output = HttpResponse(
 					json.dumps({ 'data' : { 'org_prest' : t_org_prest }}), content_type = 'application/json')
+
+	return output
+
+'''
+Cette vue permet d'afficher la page d'assistance technique.
+request : Objet requête
+'''
+@verif_acc
+def assist(request) :
+
+	# Imports
+	from django.http import HttpResponse
+	from django.shortcuts import render
+	
+	output = HttpResponse()
+
+	if request.method == 'GET' :
+
+		# J'affiche le template.
+		output = render(
+			request, 
+			'./main/assist.html',
+			{ 'title' : 'Assistance' }
+		)
 
 	return output

@@ -50,12 +50,16 @@
 					</div>
 				</div>
 				<div class="row">
-					<div class="col-sm-6">{{ t_attrs_ddv.mont_ht_ddv }}</div>
-					<div class="col-sm-6">{{ t_attrs_ddv.mont_ttc_ddv }}</div>
+					<div class="col-md-6">{{ t_attrs_ddv.mont_ht_ddv }}</div>
+					<div class="col-md-6">{{ t_attrs_ddv.mont_ttc_ddv }}</div>
 				</div>
 				<div class="row">
 					<div class="col-sm-6">{{ t_attrs_ddv.dt_ddv }}</div>
 					<div class="col-sm-6">{{ t_attrs_ddv.dt_vers_ddv }}</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-6">{{ t_attrs_ddv.num_bord_ddv }}</div>
+					<div class="col-sm-6">{{ t_attrs_ddv.num_titre_rec_ddv }}</div>
 				</div>
 				<div class="row">
 					<div class="col-sm-6">{{ t_attrs_ddv.mont_ht_verse_ddv }}</div>
@@ -69,7 +73,13 @@
 				{{ t_attrs_ddv.comm_ddv }}
 			</div>
 			<div class="col-sm-3 forbidden">
-				<a href="{% url 'modif_ddv' d.pk %}" class="icon-link modify-icon">Modifier</a>
+				<a href="{% url 'modif_ddv' d.pk %}" class="icon-link modify-icon">Modifier la demande de versement</a>
+				<br/>
+				<span action="?action=supprimer-demande-versement" class="delete-icon icon-link" onclick="html_ds_fm(event, 'suppr_ddv');">Supprimer la demande de versement</span>
+				<!--
+				<div class="br"></div>
+				<a href="{% url 'edit_lt_ddv' d.pk %}" class="icon-link word-icon">Éditer la lettre type de demande de versement</a>
+				-->
 			</div>
 		</div>
 	</div>

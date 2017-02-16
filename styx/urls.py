@@ -1,6 +1,8 @@
 # Imports
 from app.views import gestion_dossiers
 from app.views import main
+from app.views import pgre
+from app.views import realisation_etats
 from django.conf import settings
 from django.conf.urls import handler403
 from django.conf.urls import handler404
@@ -15,6 +17,8 @@ urlpatterns = [
     url(r'^index.html$', main.index, name = 'index'),
     url(r'^deconnecter.html$', main.deconnect, name = 'deconnect'),
     url(r'^modifier-compte.html$', main.modif_util, name = 'modif_util'),
+    url(r'^consulter-compte.html$', main.cons_util, name = 'cons_util'),
+    url(r'^assistance.html$', main.assist, name = 'assist'),
     url(r'^autocompleter.html$', main.autocompl, name = 'autocompl'),
     url(r'^modules/gestion-dossiers/$', gestion_dossiers.index, name = 'gest_doss'),
     url(r'^modules/gestion-dossiers/creer-dossier/$', gestion_dossiers.cr_doss, name = 'cr_doss'),
@@ -31,6 +35,7 @@ urlpatterns = [
     url(
         r'^modules/gestion-dossiers/modifier-prestation/([0-9]+)/$', gestion_dossiers.modif_prest, name = 'modif_prest'
     ),
+    url(r'^modules/gestion-dossiers/supprimer-prestation/([0-9]+)/$', gestion_dossiers.suppr_prest, name = 'suppr_prest'),
     url(r'^modules/gestion-dossiers/consulter-prestation/([0-9]+)/$', gestion_dossiers.cons_prest, name = 'cons_prest'),
     url(
         r'^modules/gestion-dossiers/ajouter-avenant/$', 
@@ -45,9 +50,11 @@ urlpatterns = [
         name = 'ajout_aven_racc'
     ),
     url(r'^modules/gestion-dossiers/modifier-avenant/([0-9]+)/$', gestion_dossiers.modif_aven, name = 'modif_aven'),
+    url(r'^modules/gestion-dossiers/supprimer-avenant/([0-9]+)/$', gestion_dossiers.suppr_aven, name = 'suppr_aven'),
     url(r'^modules/gestion-dossiers/consulter-avenant/([0-9]+)/$', gestion_dossiers.cons_aven, name = 'cons_aven'),
     url(r'^modules/gestion-dossiers/ajouter-facture/$', gestion_dossiers.ajout_fact, name = 'ajout_fact'),
     url(r'^modules/gestion-dossiers/modifier-facture/([0-9]+)/$', gestion_dossiers.modif_fact, name = 'modif_fact'),
+    url(r'^modules/gestion-dossiers/supprimer-facture/([0-9]+)/$', gestion_dossiers.suppr_fact, name = 'suppr_fact'),
     url(r'^modules/gestion-dossiers/consulter-facture/([0-9]+)/$', gestion_dossiers.cons_fact, name = 'cons_fact'),
     url(r'^modules/gestion-dossiers/ajouter-demande-de-versement/$', gestion_dossiers.ajout_ddv, name = 'ajout_ddv'),
     url(
@@ -55,10 +62,16 @@ urlpatterns = [
         gestion_dossiers.modif_ddv,
         name = 'modif_ddv'
     ),
+    url(r'^modules/gestion-dossiers/supprimer-demande-de-versement/([0-9]+)/$', gestion_dossiers.suppr_ddv, name = 'suppr_ddv'),
     url(
         r'^modules/gestion-dossiers/consulter-demande-de-versement/([0-9]+)/$', 
         gestion_dossiers.cons_ddv, 
         name = 'cons_ddv'
+    ),
+    url(
+        r'^modules/gestion-dossiers/editer-lettre-type-demande-de-versement/([0-9]+)/$',
+        gestion_dossiers.edit_lt_ddv,
+        name = 'edit_lt_ddv'
     ),
     url(r'^modules/gestion-dossiers/ajouter-arrete/$', gestion_dossiers.ajout_arr, name = 'ajout_arr'),
     url(r'^modules/gestion-dossiers/modifier-arrete/([0-9]+)/$', gestion_dossiers.modif_arr, name = 'modif_arr'),
@@ -67,7 +80,10 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/ajouter-photo/$', gestion_dossiers.ajout_ph, name = 'ajout_ph'),
     url(r'^modules/gestion-dossiers/modifier-photo/([0-9]+)/$', gestion_dossiers.modif_ph, name = 'modif_ph'),
     url(r'^modules/gestion-dossiers/supprimer-photo/([0-9]+)/$', gestion_dossiers.suppr_ph, name = 'suppr_ph'),
-    url(r'^modules/gestion-dossiers/ajouter-prestataire/$', gestion_dossiers.ajout_org_prest, name = 'ajout_org_prest')
+    url(r'^modules/gestion-dossiers/ajouter-prestataire/$', gestion_dossiers.ajout_org_prest, name = 'ajout_org_prest'),
+    url(r'^modules/realisation-etats/$', realisation_etats.index, name = 'real_etats'),
+    url(r'^modules/pgre/$', pgre.index, name = 'gest_act_pgre'),
+    url(r'^modules/pgre/creer-action-pgre/$', pgre.cr_act_pgre, name = 'cr_act_pgre'),
 ]
 
 handler403 = main.h_403

@@ -20,13 +20,17 @@
 			{{ t_fact_doss | safe }}
 			{% endif %}
 			<div class="row">
-				<div class="col-sm-6">{{ f_modif_ddv.mont_ht_ddv }}</div>
-				<div class="col-sm-6">{{ f_modif_ddv.mont_ttc_ddv }}</div>
+				<div class="col-md-6">{{ f_modif_ddv.mont_ht_ddv }}</div>
+				<div class="col-md-6">{{ f_modif_ddv.mont_ttc_ddv }}</div>
 			</div>
 			<div class="row">
 				<div class="col-sm-6">{{ f_modif_ddv.dt_ddv }}</div>
 				<div class="col-sm-6">{{ f_modif_ddv.dt_vers_ddv }}</div>
 			</div>
+			<div class="row">
+					<div class="col-sm-6">{{ f_modif_ddv.num_bord_ddv }}</div>
+					<div class="col-sm-6">{{ f_modif_ddv.num_titre_rec_ddv }}</div>
+				</div>
 			<div class="row">
 				<div class="col-sm-6">{{ f_modif_ddv.mont_ht_verse_ddv }}</div>
 				<div class="col-sm-6">{{ f_modif_ddv.mont_ttc_verse_ddv }}</div>
@@ -34,6 +38,12 @@
 			{{ f_modif_ddv.chem_pj_ddv }}
 			{{ f_modif_ddv.comm_ddv }}
 			<button class="center-block green-btn my-btn" type="submit">Valider</button>
+			<div class="form-remark">
+				**
+				<br/>
+				Il est impossible de renseigner un numéro de bordereau et un numéro de titre de recette tant qu'une
+				date de versement n'a pas été renseignée.
+			</div>
 		</div>
 	</fieldset>
 </form>
