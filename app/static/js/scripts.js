@@ -1,5 +1,6 @@
 // Variables globales
 var t_datat = {
+	'alert' : init_datat($('#t_alert'), [0]),
 	'ch_cbsm_atel_pgre' : init_datat($('#t_ch_cbsm_atel_pgre'), [1]),
 	'ch_cbsm_org_moa' : init_datat($('#t_ch_cbsm_org_moa'), [1]),
 	'ch_doss' : init_datat($('#t_ch_doss'), [4]),
@@ -58,7 +59,6 @@ $(window).load(function() {
 		// Je montre la page HTML chargée.
 		$('body').removeAttr('style');
 		$('.container-fluid').removeAttr('style');
-
 	}, 250);
 });
 
@@ -736,4 +736,18 @@ $('#id_GererActionPgre-id_ic_pgre').on('change', function(_e) {
 		},
 		[$('form[name="f_cr_act_pgre"]'), '?action=filtrer-ateliers']
 	);
+});
+
+/**
+ * Ce script permet de déterminer l'état d'alerte du compte.
+ */
+$(window).load(function() {
+	$.getJSON(URL_ALERT + '?action=compter-alertes', function(_d) {
+		if (_d > 0) {
+			$('#za_alert').css('background-color', '#FF0921');
+		}
+		else {
+			$('#za_alert').css('background-color', '#94C054');
+		}
+	});
 });

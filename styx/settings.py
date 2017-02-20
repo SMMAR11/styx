@@ -142,6 +142,7 @@ LEAFLET_CONFIG = {
 
 # Je déclare mes options personnelles.
 EP_STR = 'En projet'
+SOLD_STR_2 = 'Soldé'
 
 ACC_STR = 'Accordé'
 EA_STR = 'En attente'

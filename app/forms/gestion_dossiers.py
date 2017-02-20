@@ -506,17 +506,7 @@ class GererFinancement(forms.ModelForm) :
 		from styx.settings import PRT_STR
 
 		# Je déclare le tableau des arguments.
-		instance = kwargs.get('instance', None)
 		k_doss = kwargs.pop('k_doss', None)
-
-		# Je mets en forme certaines données.
-		'''
-		if instance :
-			kwargs.update(initial = {
-				'pourc_elig_fin' : obt_pourc(instance.pourc_elig_fin),
-				'pourc_real_fin' : obt_pourc(instance.pourc_real_fin)
-			})
-		'''
 
 		super(GererFinancement, self).__init__(*args, **kwargs)
 
@@ -531,6 +521,7 @@ class GererFinancement(forms.ModelForm) :
 		self.fields['mont_elig_fin'].label += REMARK
 		self.fields['pourc_elig_fin'].label += REMARK
 		self.fields['dt_deb_elig_fin'].label += REMARK
+		self.fields['a_inf_fin'].label += REMARK
 		self.fields['pourc_real_fin'].label += REMARK
 
 		# Je passe en lecture seule le champ relatif au pourcentage de réalisation des travaux.
@@ -585,6 +576,8 @@ class GererFinancement(forms.ModelForm) :
 		v_dt_deb_elig_fin = cleaned_data.get('dt_deb_elig_fin')
 		v_duree_valid_fin = cleaned_data.get('duree_valid_fin')
 		v_duree_pror_fin = cleaned_data.get('duree_pror_fin')
+		v_dt_lim_deb_oper_fin = cleaned_data.get('dt_lim_deb_oper_fin')
+		v_a_inf_fin = cleaned_data.get('a_inf_fin')
 
 		i = self.instance
 
@@ -656,6 +649,14 @@ class GererFinancement(forms.ModelForm) :
 						'mont_part_fin',
 						'Veuillez saisir un montant supérieur ou égal à {0} €.'.format(obt_mont(o_fin.mont_ddv_sum))
 					)
+
+			# Je gère la contrainte liée à la date limite du début de l'opération.
+			if v_dt_lim_deb_oper_fin :
+				if v_a_inf_fin == 'Sans objet' :
+					self.add_error('a_inf_fin', ERROR_MESSAGES['invalid'])
+			else :
+				if v_a_inf_fin != 'Sans objet' :
+					self.add_error('a_inf_fin', ERROR_MESSAGES['invalid'])
 
 	def save(self, commit = True) :
 
@@ -1247,6 +1248,10 @@ class GererDemandeVersement(forms.ModelForm) :
 		v_fin = cleaned_data.get('zl_fin')
 		v_type_vers = cleaned_data.get('id_type_vers')
 		v_fact = cleaned_data.get('cbsm_fact')
+		v_mont_ht_ddv = cleaned_data.get('mont_ht_ddv')
+		v_mont_ttc_ddv = cleaned_data.get('mont_ttc_ddv')
+		v_mont_ht_verse_ddv = cleaned_data.get('mont_ht_verse_ddv')
+		v_mont_ttc_verse_ddv = cleaned_data.get('mont_ttc_verse_ddv')
 
 		i = self.instance
 
@@ -1316,6 +1321,13 @@ class GererDemandeVersement(forms.ModelForm) :
 					self.add_error(
 						'id_type_vers', 'Vous avez déjà émis une demande de versement soldée pour ce financeur.'
 					)
+
+			# Je renvoie une erreur si un montant versé est renseigné alors que le montant de la demande de versement
+			# n'est pas renseigné.
+			if not v_mont_ht_ddv and v_mont_ht_verse_ddv and float(v_mont_ht_verse_ddv) > 0 :
+				self.add_error('mont_ht_verse_ddv', 'Veuillez saisir la valeur suivante : 0.')
+			if not v_mont_ttc_ddv and v_mont_ttc_verse_ddv and float(v_mont_ttc_verse_ddv) > 0 :
+				self.add_error('mont_ttc_verse_ddv', 'Veuillez saisir la valeur suivante : 0.')
 
 	def save(self, commit = True) :
 

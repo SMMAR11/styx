@@ -46,7 +46,9 @@
 			var forbidden = true;
 			{% endif %}
 
+			// J'initialise les URLS utilisées dans les fichiers JS du dossier "static".
 			const URL_AUTOCOMPL = '{% url 'autocompl' %}';
+			const URL_ALERT = '{% url 'alert' %}';
 
 		</script>
 		<script type="text/javascript" src="{% static './js/scripts_carto.js' %}"></script>
@@ -128,7 +130,7 @@
 						</ul>
 						<ul class="nav navbar-nav navbar-right">
 							<li>
-								<a href="#">
+								<a href="{% url 'alert' %}">
 									Alertes
 									<span class="my-badge" id="za_alert"></span>
 								</a>

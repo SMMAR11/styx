@@ -27,6 +27,7 @@ class VSuiviDossier(models.Model) :
 class VFinancement(models.Model) :
 
     id_fin = models.IntegerField(primary_key = True)
+    a_inf_fin = models.CharField(max_length = 255)
     chem_pj_fin = models.CharField(max_length = 255)
     comm_fin = models.TextField()
     dt_deb_elig_fin = models.DateField()

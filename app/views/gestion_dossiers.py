@@ -1098,13 +1098,14 @@ def cons_doss(request, _d) :
 					<div class="col-sm-6">{10}</div>
 				</div>
 				{11}
+				{12}
 				<div class="row">
-					<div class="col-sm-6">{12}</div>
 					<div class="col-sm-6">{13}</div>
+					<div class="col-sm-6">{14}</div>
 				</div>
-				{14}
 				{15}
 				{16}
+				{17}
 				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 				<div class="form-remark">
 					**
@@ -1114,6 +1115,10 @@ def cons_doss(request, _d) :
 					<br/>
 					La date de début d'éligibilité doit être renseignée si et seulement si la durée de validité de l'
 					aide et/ou la durée de prorogation est/sont supérieure(s) à 0 mois.
+					<br/>
+					Si la date limite du début de l'opération est renseignée, alors seules les options "Oui" et "Non"
+					de la liste déroulante suivant le champ en question seront valides. Dans le cas contraire, seule
+					l'option "Sans objet" sera valide.
 					<br/>
 					Il est impossible de renseigner un pourcentage de réalisation des travaux tant que le premier 
 					acompte n'est pas payé en fonction de celui-ci.
@@ -1132,6 +1137,7 @@ def cons_doss(request, _d) :
 				t_ajout_fin['duree_valid_fin'],
 				t_ajout_fin['duree_pror_fin'],
 				t_ajout_fin['dt_lim_deb_oper_fin'],
+				t_ajout_fin['a_inf_fin'],
 				t_ajout_fin['dt_lim_prem_ac_fin'],
 				t_ajout_fin['id_paiem_prem_ac'],
 				t_ajout_fin['pourc_real_fin'],
@@ -2074,6 +2080,10 @@ def cons_fin(request, _f) :
 			},
 			'dt_lim_deb_oper_fin' : {
 				'label' : 'Date limite du début de l\'opération', 'value' : dt_fr(o_fin.dt_lim_deb_oper_fin) or ''
+			},
+			'a_inf_fin' : { 
+				'label' : 'Avez-vous informé le partenaire financier du début de l\'opération ?',
+				'value' : o_fin.a_inf_fin
 			},
 			'dt_lim_prem_ac_fin' : {
 				'label' : 'Date limite du premier acompte', 'value' : dt_fr(o_fin.dt_lim_prem_ac_fin) or ''
@@ -3747,8 +3757,8 @@ def cons_ddv(request, _d) :
 			'mont_ttc_verse_ddv' : {
 				'label' : 'Montant TTC versé (en €)', 'value' : obt_mont(o_ddv.mont_ttc_verse_ddv)
 			},
-			'map_ht_ddv' : { 'label' : 'Manque à percevoir HT (en €)', 'value' : obt_mont(o_suivi_ddv.map_ht_ddv) },
-			'map_ttc_ddv' : { 'label' : 'Manque à percevoir TTC (en €)', 'value' : obt_mont(o_suivi_ddv.map_ttc_ddv) },
+			'map_ht_ddv' : { 'label' : 'Manque à percevoir HT (en €)', 'value' : obt_mont(o_suivi_ddv.map_ht_ddv) or '' },
+			'map_ttc_ddv' : { 'label' : 'Manque à percevoir TTC (en €)', 'value' : obt_mont(o_suivi_ddv.map_ttc_ddv) or '' },
 			'chem_pj_ddv' : {
 				'label' : 'Consulter le courrier scanné de la demande de versement', 
 				'value' : o_ddv.chem_pj_ddv, 

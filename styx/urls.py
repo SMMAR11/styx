@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^consulter-compte.html$', main.cons_util, name = 'cons_util'),
     url(r'^assistance.html$', main.assist, name = 'assist'),
     url(r'^autocompleter.html$', main.autocompl, name = 'autocompl'),
+    url(r'^alertes.html$', main.alert, name = 'alert'),
     url(r'^modules/gestion-dossiers/$', gestion_dossiers.index, name = 'gest_doss'),
     url(r'^modules/gestion-dossiers/creer-dossier/$', gestion_dossiers.cr_doss, name = 'cr_doss'),
     url(r'^modules/gestion-dossiers/modifier-dossier/([0-9]+)/$', gestion_dossiers.modif_doss, name = 'modif_doss'),

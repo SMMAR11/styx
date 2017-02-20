@@ -1,0 +1,28 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="main-title">Alertes</div>
+<div class="my-table" id="t_alert">
+	<table>
+		<thead>
+			<tr>
+				<th style="width: 20px;"></th>
+				<th>Intitulé</th>
+				<th>Description</th>
+				<th>Lien</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for a in t_alert %}
+			<tr>
+				<td class="text-center"><span class="my-badge" style="background-color: {{ a.etat_alert }};"></span></td>
+				<td>{{ a.int_alert }}</td>
+				<td>{{ a.descr_alert }}</td>
+				<td><a href="{{ a.lien_alert }}">{{ a.lien_alert }}</a></td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% endblock content %}

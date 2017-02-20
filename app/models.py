@@ -965,6 +965,12 @@ class TFinancement(models.Model) :
         null = True, 
         verbose_name = 'Premier acompte payé en fonction de'
     )
+    a_inf_fin = models.CharField(
+        choices = [('Oui', 'Oui'), ('Non', 'Non'), ('Sans objet', 'Sans objet')], 
+        default = 'Sans objet',
+        max_length = 255,
+        verbose_name = 'Avez-vous informé le partenaire financier du début de l\'opération ?'
+    )
 
     class Meta :
         db_table = 't_financement'

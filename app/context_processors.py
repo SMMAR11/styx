@@ -15,5 +15,6 @@ def global_settings(request) :
 		'REF_STR' : settings.REF_STR,
 		'SO_STR' : settings.SO_STR,
 		'SOLD_STR' : settings.SOLD_STR,
+		'SOLD_STR_2' : settings.SOLD_STR_2,
 		'VALID_STR' : settings.VALID_STR
 	}
