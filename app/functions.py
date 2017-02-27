@@ -242,7 +242,11 @@ def gen_t_ch_doss(request, _d_excl = None) :
 
 	# J'initialise la valeur de l'argument "k_org_moa".
 	try :
-		v_org_moa = TMoa.objects.get(pk = TUtilisateur.objects.get(pk = request.user.pk).id_org).pk
+		v_org_moa = TMoa.objects.get(
+			pk = TUtilisateur.objects.get(pk = request.user.pk).id_org,
+			peu_doss = True,
+			en_act_doss = True
+		).pk
 	except :
 		v_org_moa = None
 
@@ -496,16 +500,16 @@ def ger_droits(_u, _d, _g = True, _h = True) :
 	# Je retire les doublons.
 	t_coupl_uniq = set(t_coupl)
 
-	# J'initialise le tuple correspondant au couple recherché selon l'instance du paramètre "_d".
-	if isinstance(_d, list) == True :
-		tupl = tuple(_d)
-	else :
-		tupl = (_d.id_org_moa.pk, _d.id_progr.id_type_progr.pk)
-
 	# Je vérifie si l'utilisateur peut accéder à la vue.
 	trouve = False
-	if tupl in t_coupl_uniq :
-		trouve = True
+	if isinstance(_d, list) == True :
+		for e in _d :
+			tupl = tuple(e)
+			if tupl in t_coupl_uniq :
+				trouve = True
+	else :
+		if (_d.id_org_moa.pk, _d.id_progr.id_type_progr.pk) in t_coupl_uniq :
+			trouve = True
 
 	if _h == True :
 		if trouve == False :
@@ -647,7 +651,10 @@ def init_f(_f) :
 					if index % 2 == 0 :
 						split_value = i.split('"')
 						split_text = i.split('>')
-						split_tbody.append({ 'value' : split_value[1],  'text' : split_text[1] })
+						checked = ''
+						if 'selected="selected"' in i :
+							checked = ' checked=""'
+						split_tbody.append({ 'value' : split_value[1], 'text' : split_text[1], 'checked' : checked })
 				tbody = []
 				for index, i in enumerate(split_tbody) :
 					tr = '''
@@ -655,10 +662,16 @@ def init_f(_f) :
 						<td>{text}</td>
 						<td>
 							<input type="checkbox" class="pull-right" id="id_{name}_{index}" name="{name}" 
-							value="{value}">
+							value="{value}"{checked}>
 						</td>
 					</tr>
-					'''.format(text = i['text'], name = name, index = index, value = i['value'])
+					'''.format(
+						text = i['text'],
+						name = name,
+						index = index,
+						value = i['value'],
+						checked = i['checked']
+					)
 					tbody.append(tr)
 
 				gab = '''
@@ -827,6 +840,37 @@ def init_pg_cons(_t, _pdf = False) :
 			raise ValueError('Aucun gabarit n\'est disponible pour l\'attribut « {0} ».'.format(c))
 
 	return t_attrs
+
+'''
+Cette fonction permet d'obtenir les actions PGRE d'un maître d'ouvrage ainsi que les actions PGRE des maîtres
+d'ouvrages reliés au maître d'ouvrage.
+_m : Identifiant du maître d'ouvrage
+Retourne un jeu de données
+'''
+def obt_act_pgre_regr(_m) :
+
+	# Imports
+	from app.models import TDossierPgre
+	from app.models import TRegroupementsMoa
+	from django.db.models import Q
+	from functools import reduce
+	import operator
+
+	# J'initialise les conditions de la requête.
+	qs_regr_moa = TRegroupementsMoa.objects.filter(id_org_moa_fil = _m)
+	if len(qs_regr_moa) > 0 :
+		t_sql = [Q(**{ 'moa__id_org_moa' : rm.id_org_moa_anc }) for rm in qs_regr_moa]
+		t_sql.append(Q(**{ 'moa__id_org_moa' : _m }))
+	else :
+		t_sql = { 'moa__id_org_moa' : _m }
+
+	# J'initialise la requête.
+	if len(t_sql) == 1 :
+		qs_act_pgre = TDossierPgre.objects.filter(**t_sql)
+	else :
+		qs_act_pgre = TDossierPgre.objects.filter(reduce(operator.or_, t_sql))
+
+	return qs_act_pgre
 
 '''
 Cette fonction permet d'obtenir les dossiers d'un maître d'ouvrage ainsi que les dossiers des maîtres d'ouvrages reliés

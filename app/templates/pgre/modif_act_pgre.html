@@ -1,0 +1,42 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="right">
+	<a href="{% url 'cons_act_pgre' a.pk %}" class="icon-link previous-icon">Revenir à l'action PGRE</a>
+</div>
+<form action="" enctype="multipart/form-data" method="post" name="f_ger_act_pgre" onsubmit="soum_f(event)">
+	{% csrf_token %}
+	<fieldset class="my-fieldset">
+		<legend>Modifier une action PGRE</legend>
+		<div>
+			{{ f_modif_act_pgre.num_doss_pgre }}
+			{{ f_modif_act_pgre.id_ic_pgre }}
+			{{ f_modif_act_pgre.cbsm_atel_pgre }}
+			{{ f_modif_act_pgre.int_doss_pgre }}
+			<div class="row">
+				<div class="col-sm-6">{{ f_modif_act_pgre.za_doss_corr }}</div>
+				<div class="align-icon-link-xs col-sm-3 col-xs-6 text-center">
+					<span class="icon-link modify-icon" data-target="#fm_ch_doss" data-toggle="modal">Modifier</span>
+				</div>
+				<div class="align-icon-link-xs col-sm-3 col-xs-6 text-center">
+					<span class="delete-icon icon-link" id="bt_suppr_doss_corr">Supprimer</span>
+				</div>
+			</div>
+			{{ f_modif_act_pgre.cbsm_org_moa }}
+			{{ f_modif_act_pgre.id_pr_pgre }}
+			{{ f_modif_act_pgre.obj_econ_ress_doss_pgre }}
+			{{ f_modif_act_pgre.ann_prev_deb_doss_pgre }}
+			<div class="row">
+				<div class="col-sm-6">{{ f_modif_act_pgre.dt_deb_doss_pgre }}</div>
+				<div class="col-sm-6">{{ f_modif_act_pgre.dt_fin_doss_pgre }}</div>
+			</div>
+			{{ f_modif_act_pgre.zl_nat_doss }}
+			{{ f_modif_act_pgre.id_av_pgre }}
+			{{ f_modif_act_pgre.chem_pj_doss_pgre }}
+			{{ f_modif_act_pgre.comm_doss_pgre }}
+			<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		</div>
+	</fieldset>
+</form>
+{% endblock content %}

@@ -1,0 +1,53 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="br-md-after col-md-4">
+		<form action="" method="post" name="f_ch_act_pgre">
+			{% csrf_token %}
+			<fieldset class="my-fieldset" style="padding-bottom: 0;">
+				<legend>Choisir une action PGRE</legend>
+				<div>
+					{{ f_ch_act_pgre.zl_org_moa }}
+					{{ f_ch_act_pgre.zl_ic_pgre }}
+					{{ f_ch_act_pgre.zl_atel_pgre }}
+					{{ f_ch_act_pgre.zl_nat_doss }}
+				</div>
+			</fieldset>
+		</form>
+	</div>
+	<div class="col-md-8">
+		<div class="my-table" id="t_ch_act_pgre">
+			<table>
+				<thead>
+					<tr>
+						<th>N° de l'action PGRE</th>
+						<th>Intitulé de l'action PGRE</th>
+						<th>Maître(s) d'ouvrage(s)</th>
+						<th>Instance de concertation</th>
+						<th>Atelier(s) concerné(s)</th>
+						<th>Nature de l'action PGRE</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for a in t_act_pgre %}
+					<tr>
+						<td class="b">{{ a.num_doss_pgre }}</td>
+						<td>{{ a.int_doss_pgre }}</td>
+						<td>{{ a.moa }}</td>
+						<td>{{ a.id_ic_pgre }}</td>
+						<td>{{ a.atel_pgre }}</td>
+						<td>{{ a.id_nat_doss }}</td>
+						<td>
+							<a href="{% url 'cons_act_pgre' a.pk %}" class="consult-icon pull-right" title="Consulter l'action PGRE"></a>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock content %}

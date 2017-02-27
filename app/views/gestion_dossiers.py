@@ -264,6 +264,7 @@ def modif_doss(request, _d) :
 				'title' : 'Modifier un dossier'
 			}
 		)
+		
 	else :
 		if 'action' in request.GET :
 
@@ -413,6 +414,7 @@ def suppr_doss(request, _d) :
 	from app.models import TArretesDossier
 	from app.models import TDossier
 	from app.models import TDossierGeom
+	from app.models import TDossierPgre
 	from app.models import TFinancement
 	from app.models import TPhoto
 	from app.models import TPrestationsDossier
@@ -453,6 +455,13 @@ def suppr_doss(request, _d) :
 						split[j] += 's'
 					cle = ' '.join(split)
 				t_elem_a_suppr.append('{0} : {1}'.format(cle, len(t_qs[i][1])))
+		qs_act_pgre = TDossierPgre.objects.filter(id_doss = o_doss)
+		if len(qs_act_pgre) > 0 :
+			peut_suppr = False
+			cle = 'Action PGRE'
+			if len(qs_act_pgre) > 1 :
+				cle = 'Actions PGRE'
+			t_elem_a_suppr.append('{0} : {1}'.format(cle, len(qs_act_pgre)))
 
 		if peut_suppr == True :
 
@@ -480,7 +489,7 @@ def suppr_doss(request, _d) :
 		else :
 
 			# Je prépare le message d'alerte.
-			mess_html = 'Veuillez d\'abord supprimer le/les élément(s) suivant(s) :'
+			mess_html = 'Veuillez d\'abord modifier ou supprimer le/les élément(s) suivant(s) :'
 			mess_html += '<ul class="list-inline">'
 			for i in range(0, len(t_elem_a_suppr)) :
 				mess_html += '<li>{0}</li>'.format(t_elem_a_suppr[i])
@@ -520,7 +529,11 @@ def ch_doss(request) :
 
 		# J'initialise la valeur de l'argument "k_org_moa".
 		try :
-			v_org_moa = TMoa.objects.get(pk = TUtilisateur.objects.get(pk = request.user.pk).id_org).pk
+			v_org_moa = TMoa.objects.get(
+				pk = TUtilisateur.objects.get(pk = request.user.pk).id_org,
+				peu_doss = True,
+				en_act_doss = True
+			).pk
 		except :
 			v_org_moa = None
 
@@ -584,6 +597,7 @@ def ch_doss(request) :
 '''
 Cette vue permet d'afficher la page de consultation d'un dossier ou de traiter une action.
 request : Objet requête
+_d : Identifiant d'un dossier
 '''
 @verif_acc
 @nett_f
@@ -1282,11 +1296,9 @@ def cons_doss(request, _d) :
 		t_fm = [
 			init_fm('ajout_arr', 'Ajouter un arrêté', t_cont_fm['ajout_arr']),
 			init_fm('ajout_ph', 'Ajouter une photo', t_cont_fm['ajout_ph']),
-			init_fm('cons_ph', 'Consulter une photo'),
 			init_fm('modif_carto', 'Modifier un dossier'),
 			init_fm('modif_doss_regl', 'Modifier un dossier'),
-			init_fm('suppr_doss', 'Supprimer un dossier'),
-			init_fm('suppr_ph', 'Supprimer une photo')
+			init_fm('suppr_doss', 'Supprimer un dossier')
 		]
 
 		# Je complète le tableau de fenêtres modales dans le cas où le dossier n'est pas en projet.
@@ -1302,8 +1314,10 @@ def cons_doss(request, _d) :
 
 		# Je complète le tableau de fenêtres modales dans le cas où le dossier comporte des photos.
 		if len(t_ph) > 0 :
-			t_fm += [	
-				init_fm('lanc_diap', 'Lancer le diaporama', t_cont_fm['lanc_diap'])
+			t_fm += [
+				init_fm('cons_ph', 'Consulter une photo'),
+				init_fm('lanc_diap', 'Lancer le diaporama', t_cont_fm['lanc_diap']),
+				init_fm('suppr_ph', 'Supprimer une photo')
 			]
 
 		# J'affiche le template.

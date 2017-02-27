@@ -888,3 +888,40 @@ class AAtelierPgre(admin.ModelAdmin) :
 
 # Je peux désormais gérer les ateliers PGRE.
 admin.site.register(TAtelierPgre, AAtelierPgre)
+
+class AOrganisme(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	list_display = ['n_org']
+
+	# Je mets en forme le formulaire.
+	fieldsets = (
+		('Informations générales', {
+			'fields' : (
+				('n_org'),
+				('tel_org'),
+				('port_org'),
+				('courr_org'),
+				('site_web_org')
+			)
+		}),
+		('Adresse', {
+			'fields' : (
+				('adr_org'),
+				('compl_adr_org'),
+				('cp_org'),
+				('num_comm'),
+				('cedex_org'),
+				('bp_org')
+			)
+		}),
+		('Autres', {
+			'fields' : (
+				('comm_org'),
+			)
+		})
+	)
+
+# Je peux désormais gérer les organismes (exclus de l'héritage).
+admin.site.register(TOrganisme, AOrganisme)

@@ -283,6 +283,29 @@ function ret_errs(_f) {
 }
 
 /**
+ * Cette procédure permet d'afficher une zone d'information relative à l'un des points d'un graphique.
+ * _id : Identifiant de la zone d'information
+ * _c : Contenu de la zone d'information
+ */
+function show_tooltip(_id, _c) {
+
+	// Je récupère l'identifiant de l'objet "graphique".
+	var id_graph = _id.split('_tooltip')[0];
+
+	// J'initialise les coordonnées absolues de la zone d'information.
+	var offset = $('#' + id_graph).offset();
+	var x = offset.left;
+	var y = offset.top + 8;
+
+	// Je prépare et j'affiche la zone d'information relative à l'un des points du graphique.
+	var div = $('<div/>', { class : 'graph-tooltip', 'id' : _id });
+	div.css({ left : x, top : y, width : $('#' + id_graph).width() });
+	div.appendTo('body');
+	$('<div/>', { html : _c }).appendTo(div);
+	div.show();
+}
+
+/**
  * Cette procédure permet de traiter un formulaire soumis.
  * _e : Objet DOM
  * _s : Styles post-traitement
@@ -529,4 +552,24 @@ function suppr(_e)
 			aff_load_ajax(false);
 		}
 	});
+}
+
+/**
+ * Cette fonction permet d'afficher un nombre avec des zéros non-siginificatifs.
+ * _v : Valeur à convertir
+ * _s : Taille souhaitée
+ * Retourne une chaîne de caractères
+ */
+function zfill(_v, _s) {
+
+	// Je convertis la donnée en chaîne de caractères.
+	v = String(_v);
+
+	// Je rajoute un zéro non-significatif à gauche tant que la longueur de la nouvelle chaîne de caractères n'est pas
+	// égale à la taille souhaitée.
+	while (v.length < _s) {
+		v = '0' + v;
+	}
+
+	return v;
 }

@@ -55,6 +55,9 @@
 		<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.draw/leaflet.draw.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.easybutton/easy-button.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static './vendors/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+		<script type="text/javascript" src="{% static './vendors/flot/jquery.flot.js' %}"></script>
+		<script type="text/javascript" src="{% static './vendors/flot/jquery.flot.time.js' %}"></script>
+		<script type="text/javascript" src="{% static './vendors/flot/jquery.flot.resize.js' %}"></script>
 	</head>
 	<body>
 		<div class="container-fluid">
@@ -110,7 +113,7 @@
 									</li>
 								</ul>
 							</li>
-							<li class="dropdown" style="display: none;">
+							<li class="dropdown">
 								<a class="dropdown-toggle" data-toggle="dropdown" href="#">
 									PGRE
 									<span class="caret"></span>
@@ -120,7 +123,7 @@
 										<a href="{% url 'cr_act_pgre' %}">Créer une action PGRE</a>
 									</li>
 									<li>
-										<a href="#">Consulter une action PGRE</a>
+										<a href="{% url 'ch_act_pgre' %}">Consulter une action PGRE</a>
 									</li>
 									<li>
 										<a href="#">Réalisation d'états</a>

@@ -157,3 +157,4 @@ SOLD_STR = 'Solde'
 VALID_STR = 'Validé'
 
 PGRE_PK = 4
+DDTM_PK = 59

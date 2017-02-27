@@ -284,7 +284,7 @@ class GererDossier(forms.ModelForm) :
 		if not i.pk and v_org_moa and v_progr :
 			o_org_moa = TMoa.objects.get(pk = v_org_moa)
 			o_progr = TProgramme.objects.get(pk = v_progr)
-			if ger_droits(self.k_util, [o_org_moa.pk, o_progr.id_type_progr.pk], False, False) == False :
+			if ger_droits(self.k_util, [(o_org_moa.pk, o_progr.id_type_progr.pk)], False, False) == False :
 				self.add_error('zl_org_moa', None)
 				self.add_error(
 					'zl_progr',

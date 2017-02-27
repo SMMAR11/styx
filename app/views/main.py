@@ -348,6 +348,10 @@ def assist(request) :
 
 	return output
 
+'''
+Cette vue permet d'afficher la page de consultation des alertes liées à un compte utilisateur.
+request : Objet requête
+'''
 @verif_acc
 def alert(request) :
 

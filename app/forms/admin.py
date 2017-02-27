@@ -13,6 +13,7 @@ from app.models import TProgramme
 from app.models import TSousAxe
 from app.models import TUtilisateur
 from django import forms
+from django.db.models import Q
 
 class MSousAxe(forms.ModelForm) :
 
@@ -161,6 +162,15 @@ class MUtilisateurCreate(forms.ModelForm) :
                 'Prestataires', (
                     [(p.id_org_prest.id_org, p.id_org_prest) for p in TPrestataire.objects.all()]
                 )
+            ),
+            (
+                'Autres', (
+                    [(o.pk, o) for o in TOrganisme.objects.exclude(
+                        Q(pk__in = TFinanceur.objects.values_list('pk', flat = True)) |
+                        Q(pk__in = TMoa.objects.values_list('pk', flat = True)) |
+                        Q(pk__in = TPrestataire.objects.values_list('pk', flat = True))
+                    )]
+                )
             )
         ]
 
@@ -229,6 +239,15 @@ class MUtilisateurUpdate(forms.ModelForm) :
             (
                 'Prestataires', (
                     [(p.id_org_prest.id_org, p.id_org_prest) for p in TPrestataire.objects.all()]
+                )
+            ),
+            (
+                'Autres', (
+                    [(o.pk, o) for o in TOrganisme.objects.exclude(
+                        Q(pk__in = TFinanceur.objects.values_list('pk', flat = True)) |
+                        Q(pk__in = TMoa.objects.values_list('pk', flat = True)) |
+                        Q(pk__in = TPrestataire.objects.values_list('pk', flat = True))
+                    )]
                 )
             )
         ]

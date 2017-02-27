@@ -1185,7 +1185,7 @@ class TDossierPgre(models.Model) :
     )
     id_pr_pgre = models.ForeignKey(TPrioritePgre, models.DO_NOTHING, verbose_name = 'Priorité')
     id_av_pgre = models.ForeignKey(TAvancementPgre, models.DO_NOTHING, verbose_name = 'État d\'avancement')
-    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, verbose_name = 'Nature de l\'action PGRE')
+    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING)
     atel_pgre = models.ManyToManyField(TAtelierPgre, through = 'TAteliersPgreDossierPgre')
     moa = models.ManyToManyField(TMoa, through = 'TMoaDossierPgre')
 
@@ -1205,6 +1205,7 @@ class TAteliersPgreDossierPgre(models.Model) :
 
     class Meta :
         db_table = 't_ateliers_pgre_dossier_pgre'
+        ordering = ['id_atel_pgre']
         verbose_name = 'T_ATELIERS_PGRE_DOSSIER_PGRE'
         verbose_name_plural = 'T_ATELIERS_PGRE_DOSSIER_PGRE'
 
@@ -1218,6 +1219,7 @@ class TMoaDossierPgre(models.Model) :
 
     class Meta :
         db_table = 't_moa_dossier_pgre'
+        ordering = ['id_org_moa']
         verbose_name = 'T_MOA_DOSSIER_PGRE'
         verbose_name_plural = 'T_MOA_DOSSIER_PGRE'
 
@@ -1227,13 +1229,15 @@ class TMoaDossierPgre(models.Model) :
 class TControleDossierPgre(models.Model) :
 
     id_contr_doss_pgre = models.AutoField(primary_key = True)
-    dt_contr_doss_pgre = models.DateField()
-    obj_real_contr_doss_pgre = models.FloatField()
+    dt_contr_doss_pgre = models.DateField(verbose_name = 'Date du contrôle')
+    obj_real_contr_doss_pgre = models.FloatField(
+        verbose_name = 'Objectif réalisé en terme d\'économie de la ressource en eau (en m<sup>3</sup>)'
+    )
     id_doss_pgre = models.ForeignKey(TDossierPgre, models.DO_NOTHING)
 
     class Meta :
         db_table = 't_controle_dossier_pgre'
-        ordering = ['-dt_contr_doss_pgre']
+        ordering = ['dt_contr_doss_pgre']
         verbose_name = 'T_CONTROLE_DOSSIER_PGRE'
         verbose_name_plural = 'T_CONTROLE_DOSSIER_PGRE'
 
@@ -1272,12 +1276,18 @@ class TPhotoPgre(models.Model) :
         return 'actions_pgre/photos/{0}'.format(new_fn)
 
     id_ph_pgre = models.AutoField(primary_key = True)
-    chem_ph_pgre = models.FileField(upload_to = set_chem_ph_pgre_upload_to, validators = [val_fich_img])
-    descr_ph_pgre = models.CharField(blank = True, max_length = 255, null = True, validators = [val_cdc])
-    dt_pv_ph_pgre = models.DateField()
-    int_ph_pgre = models.CharField(max_length = 255, validators = [val_cdc])
-    id_doss_pgre = models.ForeignKey(TDossier, models.DO_NOTHING)
-    id_ppv_ph = models.ForeignKey(TPeriodePriseVuePhoto, models.DO_NOTHING)
+    chem_ph_pgre = models.FileField(
+        upload_to = set_chem_ph_pgre_upload_to, 
+        validators = [val_fich_img],
+        verbose_name = 'Insérer une photo <span class="field-complement">(taille limitée à 3 Mo)</span>'
+    )
+    descr_ph_pgre = models.CharField(
+        blank = True, max_length = 255, null = True, validators = [val_cdc], verbose_name = 'Description'
+    )
+    dt_pv_ph_pgre = models.DateField(verbose_name = 'Date de prise de vue')
+    int_ph_pgre = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la photo')
+    id_doss_pgre = models.ForeignKey(TDossierPgre, models.DO_NOTHING)
+    id_ppv_ph = models.ForeignKey(TPeriodePriseVuePhoto, models.DO_NOTHING, verbose_name = 'Période de prise de vue')
 
     class Meta :
         db_table = 't_photo_pgre'

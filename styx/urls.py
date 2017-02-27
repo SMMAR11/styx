@@ -83,8 +83,17 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/supprimer-photo/([0-9]+)/$', gestion_dossiers.suppr_ph, name = 'suppr_ph'),
     url(r'^modules/gestion-dossiers/ajouter-prestataire/$', gestion_dossiers.ajout_org_prest, name = 'ajout_org_prest'),
     url(r'^modules/realisation-etats/$', realisation_etats.index, name = 'real_etats'),
-    url(r'^modules/pgre/$', pgre.index, name = 'gest_act_pgre'),
+    url(r'^modules/pgre/$', pgre.index, name = 'pgre'),
     url(r'^modules/pgre/creer-action-pgre/$', pgre.cr_act_pgre, name = 'cr_act_pgre'),
+    url(r'^modules/pgre/modifier-action-pgre/([0-9]+)/$', pgre.modif_act_pgre, name = 'modif_act_pgre'),
+    url(r'^modules/pgre/supprimer-action-pgre/([0-9]+)/$', pgre.suppr_act_pgre, name = 'suppr_act_pgre'),
+    url(r'^modules/pgre/choisir-action-pgre/$', pgre.ch_act_pgre, name = 'ch_act_pgre'),
+    url(r'^modules/pgre/consulter-action-pgre/([0-9]+)/$', pgre.cons_act_pgre, name = 'cons_act_pgre'),
+    url(r'^modules/pgre/ajouter-photo/$', pgre.ajout_ph_pgre, name = 'ajout_ph_pgre'),
+    url(r'^modules/pgre/modifier-photo/([0-9]+)/$', pgre.modif_ph_pgre, name = 'modif_ph_pgre'),
+    url(r'^modules/pgre/supprimer-photo/([0-9]+)/$', pgre.suppr_ph_pgre, name = 'suppr_ph_pgre'),
+    url(r'^modules/pgre/modifier-point-de-controle/([0-9]+)/$', pgre.modif_pdc, name = 'modif_pdc'),
+    url(r'^modules/pgre/supprimer-point-de-controle/([0-9]+)/$', pgre.suppr_pdc, name = 'suppr_pdc')
 ]
 
 handler403 = main.h_403

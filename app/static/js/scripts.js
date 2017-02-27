@@ -1,6 +1,7 @@
 // Variables globales
 var t_datat = {
 	'alert' : init_datat($('#t_alert'), [0]),
+	'ch_act_pgre' : init_datat($('#t_ch_act_pgre'), [6]),
 	'ch_cbsm_atel_pgre' : init_datat($('#t_ch_cbsm_atel_pgre'), [1]),
 	'ch_cbsm_org_moa' : init_datat($('#t_ch_cbsm_org_moa'), [1]),
 	'ch_doss' : init_datat($('#t_ch_doss'), [4]),
@@ -15,11 +16,14 @@ var t_datat = {
 	'cons_fact' : init_datat($('#t_cons_fact'), [7]),
 	'cons_fact_ddv' : init_datat($('#t_cons_fact_ddv'), [4]),
 	'cons_fin' : init_datat($('#t_cons_fin'), [8]),
+	'cons_pdc' : init_datat($('#t_cons_pdc'), [2]),
 	'cons_ph' : init_datat($('#t_cons_ph'), [0, 4]),
 	'cons_prest' : init_datat($('#t_cons_prest'), [6]),
 	'modif_prest_doss' : init_datat($('#t_modif_prest_doss'), [0, 1, 2, 3, 4])
 };
 var submit = false;
+var pt_prec = null;
+var est_init = false;
 
 /**
  * Ce script permet l'affichage d'un loader dès la fin du chargement du DOM.
@@ -146,7 +150,7 @@ $(document).on('click', '#t_ch_doss .choose-icon', function() {
 /**
  * Ce script permet de réinitialiser la valeur du dossier associé/de correspondance.
  */
-$('#id_GererDossier-rb_doss_ass_1, #id_GererActionPgre-rb_doss_corr_1, #bt_suppr_doss_ass').on(
+$('#id_GererDossier-rb_doss_ass_1, #id_GererActionPgre-rb_doss_corr_1, #bt_suppr_doss_ass, #bt_suppr_doss_corr').on(
 	'click', function() {
 
 	// Je réinitialise tous les pictogrammes.
@@ -721,6 +725,11 @@ $('input[type="checkbox"]').on('change', function() {
 			}
 		});
 	}
+	else {
+		if ($(this).is(':checked') == false) {
+			$('#id_' + $(this).attr('name') + '__all').attr('checked', false);
+		}
+	}
 });
 
 /**
@@ -734,7 +743,7 @@ $('#id_GererActionPgre-id_ic_pgre').on('change', function(_e) {
 		function() {
 			$('#id_GererActionPgre-cbsm_atel_pgre__all').attr('checked', false);
 		},
-		[$('form[name="f_cr_act_pgre"]'), '?action=filtrer-ateliers']
+		[$('form[name="f_ger_act_pgre"]'), '?action=filtrer-ateliers']
 	);
 });
 
@@ -750,4 +759,100 @@ $(window).load(function() {
 			$('#za_alert').css('background-color', '#94C054');
 		}
 	});
+});
+
+/**
+ * Ce script permet l'initialisation du graphique relatif à la variation de l'économie de la ressource en eau.
+ */
+$(function() {
+    $('body').on('shown.bs.tab', 'a[href="#ong_pdc"]', function() {
+    	if (est_init == false) {
+    		est_init = true;
+	    	$.post('?action=initialiser-graphique', function(_d) {
+	    		try {
+		    		$.plot('#zg_pdc', [{
+		    			color : '#FF0921',
+		    			data : _d[1],
+		    			hoverable : false,
+		    			label : 'Objectifs d\'économie de la ressource en eau (en m<sup>3</sup>)',
+		    			points : { show : false },
+		    			shadowSize : 0
+		    		}, {
+		    			color : '#F8B862',
+		    			data : _d[0],
+		    			label : 'Économie de la ressource en eau réalisée (en m<sup>3</sup>)',
+		    			shadowSize : 0
+		    		}], {
+		    			grid: { backgroundColor : '#FFF', borderWidth: 1, color : '#555', hoverable : true },
+		    			legend : { container : $('#zg_pdc').next(), show : true },
+			    		series : {
+			    			lines : { show : true },
+			    			points : { show : true }
+			    		},
+			    		xaxis : {
+			    			minTickSize: [1, 'day'],
+			    			mode : 'time',
+			    			timeformat : '%d/%m'
+			    		}
+		    		});
+		    	}
+		    	catch (e) {
+		    		
+		    	}
+	    	});
+	    }
+    });
+});
+
+/**
+ * Ce script permet l'affichage de la zone d'information relative à l'un des points du graphique des points de 
+ * contrôle.
+ */
+$('#zg_pdc').bind('plothover', function(_e, _p, item) {
+
+	// Je mets en forme l'identifiant de la zone d'information.
+	var id = $(_e.target).attr('id') + '_tooltip';
+
+	// Je retire la zone d'information.
+	$('#' + id).remove();
+
+	if (item) {
+		if (pt_prec != item.datapoint) {
+			pt_prec = item.datapoint;
+
+			// Je prépare la date du point de contrôle.
+			var o_dt = new Date(item.datapoint[0]);
+			var dt = zfill(o_dt.getDate(), 2) + '/' + zfill(o_dt.getMonth() + 1, 2) + '/' + zfill(o_dt.getFullYear(), 4);
+
+			// J'affiche la zone d'information.
+			show_tooltip(id, item.datapoint[1] + ' m<sup>3</sup> économisé(s) au ' + dt);
+		}
+	}
+	else {
+		pt_prec = null;
+	}
+});
+
+/**
+ * Ce script permet de simuler la soumission du formulaire de choix d'une action PGRE.
+ */
+$('form[name="f_ch_act_pgre"]').on('change', function() {
+	$(this).submit();
+});
+
+/**
+ * Ce script permet de traiter le formulaire de choix d'une action PGRE.
+ * _e : Objet DOM
+ */
+$('form[name="f_ch_act_pgre"]').on('submit', function(_e) {
+	soum_f(
+		_e,
+		function() {
+			$('#t_ch_act_pgre tbody > tr').each(function() {
+				if ($(this).find('td:first-child').attr('class') != 'dataTables_empty') {
+					$(this).find('td:first-child').addClass('b');
+				}				
+			});
+		}
+	);
 });

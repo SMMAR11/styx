@@ -105,14 +105,19 @@ $(function() {
         }
 
         // Je cache les boutons non-autorisés.
-        if($('#types_geom_doss').val().indexOf('marker') == -1) {
-            $('.leaflet-draw-draw-marker').remove();
+        try {
+            if($('#types_geom_doss').val().indexOf('marker') == -1) {
+                $('.leaflet-draw-draw-marker').remove();
+            }
+            if($('#types_geom_doss').val().indexOf('polyline') == -1) {
+                $('.leaflet-draw-draw-polyline').remove();
+            }
+            if($('#types_geom_doss').val().indexOf('polygon') == -1) {
+                $('.leaflet-draw-draw-polygon').remove();
+            }
         }
-        if($('#types_geom_doss').val().indexOf('polyline') == -1) {
-            $('.leaflet-draw-draw-polyline').remove();
-        }
-        if($('#types_geom_doss').val().indexOf('polygon') == -1) {
-            $('.leaflet-draw-draw-polygon').remove();
+        catch (e) {
+
         }
     });
 });

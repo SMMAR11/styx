@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<form action="" enctype="multipart/form-data" method="post" name="f_cr_act_pgre" onsubmit="soum_f(event)">
+<form action="" enctype="multipart/form-data" method="post" name="f_ger_act_pgre" onsubmit="soum_f(event)">
 	{% csrf_token %}
 	<fieldset class="my-fieldset">
 		<legend>Créer une action PGRE</legend>
@@ -12,8 +12,8 @@
 			{{ f_cr_act_pgre.cbsm_atel_pgre }}
 			{{ f_cr_act_pgre.int_doss_pgre }}
 			<div class="row">
-				<div class="col-sm-6">{{ f_cr_act_pgre.rb_doss_corr }}</div>
-				<div class="col-sm-6">{{ f_cr_act_pgre.za_doss_corr }}</div>
+				<div class="col-md-6">{{ f_cr_act_pgre.rb_doss_corr }}</div>
+				<div class="col-md-6">{{ f_cr_act_pgre.za_doss_corr }}</div>
 			</div>
 			{{ f_cr_act_pgre.cbsm_org_moa }}
 			{{ f_cr_act_pgre.id_pr_pgre }}
@@ -23,7 +23,7 @@
 				<div class="col-sm-6">{{ f_cr_act_pgre.dt_deb_doss_pgre }}</div>
 				<div class="col-sm-6">{{ f_cr_act_pgre.dt_fin_doss_pgre }}</div>
 			</div>
-			{{ f_cr_act_pgre.id_nat_doss }}
+			{{ f_cr_act_pgre.zl_nat_doss }}
 			{{ f_cr_act_pgre.id_av_pgre }}
 			{{ f_cr_act_pgre.chem_pj_doss_pgre }}
 			{{ f_cr_act_pgre.comm_doss_pgre }}
