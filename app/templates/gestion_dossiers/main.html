@@ -2,18 +2,5 @@
 {% load static %}
 
 {% block content %}
-<div class="row thumbnails-row">
-	<div class="col-sm-6">
-		<a class="my-thumbnail" href="{% url 'cr_doss' %}">
-			<img src="{% static './pics/thumbnails/gestion_dossiers/add.png' %}">
-			<div>Créer un dossier</div>
-		</a>
-	</div>
-	<div class="col-sm-6">
-		<a class="my-thumbnail" href="{% url 'ch_doss' %}">
-			<img src="{% static './pics/thumbnails/gestion_dossiers/consult.png' %}">
-			<div>Consulter un dossier</div>
-		</a>
-	</div>
-</div>
+{{ gest_doss_thumbnails }}
 {% endblock content %}

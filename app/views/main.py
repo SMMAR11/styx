@@ -8,7 +8,6 @@ from app.decorators import *
 Cette vue permet d'afficher la page principale ou de traiter l'un des formulaires de celle-ci.
 request : Objet requête
 '''
-@nett_f
 def index(request) :
 
 	# Imports
@@ -118,7 +117,6 @@ de celui-ci.
 request : Objet requête
 '''
 @verif_acc
-@nett_f
 def modif_util(request) :
 
 	# Imports
@@ -366,7 +364,7 @@ def alert(request) :
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import render
-	from styx.settings import SOLD_STR_2
+	from styx.settings import T_DONN_BDD_STR
 	import datetime
 	import json
 	
@@ -415,7 +413,7 @@ def alert(request) :
 			# Je stocke les financements du couple courant avec exclusion si le dossier est soldé.
 			qs_fin = VFinancement.objects.filter(
 				id_doss__id_org_moa = t[0], id_doss__id_progr__id_type_progr = t[1]
-			).exclude(id_doss__id_av__int_av = SOLD_STR_2)
+			).exclude(id_doss__id_av__int_av = T_DONN_BDD_STR['AV_SOLDE'])
 
 			for f in qs_fin :
 

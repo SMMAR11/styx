@@ -24,26 +24,26 @@
 fieldset.my-div-fieldset {
 	color: #3770B1;
 	border: solid 1px;
-	padding: 15px 30px 0 15px;
+	padding: 20px 15px 0px 7.5px;
 }
 
 fieldset.my-div-fieldset > legend {
 	color: #3770B1;
 	border: none;
-	padding: 0 15px;
+	padding: 0 7.5px;
 	margin-bottom: 0;
 	width: auto;
 	font-size: 16px;
 }
 
 fieldset.my-div-fieldset > div {
-	padding: 5px 0 0 15px;
+	padding-left: 7.5px;
 }
 
 /* Boutons */
 .my-btn {
 	display: block;
-	padding: 5px 15px;
+	padding: 2.5px 7.5px;
 	border: none;
 	border-radius: 5px;
 	color: #FFF;
@@ -152,7 +152,7 @@ fieldset.my-div-fieldset > div {
 }
 
 .field-wrapper .field-control > input[type="checkbox"] {
-	display: block;
+	display: inline-block;
 }
 
 .field-wrapper .field-control > input[type="password"],
@@ -261,7 +261,7 @@ fieldset.my-div-fieldset > div {
 }
 
 .green-color {
-	color: #3A9D23;
+	color: #82C46C;
 }
 
 /* Fenêtres modales */
@@ -318,13 +318,13 @@ fieldset.my-div-fieldset > div {
 form > fieldset.my-fieldset {
 	color: #3770B1;
 	border: solid 2px;
-	padding: 15px 30px 20px 15px;
+	padding: 10px 15px 10px 7.5px;
 }
 
 form > fieldset.my-fieldset > legend {
 	color: #3770B1;
 	border: none;
-	padding: 0 15px;
+	padding: 0 7.5px;
 	margin-bottom: 0;
 	width: auto;
 	font-size: 24px;
@@ -332,7 +332,7 @@ form > fieldset.my-fieldset > legend {
 }
 
 form > fieldset.my-fieldset > div {
-	padding: 5px 0 0 15px;
+	padding-left: 7.5px;
 }
 
 .field-error > ul {
@@ -342,8 +342,9 @@ form > fieldset.my-fieldset > div {
 }
 
 .field-error > ul > li {
-	margin-bottom: -15.6px;
 	font-size : 12px;
+	position: absolute;
+	bottom: -15px;
 	color : #FF0921;
 }
 
@@ -495,13 +496,17 @@ ul.my-list-style > li:before {
 	border-radius: 100%;
 }
 
+.checkboxes-group .field-wrapper:not(:last-child) {
+	margin-bottom: 0;
+}
+
 /* Onglets */
 .my-nav-tabs {
 	border-color: #DDD;
 }
 
 .my-nav-tabs > li > a {
-	padding: 5px 15px;
+	padding: 2.5px 7.5px;
 	border-radius: 0;
 }
 
@@ -576,6 +581,15 @@ ul.my-list-style > li:before {
 	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
 	width: 20px;
+	height: 20px;
+}
+
+.csv-icon {
+	background-image: url('../pics/icons/csv.png');
+	background-size: 22px;
+	-webkit-background-size: 21px;
+	background-repeat: no-repeat;
+	width: 22px;
 	height: 20px;
 }
 
@@ -783,51 +797,64 @@ ul.my-list-style > li:before {
 }
 
 /* Vignettes */
-.my-thumbnail {
+.custom-thumbnail {
 	display: block;
 	background-color: #FFF;
 	border: 1px solid #DDD;
-	padding: 20px 15px;
+	padding: 10px 15px;
 	text-align: center;
 }
 
-.my-thumbnail:hover {
-	border-color: #2C5A8E;
+.custom-thumbnail:hover {
+	border-color: #2A5485;
 	-webkit-transition: border .2s ease-in-out;
 	-o-transition: border .2s ease-in-out;
 	transition: border .2s ease-in-out;
-	cursor: pointer;
 }
 
-.my-thumbnail,
-.my-thumbnail:hover,
-.my-thumbnail:focus {
+.custom-thumbnail,
+.custom-thumbnail:hover,
+.custom-thumbnail:focus {
 	color: #555;
 	text-decoration: none;
 }
 
-.my-thumbnail > img {
+.custom-thumbnail > img {
 	max-height: 120px;
-	margin-bottom: 20px;
+	margin-bottom: 10px;
+}
+
+@media (min-width: 768px) {
+	.thumbnails-row > div:not(:last-child) {
+		margin-bottom: 20px;
+	}
+}
+
+@media (max-width: 767px) {
+	.thumbnails-row > div > div {
+		margin-bottom: 20px;
+	}
+
+	.thumbnails-row {
+		margin-bottom: -20px;
+	}
+}
+
+.custom-thumbnail[href="#"] {
+	opacity: 0.5;
 }
 
 .profile-widget {
 	display: block;
 	background-color: #FFF;
 	border: 1px solid #DDD;
-	padding: 20px 15px;
+	padding: 10px 15px;
 	text-align: center;
 	margin-bottom: 20px;
 }
 
 .profile-widget > div {
 	margin-bottom: 20px;
-}
-
-@media (max-width: 767px) {
-	.thumbnails-row > div:not(:last-child) {
-		margin-bottom: 20px;
-	}
 }
 
 /* Zones d'upload */

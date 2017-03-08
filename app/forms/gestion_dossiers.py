@@ -82,9 +82,7 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TProgramme
 		from app.models import TSousAxe
 		from app.models import TTechnicien
-		from styx.settings import ACC_STR
-		from styx.settings import EP_STR
-		from styx.settings import REF_STR
+		from styx.settings import T_DONN_BDD_STR
 
 		# Je déclare le tableau des arguments.
 		self.k_util = kwargs.pop('k_util', None)
@@ -196,11 +194,11 @@ class GererDossier(forms.ModelForm) :
 						self.fields['zl_act'].widget.attrs['class'] += ' show-field'
 
 			# Je vérifie si certains champs doivent bénéficier ou non de la lecture seule.
-			if i.id_av.int_av == EP_STR :
+			if i.id_av.int_av == T_DONN_BDD_STR['AV_EP'] :
 				self.fields['dt_delib_moa_doss'].widget.attrs['readonly'] = True
-			if i.id_av_cp.int_av_cp in [ACC_STR, REF_STR] :
+			if i.id_av_cp.int_av_cp in [T_DONN_BDD_STR['AV_CP_ACC'], T_DONN_BDD_STR['AV_CP_REF']] :
 				self.fields['dt_av_cp_doss'].widget.attrs['readonly'] = False
-			if i.id_av_cp.int_av_cp == ACC_STR :
+			if i.id_av_cp.int_av_cp == T_DONN_BDD_STR['AV_CP_ACC'] :
 				self.fields['mont_doss'].widget.attrs['readonly'] = True
 			else :
 				self.fields['mont_suppl_doss'].widget.attrs['readonly'] = True
@@ -218,10 +216,7 @@ class GererDossier(forms.ModelForm) :
 		from app.sql_views import VSuiviDossier
 		from django.db.models import Max
 		from django.db.models import Sum
-		from styx.settings import ACC_STR
-		from styx.settings import EA_STR
-		from styx.settings import EP_STR
-		from styx.settings import SO_STR
+		from styx.settings import T_DONN_BDD_STR
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererDossier, self).clean()
@@ -257,12 +252,12 @@ class GererDossier(forms.ModelForm) :
 		# Je rends obligatoire la date de délibération au maître d'ouvrage si l'état d'avancement du dossier n'est pas
 		# en projet.
 		if v_av :
-			if v_av.int_av != EP_STR and not v_dt_delib_moa_doss :
+			if v_av.int_av != T_DONN_BDD_STR['AV_EP'] and not v_dt_delib_moa_doss :
 				self.add_error('dt_delib_moa_doss', ERROR_MESSAGES['required'])
 
 		# Je rends obligatoire la date de l'avis du comité de programmation si celui-ci est en attente ou sans objet.
 		if v_av_cp :
-			if not v_av_cp.int_av_cp in [EA_STR, SO_STR] and not v_av_cp_doss :
+			if not v_av_cp.int_av_cp in [T_DONN_BDD_STR['AV_CP_EA'], T_DONN_BDD_STR['AV_CP_SO']] and not v_av_cp_doss :
 				self.add_error('dt_av_cp_doss', ERROR_MESSAGES['required'])
 
 		# Je rends obligatoire l'axe, le sous-axe, l'action et le type de dossier sous certaines conditions.
@@ -311,7 +306,7 @@ class GererDossier(forms.ModelForm) :
 			# Je gère la contrainte suivante : les montants du dossier dépendent des éléments comptables de celui-ci.
 			if v_mont_doss is not None and v_mont_suppl_doss is not None :
 				if v_av_cp :
-					if v_av_cp.int_av_cp == ACC_STR :
+					if v_av_cp.int_av_cp == T_DONN_BDD_STR['AV_CP_ACC'] :
 						if t_mont_doss[2] > i.mont_doss :
 							mont_min = t_mont_doss[2] - i.mont_doss
 							if float(v_mont_suppl_doss) < mont_min :
@@ -328,7 +323,7 @@ class GererDossier(forms.ModelForm) :
 
 			# Je renvoie une erreur si je passe un dossier en projet alors que des éléments comptables ont déjà été
 			# saisis.
-			if v_av and v_av.int_av == EP_STR :
+			if v_av and v_av.int_av == T_DONN_BDD_STR['AV_EP'] :
 				mess = None
 				if len(TFinancement.objects.filter(id_doss = i)) > 0 :
 					mess = 'Un financement a déjà été déclaré pour ce dossier.' 
@@ -339,7 +334,7 @@ class GererDossier(forms.ModelForm) :
 
 			# Je renvoie une erreur si le montant de dépassement d'un dossier dont l'avis du comité de programmation
 			# est différent de "Accordé" est strictement positif.
-			if v_av_cp and v_av_cp.int_av_cp != ACC_STR :
+			if v_av_cp and v_av_cp.int_av_cp != T_DONN_BDD_STR['AV_CP_ACC'] :
 				if v_mont_suppl_doss and float(v_mont_suppl_doss) > 0 :
 					self.add_error('mont_suppl_doss', ERROR_MESSAGES['invalid'])
 			else :
@@ -503,7 +498,7 @@ class GererFinancement(forms.ModelForm) :
 
 		# Imports
 		from app.functions import obt_pourc
-		from styx.settings import PRT_STR
+		from styx.settings import T_DONN_BDD_STR
 
 		# Je déclare le tableau des arguments.
 		k_doss = kwargs.pop('k_doss', None)
@@ -541,7 +536,7 @@ class GererFinancement(forms.ModelForm) :
 				self.fields['mont_part_fin'].widget.attrs['readonly'] = True
 			'''
 			if i.id_paiem_prem_ac :
-				if i.id_paiem_prem_ac.int_paiem_prem_ac == PRT_STR :
+				if i.id_paiem_prem_ac.int_paiem_prem_ac == T_DONN_BDD_STR['PPA_PRT'] :
 					self.fields['pourc_real_fin'].widget.attrs['readonly'] = False
 		else :
 			if k_doss :
@@ -1239,8 +1234,7 @@ class GererDemandeVersement(forms.ModelForm) :
 		from app.models import TDemandeVersement
 		from app.models import TDossier
 		from app.sql_views import VFinancement
-		from styx.settings import ACOMPT_STR
-		from styx.settings import SOLD_STR
+		from styx.settings import T_DONN_BDD_STR
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererDemandeVersement, self).clean()
@@ -1298,13 +1292,15 @@ class GererDemandeVersement(forms.ModelForm) :
 			# Je renvoie une erreur si aucune facture n'a été reliée à une demande de versement dont le type de 
 			# versement est différent de "Avance forfaitaire".
 			if v_type_vers :
-				if v_type_vers.int_type_vers in [ACOMPT_STR, SOLD_STR] and not v_fact :
+				if v_type_vers.int_type_vers in [
+					T_DONN_BDD_STR['TVERS_ACOMPT'], T_DONN_BDD_STR['TVERS_SOLDE']
+				] and not v_fact :
 					self.add_error('cbsm_fact', ERROR_MESSAGES['required'])
 
 			# Je récupère les demandes de versements soldées du financement.
 			qs_ddv = TDemandeVersement.objects.filter(
 				id_fin = o_suivi_fin.pk, 
-				id_type_vers__int_type_vers = SOLD_STR
+				id_type_vers__int_type_vers = T_DONN_BDD_STR['TVERS_SOLDE']
 			)
 
 			# Je renvoie une erreur si un financement admet déjà une demande de versement soldée.
@@ -1315,7 +1311,7 @@ class GererDemandeVersement(forms.ModelForm) :
 						err = True
 				else :
 					qs_ddv = qs_ddv.exclude(pk = i.pk)
-					if len(qs_ddv) > 0 and v_type_vers.int_type_vers == SOLD_STR :
+					if len(qs_ddv) > 0 and v_type_vers.int_type_vers == T_DONN_BDD_STR['TVERS_SOLDE'] :
 						err = True
 				if err == True :
 					self.add_error(
@@ -1411,7 +1407,7 @@ class GererArrete(forms.ModelForm) :
 		# Imports
 		from app.models import TArretesDossier
 		from app.models import TDossier
-		from styx.settings import VALID_STR
+		from styx.settings import T_DONN_BDD_STR
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererArrete, self).clean()
@@ -1438,7 +1434,7 @@ class GererArrete(forms.ModelForm) :
 		if o_doss :
 
 			# Je rends certains champs obligatoires si et seulement si l'avancement de l'arrêté est "Validé".
-			if v_type_av_arr and v_type_av_arr.int_type_av_arr == VALID_STR :
+			if v_type_av_arr and v_type_av_arr.int_type_av_arr == T_DONN_BDD_STR['TAV_ARR_VALIDE'] :
 				if not v_num_arr :
 					self.add_error('num_arr', ERROR_MESSAGES['required'])
 				if not v_dt_sign_arr :

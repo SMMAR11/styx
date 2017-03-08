@@ -171,12 +171,11 @@
 		 * Ce script permet d'activer un onglet du navigateur à onglets relatif à une action PGRE.
 		 */
 		$(document).ready(function() {
-			var ong_tab_act_pgre = '{{ request.session.tab_act_pgre.0 }}';
+			var ong_tab_act_pgre = '{{ request.session.tab_act_pgre }}';
 			if (ong_tab_act_pgre == '') {
 				ong_tab_act_pgre = '#ong_act_pgre';
 			}
-			$('#tab_act_pgre').find('a[href="' + ong_tab_act_pgre + '"]').parent().addClass('active');
-			$('#tab_act_pgre').next().find(ong_tab_act_pgre).addClass('active in');
+			$('#tab_act_pgre').find('a[href="' + ong_tab_act_pgre + '"]').tab('show');
 		});
 
 		</script>

@@ -30,7 +30,6 @@ Cette vue permet d'afficher la page de création d'un dossier ou de traiter une 
 request : Objet requête
 '''
 @verif_acc
-@nett_f
 def cr_doss(request) :
 
 	# Imports
@@ -199,7 +198,6 @@ request : Objet requête
 _d : Identifiant d'un dossier
 '''
 @verif_acc
-@nett_f
 def modif_doss(request, _d) :
 
 	# Imports
@@ -505,7 +503,6 @@ Cette vue permet d'afficher la page de choix d'un dossier ou de traiter une acti
 request : Objet requête
 '''
 @verif_acc
-@nett_f
 def ch_doss(request) :
 
 	# Imports
@@ -600,7 +597,6 @@ request : Objet requête
 _d : Identifiant d'un dossier
 '''
 @verif_acc
-@nett_f
 @csrf_exempt
 def cons_doss(request, _d) :
 
@@ -644,7 +640,7 @@ def cons_doss(request, _d) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	from django.template.context_processors import csrf
-	from styx.settings import EP_STR
+	from styx.settings import T_DONN_BDD_STR
 	from styx.settings import MEDIA_URL
 	import json
 
@@ -660,10 +656,7 @@ def cons_doss(request, _d) :
 
 		# Je désigne l'onglet actif du navigateur à onglets relatif à un dossier.
 		if 'tab_doss' not in request.session :
-			request.session['tab_doss'] = ['#ong_doss', -1]
-		request.session['tab_doss'][1] += 1
-		if request.session['tab_doss'][1] > 0 :
-			del request.session['tab_doss']
+			request.session['tab_doss'] = '#ong_doss'
 
 		# Je définis si le montant du dossier est en HT ou en TTC.
 		ht_ou_ttc = 'HT'
@@ -674,6 +667,15 @@ def cons_doss(request, _d) :
 		o_suivi_doss = VSuiviDossier.objects.get(id_doss = o_doss.pk)
 
 		# Je prépare l'onglet "Caractéristiques".
+		v_axe = o_doss.num_axe
+		if v_axe == None :
+			v_axe = ''
+		v_ss_axe = o_doss.num_ss_axe
+		if v_ss_axe == None :
+			v_ss_axe = ''
+		v_act = o_doss.num_act
+		if v_act == None :
+			v_act = ''
 		t_attrs_doss = {
 			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
 			'int_doss' : {
@@ -703,9 +705,9 @@ def cons_doss(request, _d) :
 			},
 			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
 			'id_progr' : { 'label' : 'Programme', 'value' : o_doss.id_progr },
-			'num_axe' : { 'label' : 'Axe', 'value' : o_doss.num_axe or '' },
-			'num_ss_axe' : { 'label' : 'Sous-axe', 'value' : o_doss.num_ss_axe or '' },
-			'num_act' : { 'label' : 'Action', 'value' : o_doss.num_act or '' },
+			'num_axe' : { 'label' : 'Axe', 'value' : v_axe },
+			'num_ss_axe' : { 'label' : 'Sous-axe', 'value' : v_ss_axe },
+			'num_act' : { 'label' : 'Action', 'value' : v_act },
 			'id_nat_doss' : { 'label' : 'Nature du dossier', 'value' : o_doss.id_nat_doss },
 			'id_type_doss' : { 'label' : 'Type de dossier', 'value' : o_doss.id_type_doss },
 			'id_techn' : { 'label' : 'Agent responsable', 'value' : o_doss.id_techn },
@@ -1302,7 +1304,7 @@ def cons_doss(request, _d) :
 		]
 
 		# Je complète le tableau de fenêtres modales dans le cas où le dossier n'est pas en projet.
-		if o_doss.id_av.int_av != EP_STR :
+		if o_doss.id_av.int_av != T_DONN_BDD_STR['AV_EP'] :
 			t_fm += [	
 				init_fm('ajout_aven', 'Ajouter un avenant'),
 				init_fm('ajout_fact', 'Ajouter une facture', t_cont_fm['ajout_fact']),
@@ -1325,6 +1327,7 @@ def cons_doss(request, _d) :
 			request, 
 			'./gestion_dossiers/cons_doss.html',
 			{
+				'AV_EP' : T_DONN_BDD_STR['AV_EP'],
 				'd' : o_doss,
 				'f_modif_doss_regl' : init_f(f_modif_doss_regl),
 				'forbidden' : ger_droits(request.user, o_doss, False, False),
@@ -1353,6 +1356,9 @@ def cons_doss(request, _d) :
 				'title' : 'Consulter un dossier'
 			}
 		)
+
+		# Je supprime la variable de session liée au navigateur à onglets relatif à un dossier.
+		del request.session['tab_doss']
 
 	else :
 		if 'action' in request.GET :
@@ -1440,7 +1446,7 @@ def cons_doss(request, _d) :
 					)
 
 					# Je renseigne l'onglet actif après rechargement de la page.
-					request.session['tab_doss'] = ['#ong_arr', -1]
+					request.session['tab_doss'] = '#ong_arr'
 
 					# Je complète le fichier log.
 					rempl_fich_log([
@@ -1753,7 +1759,7 @@ def cons_doss(request, _d) :
 					)
 
 					# Je renseigne l'onglet actif après rechargement de la page.
-					request.session['tab_doss'] = ['#ong_prest', -1]
+					request.session['tab_doss'] = '#ong_prest'
 
 					if 'relier-prestation' in request.session :
 						del request.session['relier-prestation']
@@ -1824,7 +1830,7 @@ def ajout_fin(request) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_doss'] = ['#ong_fin', -1]
+			request.session['tab_doss'] = '#ong_fin'
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -1848,7 +1854,6 @@ request : Objet requête
 _f : Identifiant d'un financement
 '''
 @verif_acc
-@nett_f
 def modif_fin(request, _f) :
 
 	# Imports
@@ -1986,7 +1991,7 @@ def suppr_fin(request, _f) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_doss'] = ['#ong_fin', -1]
+			request.session['tab_doss'] = '#ong_fin'
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -2203,7 +2208,7 @@ def ajout_prest(request) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_doss'] = ['#ong_prest', -1]
+			request.session['tab_doss'] = '#ong_prest'
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -2233,7 +2238,6 @@ request : Objet requête
 _p : Identifiant d'une prestation
 '''
 @verif_acc
-@nett_f
 def modif_prest(request, _pd) :
 
 	# Imports
@@ -2479,7 +2483,7 @@ def suppr_prest(request, _pd) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_doss'] = ['#ong_prest', -1]
+			request.session['tab_doss'] = '#ong_prest'
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -2512,7 +2516,6 @@ request : Objet requête
 _p : Identifiant d'une prestation
 '''
 @verif_acc
-@nett_f
 @csrf_exempt
 def cons_prest(request, _pd) :
 
@@ -2546,10 +2549,7 @@ def cons_prest(request, _pd) :
 
 		# Je désigne l'onglet actif du navigateur à onglets relatif à une prestation.
 		if 'tab_prest' not in request.session :
-			request.session['tab_prest'] = ['#ong_prest', -1]
-		request.session['tab_prest'][1] += 1
-		if request.session['tab_prest'][1] > 0 :
-			del request.session['tab_prest']
+			request.session['tab_prest'] = '#ong_prest'
 
 		# Je définis si le montant de la prestation est en HT ou en TTC.
 		ht_ou_ttc = 'HT'
@@ -2659,6 +2659,9 @@ def cons_prest(request, _pd) :
 			}
 		)
 
+		# Je supprime la variable de session liée au navigateur à onglets relatif à une prestation.
+		del request.session['tab_prest']
+
 	else :
 		if 'action' in request.GET :
 
@@ -2763,7 +2766,7 @@ def ajout_aven(request, _r) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session[tab] = [ong, -1]
+			request.session[tab] = ong
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -2787,7 +2790,6 @@ request : Objet requête
 _a : Identifiant d'un avenant
 '''
 @verif_acc
-@nett_f
 def modif_aven(request, _a) :
 
 	# Imports
@@ -2926,6 +2928,9 @@ def suppr_aven(request, _a) :
 			}}), 
 			content_type = 'application/json'
 		)
+
+		# Je renseigne l'onglet actif après rechargement de la page.
+		request.session['tab_prest'] = '#ong_aven'
 
 		# Je complète le fichier log.
 		rempl_fich_log([
@@ -3110,7 +3115,7 @@ def ajout_fact(request) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_doss'] = ['#ong_fact', -1]
+			request.session['tab_doss'] = '#ong_fact'
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -3140,7 +3145,6 @@ request : Objet requête
 _f : Identifiant d'une facture
 '''
 @verif_acc
-@nett_f
 def modif_fact(request, _f) :
 
 	# Imports
@@ -3304,7 +3308,7 @@ def suppr_fact(request, _f) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_doss'] = ['#ong_fact', -1]
+			request.session['tab_doss'] = '#ong_fact'
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -3504,7 +3508,7 @@ def ajout_ddv(request) :
 				)
 
 				# Je renseigne l'onglet actif après rechargement de la page.
-				request.session['tab_doss'] = ['#ong_ddv', -1]
+				request.session['tab_doss'] = '#ong_ddv'
 
 				# Je complète le fichier log.
 				rempl_fich_log([
@@ -3534,7 +3538,6 @@ request : Objet requête
 _d : Identifiant d'une demande de versement
 '''
 @verif_acc
-@nett_f
 @csrf_exempt
 def modif_ddv(request, _d) :
 
@@ -3700,7 +3703,7 @@ def suppr_ddv(request, _d) :
 		)
 
 		# Je renseigne l'onglet actif après rechargement de la page.
-		request.session['tab_doss'] = ['#ong_ddv', -1]
+		request.session['tab_doss'] = '#ong_ddv'
 
 		# Je complète le fichier log.
 		rempl_fich_log([
@@ -3880,7 +3883,7 @@ def ajout_arr(request) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_doss'] = ['#ong_arr', -1]
+			request.session['tab_doss'] = '#ong_arr'
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -3903,7 +3906,6 @@ request : Objet requête
 _a : Identifiant d'un arrêté
 '''
 @verif_acc
-@nett_f
 def modif_arr(request, _a) :
 
 	# Imports
@@ -4037,7 +4039,7 @@ def suppr_arr(request, _a) :
 		)
 
 		# Je renseigne l'onglet actif après rechargement de la page.
-		request.session['tab_doss'] = ['#ong_arr', -1]
+		request.session['tab_doss'] = '#ong_arr'
 
 		# Je complète le fichier log.
 		rempl_fich_log([request.user.pk, request.user, o_doss.pk, o_doss, 'D', 'Arrêté', v_id_arr_doss])
@@ -4166,7 +4168,7 @@ def ajout_ph(request) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_doss'] = ['#ong_ph', -1]
+			request.session['tab_doss'] = '#ong_ph'
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -4196,7 +4198,6 @@ request : Objet requête
 _p : Identifiant d'une photo
 '''
 @verif_acc
-@nett_f
 def modif_ph(request, _p) :
 
 	# Imports
@@ -4258,7 +4259,7 @@ def modif_ph(request, _p) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_doss'] = ['#ong_ph', -1]
+			request.session['tab_doss'] = '#ong_ph'
 
 			# Je complète le fichier log.
 			rempl_fich_log([
@@ -4322,7 +4323,7 @@ def suppr_ph(request, _p) :
 		)
 
 		# Je renseigne l'onglet actif après rechargement de la page.
-		request.session['tab_doss'] = ['#ong_ph', -1]
+		request.session['tab_doss'] = '#ong_ph'
 
 		# Je complète le fichier log.
 		rempl_fich_log([request.user.pk, request.user, o_doss.pk, o_doss, 'D', 'Photo', v_id_ph])
@@ -4334,7 +4335,6 @@ Cette vue permet de traiter le formulaire d'ajout d'un prestataire.
 request : Objet requête
 '''
 @verif_acc
-@nett_f
 def ajout_org_prest(request) :
 
 	# Imports
@@ -4421,6 +4421,15 @@ def impr_doss(request, _d) :
 			ht_ou_ttc = 'TTC'
 
 		# Je prépare le bloc "Caractéristiques".
+		v_axe = o_doss.num_axe
+		if v_axe == None :
+			v_axe = '-'
+		v_ss_axe = o_doss.num_ss_axe
+		if v_ss_axe == None :
+			v_ss_axe = '-'
+		v_act = o_doss.num_act
+		if v_act == None :
+			v_act = '-'
 		t_attrs_doss = {
 			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
 			'int_doss' : {
@@ -4431,9 +4440,9 @@ def impr_doss(request, _d) :
 			},
 			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
 			'id_progr' : { 'label' : 'Programme', 'value' : o_doss.id_progr },
-			'num_axe' : { 'label' : 'Axe', 'value' : o_doss.num_axe or '-' },
-			'num_ss_axe' : { 'label' : 'Sous-axe', 'value' : o_doss.num_ss_axe or '-' },
-			'num_act' : { 'label' : 'Action', 'value' : o_doss.num_act or '-' },
+			'num_axe' : { 'label' : 'Axe', 'value' : v_axe },
+			'num_ss_axe' : { 'label' : 'Sous-axe', 'value' : v_ss_axe },
+			'num_act' : { 'label' : 'Action', 'value' : v_act },
 			'id_nat_doss' : { 'label' : 'Nature du dossier', 'value' : o_doss.id_nat_doss },
 			'id_type_doss' : { 'label' : 'Type de dossier', 'value' : o_doss.id_type_doss },
 			'id_techn' : { 'label' : 'Agent responsable', 'value' : o_doss.id_techn },

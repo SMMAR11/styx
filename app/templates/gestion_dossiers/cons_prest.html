@@ -124,12 +124,11 @@
 		 * Ce script permet d'activer un onglet du navigateur à onglets relatif à une prestation.
 		 */
 		$(document).ready(function() {
-			var ong_tab_prest = '{{ request.session.tab_prest.0 }}';
+			var ong_tab_prest = '{{ request.session.tab_prest }}';
 			if (ong_tab_prest == '') {
 				ong_tab_prest = '#ong_prest';
 			}
-			$('#tab_prest').find('a[href="' + ong_tab_prest + '"]').parent().addClass('active');
-			$('#tab_prest').next().find(ong_tab_prest).addClass('active in');
+			$('#tab_prest').find('a[href="' + ong_tab_prest + '"]').tab('show');
 		});
 
 		</script>

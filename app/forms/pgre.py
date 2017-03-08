@@ -94,7 +94,7 @@ class GererActionPgre(forms.ModelForm) :
 		from app.functions import ger_droits
 		from app.models import TDossier
 		from app.models import TMoa
-		from styx.settings import PGRE_PK
+		from styx.settings import T_DONN_BDD_INT
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererActionPgre, self).clean()
@@ -109,7 +109,7 @@ class GererActionPgre(forms.ModelForm) :
 		if not i.pk and v_org_moa :
 			for m in v_org_moa :
 				o_org_moa = TMoa.objects.get(pk = m)
-				if ger_droits(self.k_util, [(o_org_moa.pk, PGRE_PK)], False, False) == False :
+				if ger_droits(self.k_util, [(o_org_moa.pk, T_DONN_BDD_INT['PGRE_PK'])], False, False) == False :
 					self.add_error(
 						'cbsm_org_moa',
 						'''

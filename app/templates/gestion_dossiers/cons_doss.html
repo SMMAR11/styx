@@ -13,7 +13,7 @@
 		<div class="main-title">Dossier {{ d }}</div>
 		<ul class="my-nav-tabs nav nav-tabs" id="tab_doss">
 			<li><a href="#ong_doss" data-toggle="tab">Caractéristiques</a></li>
-			{% if d.id_av.int_av != EP_STR %}
+			{% if d.id_av.int_av != AV_EP %}
 			<li><a href="#ong_fin" data-toggle="tab">Plan de financement</a></li>
 			<li><a href="#ong_prest" data-toggle="tab">Prestations</a></li>
 			<li><a href="#ong_fact" data-toggle="tab">Factures</a></li>
@@ -104,7 +104,7 @@
 					</div>
 				</div>
 			</div>
-			{% if d.id_av.int_av != EP_STR %}
+			{% if d.id_av.int_av != AV_EP %}
 			<div id="ong_fin" class="fade tab-pane">
 				<div class="right">
 					<span data-target="#fm_ajout_fin" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter un organisme financier</span>
@@ -400,12 +400,11 @@
 		 * Ce script permet d'activer un onglet du navigateur à onglets relatif à un dossier.
 		 */
 		$(document).ready(function() {
-			var ong_tab_doss = '{{ request.session.tab_doss.0 }}';
+			var ong_tab_doss = '{{ request.session.tab_doss }}';
 			if (ong_tab_doss == '') {
 				ong_tab_doss = '#ong_doss';
 			}
-			$('#tab_doss').find('a[href="' + ong_tab_doss + '"]').parent().addClass('active');
-			$('#tab_doss').next().find(ong_tab_doss).addClass('active in');
+			$('#tab_doss').find('a[href="' + ong_tab_doss + '"]').tab('show');
 		});
 
 		</script>

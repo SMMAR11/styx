@@ -19,7 +19,9 @@ var t_datat = {
 	'cons_pdc' : init_datat($('#t_cons_pdc'), [2]),
 	'cons_ph' : init_datat($('#t_cons_ph'), [0, 4]),
 	'cons_prest' : init_datat($('#t_cons_prest'), [6]),
-	'modif_prest_doss' : init_datat($('#t_modif_prest_doss'), [0, 1, 2, 3, 4])
+	'modif_prest_doss' : init_datat($('#t_modif_prest_doss'), [0, 1, 2, 3, 4]),
+	'select_doss' : init_datat($('#t_select_doss'), [4]),
+	'select_prest' : init_datat($('#t_select_prest'), [])
 };
 var submit = false;
 var pt_prec = null;
@@ -32,30 +34,38 @@ $(document).ready(function() {
 
 	// Je cache la page HTML.
 	$('.container-fluid').hide();
-	$('body').css('background-color', '#FFF');
+	$('body').css({ 'background-color' : '#FFF', 'margin-bottom' : 0 });
 
 	// J'initialise le contenu du loader principal.
-	var o_main_loader = $('<div/>', { 'id' : 'main-loader' });
-	var t_main_loader = [
+	var t_load = [
 		$('<span/>', { 'class' : 'glyphicon glyphicon-refresh spin' }),
 		$('<br/>'),
 		'Chargement de la page'
 	];
 
-	// Je prépare le contenu du loader principal.
-	for (var i = 0; i < t_main_loader.length; i += 1) {
-		o_main_loader.append(t_main_loader[i]);
+	// Je prépare le contenu du loader principal que j'insère dans un premier temps dans un conteneur afin de le 
+	// centrer verticalement.
+	var div = $('<div/>', { 'id' : 'main-loader' });
+	var div_wrapp = $('<div/>');
+	for (var i = 0; i < t_load.length; i += 1) {
+		div_wrapp.append(t_load[i]);
 	}
+	div.append(div_wrapp);
 
 	// J'affiche le loader principal.
-	$('body').prepend(o_main_loader);
+	$('body').prepend(div);
 });
 
 /**
- * Ce script permet l'affichage d'une page web dès la fin du chargement de celle-ci.
+ * Ce script permet l'affichage d'une page web dès la fin du chargement de celle-ci (ainsi que d'autres choses).
  */
 $(window).load(function() {
 	setTimeout(function() {
+
+		// Je réinitialise tous les formulaires de la page web.
+		$('form').each(function() {
+			$(this)[0].reset();
+		});
 
 		// Je supprime le loader principal.
 		$('#main-loader').remove();
@@ -101,16 +111,6 @@ $(document).on('click', '.showable-password', function() {
 		o_password.attr('type', 'password');
 	}
 });
-
-/**
- * Ce script permet de bloquer le comportement par défaut d'un élément cliqué qui possède la classe "to-block".
- * _e : Objet DOM
- */
-$(document).on('click', '.to-block', function(_e) {
-	_e.preventDefault();
-})
-
-// Gestion des dossiers
 
 /**
  * Ce script permet l'affichage de la fenêtre modale d'ajout d'un dossier associé/de correspondance.
@@ -258,12 +258,12 @@ $('#id_GererDossier-id_av, #id_GererDossier-id_av_cp').on('change', function(_e)
 		var o_dt_delib_moa_doss = $('#id_GererDossier-dt_delib_moa_doss');
 		var o_dt_av_cp_doss = $('#id_GererDossier-dt_av_cp_doss');
 
-		if (v_int_av == EP_STR) {
+		if (v_int_av == AV_EP) {
 			o_dt_delib_moa_doss.val('');
 			o_dt_delib_moa_doss.attr('readonly', true);
 
 			$('#id_GererDossier-id_av_cp option').each(function() {
-				if ($(this).text() == EA_STR) {
+				if ($(this).text() == AV_CP_EA) {
 					$('#id_GererDossier-id_av_cp').val($(this).val());
 				}
 			});
@@ -272,7 +272,7 @@ $('#id_GererDossier-id_av, #id_GererDossier-id_av_cp').on('change', function(_e)
 			o_dt_delib_moa_doss.removeAttr('readonly');
 		}
 
-		if (v_int_av == EP_STR || $.inArray(v_int_av_cp, [EA_STR, SO_STR]) > -1) {
+		if (v_int_av == AV_EP || $.inArray(v_int_av_cp, [AV_CP_EA, AV_CP_SO]) > -1) {
 			o_dt_av_cp_doss.val('');
 			o_dt_av_cp_doss.attr('readonly', true);
 		}
@@ -335,7 +335,7 @@ $('#id_GererFinancement-id_paiem_prem_ac').on('change', function() {
 
 	// J'active ou je désactive la lecture seule du contrôle lié au pourcentage de réalisation des travaux.
 	var o_pourc_real_fin = $('#id_GererFinancement-pourc_real_fin');
-	if (v_paiem_prem_ac == PRT_STR) {
+	if (v_paiem_prem_ac == PPA_PRT) {
 		o_pourc_real_fin.removeAttr('readonly');
 	}
 	else {
@@ -536,7 +536,7 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 	var v_type_vers = $('#id_GererDemandeVersement-id_type_vers').val();
 	if (v_type_vers != '' && isNaN(v_type_vers) == false) {
 		var v_int_type_vers = $('#id_GererDemandeVersement-id_type_vers option:selected').text();
-		if ($.inArray(v_int_type_vers, [ACOMPT_STR, SOLD_STR]) > -1) {
+		if ($.inArray(v_int_type_vers, [TVERS_ACOMPT, TVERS_SOLDE]) > -1) {
 			aff_t += 1;
 		}
 	}
@@ -697,7 +697,7 @@ $('#fm_ajout_org_prest').on('hidden.bs.modal', function() {
  */
 $('form[name="f_modif_doss"] #id_GererDossier-id_av_cp').on('change', function() {
 	var v_int_av_cp = $('#id_GererDossier-id_av_cp option:selected').text();
-	if (v_int_av_cp == ACC_STR) {
+	if (v_int_av_cp == AV_CP_ACC) {
 		$('#id_GererDossier-mont_doss').attr('readonly', true);
 		$('#id_GererDossier-mont_suppl_doss').removeAttr('readonly');
 	}
@@ -856,3 +856,58 @@ $('form[name="f_ch_act_pgre"]').on('submit', function(_e) {
 		}
 	);
 });
+
+/**
+ * Ce script permet de gérer l'affichage et les données des listes déroulantes des axes, des sous-axes et des actions
+ * du formulaire de réalisation d'un état en sélectionnant des dossiers.
+ * _e : Objet DOM
+ */
+$('#id_SelectionnerDossiers-zl_progr, #id_SelectionnerDossiers-zl_axe, #id_SelectionnerDossiers-zl_ss_axe').on(
+	'change', function(_e) {
+		alim_ld(
+			_e,
+			[
+				'id_SelectionnerDossiers-zl_progr',
+				['id_SelectionnerDossiers-zl_axe'],
+				'id_SelectionnerDossiers-zl_ss_axe',
+				'id_SelectionnerDossiers-zl_act'
+			]
+		);
+	}
+);
+
+/**
+ * Ce script permet de traiter le formulaire de réalisation d'un état en sélectionnant des dossiers.
+ * _e : Objet DOM
+ */
+$('form[name="f_select_doss"]').on('submit', function(_e) {
+	soum_f(
+		_e,
+		function() {
+			$('#t_select_doss tbody > tr').each(function() {
+				if ($(this).find('td:first-child').attr('class') != 'dataTables_empty') {
+					$(this).find('td:first-child').addClass('b');
+				}				
+			});
+		}
+	);
+});
+
+/**
+ * Ce script permet de gérer l'affichage et les données des listes déroulantes des axes, des sous-axes et des actions
+ * du formulaire de réalisation d'un état en sélectionnant des prestations.
+ * _e : Objet DOM
+ */
+$('#id_SelectionnerPrestations-zl_progr, #id_SelectionnerPrestations-zl_axe, #id_SelectionnerPrestations-zl_ss_axe')
+	.on('change', function(_e) {
+		alim_ld(
+			_e,
+			[
+				'id_SelectionnerPrestations-zl_progr',
+				['id_SelectionnerPrestations-zl_axe'],
+				'id_SelectionnerPrestations-zl_ss_axe',
+				'id_SelectionnerPrestations-zl_act'
+			]
+		);
+	}
+);

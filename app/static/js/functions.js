@@ -326,17 +326,14 @@ function soum_f(_e, _s = function(){}, _t = []) {
 		}
 	}
 
-	// Je récupère la valeur de l'attribut "name".
-	var get_f_name = $(_e.target).attr('name');
-
 	// Je pointe vers l'objet "formulaire".
-	var o_f = $('form[name="' + get_f_name + '"]');
+	var o_f = $(_e.target);
 	if (est_conf == true) {
 		o_f = _t[0];
 	}
 
 	// J'assigne le suffixe lié au formulaire (utile pour manipuler les contrôles liés à celui-ci).
-	var suff = get_f_name.substring(2);
+	var suff = o_f.attr('name').substring(2);
 
 	// J'initialise l'URL traitant le formulaire.
 	var act = o_f.attr('action');
@@ -347,6 +344,9 @@ function soum_f(_e, _s = function(){}, _t = []) {
 		act += _t[1];
 	}
 
+	// Je stocke la valeur de l'attribut "onsubmit".
+	var get_onsubmit = o_f.attr('onsubmit');
+	
 	// Je lance une requête AJAX.
 	$.ajax({
 		type : 'post',
@@ -357,7 +357,11 @@ function soum_f(_e, _s = function(){}, _t = []) {
 		contentType : false,
 		beforeSend : function() {
 			aff_load_ajax(true);
-			o_f.find('button[type="submit"]').addClass('to-block');
+
+			// Je désactive la possibilité de soumettre le formulaire tant que la requête AJAX n'est pas terminée.
+			if (get_onsubmit != undefined) {
+				o_f.attr('onsubmit', 'return false;');
+			}
 		},
 		success : function(data) {
 
@@ -480,7 +484,12 @@ function soum_f(_e, _s = function(){}, _t = []) {
 			alert('Erreur ' + xhr.status);
 		},
 		complete : function() {
-			o_f.find('button[type="submit"]').removeClass('to-block');
+
+			// Je réactive la possibilité de soumettre le formulaire.
+			if (get_onsubmit != undefined) {
+				o_f.attr('onsubmit', get_onsubmit);
+			}
+
 			aff_load_ajax(false);
 		}
 	});

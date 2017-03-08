@@ -67,7 +67,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
-                'app.context_processors.global_settings'
+                'app.context_processors.get_bdd_settings',
+                'app.context_processors.get_menu'
             ],
         },
     },
@@ -141,20 +142,20 @@ LEAFLET_CONFIG = {
 }
 
 # Je déclare mes options personnelles.
-EP_STR = 'En projet'
-SOLD_STR_2 = 'Soldé'
+T_DONN_BDD_STR = {
+    'AV_EP' : 'En projet',
+    'AV_SOLDE' : 'Soldé',
+    'AV_CP_ACC' : 'Accordé',
+    'AV_CP_EA' : 'En attente',
+    'AV_CP_REF' : 'Refusé',
+    'AV_CP_SO' : 'Sans objet',
+    'PPA_PRT' : 'Pourcentage de réalisation des travaux',
+    'TVERS_ACOMPT' : 'Acompte',
+    'TVERS_SOLDE' : 'Solde',
+    'TAV_ARR_VALIDE' : 'Validé',
+}
 
-ACC_STR = 'Accordé'
-EA_STR = 'En attente'
-REF_STR = 'Refusé'
-SO_STR = 'Sans objet'
-
-PRT_STR = 'Pourcentage de réalisation des travaux'
-
-ACOMPT_STR = 'Acompte'
-SOLD_STR = 'Solde'
-
-VALID_STR = 'Validé'
-
-PGRE_PK = 4
-DDTM_PK = 59
+T_DONN_BDD_INT = {
+    'PGRE_PK' : 4,
+    'DDTM_PK' : 59
+}

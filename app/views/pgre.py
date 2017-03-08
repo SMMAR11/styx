@@ -30,7 +30,6 @@ Cette vue permet d'afficher la page de création d'une action PGRE ou de traiter
 request : Objet requête
 '''
 @verif_acc
-@nett_f
 @csrf_exempt
 def cr_act_pgre(request) :
 
@@ -174,7 +173,6 @@ request : Objet requête
 _a : Identifiant d'une action PGRE
 '''
 @verif_acc
-@nett_f
 @csrf_exempt
 def modif_act_pgre(request, _a) :
 
@@ -196,7 +194,7 @@ def modif_act_pgre(request, _a) :
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
-	from styx.settings import PGRE_PK
+	from styx.settings import T_DONN_BDD_INT
 	import json
 
 	output = HttpResponse()
@@ -207,7 +205,9 @@ def modif_act_pgre(request, _a) :
 	# Je vérifie le droit d'écriture.
 	ger_droits(
 		request.user,
-		[(m.id_org_moa.pk, PGRE_PK) for m in TMoaDossierPgre.objects.filter(id_doss_pgre = o_act_pgre)],
+		[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+			id_doss_pgre = o_act_pgre
+		)],
 		False
 	)
 
@@ -391,7 +391,7 @@ def suppr_act_pgre(request, _a) :
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
-	from styx.settings import PGRE_PK
+	from styx.settings import T_DONN_BDD_INT
 	import json
 
 	output = HttpResponse()
@@ -404,7 +404,9 @@ def suppr_act_pgre(request, _a) :
 		# Je vérifie le droit d'écriture.
 		ger_droits(
 			request.user,
-			[(m.id_org_moa.pk, PGRE_PK) for m in TMoaDossierPgre.objects.filter(id_doss_pgre = o_act_pgre)],
+			[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+				id_doss_pgre = o_act_pgre
+			)],
 			False
 		)
 
@@ -469,7 +471,6 @@ Cette vue permet d'afficher la page de choix d'une action PGRE ou de traiter une
 request : Objet requête
 '''
 @verif_acc
-@nett_f
 def ch_act_pgre(request) :
 
 	# Imports
@@ -587,7 +588,6 @@ request : Objet requête
 _a : Identifiant d'une action PGRE
 '''
 @verif_acc
-@nett_f
 @csrf_exempt
 def cons_act_pgre(request, _a) :
 
@@ -614,9 +614,8 @@ def cons_act_pgre(request, _a) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	from django.template.context_processors import csrf
-	from styx.settings import DDTM_PK
 	from styx.settings import MEDIA_URL
-	from styx.settings import PGRE_PK
+	from styx.settings import T_DONN_BDD_INT
 	import datetime
 	import json
 	import time
@@ -627,7 +626,9 @@ def cons_act_pgre(request, _a) :
 	o_act_pgre = get_object_or_404(TDossierPgre, pk = _a)
 
 	# J'initialise le tableau des couples pouvant accéder à la vue.
-	t_coupl_val = [(m.id_org_moa.pk, PGRE_PK) for m in TMoaDossierPgre.objects.filter(id_doss_pgre = o_act_pgre)]
+	t_coupl_val = [(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+		id_doss_pgre = o_act_pgre
+	)]
 
 	# Je stocke le jeu de données des points de contrôle de l'année courante.
 	annee = date.today().year
@@ -640,10 +641,7 @@ def cons_act_pgre(request, _a) :
 
 		# Je désigne l'onglet actif du navigateur à onglets relatif à une action PGRE.
 		if 'tab_act_pgre' not in request.session :
-			request.session['tab_act_pgre'] = ['#ong_act_pgre', -1]
-		request.session['tab_act_pgre'][1] += 1
-		if request.session['tab_act_pgre'][1] > 0 :
-			del request.session['tab_act_pgre']
+			request.session['tab_act_pgre'] = '#ong_act_pgre'
 
 		# Je prépare l'onglet "Caractéristiques".
 		t_attrs_act_pgre = {
@@ -829,7 +827,7 @@ def cons_act_pgre(request, _a) :
 
 		# Je regarde si l'utilisateur connecté provient de la DDTM.
 		est_ddtm = False
-		if TUtilisateur.objects.get(pk = request.user.pk).id_org.pk == DDTM_PK :
+		if TUtilisateur.objects.get(pk = request.user.pk).id_org.pk == T_DONN_BDD_INT['DDTM_PK'] :
 			est_ddtm = True
 
 		# Je complète le tableau de fenêtres modales dans le cas où l'utilisateur connecté provient de la DDTM.
@@ -859,6 +857,9 @@ def cons_act_pgre(request, _a) :
 				'title' : 'Consulter une action PGRE'
 			}
 		)
+
+		# Je supprime la variable de session liée au navigateur à onglets relatif à une action PGRE.
+		del request.session['tab_act_pgre']
 
 	else :
 		if 'action' in request.GET :
@@ -996,7 +997,7 @@ def ajout_ph_pgre(request) :
 	from app.models import TMoaDossierPgre
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
-	from styx.settings import PGRE_PK
+	from styx.settings import T_DONN_BDD_INT
 	import json
 
 	output = HttpResponse()
@@ -1013,7 +1014,9 @@ def ajout_ph_pgre(request) :
 		if o_act_pgre_droit :
 			ger_droits(
 				request.user, 
-				[(m.id_org_moa.pk, PGRE_PK) for m in TMoaDossierPgre.objects.filter(id_doss_pgre = o_act_pgre_droit)],
+				[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+					id_doss_pgre = o_act_pgre_droit
+				)],
 				False
 			)
 
@@ -1038,7 +1041,7 @@ def ajout_ph_pgre(request) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_act_pgre'] = ['#ong_ph', -1]
+			request.session['tab_act_pgre'] = '#ong_ph'
 
 		else :
 
@@ -1057,7 +1060,6 @@ request : Objet requête
 _p : Identifiant d'une photo
 '''
 @verif_acc
-@nett_f
 def modif_ph_pgre(request, _p) :
 
 	# Imports
@@ -1071,7 +1073,7 @@ def modif_ph_pgre(request, _p) :
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
-	from styx.settings import PGRE_PK
+	from styx.settings import T_DONN_BDD_INT
 	import json
 
 	output = HttpResponse()
@@ -1082,7 +1084,9 @@ def modif_ph_pgre(request, _p) :
 	# Je vérifie le droit d'écriture.
 	ger_droits(
 		request.user,
-		[(m.id_org_moa.pk, PGRE_PK) for m in TMoaDossierPgre.objects.filter(id_doss_pgre = o_ph_pgre.id_doss_pgre)],
+		[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+			id_doss_pgre = o_ph_pgre.id_doss_pgre
+		)],
 		False
 	)
 
@@ -1129,7 +1133,7 @@ def modif_ph_pgre(request, _p) :
 			)
 
 			# Je renseigne l'onglet actif après rechargement de la page.
-			request.session['tab_act_pgre'] = ['#ong_ph', -1]
+			request.session['tab_act_pgre'] = '#ong_ph'
 
 		else :
 
@@ -1157,7 +1161,7 @@ def suppr_ph_pgre(request, _p) :
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
-	from styx.settings import PGRE_PK
+	from styx.settings import T_DONN_BDD_INT
 	import json
 
 	output = HttpResponse()
@@ -1170,7 +1174,9 @@ def suppr_ph_pgre(request, _p) :
 		# Je vérifie le droit d'écriture.
 		ger_droits(
 			request.user,
-			[(m.id_org_moa.pk, PGRE_PK) for m in TMoaDossierPgre.objects.filter(id_doss_pgre = o_ph_pgre.id_doss_pgre)],
+			[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+				id_doss_pgre = o_ph_pgre.id_doss_pgre
+			)],
 			False
 		)
 
@@ -1190,7 +1196,7 @@ def suppr_ph_pgre(request, _p) :
 		)
 
 		# Je renseigne l'onglet actif après rechargement de la page.
-		request.session['tab_act_pgre'] = ['#ong_ph', -1]
+		request.session['tab_act_pgre'] = '#ong_ph'
 
 	return output
 
@@ -1201,7 +1207,6 @@ request : Objet requête
 _p : Identifiant d'un point de contrôle
 '''
 @verif_acc
-@nett_f
 def modif_pdc(request, _p) :
 
 	# Imports
@@ -1215,7 +1220,7 @@ def modif_pdc(request, _p) :
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
-	from styx.settings import PGRE_PK
+	from styx.settings import T_DONN_BDD_INT
 	import json
 
 	output = HttpResponse()
@@ -1226,7 +1231,9 @@ def modif_pdc(request, _p) :
 	# Je vérifie le droit d'écriture.
 	ger_droits(
 		request.user,
-		[(m.id_org_moa.pk, PGRE_PK) for m in TMoaDossierPgre.objects.filter(id_doss_pgre = o_pdc.id_doss_pgre)],
+		[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+			id_doss_pgre = o_pdc.id_doss_pgre
+		)],
 		False
 	)
 
@@ -1302,7 +1309,7 @@ def suppr_pdc(request, _p) :
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
-	from styx.settings import PGRE_PK
+	from styx.settings import T_DONN_BDD_INT
 	import json
 
 	output = HttpResponse()
@@ -1315,7 +1322,9 @@ def suppr_pdc(request, _p) :
 		# Je vérifie le droit d'écriture.
 		ger_droits(
 			request.user,
-			[(m.id_org_moa.pk, PGRE_PK) for m in TMoaDossierPgre.objects.filter(id_doss_pgre = o_pdc.id_doss_pgre)],
+			[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+				id_doss_pgre = o_pdc.id_doss_pgre
+			)],
 			False
 		)
 

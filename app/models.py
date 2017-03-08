@@ -499,11 +499,11 @@ class TDossier(models.Model) :
 
         # Imports
         from app.models import TAvisCp
-        from styx.settings import EA_STR
+        from styx.settings import T_DONN_BDD_STR
 
         # Je vérifie l'existence d'un objet TAvisCp dont son intitulé est "En attente".
         try :
-            v_av_cp = TAvisCp.objects.get(int_av_cp = EA_STR).pk
+            v_av_cp = TAvisCp.objects.get(int_av_cp = T_DONN_BDD_STR['AV_CP_EA']).pk
         except :
             v_av_cp = None
 
@@ -692,7 +692,7 @@ class TDepartement(models.Model) :
         verbose_name_plural = 'T_DEPARTEMENT'
 
     def __str__(self) :
-        return self.n_dep
+        return '{0} ({1})'.format(self.n_dep, self.num_dep)
 
 class TPrestataire(TOrganisme) :
 

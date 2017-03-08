@@ -518,6 +518,60 @@ def ger_droits(_u, _d, _g = True, _h = True) :
 		return trouve
 
 '''
+Cette fonction retourne un menu à vignettes.
+_t : Tableau de vignettes
+_l : Limite par ligne
+Retourne une chaîne de caractères
+'''
+def get_menu_vign(_t, _l) :
+
+	# Import
+	from django.template.defaultfilters import safe
+
+	# Je stocke la longueur du tableau à vignettes.
+	long_t = len(_t)
+
+	# Je stocke le nombre de lignes complètes (lignes comportant "_lim" vignettes).
+	nb_lg = int(long_t / _l)
+
+	# J'initialise le tableau des lignes (éléments <div/> possédant la classe "row").
+	t_lg = []
+
+	for i in range(0, nb_lg) :
+
+		# Je stocke l'indice de la première vignette de la ligne courante.
+		ind = i * _l
+
+		# J'initialise et j'empile le tableau des colonnes de la ligne courante.
+		t_col = []
+		for j in range(0, _l) :
+			t_col.append('<div class="col-sm-{0}">{1}</div>'.format(int(12 / _l), _t[ind + j]))
+
+		# J'empile le tableau des lignes.
+		t_lg.append('<div class="row">{0}</div>'.format(''.join(t_col)))
+
+	# Je stocke le nombre de vignettes non-assignées.
+	nb_vign_rest = long_t % _l
+
+	if nb_vign_rest > 0 :
+
+		# Je stocke l'indice de la première vignette de la dernière ligne.
+		ind = nb_lg * _l
+
+		# J'initialise et j'empile le tableau des colonnes de la dernière ligne.
+		t_col = []
+		for i in range(0, nb_vign_rest) :
+			t_col.append('<div class="col-sm-{0}">{1}</div>'.format(int(12 / nb_vign_rest), _t[ind + i]))
+
+		# J'empile le tableau des lignes.
+		t_lg.append('<div class="row">{0}</div>'.format(''.join(t_col)))
+
+	# Je prépare le menu à vignettes.
+	menu_vign = '<div class="thumbnails-row">{0}</div>'.format(''.join(t_lg))
+
+	return safe(menu_vign)
+
+'''
 Cette fonction retourne le gabarit de chaque champ d'un formulaire.
 _f : Formulaire traité
 Retourne un tableau associatif.
@@ -589,7 +643,13 @@ def init_f(_f) :
 		if bal == '<input/>' :
 
 			if 'type="checkbox"' in c_to_html :
-				gab = gab_base.format(c.label, c)
+				gab = '''
+				<div class="field-wrapper">
+					<span class="field-control">{0}</span>
+					<span class="field-label">{1}</span>
+					<span class="field-error"></span>
+				</div>
+				'''.format(c, c.label)
 
 			if 'type="email"' in c_to_html :
 				c_maj = c_to_html.replace('type="email"', 'type="text"')
@@ -935,7 +995,7 @@ def obt_pourc(_v) :
 
 	output = _v
 
-	if _v :
+	if _v is not None :
 
 		# Je convertis l'entier ou le nombre décimal sous forme de pourcentage.
 		output = '{0:.2f}'.format(_v)
@@ -1023,6 +1083,28 @@ def suppr(_v, _m = '') :
 	t_lg.reverse()
 
 	return '<div class="br"></div>'.join(t_lg)
+
+''' 
+Cette fonction supprime les doublons d'un tableau.
+_t : Tableau à traiter
+Retourne un tableau
+'''
+def suppr_doubl(_t) :
+
+	# J'initialise un ensemble vide.
+	t_tupl = set()
+
+	# J'initialise et j'empile le tableau de sortie.
+	t = []
+	for lg in _t :
+		tupl = tuple(lg)
+		if tupl not in t_tupl :
+			t.append(tupl)
+
+			# J'empile le tableau des tuples uniques.
+			t_tupl.add(tupl)
+
+	return t
 
 '''
 Cette fonction vérifie si l'extension d'un fichier uploadé est autorisée.
