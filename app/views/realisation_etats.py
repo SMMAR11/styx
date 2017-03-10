@@ -33,7 +33,7 @@ request : Objet requête
 def select_doss(request) :
 
 	# Imports
-	from app.forms.realisation_etats import SelectionnerDossiers
+	from app.forms.realisation_etats import RechercherDossiers
 	from app.functions import alim_ld
 	from app.functions import dt_fr
 	from app.functions import gen_cdc
@@ -86,6 +86,7 @@ def select_doss(request) :
 					'Montant du dossier présenté au CD GEMAPI (en €)',
 					'Dépassement du dossier (en €)',
 					'Montant total du dossier (en €)',
+					'Mode de taxe du dossier',
 					'État d\'avancement',
 					'Date de délibération au maître d\'ouvrage',
 					'Avis du comité de programmation - CD GEMAPI',
@@ -106,6 +107,11 @@ def select_doss(request) :
 					o_doss = TDossier.objects.get(num_doss = lg[0])
 					o_suivi_doss = VSuiviDossier.objects.get(pk = o_doss.pk)
 
+					# Je définis le mode de taxe du dossier.
+					ht_ou_ttc = 'HT'
+					if o_doss.est_ttc_doss == True :
+						ht_ou_ttc = 'TTC'
+
 					# Je commence à préparer la ligne courante.
 					body = [
 						o_doss,
@@ -125,6 +131,7 @@ def select_doss(request) :
 						o_doss.mont_doss,
 						o_doss.mont_suppl_doss,
 						o_suivi_doss.mont_tot_doss,
+						ht_ou_ttc,
 						o_doss.id_av,
 						o_doss.dt_delib_moa_doss,
 						o_doss.id_av_cp,
@@ -148,7 +155,7 @@ def select_doss(request) :
 			request.session['select_doss'] = []
 
 			# J'instancie un objet "formulaire".
-			f_select_doss = SelectionnerDossiers(prefix = 'SelectionnerDossiers')
+			f_select_doss = RechercherDossiers(prefix = 'RechercherDossiers')
 
 			# J'affiche le template.
 			output = render(request, './realisation_etats/select_doss.html', {
@@ -165,12 +172,12 @@ def select_doss(request) :
 		else :
 
 			# Je soumets le formulaire.
-			f_select_doss = SelectionnerDossiers(
+			f_select_doss = RechercherDossiers(
 				request.POST,
-				prefix = 'SelectionnerDossiers',
-				k_progr = request.POST.get('SelectionnerDossiers-zl_progr'),
-				k_axe = request.POST.get('SelectionnerDossiers-zl_axe'),
-				k_ss_axe = request.POST.get('SelectionnerDossiers-zl_ss_axe')
+				prefix = 'RechercherDossiers',
+				k_progr = request.POST.get('RechercherDossiers-zl_progr'),
+				k_axe = request.POST.get('RechercherDossiers-zl_axe'),
+				k_ss_axe = request.POST.get('RechercherDossiers-zl_ss_axe')
 			)
 
 			if f_select_doss.is_valid() :
@@ -274,7 +281,7 @@ def select_doss(request) :
 				# J'affiche les erreurs.
 				t_err = {}
 				for k, v in f_select_doss.errors.items() :
-					t_err['SelectionnerDossiers-{0}'.format(k)] = v
+					t_err['RechercherDossiers-{0}'.format(k)] = v
 				output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
 
 	return output
@@ -285,15 +292,15 @@ des actions disponibles.
 request : Objet requête
 '''
 @verif_acc
-def select_prest(request) :
+def regr_prest(request) :
 
 	# Imports
-	from app.forms.realisation_etats import SelectionnerPrestations
+	from app.forms.realisation_etats import RechercherPrestations
 	from app.functions import alim_ld
-	from app.functions import dt_fr
 	from app.functions import gen_cdc
 	from app.functions import init_f
 	from app.functions import obt_mont
+	from app.functions import obt_pourc
 	from app.functions import suppr_doubl
 	from app.models import TPrestation
 	from app.models import TRegroupementsMoa
@@ -324,57 +331,71 @@ def select_prest(request) :
 
 				# J'initialise le tableau qui va aider à la conception du fichier CSV.
 				t_lg = []
-				if 'select_prest' in request.session :
-					t_lg = request.session['select_prest']
+				if 'regr_prest' in request.session :
+					t_lg = request.session['regr_prest']
 
 				writer.writerow([
 					'Prestataire',
-					'Intitulé de la prestation',
-					'Référence de la prestation',
-					'Nombre de dossiers reliés à la prestation',
-					'Dossier(s) relié(s) à la prestation',
-					'Montant total de la prestation (en €)',
-					'Reste à facturer total de la prestation (en €)',
-					'Date de notification de la prestation',
-					'Date de fin de la prestation',
-					'Nature de la prestation',
-					'Commentaire'
+					'Nombre de prestations',
+					'Montant cumulé des prestations (en €)',
+					'Reste à facturer cumulé (en €)',
+					'Nombre de prestations en cours',
+					'Montant cumulé des prestations en cours (en €)',
+					'Nombre de prestations clôturées',
+					'Montant cumulé des prestations clôturées (en €)',
+					'Indice de contractualisation (en %)'
 				])
 
+				mont_tot_prest = sum(elem[3] for elem in t_lg)
 				for lg in t_lg :
 
-					# Je pointe vers l'objet TPrestation.
-					o_prest = TPrestation.objects.get(pk = lg[0])
+					# Je récupère les prestations effectuées pour un prestataire.
+					split = lg[0].split(';')
 
-					qs_prest_doss = VSuiviPrestationsDossier.objects.filter(id_prest = o_prest)
-					qs_aggr_prest_doss = qs_prest_doss.aggregate(Count('pk'), Sum('mont_prest_doss'), Sum('mont_raf'))
+					mont_cumul_prest = [0, 0]
+					nb_prest = [0, 0]
+					for elem in split :
+
+						# Je pointe vers l'objet TPrestation.
+						o_prest = TPrestation.objects.get(pk = elem)
+
+						# Je stocke le cumul des prestations ainsi que le cumul des restes à facturer lié à la
+						# prestation courante.
+						qs_aggr_prest_doss = VSuiviPrestationsDossier.objects.filter(id_prest = o_prest).aggregate(
+							Sum('mont_prest_doss'), Sum('mont_raf')
+						)
+
+						# Je vérifie si la prestation courante est clôturée ou non.
+						ind = 0
+						if qs_aggr_prest_doss['mont_raf__sum'] == 0 :
+							ind = 1
+						mont_cumul_prest[ind] += qs_aggr_prest_doss['mont_prest_doss__sum']
+						nb_prest[ind] += 1
 
 					writer.writerow([
-						o_prest.id_org_prest,
-						o_prest.int_prest,
-						o_prest.ref_prest,
-						qs_aggr_prest_doss['pk__count'],
-						', '.join([str(pd.id_doss) for pd in qs_prest_doss]),
-						qs_aggr_prest_doss['mont_prest_doss__sum'],
-						qs_aggr_prest_doss['mont_raf__sum'],
-						o_prest.dt_notif_prest,
-						o_prest.dt_fin_prest,
-						o_prest.id_nat_prest,
-						o_prest.comm_prest
+						lg[1],
+						lg[2],
+						lg[3],
+						lg[4],
+						nb_prest[0],
+						mont_cumul_prest[0],
+						nb_prest[1],
+						mont_cumul_prest[1],
+						obt_pourc((lg[3] / mont_tot_prest) * 100)
 					])
 
 		else :
 
 			# J'initialise le tableau des dossiers sélectionnés.
-			request.session['select_prest'] = []
+			request.session['regr_prest'] = []
 
 			# J'instancie un objet "formulaire".
-			f_select_prest = SelectionnerPrestations(prefix = 'SelectionnerPrestations')
+			f_regr_prest = RechercherPrestations(prefix = 'RechercherPrestations')
 
 			# J'affiche le template.
-			output = render(request, './realisation_etats/select_prest.html', {
-				'f_select_prest' : init_f(f_select_prest),
-				'title' : 'Réalisation d\'états en sélectionnant des prestations'
+			output = render(request, './realisation_etats/regr_prest.html', {
+				'f_regr_prest' : init_f(f_regr_prest),
+				'title' : 'Réalisation d\'états en regroupant des prestations'
 			})
 
 	else :
@@ -386,18 +407,18 @@ def select_prest(request) :
 		else :
 
 			# Je soumets le formulaire.
-			f_select_prest = SelectionnerPrestations(
+			f_regr_prest = RechercherPrestations(
 				request.POST,
-				prefix = 'SelectionnerPrestations',
-				k_progr = request.POST.get('SelectionnerPrestations-zl_progr'),
-				k_axe = request.POST.get('SelectionnerPrestations-zl_axe'),
-				k_ss_axe = request.POST.get('SelectionnerPrestations-zl_ss_axe')
+				prefix = 'RechercherPrestations',
+				k_progr = request.POST.get('RechercherPrestations-zl_progr'),
+				k_axe = request.POST.get('RechercherPrestations-zl_axe'),
+				k_ss_axe = request.POST.get('RechercherPrestations-zl_ss_axe')
 			)
 
-			if f_select_prest.is_valid() :
+			if f_regr_prest.is_valid() :
 
 				# Je récupère les données du formulaire valide.
-				cleaned_data = f_select_prest.cleaned_data
+				cleaned_data = f_regr_prest.cleaned_data
 				v_org_prest = cleaned_data.get('zl_org_prest')
 				v_org_moa = cleaned_data.get('cbsm_org_moa')
 				v_progr = cleaned_data.get('zl_progr')
@@ -409,7 +430,6 @@ def select_prest(request) :
 				v_nat_prest = cleaned_data.get('zl_nat_prest')
 				v_mont_prest_min = cleaned_data.get('zs_mont_prest_min')
 				v_mont_prest_max = cleaned_data.get('zs_mont_prest_max')
-				v_mont_raf = cleaned_data.get('zs_mont_raf')
 				v_dep = cleaned_data.get('zl_dep')
 				v_ajout_select_exist = cleaned_data.get('cb_ajout_select_exist')
 
@@ -433,26 +453,31 @@ def select_prest(request) :
 					t_sql['and']['id_nat_prest'] = v_nat_prest
 				if v_dep :
 					t_sql['and']['id_org_prest__num_dep'] = v_dep
+
+				# J'initialise, j'empile et j'épure le tableau des maîtres d'ouvrages concernés par la requête.
 				t_org_moa = []
 				for m in v_org_moa :
 					qs_regr_moa = TRegroupementsMoa.objects.filter(id_org_moa_fil = m)
 					for rm in qs_regr_moa :
-						t_org_moa.append(rm.id_org_moa_anc.pk)
-					t_org_moa.append(m)
+						t_org_moa.append(str(rm.id_org_moa_anc.pk))
+					t_org_moa.append(str(m))
+				t_org_moa = list(set(t_org_moa))
+
+				# Je débute l'initialisation de la requête en incluant.
 				if len(t_org_moa) > 0 :
 					if len(t_org_moa) == 1 :
 						t_sql['and']['tprestationsdossier__id_doss__id_org_moa'] = t_org_moa[0]
 					else :
 						for m in t_org_moa :
 							t_sql['or'].append(Q(**{ 'tprestationsdossier__id_doss__id_org_moa' : m }))
-
-				# Je débute l'initialisation de la requête.
-				if len(t_sql['or']) > 0 :
-					qs_prest = TPrestation.objects.filter(reduce(operator.or_, t_sql['or']), **t_sql['and'])
+					if len(t_sql['or']) > 0 :
+						qs_prest = TPrestation.objects.filter(reduce(operator.or_, t_sql['or']), **t_sql['and'])
+					else :
+						qs_prest = TPrestation.objects.filter(**t_sql['and'])
 				else :
-					qs_prest = TPrestation.objects.filter(**t_sql['and'])
+					qs_prest = TPrestation.objects.none()
 
-				# Je termine l'initialisation de la requête.
+				# Je termine l'initialisation de la requête en excluant.
 				t_excl = [] 
 				if v_mont_prest_min :
 					t_excl[len(t_excl):] = [p.pk for p in VPrestation.objects.filter(
@@ -462,55 +487,84 @@ def select_prest(request) :
 					t_excl[len(t_excl):] = [p.pk for p in VPrestation.objects.filter(
 						mont_prest__gt = v_mont_prest_max
 					)]
-				if v_mont_raf :
-					for p in TPrestation.objects.all() :
-						qs_aggr_prest_doss = VSuiviPrestationsDossier.objects.filter(id_prest = p).aggregate(
-							Sum('mont_raf')
-						)
-						if qs_aggr_prest_doss['mont_raf__sum'] < v_mont_raf :
-							t_excl.append(p.pk)
-				qs_prest = qs_prest.exclude(pk__in = t_excl).order_by('id_org_prest', 'int_prest', 'dt_notif_prest')
+				qs_prest = qs_prest.exclude(pk__in = t_excl).distinct().order_by('id_org_prest')
 
-				# Je prépare le tableau des prestations filtrées.
-				t_prest = []
+				# J'initialise et j'empile le tableau "group by".
+				t_group_by = {}
 				for p in qs_prest :
+					v_id_org_prest = str(p.id_org_prest.pk)
+					if v_id_org_prest not in t_group_by :
+						t_group_by[v_id_org_prest] = TPrestation.objects.none()
+					t_group_by[v_id_org_prest] = t_group_by[v_id_org_prest] | TPrestation.objects.filter(pk = p.pk)
 
-					qs_aggr_prest_doss = VSuiviPrestationsDossier.objects.filter(id_prest = p).aggregate(
-						Count('pk'), Sum('mont_prest_doss'), Sum('mont_raf')
-					)
+				# J'empile le tableau des prestataires filtrés.
+				t_org_prest = []
 
-					t_prest.append((
-						p.pk,
-						str(p.id_org_prest),
-						p.int_prest,
-						dt_fr(p.dt_notif_prest),
-						qs_aggr_prest_doss['pk__count'],
-						obt_mont(qs_aggr_prest_doss['mont_prest_doss__sum']),
-						obt_mont(qs_aggr_prest_doss['mont_raf__sum'])
+				for cle, val in t_group_by.items() :
+
+					# Je cumule les montants des prestations ainsi que les restes à facturer pour le prestataire
+					# courant.
+					mont_cumul_prest = 0
+					mont_cumul_raf = 0
+					for p in val :
+						qs_aggr = VSuiviPrestationsDossier.objects.filter(id_prest = p).aggregate(
+							Sum('mont_prest_doss'), Sum('mont_raf')
+						)
+						mont_cumul_prest += qs_aggr['mont_prest_doss__sum']
+						mont_cumul_raf += qs_aggr['mont_raf__sum']
+
+					# J'empile le tableau des prestataires filtrés.
+					t_org_prest.append((
+						';'.join([str(p.pk) for p in val]),
+						str(val[0].id_org_prest),
+						len(val),
+						mont_cumul_prest,
+						mont_cumul_raf
 					))
 
-				# Je réinitialise le tableau des prestations sélectionnées si l'option "Ajouter à la sélection 
+				# Je réinitialise le tableau des prestataires sélectionnés si l'option "Ajouter à la sélection 
 				# existante" est cochée.
 				if v_ajout_select_exist == False :
-					request.session['select_prest'] = []
+					request.session['regr_prest'] = []
 
-				# J'empile le tableau des prestations sélectionnées.
-				for p in t_prest :
-					request.session['select_prest'].append(p)
+				# J'empile le tableau des prestataires sélectionnés.
+				for p in t_org_prest :
+					request.session['regr_prest'].append(p)
 
-				# Je supprime les doublons du tableau des prestations sélectionnées.
-				request.session['select_prest'] = suppr_doubl(request.session['select_prest'])
+				# Je supprime les doublons du tableau des prestataires sélectionnés.
+				request.session['regr_prest'] = suppr_doubl(request.session['regr_prest'])
 
-				# Je "slice" le tableau de session afin de ne pas afficher l'identifiant de la prestation dans le
-				# tableau HTML (utile pour la génération d'un fichier CSV).
+				# Je prépare le tableau de sortie.
 				t_output = []
-				for elem in request.session['select_prest'] :
-					t_output.append(elem[1:])
+				mont_tot_prest = sum(elem[3] for elem in request.session['regr_prest'])
+				for elem in request.session['regr_prest'] :
+					t_output.append([
+						elem[1],
+						elem[2],
+						elem[3],
+						elem[4],
+						(elem[3] / mont_tot_prest) * 100
+					])
 
-				# J'envoie le tableau des prestations filtrées.
+				# Je prépare le tableau relatif à la balise <tfoot/> de la datatable.
+				t_tfoot = [
+					'Total',
+					sum(elem[1] for elem in t_output),
+					obt_mont(sum(elem[2] for elem in t_output)),
+					obt_mont(sum(elem[3] for elem in t_output)),
+					obt_pourc(sum(elem[4] for elem in t_output))
+				]
+
+				# Je mets en forme le tableau de sortie.
+				for elem in t_output :
+					elem[2] = obt_mont(elem[2])
+					elem[3] = obt_mont(elem[3])
+					elem[4] = obt_pourc(elem[4])
+
+				# J'envoie le tableau des prestataires filtrés.
 				output = HttpResponse(
 					json.dumps({ 'success' : {
-						'datatable' : t_output
+						'datatable' : t_output, 'datatable_tfoot' : t_tfoot
 					}}), content_type = 'application/json'
 				)
 
@@ -518,8 +572,8 @@ def select_prest(request) :
 
 				# J'affiche les erreurs.
 				t_err = {}
-				for k, v in f_select_prest.errors.items() :
-					t_err['SelectionnerPrestations-{0}'.format(k)] = v
+				for k, v in f_regr_prest.errors.items() :
+					t_err['RechercherPrestations-{0}'.format(k)] = v
 				output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
 
 	return output

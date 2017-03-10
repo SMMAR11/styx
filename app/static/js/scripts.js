@@ -20,8 +20,8 @@ var t_datat = {
 	'cons_ph' : init_datat($('#t_cons_ph'), [0, 4]),
 	'cons_prest' : init_datat($('#t_cons_prest'), [6]),
 	'modif_prest_doss' : init_datat($('#t_modif_prest_doss'), [0, 1, 2, 3, 4]),
-	'select_doss' : init_datat($('#t_select_doss'), [4]),
-	'select_prest' : init_datat($('#t_select_prest'), [])
+	'regr_prest' : init_datat($('#t_regr_prest'), []),
+	'select_doss' : init_datat($('#t_select_doss'), [4])
 };
 var submit = false;
 var pt_prec = null;
@@ -859,18 +859,18 @@ $('form[name="f_ch_act_pgre"]').on('submit', function(_e) {
 
 /**
  * Ce script permet de gérer l'affichage et les données des listes déroulantes des axes, des sous-axes et des actions
- * du formulaire de réalisation d'un état en sélectionnant des dossiers.
+ * du formulaire de réalisation d'un état sur les dossiers.
  * _e : Objet DOM
  */
-$('#id_SelectionnerDossiers-zl_progr, #id_SelectionnerDossiers-zl_axe, #id_SelectionnerDossiers-zl_ss_axe').on(
+$('#id_RechercherDossiers-zl_progr, #id_RechercherDossiers-zl_axe, #id_RechercherDossiers-zl_ss_axe').on(
 	'change', function(_e) {
 		alim_ld(
 			_e,
 			[
-				'id_SelectionnerDossiers-zl_progr',
-				['id_SelectionnerDossiers-zl_axe'],
-				'id_SelectionnerDossiers-zl_ss_axe',
-				'id_SelectionnerDossiers-zl_act'
+				'id_RechercherDossiers-zl_progr',
+				['id_RechercherDossiers-zl_axe'],
+				'id_RechercherDossiers-zl_ss_axe',
+				'id_RechercherDossiers-zl_act'
 			]
 		);
 	}
@@ -895,18 +895,18 @@ $('form[name="f_select_doss"]').on('submit', function(_e) {
 
 /**
  * Ce script permet de gérer l'affichage et les données des listes déroulantes des axes, des sous-axes et des actions
- * du formulaire de réalisation d'un état en sélectionnant des prestations.
+ * du formulaire de réalisation d'un état sur les prestations.
  * _e : Objet DOM
  */
-$('#id_SelectionnerPrestations-zl_progr, #id_SelectionnerPrestations-zl_axe, #id_SelectionnerPrestations-zl_ss_axe')
-	.on('change', function(_e) {
+$('#id_RechercherPrestations-zl_progr, #id_RechercherPrestations-zl_axe, #id_RechercherPrestations-zl_ss_axe').on(
+	'change', function(_e) {
 		alim_ld(
 			_e,
 			[
-				'id_SelectionnerPrestations-zl_progr',
-				['id_SelectionnerPrestations-zl_axe'],
-				'id_SelectionnerPrestations-zl_ss_axe',
-				'id_SelectionnerPrestations-zl_act'
+				'id_RechercherPrestations-zl_progr',
+				['id_RechercherPrestations-zl_axe'],
+				'id_RechercherPrestations-zl_ss_axe',
+				'id_RechercherPrestations-zl_act'
 			]
 		);
 	}

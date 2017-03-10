@@ -5,7 +5,7 @@
 from app.constants import *
 from django import forms
 
-class SelectionnerDossiers(forms.Form) :
+class RechercherDossiers(forms.Form) :
 
 	# Imports
 	from app.validators import val_mont_pos
@@ -103,7 +103,7 @@ class SelectionnerDossiers(forms.Form) :
 		k_axe = kwargs.pop('k_axe', None)
 		k_ss_axe = kwargs.pop('k_ss_axe', None)
 		
-		super(SelectionnerDossiers, self).__init__(*args, **kwargs)
+		super(RechercherDossiers, self).__init__(*args, **kwargs)
 
 		# Je définis les messages d'erreurs personnalisés à chaque champ.
 		for cle, valeur in self.fields.items() :
@@ -128,7 +128,7 @@ class SelectionnerDossiers(forms.Form) :
 	def clean(self) :
 
 		# Je récupère certaines données du formulaire pré-valide.
-		cleaned_data = super(SelectionnerDossiers, self).clean()
+		cleaned_data = super(RechercherDossiers, self).clean()
 		v_dt_deb_delib_moa_doss = cleaned_data.get('zd_dt_deb_delib_moa_doss')
 		v_dt_fin_delib_moa_doss = cleaned_data.get('zd_dt_fin_delib_moa_doss')
 
@@ -139,7 +139,7 @@ class SelectionnerDossiers(forms.Form) :
 		if v_dt_fin_delib_moa_doss and not v_dt_deb_delib_moa_doss :
 			self.add_error('zd_dt_deb_delib_moa_doss', ERROR_MESSAGES['required'])
 
-class SelectionnerPrestations(forms.Form) :
+class RechercherPrestations(forms.Form) :
 
 	# Imports
 	from app.validators import val_mont_pos
@@ -193,12 +193,6 @@ class SelectionnerPrestations(forms.Form) :
 		validators = [val_mont_pos],
 		widget = forms.TextInput(attrs = { 'placeholder' : 'infini par défaut' })
 	)
-	zs_mont_raf = forms.FloatField(
-		label = 'Montant restant à payer supérieur ou égal à',
-		required = False,
-		validators = [val_mont_pos],
-		widget = forms.TextInput()
-	)
 	zl_dep = forms.ChoiceField(
 		choices = [DEFAULT_OPTION],
 		label = 'Département d\'origine du prestataire',
@@ -226,7 +220,7 @@ class SelectionnerPrestations(forms.Form) :
 		k_axe = kwargs.pop('k_axe', None)
 		k_ss_axe = kwargs.pop('k_ss_axe', None)
 		
-		super(SelectionnerPrestations, self).__init__(*args, **kwargs)
+		super(RechercherPrestations, self).__init__(*args, **kwargs)
 
 		# Je définis les messages d'erreurs personnalisés à chaque champ.
 		for cle, valeur in self.fields.items() :
@@ -250,7 +244,7 @@ class SelectionnerPrestations(forms.Form) :
 	def clean(self) :
 
 		# Je récupère certaines données du formulaire pré-valide.
-		cleaned_data = super(SelectionnerPrestations, self).clean()
+		cleaned_data = super(RechercherPrestations, self).clean()
 		v_dt_deb_notif_prest = cleaned_data.get('zd_dt_deb_notif_prest')
 		v_dt_fin_notif_prest = cleaned_data.get('zd_dt_fin_notif_prest')
 

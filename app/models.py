@@ -768,7 +768,7 @@ class TPrestation(models.Model) :
 
     class Meta :
         db_table = 't_prestation'
-        ordering = ['id_org_prest', 'dt_notif_prest', 'int_prest']
+        ordering = ['id_org_prest', 'int_prest', 'dt_notif_prest']
         verbose_name = 'T_PRESTATION'
         verbose_name_plural = 'T_PRESTATION'
 

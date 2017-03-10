@@ -109,9 +109,9 @@ def get_menu(request) :
 					'item_href' : '#'
 				},
 				{ 
-					'item_name' : 'En sélectionnant des prestations',
-					'item_img' : STATIC_URL + 'pics/thumbnails/realisation_etats/select_prest.jpg',
-					'item_href' : reverse('select_prest')
+					'item_name' : 'En regroupant des prestations',
+					'item_img' : STATIC_URL + 'pics/thumbnails/realisation_etats/regr_prest.jpg',
+					'item_href' : reverse('regr_prest')
 				}
 			],
 			'mod_rank' : 3

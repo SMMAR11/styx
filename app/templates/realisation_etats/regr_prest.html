@@ -1,0 +1,57 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="main-title">Réalisation d'états en regroupant des prestations</div>
+<div class="row">
+	<div class="br-md-after col-md-4">
+		<form action="" method="post" name="f_regr_prest" onsubmit="soum_f(event)">
+			{% csrf_token %}
+			<fieldset class="my-fieldset">
+				<legend>Rechercher par</legend>
+				<div>
+					{{ f_regr_prest.zl_org_prest }}
+					{{ f_regr_prest.cbsm_org_moa }}
+					{{ f_regr_prest.zl_progr }}
+					{{ f_regr_prest.zl_axe }}
+					{{ f_regr_prest.zl_ss_axe }}
+					{{ f_regr_prest.zl_act }}
+					Période de notification de la prestation
+					<div class="row">
+						<div class="col-xs-6">{{ f_regr_prest.zd_dt_deb_notif_prest }}</div>
+						<div class="col-xs-6">{{ f_regr_prest.zd_dt_fin_notif_prest }}</div>
+					</div>
+					{{ f_regr_prest.zl_nat_prest }}
+					Montant de la prestation compris entre
+					<div class="row">
+						<div class="col-xs-6">{{ f_regr_prest.zs_mont_prest_min }}</div>
+						<div class="col-xs-6">{{ f_regr_prest.zs_mont_prest_max }}</div>
+					</div>
+					{{ f_regr_prest.zl_dep }}
+					{{ f_regr_prest.cb_ajout_select_exist }}
+					<button type="submit" class="center-block green-btn my-btn">Valider</button>
+				</div>
+			</fieldset>
+		</form>
+	</div>
+	<div class="col-md-8">
+		<div class="my-table" id="t_regr_prest">
+			<table>
+				<thead>
+					<tr>
+						<th>Prestataire</th>
+						<th>Nombre de prestations</th>
+						<th>Montant cumulé des prestations (en €)</th>
+						<th>Reste à facturer cumulé (en €)</th>
+						<th>Indice de contractualisation (en %)</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+				<tfoot></tfoot>
+			</table>
+		</div>
+		<br />
+		<a href="?action=exporter-csv" class="csv-icon icon-link">Exporter au format CSV</a>
+	</div>
+</div>
+{% endblock content %}

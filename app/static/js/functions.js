@@ -424,6 +424,26 @@ function soum_f(_e, _s = function(){}, _t = []) {
 						t_datat[suff_datat].row.add(lg).draw(true);
 					}
 
+					// Je traite le cas où je dois ajouter un "pied de datatable".
+					if (data['success']['datatable_tfoot']) {
+
+						// Je vide le "pied de datatable".
+						$('#t_' + suff_datat).find('tfoot').empty();
+
+						if (data['success']['datatable'].length > 0) {
+
+							// Je prépare le "pied de datatable".
+							var tr = $('<tr/>');
+							for (var i = 0; i < data['success']['datatable_tfoot'].length; i += 1) {
+								var td = $('<td/>', { html : data['success']['datatable_tfoot'][i] });
+								tr.append(td);
+							}
+
+							// J'affiche le "pied de datatable" actualisé.
+							$('#t_' + suff_datat).find('tfoot').append(tr);
+						}
+					}
+
 					// J'applique les styles.
 					_s();
 				}
