@@ -1,4 +1,5 @@
-styx/settings.py
+.env
 *.pyc
+mail_dumps/
 media/
 app/migrations/
