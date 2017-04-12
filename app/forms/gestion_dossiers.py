@@ -19,7 +19,9 @@ class GererDossier(forms.ModelForm) :
 		widget = forms.RadioSelect()
 	)
 	za_doss_ass = forms.CharField(
-		label = 'Dossier associé', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
+		label = 'Dossier associé et/ou contrepartie',
+		required = False,
+		widget = forms.TextInput(attrs = { 'readonly' : True })
 	)
 	zl_progr = forms.ChoiceField(label = 'Programme', widget = forms.Select())
 	zl_org_moa = forms.ChoiceField(label = 'Maître d\'ouvrage', widget = forms.Select())
@@ -727,8 +729,8 @@ class GererPrestation(forms.ModelForm) :
 		# Mise en forme de certaines données
 		if instance :
 			kwargs.update(initial = {
-				'dt_fin_prest' : dt_fr(instance.dt_fin_prest),
-				'dt_notif_prest' : dt_fr(instance.dt_notif_prest)
+				'dt_fin_prest' : dt_fr(instance.dt_fin_prest) if instance.dt_fin_prest else None,
+				'dt_notif_prest' : dt_fr(instance.dt_notif_prest) if instance.dt_notif_prest else None
 			})
 
 		super(GererPrestation, self).__init__(*args, **kwargs)
@@ -801,7 +803,7 @@ class GererPrestation(forms.ModelForm) :
 					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(o_suivi_doss.mont_rae))
 				)
 
-		# Je renvoie une erreur si la date de fin de prestation est supérieure à la date du premier avenant.
+		# Je renvoie une erreur si la date de fin de prestation est supérieure à la date du premier avenant de date.
 		if i.pk :
 			qs_aven_aggr = TAvenant.objects.filter(id_prest = i).aggregate(Min('dt_aven'))
 			dt_aven_min = qs_aven_aggr['dt_aven__min']
@@ -809,7 +811,7 @@ class GererPrestation(forms.ModelForm) :
 				self.add_error(
 					'dt_fin_prest',
 					'''
-					Veuillez saisir une date antérieure ou égale au {0} (date de fin du premier avenant).
+					Veuillez saisir une date antérieure ou égale au {0} (date de fin du premier avenant de date).
 					'''.format(dt_fr(dt_aven_min))
 				)
 
@@ -997,7 +999,7 @@ class GererFacture(forms.ModelForm) :
 		# Mise en forme de certaines données
 		if instance :
 			kwargs.update(initial = {
-				'dt_mand_moa_fact' : dt_fr(instance.dt_mand_moa_fact),
+				'dt_mand_moa_fact' : dt_fr(instance.dt_mand_moa_fact) if instance.dt_mand_moa_fact else None,
 				'dt_rec_fact' : dt_fr(instance.dt_rec_fact) if instance.dt_rec_fact else None,
 				'mont_ht_fact' : '{:0.2f}'.format(instance.mont_ht_fact) if instance.mont_ht_fact else None,
 				'mont_ttc_fact' : '{:0.2f}'.format(instance.mont_ttc_fact) if instance.mont_ttc_fact else None,
@@ -1309,7 +1311,7 @@ class GererDemandeVersement(forms.ModelForm) :
 					str(f.id_prest),
 					obt_mont(f.mont_ttc_fact) if k_fin.id_doss.est_ttc_doss == True else obt_mont(f.mont_ht_fact),
 					f.num_fact,
-					dt_fr(f.dt_mand_moa_fact),
+					dt_fr(f.dt_mand_moa_fact) or '-',
 					'__zcc__' if est_zcc == True else ''
 				])])
 

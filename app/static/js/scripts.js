@@ -1,6 +1,4 @@
 // Variables globales
-var nb_datepicker = 0;
-var nb_form = 0;
 var t_datat = {
 	'alert' : init_datat('#t_alert', [false, [0], [0]]),
 	'ch_act_pgre' : init_datat('#t_ch_act_pgre', [false, [6], [6]]),
@@ -87,32 +85,26 @@ $(window).load(function() {
 $(document).on('mousemove', function() {
 
 	// Suppression de l'attribut "required" de chaque champ
-	if (nb_form != $('form').length) {
-		nb_form = $('form').length;
-		$('form').each(function() {
-			for (var i = 0; i < $(this).length; i += 1) {
-				var form = $(this)[i];
-				for (var j = 0; j < form.length; j += 1) {
-					var champ = form[j];
-					$(champ).removeAttr('required');
-				}
+	$('form').each(function() {
+		for (var i = 0; i < $(this).length; i += 1) {
+			var form = $(this)[i];
+			for (var j = 0; j < form.length; j += 1) {
+				var champ = form[j];
+				$(champ).removeAttr('required');
 			}
-		});
-	}
+		}
+	});
 
 	// Mise en place d'un calendrier sur chaque champ "date"
-	if (nb_datepicker != $('.date').length) {
-		nb_datepicker = $('.date').length;
-		$('.date').datepicker({
-			autoclose : true,
-			endDate : '31/12/2999',
-			keyboardNavigation : false,
-			language : 'fr',
-			maxViewMode : 2,
-			orientation : 'bottom right',
-			startDate : '01/01/2000'
-		});
-	}
+	$('.date').datepicker({
+		autoclose : true,
+		endDate : '31/12/2999',
+		keyboardNavigation : false,
+		language : 'fr',
+		maxViewMode : 2,
+		orientation : 'bottom right',
+		startDate : '01/01/2000'
+	});
 });
 
 /**

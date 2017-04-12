@@ -862,7 +862,7 @@ def cons_doss(request, _d) :
 			t_fact.append({
 				'id_prest' : f.id_prest,
 				'num_fact' : f.num_fact,
-				'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact),
+				'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact) or '-',
 				'mont_fact' : obt_mont(mont_fact),
 				'num_mandat_fact' : f.num_mandat_fact,
 				'num_bord_fact' : f.num_bord_fact,
@@ -2578,7 +2578,7 @@ def cons_prest(request, _pd) :
 			},
 			'dt_notif_prest' : { 
 				'label' : 'Date de notification de la prestation', 
-				'value' : dt_fr(o_suivi_prest.dt_notif_prest)
+				'value' : dt_fr(o_suivi_prest.dt_notif_prest) or ''
 			},
 			'dt_fin_prest' : {
 				'label' : 'Date de fin de la prestation', 'value' : dt_fr(o_suivi_prest.dt_fin_prest) or ''
@@ -3378,7 +3378,8 @@ def cons_fact(request, _f) :
 			'id_prest' : { 'label' : 'Prestation', 'value' : o_fact.id_prest },
 			'num_fact' : { 'label' : 'Numéro de facture', 'value' : o_fact.num_fact },
 			'dt_mand_moa_fact' : { 
-				'label' : 'Date de mandatement par le maître d\'ouvrage', 'value' : dt_fr(o_fact.dt_mand_moa_fact)
+				'label' : 'Date de mandatement par le maître d\'ouvrage',
+				'value' : dt_fr(o_fact.dt_mand_moa_fact) or ''
 			},
 			'mont_ht_fact' : {
 				'label' : 'Montant HT de la facture (en €)', 'value' : obt_mont(o_fact.mont_ht_fact) or ''
@@ -3462,6 +3463,7 @@ def ajout_ddv(request) :
 
 				f_ajout_ddv = init_f(GererDemandeVersement(
 					prefix = 'GererDemandeVersement',
+					k_doss = TDossier.objects.get(num_doss = request.POST.get('GererDemandeVersement-za_num_doss')),
 					k_fin = o_fin
 				))
 				output = HttpResponse(f_ajout_ddv['cbsm_fact'])
@@ -3850,7 +3852,7 @@ def cons_ddv(request, _d) :
 			t_fact_ddv.append({
 				'id_prest' : fd.id_fact.id_prest,
 				'num_fact' : fd.id_fact.num_fact,
-				'dt_mand_moa_fact' : dt_fr(fd.id_fact.dt_mand_moa_fact),
+				'dt_mand_moa_fact' : dt_fr(fd.id_fact.dt_mand_moa_fact) or '-',
 				'mont_fact' : obt_mont(mont_fact),
 				'id_fact__pk' : fd.id_fact.pk
 			})
@@ -4597,7 +4599,7 @@ def impr_doss(request, _d) :
 			t_fact.append({
 				'id_prest' : f.id_prest,
 				'num_fact' : f.num_fact,
-				'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact),
+				'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact) or '-',
 				'mont_fact' : obt_mont(mont_fact),
 				'num_mandat_fact' : f.num_mandat_fact,
 				'num_bord_fact' : f.num_bord_fact,

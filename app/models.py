@@ -773,6 +773,8 @@ class TPrestation(models.Model) :
         verbose_name = 'Date de fin de la prestation <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
     dt_notif_prest = models.DateField(
+        blank = True,
+        null = True,
         verbose_name = 'Date de notification de la prestation <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
     int_prest = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la prestation')
@@ -794,7 +796,7 @@ class TPrestation(models.Model) :
         # Imports
         from app.functions import dt_fr
 
-        return '{0} - {1} - {2}'.format(self.id_org_prest, dt_fr(self.dt_notif_prest), self.int_prest)
+        return '{0} - {1} - {2}'.format(self.id_org_prest, dt_fr(self.dt_notif_prest) or 'NC', self.int_prest)
 
 class TPrestationsDossier(models.Model) :
 
@@ -889,6 +891,8 @@ class TFacture(models.Model) :
     )
     comm_fact = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
     dt_mand_moa_fact = models.DateField(
+        blank = True,
+        null = True,
         verbose_name = 'Date de mandatement par le maître d\'ouvrage <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
     dt_rec_fact = models.DateField(
