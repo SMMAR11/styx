@@ -1,19 +1,15 @@
 #!/usr/bin/env python
 #-*- coding: utf-8
 
-DEFAULT_OPTION = ('', '---------')
-
+DEFAULT_OPTION = (None, '---------')
 ERROR_MESSAGES = {
-	'blank' : 'Veuillez renseigner ce champ.',
-	'contradiction' : 'Veuillez ne pas envoyer un fichier et cocher la case d\'effacement en même temps.',
-	'invalid' : 'Veuillez saisir une valeur valide.',
-	'invalid_choice' : 'Veuillez saisir une valeur valide.',
-	'invalid_pk_value' : 'Veuillez saisir une valeur valide.',
-	'null' : 'Veuillez renseigner ce champ.',
-	'required' : 'Veuillez renseigner ce champ.',
-	'unique' : 'Veuillez saisir une valeur unique.'
+	'blank' : 'Veuillez renseigner une valeur.',
+	'invalid' : 'Veuillez renseigner une valeur valide.',
+	'invalid_choice' : 'Veuillez renseigner une valeur valide.',
+	'invalid_pk_value' : 'Veuillez renseigner une valeur valide.',
+	'null' : 'Veuillez renseigner une valeur.',
+	'required' : 'Veuillez renseigner une valeur.',
+	'unique' : 'Veuillez renseigner une valeur unique.'
 }
-
-REMARK = '<span class="field-remark"></span>'
-
+MAY_BE_REQUIRED = '<span class="may-be-required-field"></span>'
 REQUIRED = '<span class="required-field"></span>'

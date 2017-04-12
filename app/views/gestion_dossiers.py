@@ -886,7 +886,7 @@ def cons_doss(request, _d) :
 				'mont_ddv' : obt_mont(mont_ddv),
 				'dt_ddv' : dt_fr(d.dt_ddv),
 				'dt_vers_ddv' : dt_fr(d.dt_vers_ddv) or '-',
-				'map_ddv' : obt_mont(map_ddv),
+				'map_ddv' : obt_mont(map_ddv) or '-',
 				'id_type_vers' : d.id_type_vers,
 				'pk' : d.pk
 			})
@@ -911,7 +911,7 @@ def cons_doss(request, _d) :
 			'chem_ph' : p.chem_ph,
 			'int_ph' : p.int_ph,
 			'int_ppv_ph' : p.id_ppv_ph,
-			'dt_pv_ph' : dt_fr(p.dt_pv_ph),
+			'dt_pv_ph' : dt_fr(p.dt_pv_ph) or '-',
 			'pk' : p.pk
 		} for p in qs_ph]
 
@@ -990,11 +990,11 @@ def cons_doss(request, _d) :
 				{9}
 				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 				<div class="form-remark">
-					**
-					<br/>
-					Le numéro de l'arrêté, la date de signature de l'arrêté, la date limite d'enclenchement des travaux
-					et le fichier scanné de l'arrêté sont obligatoires si et seulement si l'avancement de l'arrêté est
-					« Validé ».
+					<ul class="my-list-style">
+						<li>Le numéro de l'arrêté, la date de signature de l'arrêté, la date limite d'enclenchement des
+						travaux et le fichier scanné de l'arrêté sont obligatoires si et seulement si l'avancement de
+						l'arrêté est « Validé ».</li>
+					</ul>
 				</div>
 			</form>
 			'''.format(
@@ -1016,30 +1016,31 @@ def cons_doss(request, _d) :
 				{3}
 				{4}
 				{5}
+				{6}
 				<div class="row">
-					<div class="col-md-6">{6}</div>
 					<div class="col-md-6">{7}</div>
+					<div class="col-md-6">{8}</div>
 				</div>
 				<div class="row">
-					<div class="col-sm-6">{8}</div>
 					<div class="col-sm-6">{9}</div>
-				</div>
-				<div class="row">
 					<div class="col-sm-6">{10}</div>
-					<div class="col-sm-6">{11}</div>
 				</div>
 				<div class="row">
+					<div class="col-sm-6">{11}</div>
 					<div class="col-sm-6">{12}</div>
-					<div class="col-sm-6">{13}</div>
 				</div>
-				{14}
+				<div class="row">
+					<div class="col-sm-6">{13}</div>
+					<div class="col-sm-6">{14}</div>
+				</div>
 				{15}
+				{16}
 				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 				<div class="form-remark">
-					**
-					<br/>
-					Il est impossible de renseigner un numéro de bordereau et un numéro de titre de recette tant qu'une
-					date de versement n'a pas été renseignée.
+					<ul class="my-list-style">
+						<li>Il est impossible de renseigner un numéro de bordereau et un numéro de titre de recette
+						tant qu'une date de versement n'a pas été renseignée.</li>
+					</ul>
 				</div>
 			</form>
 			'''.format(
@@ -1049,6 +1050,7 @@ def cons_doss(request, _d) :
 				t_ajout_ddv['zl_fin'],
 				t_ajout_ddv['id_type_vers'],
 				t_ajout_ddv['int_ddv'],
+				t_ajout_ddv['cbsm_fact'],
 				t_ajout_ddv['mont_ht_ddv'],
 				t_ajout_ddv['mont_ttc_ddv'],
 				t_ajout_ddv['dt_ddv'],
@@ -1124,20 +1126,18 @@ def cons_doss(request, _d) :
 				{17}
 				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 				<div class="form-remark">
-					**
-					<br/>
-					Le montant de l'assiette éligible de la subvention et le pourcentage de l'assiette éligible peuvent
-					ne pas être renseignés, mais si l'un d'entre eux est renseigné, l'autre doit l'être également.
-					<br/>
-					La date de début d'éligibilité doit être renseignée si et seulement si la durée de validité de l'
-					aide et/ou la durée de prorogation est/sont supérieure(s) à 0 mois.
-					<br/>
-					Si la date limite du début de l'opération est renseignée, alors seules les options "Oui" et "Non"
-					de la liste déroulante suivant le champ en question seront valides. Dans le cas contraire, seule
-					l'option "Sans objet" sera valide.
-					<br/>
-					Il est impossible de renseigner un pourcentage de réalisation des travaux tant que le premier 
-					acompte n'est pas payé en fonction de celui-ci.
+					<ul class="my-list-style">
+						<li>Le montant de l'assiette éligible de la subvention et le pourcentage de l'assiette éligible
+						peuvent ne pas être renseignés, mais si l'un d'entre eux est renseigné, alors l'autre doit
+						l'être également.</li>
+						<li>La date de début d'éligibilité doit être renseignée si une durée de validité de l'aide ou
+						une durée de prorogation est renseignée.</li>
+						<li>Si la date limite du début de l'opération est renseignée, alors seules les options "Oui" et
+						"Non" de la liste déroulante suivant le champ en question seront valides. Dans le cas
+						contraire, seule l'option "Sans objet" sera valide.</li>
+						<li>Il est impossible de renseigner un pourcentage de réalisation des travaux tant que le
+						premier acompte n'est pas payé en fonction de celui-ci.</li>
+					</ul>
 				</div>
 			</form>
 			'''.format(
@@ -1241,7 +1241,7 @@ def cons_doss(request, _d) :
 				reverse('ajout_prest'),
 				csrf(request)['csrf_token'],
 				t_ajout_prest['za_num_doss'],
-				t_ajout_prest['zsac_siret_org_prest'],
+				t_ajout_prest['zs_siret_org_prest'],
 				t_ajout_prest['int_prest'],
 				t_ajout_prest['ref_prest'],
 				t_ajout_prest['zs_mont_prest'],
@@ -1387,7 +1387,7 @@ def cons_doss(request, _d) :
 						'int_ph' : { 'label' : 'Intitulé de la photo', 'value' : o_ph.int_ph },
 						'descr_ph' : { 'label' : 'Description', 'value' : o_ph.descr_ph or '' },
 						'id_ppv_ph' : { 'label' : 'Période de prise de vue', 'value' : o_ph.id_ppv_ph },
-						'dt_pv_ph' : { 'label' : 'Date de prise de vue', 'value' : dt_fr(o_ph.dt_pv_ph) }
+						'dt_pv_ph' : { 'label' : 'Date de prise de vue', 'value' : dt_fr(o_ph.dt_pv_ph) or '' }
 					}
 					
 					t_attrs_ph = init_pg_cons(t_attrs_ph)
@@ -1656,7 +1656,7 @@ def cons_doss(request, _d) :
 										<thead>
 											<tr>
 												<th>N° du dossier</th>
-												<th>Montant {1} de la prestation (en €)</th>
+												<th>Montant {1} de la prestation</th>
 												<th>Somme {2} des avenants (en €)</th>
 												<th>Somme {3} des factures émises (en €)</th>
 												<th>Reste à engager {4} pour le dossier (en €)</th>
@@ -2068,7 +2068,7 @@ def cons_fin(request, _f) :
 		t_attrs_fin = {
 			'id_doss' : { 'label' : 'Numéro du dossier', 'value' : o_fin.id_doss },
 			'id_org_fin' : { 'label' : 'Organisme financeur', 'value' : o_fin.id_org_fin },
-			'num_arr_fin' : { 'label' : 'Numéro de l\'arrêté ou convention', 'value' : o_fin.num_arr_fin },
+			'num_arr_fin' : { 'label' : 'Numéro de l\'arrêté ou convention', 'value' : o_fin.num_arr_fin or '' },
 			'mont_elig_fin' : {
 				'label' : 'Montant {0} de l\'assiette éligible de la subvention (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_fin.mont_elig_fin) or ''
@@ -2092,10 +2092,10 @@ def cons_fin(request, _f) :
 				'label' : 'Date de fin d\'éligibilité', 'value' : dt_fr(o_suivi_fin.dt_fin_elig_fin) or ''
 			},
 			'duree_valid_fin' : { 
-				'label' : 'Durée de validité de l\'aide (en mois)', 'value' : o_fin.duree_valid_fin
+				'label' : 'Durée de validité de l\'aide (en mois)', 'value' : o_fin.duree_valid_fin or 0
 			},
 			'duree_pror_fin' : {
-				'label' : 'Durée de la prorogation (en mois)', 'value' : o_fin.duree_pror_fin
+				'label' : 'Durée de la prorogation (en mois)', 'value' : o_fin.duree_pror_fin or 0
 			},
 			'dt_lim_deb_oper_fin' : {
 				'label' : 'Date limite du début de l\'opération', 'value' : dt_fr(o_fin.dt_lim_deb_oper_fin) or ''
@@ -2581,7 +2581,7 @@ def cons_prest(request, _pd) :
 				'value' : dt_fr(o_suivi_prest.dt_notif_prest)
 			},
 			'dt_fin_prest' : {
-				'label' : 'Date de fin de la prestation', 'value' : dt_fr(o_suivi_prest.dt_fin_prest)
+				'label' : 'Date de fin de la prestation', 'value' : dt_fr(o_suivi_prest.dt_fin_prest) or ''
 			},
 			'id_nat_prest' : { 'label' : 'Nature de la prestation', 'value' : o_suivi_prest.id_nat_prest },
 			'chem_pj_prest' : {
@@ -2625,12 +2625,12 @@ def cons_prest(request, _pd) :
 		t_aven = [{
 			'num_aven' : index + 1,
 			'int_aven' : a.int_aven,
-			'dt_aven' : dt_fr(a.dt_aven),
-			'mont_aven' : obt_mont(a.mont_aven),
+			'dt_aven' : dt_fr(a.dt_aven) or '-',
+			'mont_aven' : obt_mont(a.mont_aven) or 0,
 			'pk' : a.pk
-		} for index, a in enumerate(TAvenant.objects.filter(
-			id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest
-		).order_by('num_aven'))]
+		} for index, a in enumerate(
+			TAvenant.objects.filter(id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest)
+		)]
 
 		# Je déclare un tableau qui stocke le contenu de certaines fenêtres modales.
 		t_cont_fm = {
@@ -2986,9 +2986,10 @@ def cons_aven(request, _a) :
 			'id_doss' : { 'label': 'Numéro du dossier', 'value' : o_aven.id_doss },
 			'id_prest' : { 'label' : 'Prestation', 'value' : o_aven.id_prest },
 			'int_aven' : { 'label' : 'Intitulé de l\'avenant', 'value' : o_aven.int_aven },
-			'dt_aven' : { 'label' : 'Date de fin de l\'avenant', 'value' : dt_fr(o_aven.dt_aven) },
+			'dt_aven' : { 'label' : 'Date de fin de l\'avenant', 'value' : dt_fr(o_aven.dt_aven) or '' },
 			'mont_aven' : { 
-				'label' : 'Montant {0} de l\'avenant (en €)'.format(ht_ou_ttc), 'value' : obt_mont(o_aven.mont_aven)
+				'label' : 'Montant {0} de l\'avenant (en €)'.format(ht_ou_ttc),
+				'value' : obt_mont(o_aven.mont_aven) or 0
 			},
 			'chem_pj_aven' : {
 				'label' : 'Consulter le fichier scanné de l\'avenant', 'value' : o_aven.chem_pj_aven, 'pdf' : True
@@ -3379,11 +3380,13 @@ def cons_fact(request, _f) :
 			'dt_mand_moa_fact' : { 
 				'label' : 'Date de mandatement par le maître d\'ouvrage', 'value' : dt_fr(o_fact.dt_mand_moa_fact)
 			},
-			'mont_ht_fact' : { 'label' : 'Montant HT de la facture (en €)', 'value' : obt_mont(o_fact.mont_ht_fact) },
-			'mont_ttc_fact' : {
-				'label' : 'Montant TTC de la facture (en €)', 'value' : obt_mont(o_fact.mont_ttc_fact)
+			'mont_ht_fact' : {
+				'label' : 'Montant HT de la facture (en €)', 'value' : obt_mont(o_fact.mont_ht_fact) or ''
 			},
-			'dt_rec_fact' : { 'label' : 'Date de réception de la facture', 'value' : dt_fr(o_fact.dt_rec_fact) },
+			'mont_ttc_fact' : {
+				'label' : 'Montant TTC de la facture (en €)', 'value' : obt_mont(o_fact.mont_ttc_fact) or ''
+			},
+			'dt_rec_fact' : { 'label' : 'Date de réception de la facture', 'value' : dt_fr(o_fact.dt_rec_fact) or '' },
 			'num_mandat_fact' : { 'label' : 'Numéro de mandat', 'value' : o_fact.num_mandat_fact },
 			'num_bord_fact' : { 'label' : 'Numéro de bordereau', 'value' : o_fact.num_bord_fact },
 			'suivi_fact' : { 'label' : 'Suivi de la facturation', 'value' : o_fact.suivi_fact },
@@ -3429,8 +3432,8 @@ def ajout_ddv(request) :
 
 	# Imports
 	from app.forms.gestion_dossiers import GererDemandeVersement
-	from app.functions import gen_t_html_fact_doss
 	from app.functions import ger_droits
+	from app.functions import init_f
 	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from app.models import TFacture
@@ -3450,7 +3453,18 @@ def ajout_ddv(request) :
 
 			# Je traite le cas où je dois filtrer les factures.
 			if get_action == 'filtrer-factures' :
-				output = HttpResponse(gen_t_html_fact_doss(request.POST.get('GererDemandeVersement-zl_fin')))
+
+				# Tentative d'obtention d'une instance TFinancement
+				try :
+					o_fin = TFinancement.objects.get(pk = request.POST.get('GererDemandeVersement-zl_fin'))
+				except :
+					o_fin = None
+
+				f_ajout_ddv = init_f(GererDemandeVersement(
+					prefix = 'GererDemandeVersement',
+					k_fin = o_fin
+				))
+				output = HttpResponse(f_ajout_ddv['cbsm_fact'])
 
 		else :
 
@@ -3462,8 +3476,19 @@ def ajout_ddv(request) :
 			if o_doss_droit :
 				ger_droits(request.user, o_doss_droit, False)
 
+			# Tentative d'obtention d'une instance TFinancement
+			try :
+				o_fin = TFinancement.objects.get(pk = request.POST.get('GererDemandeVersement-zl_fin'))
+			except :
+				o_fin = None
+
 			# Je soumets le formulaire.
-			f_ajout_ddv = GererDemandeVersement(request.POST, request.FILES, prefix = 'GererDemandeVersement')
+			f_ajout_ddv = GererDemandeVersement(
+				request.POST,
+				request.FILES,
+				prefix = 'GererDemandeVersement',
+				k_fin = o_fin
+			)
 
 			# Je rajoute des choix valides pour les listes déroulantes des financements et des factures (prévention d'
 			# erreurs).
@@ -3543,7 +3568,6 @@ def modif_ddv(request, _d) :
 
 	# Imports
 	from app.forms.gestion_dossiers import GererDemandeVersement
-	from app.functions import gen_t_html_fact_doss
 	from app.functions import ger_droits
 	from app.functions import init_f
 	from app.functions import init_fm
@@ -3551,6 +3575,7 @@ def modif_ddv(request, _d) :
 	from app.models import TDemandeVersement
 	from app.models import TFacture
 	from app.models import TFacturesDemandeVersement
+	from app.models import TFinancement
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -3568,7 +3593,12 @@ def modif_ddv(request, _d) :
 	if request.method == 'GET' :
 
 		# J'instancie un objet "formulaire".
-		f_modif_ddv = GererDemandeVersement(instance = o_ddv, prefix = 'GererDemandeVersement')
+		f_modif_ddv = GererDemandeVersement(
+			instance = o_ddv,
+			prefix = 'GererDemandeVersement',
+			k_fin = o_ddv.id_fin,
+			k_init = True
+		)
 
 		# Je déclare un tableau de fenêtres modales.
 		t_fm = [
@@ -3582,7 +3612,6 @@ def modif_ddv(request, _d) :
 			{
 				'd' : o_ddv,
 				'f_modif_ddv' : init_f(f_modif_ddv),
-				't_fact_doss' : gen_t_html_fact_doss(o_ddv.id_fin.pk, o_ddv, True),
 				't_fm' : t_fm,
 				'title' : 'Modifier une demande de versement'
 			}
@@ -3596,13 +3625,37 @@ def modif_ddv(request, _d) :
 
 			# Je traite le cas où je dois filtrer les factures.
 			if get_action == 'filtrer-factures' :
-				output = HttpResponse(gen_t_html_fact_doss(request.POST.get('GererDemandeVersement-zl_fin'), o_ddv))
+
+				# Tentative d'obtention d'une instance TFinancement
+				try :
+					o_fin = TFinancement.objects.get(pk = request.POST.get('GererDemandeVersement-zl_fin'))
+				except :
+					o_fin = None
+
+				f_modif_ddv = init_f(
+					GererDemandeVersement(
+						instance = o_ddv,
+						prefix = 'GererDemandeVersement',
+						k_fin = o_fin
+					)
+				)
+				output = HttpResponse(f_modif_ddv['cbsm_fact'])
 
 		else :
 
+			# Tentative d'obtention d'une instance TFinancement
+			try :
+				o_fin = TFinancement.objects.get(pk = request.POST.get('GererDemandeVersement-zl_fin'))
+			except :
+				o_fin = None
+
 			# Je soumets le formulaire.
 			f_modif_ddv = GererDemandeVersement(
-				request.POST, request.FILES, instance = o_ddv, prefix = 'GererDemandeVersement'
+				request.POST,
+				request.FILES,
+				instance = o_ddv,
+				prefix = 'GererDemandeVersement',
+				k_fin = o_fin
 			)
 
 			if f_modif_ddv.is_valid() :
@@ -3770,9 +3823,11 @@ def cons_ddv(request, _d) :
 			'dt_vers_ddv' : { 'label' : 'Date de versement', 'value' : dt_fr(o_ddv.dt_vers_ddv) or '' },
 			'num_bord_ddv' : { 'label' : 'Numéro de bordereau', 'value' : o_ddv.num_bord_ddv },
 			'num_titre_rec_ddv' : { 'label' : 'Numéro de titre de recette', 'value' : o_ddv.num_titre_rec_ddv },
-			'mont_ht_verse_ddv' : { 'label' : 'Montant HT versé (en €)', 'value' : obt_mont(o_ddv.mont_ht_verse_ddv) },
+			'mont_ht_verse_ddv' : {
+				'label' : 'Montant HT versé (en €)', 'value' : obt_mont(o_ddv.mont_ht_verse_ddv) or ''
+			},
 			'mont_ttc_verse_ddv' : {
-				'label' : 'Montant TTC versé (en €)', 'value' : obt_mont(o_ddv.mont_ttc_verse_ddv)
+				'label' : 'Montant TTC versé (en €)', 'value' : obt_mont(o_ddv.mont_ttc_verse_ddv) or ''
 			},
 			'map_ht_ddv' : { 'label' : 'Manque à percevoir HT (en €)', 'value' : obt_mont(o_suivi_ddv.map_ht_ddv) or '' },
 			'map_ttc_ddv' : { 'label' : 'Manque à percevoir TTC (en €)', 'value' : obt_mont(o_suivi_ddv.map_ttc_ddv) or '' },
@@ -4360,7 +4415,7 @@ def ajout_org_prest(request) :
 			output = HttpResponse(
 				json.dumps({ 'success' : {
 					'message' : 'Le prestataire {0} a été créé avec succès.'.format(o_nv_org_prest),
-					'display' : ['#id_GererPrestation-zsac_siret_org_prest', o_nv_org_prest.siret_org_prest]
+					'display' : ['#id_GererPrestation-zs_siret_org_prest', o_nv_org_prest.siret_org_prest]
 				}}), 
 				content_type = 'application/json'
 			)
@@ -4565,7 +4620,7 @@ def impr_doss(request, _d) :
 				'mont_ddv' : obt_mont(mont_ddv),
 				'dt_ddv' : dt_fr(d.dt_ddv),
 				'dt_vers_ddv' : dt_fr(d.dt_vers_ddv) or '-',
-				'map_ddv' : obt_mont(map_ddv),
+				'map_ddv' : obt_mont(map_ddv) or '-',
 				'id_type_vers' : d.id_type_vers
 			})
 			mont_ddv_sum += mont_ddv

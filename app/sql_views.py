@@ -93,6 +93,7 @@ class VDemandeVersement(models.Model) :
     class Meta :
         db_table = 'v_demande_versement'
         managed = False
+        ordering = ['-dt_ddv']
 
 class VPrestation(models.Model) :
 

@@ -294,6 +294,7 @@ def autocompl(request) :
 
 	# Imports
 	from app.models import TPrestataire
+	from django.db.models import Q
 	from django.http import HttpResponse
 	import json
 
@@ -311,10 +312,14 @@ def autocompl(request) :
 			if get_action == 'autocompleter-siret' :
 
 				# J'initialise le tableau des prestataires.
-				t_org_prest = [{
-					'siret_org_prest' : p.siret_org_prest,
-					'n_org' : p.n_org
-				} for p in TPrestataire.objects.filter(siret_org_prest__contains = get_q)]
+				t_org_prest = []
+				for p in TPrestataire.objects.all() :
+					for elem in [p.siret_org_prest, p.n_org.lower()] :
+						if get_q.lower() in elem :
+							t_org_prest.append({
+								'siret_org_prest' : p.siret_org_prest,
+								'n_org' : p.n_org
+							})
 
 				# J'envoie le tableau des prestataires.
 				output = HttpResponse(

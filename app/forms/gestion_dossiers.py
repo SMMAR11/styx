@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 #-*- coding: utf-8
 
-''' Imports '''
+# Imports
 from app.constants import *
+from app.functions import init_mess_err
 from django import forms
 
 class GererDossier(forms.ModelForm) :
@@ -71,6 +72,12 @@ class GererDossier(forms.ModelForm) :
 		]
 		fields = '__all__'
 		model = TDossier
+		widgets = {
+			'dt_av_cp_doss' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_delib_moa_doss' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
+			'mont_doss' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' }),
+			'mont_suppl_doss' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
+		}
 
 	def __init__(self, *args, **kwargs) :
 
@@ -85,22 +92,23 @@ class GererDossier(forms.ModelForm) :
 		from styx.settings import T_DONN_BDD_STR
 
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		self.k_util = kwargs.pop('k_util', None)
 
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'mont_doss' : '{:0.2f}'.format(instance.mont_doss),
+				'mont_suppl_doss' : '{:0.2f}'.format(instance.mont_suppl_doss)
+			})
+
 		super(GererDossier, self).__init__(*args, **kwargs)
-
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
-
-		# J'ajoute un double astérisque au label de certains champs.
-		self.fields['dt_delib_moa_doss'].label += REMARK
-		self.fields['mont_doss'].label += REMARK
-		self.fields['mont_suppl_doss'].label += REMARK
-		self.fields['dt_av_cp_doss'].label += REMARK
+		init_mess_err(self)
+		self.fields['zl_axe'].label += REQUIRED
+		self.fields['zl_ss_axe'].label += REQUIRED
+		self.fields['zl_act'].label += REQUIRED
+		self.fields['dt_delib_moa_doss'].label += MAY_BE_REQUIRED
+		self.fields['dt_av_cp_doss'].label += MAY_BE_REQUIRED
 
 		# J'alimente la liste déroulante des maîtres d'ouvrages.
 		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(peu_doss = True, en_act_doss = True)]
@@ -280,9 +288,8 @@ class GererDossier(forms.ModelForm) :
 			o_org_moa = TMoa.objects.get(pk = v_org_moa)
 			o_progr = TProgramme.objects.get(pk = v_progr)
 			if ger_droits(self.k_util, [(o_org_moa.pk, o_progr.id_type_progr.pk)], False, False) == False :
-				self.add_error('zl_org_moa', None)
 				self.add_error(
-					'zl_progr',
+					'__all__',
 					'''
 					Vous n\'avez pas les permissions requises pour créer un dossier du programme « {0} » pour le maître
 					d\'ouvrage « {1} ».
@@ -451,10 +458,7 @@ class ChoisirDossier(forms.ModelForm) :
 		k_org_moa = kwargs.pop('k_org_moa', None)
 
 		super(ChoisirDossier, self).__init__(*args, **kwargs)
-
-		# Je définis les messages d'erreurs personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
+		init_mess_err(self, False)
 
 		if k_org_moa :
 			self.fields['zl_org_moa'].initial = k_org_moa
@@ -493,6 +497,13 @@ class GererFinancement(forms.ModelForm) :
 		exclude = ['id_doss']
 		fields = '__all__'
 		model = TFinancement
+		widgets = {
+			'dt_deb_elig_fin' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_lim_deb_oper_fin' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_lim_prem_ac_fin' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
+			'mont_elig_fin' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' }),
+			'mont_part_fin' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
+		}
 
 	def __init__(self, *args, **kwargs) :
 
@@ -501,23 +512,22 @@ class GererFinancement(forms.ModelForm) :
 		from styx.settings import T_DONN_BDD_STR
 
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		k_doss = kwargs.pop('k_doss', None)
 
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'mont_elig_fin' : '{:0.2f}'.format(instance.mont_elig_fin) if instance.mont_elig_fin else None,
+				'mont_part_fin' : '{:0.2f}'.format(instance.mont_part_fin)
+			})
+
 		super(GererFinancement, self).__init__(*args, **kwargs)
-
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
-
-		# J'ajoute un double astérisque au label de certains champs.
-		self.fields['mont_elig_fin'].label += REMARK
-		self.fields['pourc_elig_fin'].label += REMARK
-		self.fields['dt_deb_elig_fin'].label += REMARK
-		self.fields['a_inf_fin'].label += REMARK
-		self.fields['pourc_real_fin'].label += REMARK
+		init_mess_err(self)
+		self.fields['mont_elig_fin'].label += MAY_BE_REQUIRED
+		self.fields['pourc_elig_fin'].label += MAY_BE_REQUIRED
+		self.fields['pourc_real_fin'].label += MAY_BE_REQUIRED
+		self.fields['dt_deb_elig_fin'].label += MAY_BE_REQUIRED
 
 		# Je passe en lecture seule le champ relatif au pourcentage de réalisation des travaux.
 		self.fields['pourc_real_fin'].widget.attrs['readonly'] = True
@@ -670,7 +680,6 @@ class GererPrestation(forms.ModelForm) :
 
 	# Imports
 	from app.validators import val_mont_pos
-	from app.validators import val_siret
 
 	rb_prest_exist = forms.ChoiceField(
 		choices = [(1, 'Oui'), (0, 'Non')],
@@ -682,15 +691,14 @@ class GererPrestation(forms.ModelForm) :
 	za_num_doss = forms.CharField(
 		label = 'Numéro du dossier', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
 	)
-	zsac_siret_org_prest = forms.CharField(
-		label = 'Numéro SIRET du prestataire', 
-		validators = [val_siret], 
-		widget = forms.TextInput(attrs = { 'autocomplete' : 'off', 'maxlength' : 14 })
+	zs_siret_org_prest = forms.CharField(
+		label = 'Numéro SIRET du prestataire',
+		widget = forms.TextInput(attrs = { 'autocomplete' : 'off', 'maxlength' : 14, 'typeahead' : 'on' })
 	)
 	zs_mont_prest = forms.FloatField(
 		label = 'Montant [ht_ou_ttc] de la prestation', 
         validators = [val_mont_pos],
-        widget = forms.TextInput()
+        widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
     )
 
 	class Meta :
@@ -701,30 +709,37 @@ class GererPrestation(forms.ModelForm) :
 		exclude = ['doss', 'id_org_prest']
 		fields = '__all__'
 		model = TPrestation
+		widgets = {
+			'dt_fin_prest' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_notif_prest' : forms.TextInput(attrs = { 'input-group-addon' : 'date' })
+		}
 
 	def __init__(self, *args, **kwargs) :
 
 		# Imports
+		from app.functions import dt_fr
 		from app.models import TPrestationsDossier
 
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		k_doss = kwargs.pop('k_doss', None)
 
-		super(GererPrestation, self).__init__(*args, **kwargs)
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'dt_fin_prest' : dt_fr(instance.dt_fin_prest),
+				'dt_notif_prest' : dt_fr(instance.dt_notif_prest)
+			})
 
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
+		super(GererPrestation, self).__init__(*args, **kwargs)
+		init_mess_err(self)
 
 		# J'initialise la variable liée au mode de taxe par précaution.
 		ht_ou_ttc = 'HT'
 
 		i = self.instance
 		if i.pk :
-			self.fields['zsac_siret_org_prest'].initial = i.id_org_prest.siret_org_prest
+			self.fields['zs_siret_org_prest'].initial = i.id_org_prest.siret_org_prest
 			for pd in TPrestationsDossier.objects.filter(id_prest = i) :
 				if pd.id_doss.est_ttc_doss == True :
 					ht_ou_ttc = 'TTC'
@@ -756,7 +771,7 @@ class GererPrestation(forms.ModelForm) :
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererPrestation, self).clean()
 		v_num_doss = cleaned_data.get('za_num_doss')
-		v_siret_org_prest = cleaned_data.get('zsac_siret_org_prest')
+		v_siret_org_prest = cleaned_data.get('zs_siret_org_prest')
 		v_mont_prest = cleaned_data.get('zs_mont_prest')
 		v_dt_fin_prest = cleaned_data.get('dt_fin_prest')
 
@@ -765,7 +780,7 @@ class GererPrestation(forms.ModelForm) :
 		# Je gère la contrainte suivante : le numéro SIRET doit exister dans la base de données afin de le relier à un
 		# prestataire.
 		if len(TPrestataire.objects.filter(siret_org_prest = v_siret_org_prest)) == 0 :
-			self.add_error('zsac_siret_org_prest', 'Le numéro SIRET appartient à aucun prestataire.')
+			self.add_error('zs_siret_org_prest', 'Le numéro SIRET appartient à aucun prestataire.')
 
 		# Je vérifie l'existence d'un objet TDossier.
 		o_doss = None
@@ -805,7 +820,7 @@ class GererPrestation(forms.ModelForm) :
 		from app.models import TPrestataire
 
 		o = super(GererPrestation, self).save(commit = False)
-		o.id_org_prest = TPrestataire.objects.get(siret_org_prest = self.cleaned_data.get('zsac_siret_org_prest'))
+		o.id_org_prest = TPrestataire.objects.get(siret_org_prest = self.cleaned_data.get('zs_siret_org_prest'))
 		if commit :
 			o.save()
 
@@ -829,13 +844,7 @@ class ChoisirPrestation(forms.Form) :
 		k_org_moa = kwargs.pop('k_org_moa', None)
 
 		super(ChoisirPrestation, self).__init__(*args, **kwargs)
-
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
+		init_mess_err(self, False)
 
 		# J'alimente la liste déroulante des programmes.
 		t_progr = [(p.pk, p) for p in TProgramme.objects.all()]
@@ -859,19 +868,23 @@ class RedistribuerPrestation(forms.ModelForm) :
 
 		fields = ['mont_prest_doss']
 		model = TPrestationsDossier
+		widgets = {'mont_prest_doss' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })}
 
 	def __init__(self, *args, **kwargs) :
 
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		self.k_doss = kwargs.pop('k_doss', None)
 		self.k_prest = kwargs.pop('k_prest', None)
+
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'mont_prest_doss' : '{:0.2f}'.format(instance.mont_prest_doss)
+			})
 		
 		super(RedistribuerPrestation, self).__init__(*args, **kwargs)
-
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
+		init_mess_err(self, False)
 
 		# Je supprime le label lié au montant du couple prestation/dossier.
 		self.fields['mont_prest_doss'].label = ''
@@ -963,24 +976,35 @@ class GererFacture(forms.ModelForm) :
 		exclude = ['id_doss', 'id_prest', 'suivi_fact']
 		fields = '__all__'
 		model = TFacture
+		widgets = {
+			'dt_mand_moa_fact' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_rec_fact' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
+			'mont_ht_fact' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' }),
+			'mont_ttc_fact' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
+		}
 
 	def __init__(self, *args, **kwargs) :
 
 		# Imports
+		from app.functions import dt_fr
 		from app.models import TFacturesDemandeVersement
 		from app.models import TPrestationsDossier
 
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		k_doss = kwargs.pop('k_doss', None)
 
-		super(GererFacture, self).__init__(*args, **kwargs)
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'dt_mand_moa_fact' : dt_fr(instance.dt_mand_moa_fact),
+				'dt_rec_fact' : dt_fr(instance.dt_rec_fact) if instance.dt_rec_fact else None,
+				'mont_ht_fact' : '{:0.2f}'.format(instance.mont_ht_fact) if instance.mont_ht_fact else None,
+				'mont_ttc_fact' : '{:0.2f}'.format(instance.mont_ttc_fact) if instance.mont_ttc_fact else None,
+			})
 
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
+		super(GererFacture, self).__init__(*args, **kwargs)
+		init_mess_err(self)
 
 		# J'initialise certaines variables par précaution.
 		num_doss = None
@@ -1149,7 +1173,18 @@ class GererDemandeVersement(forms.ModelForm) :
 		label = 'Numéro du dossier', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
 	)
 	zl_fin = forms.ChoiceField(label = 'Partenaire financier', widget = forms.Select())
-	cbsm_fact = forms.MultipleChoiceField(label = '', required = False, widget = forms.CheckboxSelectMultiple())
+	cbsm_fact = forms.MultipleChoiceField(
+		label = '|'.join([
+			'Facture(s) pouvant être reliée(s) à la demande de versement',
+			'Prestation',
+			'Montant [ht_ou_ttc] (en €)',
+			'N° de facture',
+			'Date de mandatement par le maître d\'ouvrage',
+			'__zcc__'
+		]),
+		required = False,
+		widget = forms.SelectMultiple()
+	)
 
 	class Meta :
 
@@ -1159,28 +1194,49 @@ class GererDemandeVersement(forms.ModelForm) :
 		exclude = ['fact', 'id_fin']
 		fields = '__all__'
 		model = TDemandeVersement
+		widgets = {
+			'dt_ddv' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_vers_ddv' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
+			'mont_ht_ddv' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' }),
+			'mont_ttc_ddv' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' }),
+			'mont_ht_verse_ddv' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' }),
+			'mont_ttc_verse_ddv' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
+		}
 
 	def __init__(self, *args, **kwargs) :
 
 		# Imports
+		from app.functions import dt_fr
+		from app.functions import obt_mont
 		from app.models import TFacture
+		from app.models import TFacturesDemandeVersement
 		from app.models import TFinancement
+		from styx.settings import T_DONN_BDD_STR
 
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		k_doss = kwargs.pop('k_doss', None)
+		k_fin = kwargs.pop('k_fin', None)
+		k_init = kwargs.pop('k_init', False)
+
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'mont_ht_ddv' : '{:0.2f}'.format(instance.mont_ht_ddv) if instance.mont_ht_ddv else None,
+				'mont_ttc_ddv' : '{:0.2f}'.format(instance.mont_ttc_ddv) if instance.mont_ttc_ddv else None,
+				'mont_ht_verse_ddv' : '{:0.2f}'.format(
+					instance.mont_ht_verse_ddv
+				) if instance.mont_ht_verse_ddv else None,
+				'mont_ttc_verse_ddv' : '{:0.2f}'.format(
+					instance.mont_ttc_verse_ddv
+				) if instance.mont_ttc_verse_ddv else None
+			})
 
 		super(GererDemandeVersement, self).__init__(*args, **kwargs)
-
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
-
-		# J'ajoute un double astérisque au label de certains champs.
-		self.fields['num_bord_ddv'].label += REMARK
-		self.fields['num_titre_rec_ddv'].label += REMARK
+		init_mess_err(self)
+		split = self.fields['cbsm_fact'].label.split('|')
+		split[0] += MAY_BE_REQUIRED
+		self.fields['cbsm_fact'].label = '|'.join(split)
 
 		# J'initialise le numéro du dossier par précaution.
 		num_doss = None
@@ -1195,12 +1251,16 @@ class GererDemandeVersement(forms.ModelForm) :
 		# J'affiche le numéro du dossier lié à l'arrêté (ou prochainement lié).
 		self.fields['za_num_doss'].initial = num_doss
 
-		# J'ajoute un astérisque au label du champ de montant obligatoire.
 		if num_doss :
 			if num_doss.est_ttc_doss == True :
 				self.fields['mont_ttc_ddv'].label += REQUIRED
 			else :
 				self.fields['mont_ht_ddv'].label += REQUIRED
+
+			# Mise à jour du label (ajout du mode de taxe du dossier)
+			split = self.fields['cbsm_fact'].label.split('|')
+			split[2] = split[2].replace('[ht_ou_ttc]', 'TTC' if num_doss.est_ttc_doss == True else 'HT')
+			self.fields['cbsm_fact'].label = '|'.join(split)
 
 		# J'alimente la liste déroulante des financements du dossier.
 		o_doss = num_doss
@@ -1214,7 +1274,6 @@ class GererDemandeVersement(forms.ModelForm) :
 		# Je prépare les valeurs initiales des champs personalisés.
 		if i.pk :
 			self.fields['zl_fin'].initial = i.id_fin
-			self.fields['cbsm_fact'].choices = [(f.pk, f) for f in TFacture.objects.filter(id_doss = i.id_fin.id_doss)]
 
 		# Je gère l'état des champs suivants : numéro de bordereau et numéro de titre de recette.
 		ro = False
@@ -1226,6 +1285,42 @@ class GererDemandeVersement(forms.ModelForm) :
 		if ro == True :
 			self.fields['num_bord_ddv'].widget.attrs['readonly'] = True
 			self.fields['num_titre_rec_ddv'].widget.attrs['readonly'] = True
+
+		if k_fin :
+
+			# Déclaration du tableau des choix (initiaux ou non)
+			tab_fact_ddv = []
+			tab_fact_ddv_checked = []
+
+			for f in TFacture.objects.filter(id_doss = k_fin.id_doss) :
+
+				# Initialisation des cases à cocher
+				est_zcc = False
+				if TFacturesDemandeVersement.objects.filter(id_ddv__id_fin = k_fin, id_fact = f).count() == 0 :
+					est_zcc = True
+				if TFacturesDemandeVersement.objects.filter(
+					id_ddv = i, id_ddv__id_fin = k_fin, id_fact = f
+				).count() == 1 :
+					est_zcc = True
+					tab_fact_ddv_checked.append(f.pk)
+
+				# Préparation du tableau des factures
+				tab_fact_ddv.append([f.pk, '|'.join([
+					str(f.id_prest),
+					obt_mont(f.mont_ttc_fact) if k_fin.id_doss.est_ttc_doss == True else obt_mont(f.mont_ht_fact),
+					f.num_fact,
+					dt_fr(f.dt_mand_moa_fact),
+					'__zcc__' if est_zcc == True else ''
+				])])
+
+			# Destruction des tableaux en cas d'avance forfaitaire
+			if i.pk and i.id_type_vers.int_type_vers == T_DONN_BDD_STR['TVERS_AF'] and k_init == True :
+				tab_fact_ddv = []
+				tab_fact_ddv_checked = []
+
+			# ALimentation du champ lié au tableau des factures
+			self.fields['cbsm_fact'].choices = tab_fact_ddv
+			self.fields['cbsm_fact'].initial = tab_fact_ddv_checked
 
 	def clean(self) :
 
@@ -1242,10 +1337,6 @@ class GererDemandeVersement(forms.ModelForm) :
 		v_fin = cleaned_data.get('zl_fin')
 		v_type_vers = cleaned_data.get('id_type_vers')
 		v_fact = cleaned_data.get('cbsm_fact')
-		v_mont_ht_ddv = cleaned_data.get('mont_ht_ddv')
-		v_mont_ttc_ddv = cleaned_data.get('mont_ttc_ddv')
-		v_mont_ht_verse_ddv = cleaned_data.get('mont_ht_verse_ddv')
-		v_mont_ttc_verse_ddv = cleaned_data.get('mont_ttc_verse_ddv')
 
 		i = self.instance
 
@@ -1318,13 +1409,6 @@ class GererDemandeVersement(forms.ModelForm) :
 						'id_type_vers', 'Vous avez déjà émis une demande de versement soldée pour ce financeur.'
 					)
 
-			# Je renvoie une erreur si un montant versé est renseigné alors que le montant de la demande de versement
-			# n'est pas renseigné.
-			if not v_mont_ht_ddv and v_mont_ht_verse_ddv and float(v_mont_ht_verse_ddv) > 0 :
-				self.add_error('mont_ht_verse_ddv', 'Veuillez saisir la valeur suivante : 0.')
-			if not v_mont_ttc_ddv and v_mont_ttc_verse_ddv and float(v_mont_ttc_verse_ddv) > 0 :
-				self.add_error('mont_ttc_verse_ddv', 'Veuillez saisir la valeur suivante : 0.')
-
 	def save(self, commit = True) :
 
 		# Imports
@@ -1354,30 +1438,37 @@ class GererArrete(forms.ModelForm) :
 		exclude = ['id_doss', 'id_type_decl']
 		fields = '__all__'
 		model = TArretesDossier
+		widgets = {
+			'dt_lim_encl_trav_arr' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_sign_arr' : forms.TextInput(attrs = { 'input-group-addon' : 'date' })
+		}
 
 	def __init__(self, *args, **kwargs) :
 
 		# Imports
+		from app.functions import dt_fr
 		from app.models import TArretesDossier
 		from app.models import TTypeDeclaration
 
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		k_doss = kwargs.pop('k_doss', None)
 
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'dt_lim_encl_trav_arr' : dt_fr(
+					instance.dt_lim_encl_trav_arr
+				) if instance.dt_lim_encl_trav_arr else None,
+				'dt_sign_arr' : dt_fr(instance.dt_sign_arr) if instance.dt_sign_arr else None
+			})
+
 		super(GererArrete, self).__init__(*args, **kwargs)
-
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
-
-		# J'ajoute un double astérisque au label de certains champs.
-		self.fields['num_arr'].label += REMARK
-		self.fields['dt_sign_arr'].label += REMARK
-		self.fields['dt_lim_encl_trav_arr'].label += REMARK
-		self.fields['chem_pj_arr'].label += REMARK
+		init_mess_err(self)
+		self.fields['num_arr'].label += MAY_BE_REQUIRED
+		self.fields['dt_sign_arr'].label += MAY_BE_REQUIRED
+		self.fields['dt_lim_encl_trav_arr'].label += MAY_BE_REQUIRED
+		self.fields['chem_pj_arr'].label += MAY_BE_REQUIRED
 
 		# J'initialise le numéro du dossier par précaution.
 		num_doss = None
@@ -1493,6 +1584,7 @@ class GererPhoto(forms.ModelForm) :
 		exclude = ['id_doss']
 		fields = '__all__'
 		model = TPhoto
+		widgets = { 'dt_pv_ph' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }) }
 
 	def __init__(self, *args, **kwargs) :
 
@@ -1500,13 +1592,7 @@ class GererPhoto(forms.ModelForm) :
 		k_doss = kwargs.pop('k_doss', None)
 
 		super(GererPhoto, self).__init__(*args, **kwargs)
-
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
+		init_mess_err(self)
 
 		i = self.instance
 		if not i.pk :
@@ -1559,20 +1645,31 @@ class GererAvenant(forms.ModelForm) :
 		exclude = ['id_doss', 'id_prest', 'num_aven']
 		fields = '__all__'
 		model = TAvenant
+		widgets = {
+			'dt_aven' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
+			'mont_aven' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
+		}
 
 	def __init__(self, *args, **kwargs) :
 
+		# Imports
+		from app.functions import dt_fr
+
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		k_prest_doss = kwargs.pop('k_prest_doss', None)
 
-		super(GererAvenant, self).__init__(*args, **kwargs)
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'dt_aven' : dt_fr(instance.dt_aven),
+				'mont_aven' : '{:0.2f}'.format(instance.mont_aven) if instance.mont_aven else None
+			})
 
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
+		super(GererAvenant, self).__init__(*args, **kwargs)
+		init_mess_err(self)
+		self.fields['dt_aven'].label += MAY_BE_REQUIRED
+		self.fields['mont_aven'].label += MAY_BE_REQUIRED
 
 		# J'initialise certaines variables par précaution.
 		num_doss = None
@@ -1609,6 +1706,7 @@ class GererAvenant(forms.ModelForm) :
 		from app.models import TAvenant
 		from app.models import TPrestationsDossier
 		from app.sql_views import VSuiviDossier
+		from app.sql_views import VSuiviPrestationsDossier
 		from django.db.models import Max
 
 		# Je récupère certaines données du formulaire pré-valide.
@@ -1630,89 +1728,123 @@ class GererAvenant(forms.ModelForm) :
 		except :
 			o_prest_doss = None
 			o_suivi_doss = None
-			self.add_error('za_num_doss', ERROR_MESSAGES['invalid'])
-			self.add_error('zl_prest', '')
+			self.add_error('__all__', 'Le couple prestation/dossier est invalide.')
 
 		if o_prest_doss and o_suivi_doss :
+
+			if not v_dt_aven and not v_mont_aven :
+				self.add_error('__all__', 'Veuillez renseigner au minimum une date ou un montant strictement positif.')
 
 			# Je gère le bon renseignement de la date de fin de l'avenant.
 			if v_dt_aven :
 				if i.pk :
 
-					# Je stocke le jeu de données des avenants du couple prestation/dossier.
-					qs_aven = TAvenant.objects.filter(
+					# Stockage du numéro de l'avenant
+					v_num_aven = i.num_aven
+
+					# Obtention de l'avenant de date i-1 et i+1
+					qs_aven_dt = TAvenant.objects.filter(
 						id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest
-					).order_by('num_aven')
+					).exclude(dt_aven = None)
+					obj_aven_min = qs_aven_dt.filter(num_aven__lt = v_num_aven).last()
+					obj_aven_max = qs_aven_dt.filter(num_aven__gt = v_num_aven).first()
 
-					# Je récupère l'index de l'avenant.
-					ind = None
-					for index, a in enumerate(qs_aven) :
-						if a.pk == i.pk :
-							ind = index
-
-					# J'initialise la date de fin minimale de l'avenant.
-					if ind == 0 :
-						dt_aven_min = o_prest_doss.id_prest.dt_fin_prest
+					# Définition de la date minimale d'un avenant
+					if obj_aven_min :
+						v_dt_aven_min = obj_aven_min.dt_aven
 					else :
-						dt_aven_min = qs_aven[ind - 1].dt_aven
+						v_dt_aven_min = o_prest_doss.id_prest.dt_fin_prest or None
 
-					# J'initialise la date de fin maximale de l'avenant.
-					if ind == len(qs_aven) - 1 :
-						dt_aven_max = None
+					# Définition de la date maximale d'un avenant
+					if obj_aven_max :
+						v_dt_aven_max = obj_aven_max.dt_aven
 					else :
-						dt_aven_max = qs_aven[ind + 1].dt_aven
+						v_dt_aven_max = None
 
-					# Je renvoie une erreur si la date de fin de l'avenant n'est pas conforme.
-					if dt_aven_max :
-						if not dt_aven_min <= v_dt_aven <= dt_aven_max : 
-							self.add_error(
-								'dt_aven',
-								'''
-								La date de fin de l\'avenant doit être comprise entre le {0} et le {1}.
-								'''.format(dt_fr(dt_aven_min), dt_fr(dt_aven_max))
-							)
-					else :
-						if v_dt_aven < dt_aven_min :
-							self.add_error(
-								'dt_aven', 
-								'''
-								La date de fin de l\'avenant doit être postérieure ou égale au {0}.
-								'''.format(dt_fr(dt_aven_min))
-							)
+					# Vérification du champ "date"
+					erreur = False
+					if v_dt_aven_min and v_dt_aven < v_dt_aven_min :
+						erreur = True
+					if v_dt_aven_max and v_dt_aven > v_dt_aven_max :
+						erreur = True
+
+					# Définition du message d'erreur
+					if erreur == True :
+						if v_dt_aven_min and v_dt_aven_max :
+							if v_dt_aven_min == v_dt_aven_max :
+								mess = 'La date de fin de l\'avenant est obligatoirement le {0}.'.format(v_dt_aven_min)
+							else :
+								mess = '''
+								La date de fin de l'avenant doit être comprise entre le {0} et le {1}.
+								'''.format(dt_fr(v_dt_aven_min), dt_fr(v_dt_aven_max))
+						elif v_dt_aven_min and not v_dt_aven_max :
+							mess = '''
+							La date de fin de l'avenant doit être postérieure ou égale au {0}.
+							'''.format(dt_fr(v_dt_aven_min)) 
+						elif not v_dt_aven_min and v_dt_aven_max :
+							mess = '''
+							La date de fin de l'avenant doit être antérieure ou égale au {0}.
+							'''.format(dt_fr(v_dt_aven_max))
+						self.add_error('dt_aven', mess)
 
 				else :
 
-					# Je récupère la date de fin de la prestation (soit celle indiquée lors de la création de celle-ci, soit la
-					# date de l'avenant la plus grande).
-					num_aven_max = TAvenant.objects.filter(
+					# Je récupère la date minimale d'un avenant.
+					dt_aven_max = TAvenant.objects.filter(
 						id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest
-					).aggregate(Max('num_aven'))['num_aven__max']
-
-					if num_aven_max :
-						dt_fin_prest = TAvenant.objects.get(
-							id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest, num_aven = num_aven_max
-						).dt_aven
-					else :
-						dt_fin_prest = o_prest_doss.id_prest.dt_fin_prest
+					).aggregate(Max('dt_aven'))['dt_aven__max'] or o_prest_doss.id_prest.dt_fin_prest
 
 					# Je renvoie une erreur si la date de fin de l'avenant n'est pas conforme.
-					if v_dt_aven < dt_fin_prest :
+					if dt_aven_max and v_dt_aven < dt_aven_max :
 						self.add_error(
 							'dt_aven',
-							'''
-							La date de fin de l\'avenant doit être postérieure ou égale au {0}.
-							'''.format(dt_fr(dt_fin_prest))
+							'La date de fin de l\'avenant doit être postérieure ou égale au {0}.'.format(dt_fr(dt_aven_max))
 						)
 
-			# Je renvoie une erreur si le montant de l'avenant est supérieur au reste à engager du dossier.
+			# Vérification du champ "montant"
+			erreur = False
+
+			# Stockage du montant de l'avenant souhaité
+			v_mont_aven = v_mont_aven or 0
+
+			# Calcul du reste à engager du dossier
 			mont_rae = o_suivi_doss.mont_rae
-			if i.pk :
+			if i.pk and i.mont_aven :
 				mont_rae += i.mont_aven
-			if v_mont_aven and float(v_mont_aven) > mont_rae :
-				self.add_error(
-					'mont_aven',
-					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_rae))
-				)
+
+			# Erreur si le montant de l'avenant est supérieur au reste à engager du dossier
+			if float(v_mont_aven) > mont_rae :
+				erreur = True
+
+			# Erreur si le montant de l'avenant entraîne un reste à facturer négatif
+			mont_aven_min = 0
+			o_suivi_prest_doss = VSuiviPrestationsDossier.objects.get(pk = o_prest_doss.pk)
+			if i.pk and i.mont_aven and i.mont_aven > o_suivi_prest_doss.mont_raf :
+				mont_aven_min = abs(o_suivi_prest_doss.mont_raf - i.mont_aven)
+				if v_mont_aven < mont_aven_min :
+					erreur = True
+
+			# Définition du message d'erreur
+			tab_bornes_mont_aven = [mont_aven_min, mont_rae]
+			if erreur == True :
+				if tab_bornes_mont_aven[0] and tab_bornes_mont_aven :
+					if tab_bornes_mont_aven[0] == tab_bornes_mont_aven[1] :
+						mess = '''
+						Le montant de l'avenant est obligatoirement de {0} €.
+						'''.format(obt_mont(tab_bornes_mont_aven[0]))
+					else :
+						mess = '''
+						Le montant de l'avenant doit être compris entre {0} € et {1} €.
+						'''.format(obt_mont(tab_bornes_mont_aven[0]), obt_mont(tab_bornes_mont_aven[1]))
+				elif tab_bornes_mont_aven[0] and not tab_bornes_mont_aven[1] :
+					mess = '''
+					Le montant de l'avenant doit être supérieur ou égal à {0} €.
+					'''.format(obt_mont(tab_bornes_mont_aven[0]))
+				elif not tab_bornes_mont_aven[0] and tab_bornes_mont_aven[1] :
+					mess = '''
+					Le montant de l'avenant doit être inférieur ou égal à {0} €.
+					'''.format(obt_mont(tab_bornes_mont_aven[1]))
+				self.add_error('mont_aven', mess)
 
 	def save(self, commit = True) :
 
@@ -1748,10 +1880,4 @@ class AjouterPrestataire(forms.ModelForm) :
 	def __init__(self, *args, **kwargs) :
 
 		super(AjouterPrestataire, self).__init__(*args, **kwargs)
-
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
+		init_mess_err(self)

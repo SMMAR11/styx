@@ -3,6 +3,7 @@
 
 # Imports
 from app.constants import *
+from app.functions import init_mess_err
 from django import forms
 
 class Identifier(forms.Form) :
@@ -33,12 +34,10 @@ class Identifier(forms.Form) :
 		if v_username and v_password :
 			o_util = authenticate(username = v_username, password = v_password)
 			if o_util is None :
-				self.add_error('zs_username', None)
-				self.add_error('zs_password', 'Les identifiants rentrés sont incorrects.')
+				self.add_error('__all__', 'Les identifiants rentrés sont incorrects.')
 			else :
 				if not o_util.is_active :
-					self.add_error('zs_username', None)
-					self.add_error('zs_password', 'Votre compte est désactivé.')
+					self.add_error('__all__', 'Votre compte est désactivé.')
 
 class GererUtilisateur(forms.ModelForm) :
 
@@ -49,13 +48,9 @@ class GererUtilisateur(forms.ModelForm) :
 
 		fields = ('email', 'first_name', 'last_name', 'port_util', 'tel_util')
 		model = TUtilisateur
+		widgets = { 'email' : forms.TextInput(attrs = { 'input-group-addon' : 'email' }) }
 
 	def __init__(self, *args, **kwargs) :
 
-		# Imports
-		from app.validators import val_courr
-
 		super(GererUtilisateur, self).__init__(*args, **kwargs)
-
-		# Je rajoute une règle de validation au champ "email" de la table "auth_user".
-		self.fields['email'].validators = [val_courr]
+		init_mess_err(self)

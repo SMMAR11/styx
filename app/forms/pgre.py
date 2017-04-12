@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 #-*- coding: utf-8
 
-''' Imports '''
+# Imports
 from app.constants import *
+from app.functions import init_mess_err
 from django import forms
 
 class GererActionPgre(forms.ModelForm) :
 
-	cbsm_atel_pgre = forms.MultipleChoiceField(label = 'Atelier(s) concerné(s);Nom', widget = forms.SelectMultiple())
+	cbsm_atel_pgre = forms.MultipleChoiceField(
+		label = 'Atelier(s) concerné(s)|Nom|__zcc__', widget = forms.SelectMultiple()
+	)
 	rb_doss_corr = forms.ChoiceField(
 		choices = [(True, 'Oui'), (False, 'Non')],
 		initial = False,
@@ -18,7 +21,9 @@ class GererActionPgre(forms.ModelForm) :
 	za_doss_corr = forms.CharField(
 		label = 'Dossier de correspondance', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
 	)
-	cbsm_org_moa = forms.MultipleChoiceField(label = 'Maître(s) d\'ouvrage(s);Nom', widget = forms.SelectMultiple())
+	cbsm_org_moa = forms.MultipleChoiceField(
+		label = 'Maître(s) d\'ouvrage(s)|Nom|__zcc__', widget = forms.SelectMultiple()
+	)
 	zl_nat_doss = forms.ChoiceField(label = 'Nature de l\'action PGRE', widget = forms.Select())
 
 	class Meta :
@@ -29,10 +34,15 @@ class GererActionPgre(forms.ModelForm) :
 		exclude = ['atel_pgre', 'id_doss', 'id_nat_doss', 'moa']
 		fields = '__all__'
 		model = TDossierPgre
+		widgets = {
+			'dt_deb_doss_pgre' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_fin_doss_pgre' : forms.TextInput(attrs = { 'input-group-addon' : 'date' })
+		}
 
 	def __init__(self, *args, **kwargs) :
 
 		# Imports
+		from app.functions import dt_fr
 		from app.models import TAteliersPgreDossierPgre
 		from app.models import TInstancesConcertationPgreAtelierPgre
 		from app.models import TMoa
@@ -40,26 +50,27 @@ class GererActionPgre(forms.ModelForm) :
 		from app.models import TNatureDossier
 
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		self.k_util = kwargs.pop('k_util', None)
 		k_ic_pgre = kwargs.pop('k_ic_pgre', None)
 
-		super(GererActionPgre, self).__init__(*args, **kwargs)
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'dt_deb_doss_pgre' : dt_fr(instance.dt_deb_doss_pgre),
+				'dt_fin_doss_pgre' : dt_fr(instance.dt_fin_doss_pgre)
+			})
 
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				split = self.fields[cle].label.split(';')
-				split[0] = split[0] + REQUIRED
-				self.fields[cle].label = ';'.join(split)
+		super(GererActionPgre, self).__init__(*args, **kwargs)
+		init_mess_err(self)
 
 		# J'alimente la liste déroulante des ateliers concernés par une instance de concertation.
 		if k_ic_pgre :
 			try :
-				t_atel_pgre = [(
-					a.id_atel_pgre.pk, a.id_atel_pgre
-				) for a in TInstancesConcertationPgreAtelierPgre.objects.filter(id_ic_pgre = k_ic_pgre).order_by(
+				t_atel_pgre = [[
+					a.id_atel_pgre.pk,
+					'|'.join([str(a.id_atel_pgre), '__zcc__'])
+				] for a in TInstancesConcertationPgreAtelierPgre.objects.filter(id_ic_pgre = k_ic_pgre).order_by(
 					'id_atel_pgre'
 				)]
 			except :
@@ -67,7 +78,10 @@ class GererActionPgre(forms.ModelForm) :
 			self.fields['cbsm_atel_pgre'].choices = t_atel_pgre
 
 		# J'alimente la liste déroulante des maîtres d'ouvrages.
-		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(peu_doss_pgre = True, en_act_doss_pgre = True)]
+		t_org_moa = [[
+			m.pk,
+			'|'.join([str(m), '__zcc__'])
+		] for m in TMoa.objects.filter(peu_doss_pgre = True, en_act_doss_pgre = True)]
 		self.fields['cbsm_org_moa'].choices = t_org_moa
 
 		# J'alimente la liste déroulante des natures d'actions PGRE.
@@ -182,6 +196,7 @@ class GererPhotoPgre(forms.ModelForm) :
 		exclude = ['id_doss_pgre']
 		fields = '__all__'
 		model = TPhotoPgre
+		widgets = { 'dt_pv_ph_pgre' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }) }
 
 	def __init__(self, *args, **kwargs) :
 
@@ -189,13 +204,7 @@ class GererPhotoPgre(forms.ModelForm) :
 		k_doss_pgre = kwargs.pop('k_doss_pgre', None)
 
 		super(GererPhotoPgre, self).__init__(*args, **kwargs)
-
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
+		init_mess_err(self)
 
 		i = self.instance
 		if not i.pk :
@@ -249,20 +258,25 @@ class GererControleActionPgre(forms.ModelForm) :
 		exclude = ['id_doss_pgre']
 		fields = '__all__'
 		model = TControleDossierPgre
+		widgets = { 'dt_contr_doss_pgre' : forms.TextInput(attrs = { 'input-group-addon' : 'date' })}
 
 	def __init__(self, *args, **kwargs) :
 
+		# Imports
+		from app.functions import dt_fr
+
 		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
 		self.k_doss_pgre = kwargs.pop('k_doss_pgre', None)
 
-		super(GererControleActionPgre, self).__init__(*args, **kwargs)
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'dt_contr_doss_pgre' : dt_fr(instance.dt_contr_doss_pgre)
+			})
 
-		# J'ajoute un astérisque au label de chaque champ obligatoire. De plus, je définis les messages d'erreurs
-		# personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
-			if self.fields[cle].required == True :
-				self.fields[cle].label += REQUIRED
+		super(GererControleActionPgre, self).__init__(*args, **kwargs)
+		init_mess_err(self)
 
 		i = self.instance
 		if not i.pk :

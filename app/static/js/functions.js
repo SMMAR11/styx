@@ -69,7 +69,7 @@ function alim_ld(_e, _t, _f = undefined) {
 
 			// Je cache la liste déroulante.
 			if ($('#' + t_ld_eff[i]).hasClass('hide-field')) {
-				point_fw($('#' + t_ld_eff[i])).hide();
+				$('#fw_' + t_ld_eff[i].substr(3)).hide();
 			}
 		}
 	}
@@ -150,7 +150,7 @@ function alim_ld(_e, _t, _f = undefined) {
 
 					// J'essaie d'afficher la liste déroulante si elle admet des choix.
 					if (t_donn.length > 0) {
-						var div = point_fw($('#' + t_ld_alim[i]));
+						var div = $('#fw_' + t_ld_alim[i].substr(3));
 						if ($.type(div) == 'object') {
 							div.show();
 						}	
@@ -225,51 +225,32 @@ function html_ds_fm(_e, _s)
 /**
  * Cette fonction permet l'initialisation d'une datatable.
  * _d : Datatable à initialiser
- * _t : Tableau de colonnes dont on ne veut pas trier
+ * _t : Tableau d'options
  * Retourne un objet "datatable"
  */
-function init_datat(_d, _t) {
-	return _d.find('table').DataTable({
-		'aoColumnDefs' : [{
-			'aTargets' : _t,
-			'bSortable' : false
-		}],
+function init_datat(_d, _t = [false, [], []]) {
+
+	// Ajustement dynamique de certaines colonnes
+	$(_d + ' table th').each(function(_index) {
+		if ($.inArray(_index, _t[2]) > -1) {
+			$(this).css({ 'width' : '1%' });
+		}
+	});
+
+	return $(_d).find('table').DataTable({
+		'aoColumnDefs' : [{ 'aTargets' : _t[1], 'bSortable' : false }],
 		'autoWidth' : false,
 		'info' : false,
 		'language' : {
-			'emptyTable' : 'Aucun enregistrement'
+			'emptyTable' : 'Aucun enregistrement',
+			'lengthMenu': 'Afficher _MENU_ enregistrements',
+			'paginate' : { 'next' : 'Suivant', 'previous' : 'Précédent' }
 		},
+		'lengthMenu' : [[-1, 10, 25, 50], ['---------', 10, 25, 50]],
 		'order' : [],
-		'paging' : false,
+		'paging' : _t[0],
 		'searching' : false
 	});
-}
-
-/**
- * Cette fonction permet de pointer vers le bloc "origine" d'un contrôle.
- * _c : Contrôle dont l'origine doit être trouvée
- * Retourne un objet
- */
-function point_fw(_c) {
-
-	var output;
-
-	// Je cherche à trouver l'origine du conteneur (élément <div/> avec la classe "field-wrapper") parmi tous les
-	// parents du champ.
-	var t_par = _c.parents();
-	for (var i = 0; i < t_par.length; i += 1) {
-		o = $(t_par[i]);
-		if (o.hasClass('field-wrapper')) {
-			output = o;
-		}
-	}
-
-	// Je renvoie une erreur si la variable de retour n'est pas définie.
-	if (output == undefined) {
-		throw 'Le champ est inclus dans aucun conteneur.'
-	}
-
-	return output;
 }
 
 /**
@@ -367,6 +348,7 @@ function soum_f(_e, _s = function(){}, _t = []) {
 
 			// Je retire toutes les erreurs du formulaire.
 			if (!data['bypass'] || data['bypass'] == false) {
+				$('#za_fe_' + suff).remove();
 				o_f.find('.field-error').empty();
 				ret_errs(o_f);
 			}
@@ -478,25 +460,37 @@ function soum_f(_e, _s = function(){}, _t = []) {
 				}
 			}
 			else {
+				var erreur_glob;
 				for (var i in data) {
+					if (i.indexOf('__all__') > -1) {
 
-					// Je pointe vers le contrôle soumis à une erreur.
-					var span = point_fw($('#id_' + i)).find('.field-error');
-
-					// Je prépare le message d'erreur.
-					var ul = $('<ul/>');
-					var li = $('<li/>', { html : data[i][0] });
-
-					// J'affiche l'erreur.
-					span.append(ul);
-					ul.append(li);
-					aj_err($('#id_' + i));
-
-					// Je cache le message d'erreur si et seulement si un message d'erreur porte sur plusieurs champs à
-					// la fois (cas exceptionnel).
-					if (data[i][0] == 'None') {
-						li.css('visibility', 'hidden');
+						// Définition du message d'erreur global
+						erreur_glob = data[i][0];
 					}
+					else {
+
+						// Je pointe vers le contrôle soumis à une erreur.
+						var span = $('#fw_' + i).find('.field-error');
+
+						// Je prépare le message d'erreur.
+						var ul = $('<ul/>');
+						var li = $('<li/>', { html : data[i][0] });
+
+						// J'affiche l'erreur.
+						span.append(ul);
+						ul.append(li);
+						aj_err($('#id_' + i));
+					}
+				}
+
+				// Affichage du message d'erreur global si défini 
+				if (erreur_glob != undefined) {
+					var div = $('<div/>', {
+						'class' : 'custom-alert-danger row',
+						'id' : 'za_fe_' + suff,
+						html : erreur_glob
+					});
+					o_f.closest('.form-root').prepend(div);
 				}
 			}
 		},

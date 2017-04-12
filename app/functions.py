@@ -333,122 +333,6 @@ def gen_t_ch_doss(request, _d_excl = None) :
 	)
 
 '''
-Cette fonction retourne le tableau HTML des factures disponibles pour une demande de versement.
-_f : Identifiant d'un objet TFinancement
-_i : Instance TDemandeVersement
-_c : Dois-je cocher les factures reliées à la demande de versement ?
-Retourne une chaîne de caractères
-'''
-def gen_t_html_fact_doss(_f, _i = None, _c = False) :
-
-	# Imports
-	from app.functions import dt_fr
-	from app.functions import obt_mont
-	from app.models import TFacture
-	from app.models import TFacturesDemandeVersement
-	from app.models import TFinancement
-	from itertools import chain
-
-	# Je vérifie l'existence d'un objet TFinancement.
-	try :
-		o_fin = TFinancement.objects.get(pk = _f)
-	except :
-		o_fin = None
-
-	# Je vérifie l'existence d'un objet TDossier.
-	if o_fin :
-		o_doss = o_fin.id_doss
-	else :
-		o_doss = None
-
-	if o_doss :
-
-		# Je définis si le montant du dossier est en HT ou en TTC.
-		ht_ou_ttc = 'HT'
-		if o_doss.est_ttc_doss == True :
-			ht_ou_ttc = 'TTC'
-
-		t_lg = []
-		for index, f in enumerate(TFacture.objects.filter(id_doss = o_doss)) :
-
-			# Je définis les factures cochées par défaut.
-			checked = ''
-			if _i and _c == True :
-				try :
-					TFacturesDemandeVersement.objects.get(id_ddv = _i, id_fact = f)
-					checked = 'checked=""'
-				except :
-					pass
-
-			# J'initialise le montant de la facture selon le mode de taxe du dossier.
-			mont_fact = f.mont_ht_fact
-			if o_doss.est_ttc_doss == True :
-				mont_fact = f.mont_ttc_fact
-
-			# Je définis les factures pouvant être encore liées à une demande de versement.
-			peut_coch = False
-			if len(TFacturesDemandeVersement.objects.filter(id_ddv__id_fin = o_fin, id_fact = f)) == 0 :
-				peut_coch = True
-			if _i :
-				peut_coch = True
-			if peut_coch == True :
-				cb_fact = '''
-				<input type="checkbox" class="pull-right" id="id_GererDemandeVersement-cbsm_fact_{0}" montant="{1}"
-				name="GererDemandeVersement-cbsm_fact" pourcentage="{2}" taxe={3} value="{4}" {5}>
-				'''.format(index, mont_fact, o_fin.pourc_elig_fin or '', ht_ou_ttc, f.pk, checked)
-			else :
-				cb_fact = ''
-
-			lg = '''
-			<tr>
-				<td>{0}</td>
-				<td>{1}</td>
-				<td>{2}</td>
-				<td>{3}</td>
-				<td>{4}</td>
-			</tr>
-			'''.format(
-				f.id_prest,
-				obt_mont(mont_fact),
-				f.num_fact, 
-				dt_fr(f.dt_mand_moa_fact), 
-				cb_fact
-			)
-
-			# J'empile le tableau des lignes du tableau HTML.
-			t_lg.append(lg)
-
-		# Je prépare le tableau HTML.
-		t_html = '''
-		<div class="field-wrapper">
-			<span class="field-label">
-				Facture(s) pouvant être reliée(s) à la demande de versement
-				<span class="required-field"></span>
-			</span>
-			<div class="my-table" id="t_ch_fact_ddv">
-				<table id="id_GererDemandeVersement-cbsm_fact">
-					<thead>
-						<tr>
-							<th>Prestation</th>
-							<th>Montant {0} (en €)</th>
-							<th>N° de facture</th>
-							<th>Date de mandatement par le maître d'ouvrage</th>
-							<th></th>
-						</tr>
-					</thead>
-					<tbody>{1}</tbody>
-				</table>
-			</div>
-			<span class="field-error"></span>
-		</div>
-		'''.format(ht_ou_ttc, '\n'.join(t_lg))
-
-	else :
-		t_html = ''
-
-	return t_html
-
-'''
 Cette procédure (ou fonction) permet de savoir si un utilisateur peut accéder ou non à une vue.
 request : Objet requête
 Retourne un booléen si le paramètre "_h" vaut False
@@ -572,203 +456,287 @@ def get_menu_vign(_t, _l) :
 	return safe(menu_vign)
 
 '''
-Cette fonction retourne le gabarit de chaque champ d'un formulaire.
-_f : Formulaire traité
-Retourne un tableau associatif.
+Obtention d'un gabarit normé pour chaque champ d'un formulaire
+_form : Objet "formulaire"
+Retourne un tableau associatif
 '''
-def init_f(_f) :
+def init_f(_form) :
 
 	# Imports
+	from bs4 import BeautifulSoup
 	from django.template.defaultfilters import safe
 
-	# Je déclare le tableau de sortie.
-	t_champs = {}
+	output = {}
 
-	# Je parcours chaque champ du formulaire traité.
-	for c in _f :
+	# Mise en forme du gabarit par défaut
+	gab_defaut = '''
+	<div class="field-wrapper" id="fw_{0}">
+		<span class="field-label">{1}</span>
+		<span class="field-control">{2}</span>
+		<span class="field-error"></span>
+	</div>
+	'''
 
-		# J'initialise le gabarit de base.
-		gab_base = '''
-		<div class="field-wrapper">
-			<span class="field-label">{0}</span>
-			<span class="field-control">{1}</span>
-			<span class="field-error"></span>
-		</div>
-		'''
-		
-		# Je mets en place une variable qui va stocker le gabarit utilisé.
+	for champ in _form :
 		gab = None
 
-		# Je convertis le champ en code HTML.
-		c_to_html = '{0}'.format(c)
+		# Conversion du champ en code HTML
+		champ_html = '{0}'.format(champ)
 
-		bal = '<{0}/>'.format(c_to_html.split('<')[1].split(' ')[0])
-		if bal == '<a/>' :
+		# Définition du nom du champ (valeur de l'attribut "name")
+		if _form.prefix :
+			set_name = '{0}-{1}'.format(_form.prefix, champ.name)
+		else :
+			set_name = champ.name
 
-			# Je récupère les différentes parties de la zone d'upload lors d'une modification.
-			split = c_to_html.split('<')
+		# Stockage du type de champ
+		bs_champ = BeautifulSoup(champ_html, 'html.parser')
+		balise_init = bs_champ.find_all()[0].name
 
-			zu_fich = '<{0}'.format(split[len(split) - 1])
-			fich_act = split[1].split('href="')[1].split('"')[0]
+		if balise_init == 'a' :
 
-			if len(split) == 8 :
-				label_eff_fich = '<{0}<{1}'.format(split[4], split[5])
-				cb_eff_fich = '<{0}'.format(split[3])
-				part_gab = '''
+			bs = BeautifulSoup(champ_html, 'html.parser')
+			tab_input = bs.find_all('input')
+
+			if len(tab_input) > 1 :
+				span = '''
 				<span class="delete-file">
 					{0}
 					{1}
 				</span>
-				'''.format(cb_eff_fich, label_eff_fich)
+				'''.format(tab_input[0], bs.find_all('label')[0])
 			else :
-				part_gab = ''
+				span = ''
 
 			gab = '''
-			<div class="field-wrapper">
-				<span class="field-label">{0}</span>
+			<div class="field-wrapper" id="fw_{0}">
+				<span class="field-label">{1}</span>
 				<div class="input-file-container">
-					<span class="field-control">{1}</span>
+					<span class="field-control">{2}</span>
 					<span class="input-file-trigger">Parcourir</span>
 					<div class="input-file-return">
 						<span class="file-infos">
-							{2}
+							{3}
 						</span>
-						{3}
+						{4}
 					</div>
 				</div>
 				<span class="field-error"></span>
 			</div>
-			'''.format(c.label, zu_fich, fich_act, part_gab)
+			'''.format(
+				set_name, 
+				champ.label, 
+				tab_input[len(tab_input) - 1],
+				bs.find_all('a')[0]['href'], 
+				span
+			)
+		
+		if balise_init == 'input' :
 
-		if bal == '<input/>' :
-
-			if 'type="checkbox"' in c_to_html :
+			# Mise en forme d'une zone de saisie de type "checkbox"
+			if 'type="checkbox"' in champ_html :
 				gab = '''
-				<div class="field-wrapper">
-					<span class="field-control">{0}</span>
-					<span class="field-label">{1}</span>
+				<div class="field-wrapper" id="fw_{0}">
+					<span class="field-control">{1}</span>
+					<span class="field-label">{2}</span>
 					<span class="field-error"></span>
 				</div>
-				'''.format(c, c.label)
+				'''.format(set_name, champ, champ.label)
 
-			if 'type="email"' in c_to_html :
-				c_maj = c_to_html.replace('type="email"', 'type="text"')
-				gab = gab_base.format(c.label, c_maj)
-			
-			if 'type="file"' in c_to_html :
+			# Mise en forme d'une zone de saisie de type "file"
+			if 'type="file"' in champ_html :
 				gab = '''
-				<div class="field-wrapper">
-					<span class="field-label">{0}</span>
+				<div class="field-wrapper" id="fw_{0}">
+					<span class="field-label">{1}</span>
 					<div class="input-file-container">
-						<span class="field-control">{1}</span>
+						<span class="field-control">{2}</span>
 						<span class="input-file-trigger">Parcourir</span>
 					</div>
 					<span class="field-error"></span>
 				</div>
-				'''.format(c.label, c)
+				'''.format(set_name, champ.label, champ)
 
-			if 'type="hidden"' in c_to_html :
-				gab = gab_base.format(c.label, c)
-
-			if 'type="number"' in c_to_html :
-				c_maj = c_to_html.replace('type="number"', 'type="text"')
-				c_maj = c_maj.replace(' step="any"', '')
-				gab = gab_base.format(c.label, c_maj)
-
-			if 'type="password"' in c_to_html or 'type="text"' in c_to_html :
-				if c.name.startswith('zsac_') == True :
+			# Mise en forme d'une zone de saisie de type "number"
+			if 'type="number"' in champ_html :
+				champ_html_modif = champ_html.replace('type="number"', 'type="text"')
+				champ_html_modif = champ_html_modif.replace('step="any"', '')
+				if 'input-group-addon="euro"' in champ_html :
 					gab = '''
-					<div class="field-wrapper">
-						<span class="field-label">{0}</span>
+					<div class="field-wrapper" id="fw_{0}">
+						<span class="field-label">{1}</span>
+						<div class="form-group">
+							<span class="field-control">
+								<div class="input-group">
+									{2}
+									<span class="input-group-addon">
+										<span class="fa fa-eur"></span>
+									</span>
+								</div>
+							</span>
+						</div>
+						<span class="field-error"></span>
+					</div>
+					'''.format(set_name, champ.label, champ_html_modif)
+				else :
+					gab = gab_defaut.format(set_name, champ.label, champ_html_modif)
+
+			# Mise en forme d'une zone de saisie de type "password"
+			if 'type="password"' in champ_html :
+				gab = gab_defaut.format(set_name, champ.label, champ)
+
+			# Mise en forme d'une zone de saisie de type "text"
+			if 'type="text"' in champ_html :
+				if 'input-group-addon="date"' in champ_html :
+					gab = '''
+					<div class="field-wrapper" id="fw_{0}">
+						<span class="field-label">{1}</span>
+						<div class="form-group">
+							<span class="field-control">
+								<div class="input-group">
+									{2}
+									<span class="date input-group-addon">
+										<input name="{3}__datepicker" type="hidden">
+										<span class="glyphicon glyphicon-calendar"></span>
+									</span>
+								</div>
+							</span>
+						</div>
+						<span class="field-error"></span>
+					</div>
+					'''.format(set_name, champ.label, champ, set_name)
+				elif 'input-group-addon="email"' in champ_html :
+					gab = '''
+					<div class="field-wrapper" id="fw_{0}">
+						<span class="field-label">{1}</span>
+						<div class="form-group">
+							<span class="field-control">
+								<div class="input-group">
+									{2}
+									<span class="input-group-addon">
+										<span class="fa fa-at"></span>
+									</span>
+								</div>
+							</span>
+						</div>
+						<span class="field-error"></span>
+					</div>
+					'''.format(set_name, champ.label, champ)
+				elif 'typeahead="on"' in champ_html :
+					gab = '''
+					<div class="field-wrapper" id="fw_{0}">
+						<span class="field-label">{1}</span>
 						<div class="typeahead__container">
 							<div class="typeahead__field">
 								<span class="typeahead__query">
-									<span class="field-control">{1}</span>
+									<div class="form-group">
+										<span class="field-control">
+											<div class="input-group">
+												{2}
+												<span class="input-group-addon pointer" id="btn_rech_siret"
+												title="Rechercher sur www.societe.com/">
+													<span class="siret-search-icon" style="display: block;"></span>
+												</span>
+											</div>
+										</span>
+									</div>
 								</span>
 							</div>
 						</div>
 						<span class="field-error"></span>
 					</div>
-					'''.format(c.label, c)
+					'''.format(set_name, champ.label, champ)
 				else :
-					gab = gab_base.format(c.label, c)
+					gab = gab_defaut.format(set_name, champ.label, champ)
 
-		if bal == '<select/>' :
-			gab = gab_base.format(c.label, c)
-			if 'multiple="multiple"' in c_to_html :
+		# Mise en forme d'une zone de liste
+		if balise_init == 'select' :
+			if 'multiple="multiple"' in champ_html :
+				if 'm2m="on"' in champ_html :
 
-				# Je récupère la valeur de l'attribut "name".
-				split_name = c_to_html.split('name="')
-				name = split_name[1].split('"')[0]
+					# Initialisation des colonnes de la balise <thead/>
+					tab_elem = [
+						champ.label.split('|')[1],
+						'<input type="checkbox" id="id_{0}__all" value="__all__">'.format(set_name)
+					]
+					tab_thead = ['<th>{0}</th>'.format(elem) for elem in tab_elem]
 
-				# Je prépare la balise <thead/> du tableau HTML.
-				split_thead = c.label.split(';')
-				thead = ['<th>{0}</th>'.format(i) for i in split_thead[1:]]
+					# Initialisation des lignes de la balise <tbody/>
+					bs = BeautifulSoup(champ_html, 'html.parser')
+					tab_tbody = []
+					for index, elem in enumerate(bs.find_all('option')) :
+						tab_elem = [elem.text, '<input type="checkbox" id="id_{0}_{1}" name="{2}" value="{3}" {4}>'.format(
+							set_name,
+							index,
+							set_name,
+							elem['value'],
+							'checked' if elem.has_attr('selected') else ''
+						)]
+						tab_td = ['<td>{0}</td>'.format(elem) for elem in tab_elem]
+						tab_tbody.append('<tr>{0}</tr>'.format(''.join(tab_td)))
 
-				# Je prépare la balise <tbody/> du tableau HTML.
-				split_tbody = []
-				for index, i in enumerate(c_to_html.split('<')[2:-1]) :
-					if index % 2 == 0 :
-						split_value = i.split('"')
-						split_text = i.split('>')
-						checked = ''
-						if 'selected="selected"' in i :
-							checked = ' checked=""'
-						split_tbody.append({ 'value' : split_value[1], 'text' : split_text[1], 'checked' : checked })
-				tbody = []
-				for index, i in enumerate(split_tbody) :
-					tr = '''
-					<tr>
-						<td>{text}</td>
-						<td>
-							<input type="checkbox" class="pull-right" id="id_{name}_{index}" name="{name}" 
-							value="{value}"{checked}>
-						</td>
-					</tr>
-					'''.format(
-						text = i['text'],
-						name = name,
-						index = index,
-						value = i['value'],
-						checked = i['checked']
-					)
-					tbody.append(tr)
+				else :
+
+					# Initialisation des colonnes de la balise <thead/>
+					tab_thead = []
+					for elem in champ.label.split('|')[1:] :
+						if elem == '__zcc__' :
+							elem = '<input type="checkbox" id="id_{0}__all" value="__all__">'.format(set_name)
+						tab_thead.append('<th>{0}</th>'.format(elem))
+
+					# Initialisation des lignes de la balise <tbody/>
+					bs = BeautifulSoup(champ_html, 'html.parser')
+					tab_tbody = []
+					for index, elem in enumerate(bs.find_all('option')) :
+						tab_td = []
+						for elem_2 in elem.text.split('|') :
+							if elem_2 == '__zcc__' :
+								elem_2 = '<input type="checkbox" id="id_{0}_{1}" name="{2}" value="{3}" {4}>'.format(
+									set_name,
+									index,
+									set_name,
+									elem['value'],
+									'checked' if elem.has_attr('selected') else ''
+								)
+							tab_td.append('<td>{0}</td>'.format(elem_2))
+						tab_tbody.append('<tr>{0}</tr>'.format(''.join(tab_td)))
 
 				gab = '''
-				<div class="field-wrapper">
-					<span class="field-label">{0}</span>
-					<div class="my-table" id="t_ch_{1}">
-						<table id="id_{2}">
-							<thead>
-								<tr>
-									{3}
-									<th>
-										<input type="checkbox" class="pull-right" id="id_{4}__all" value="all">
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								{5}
-							</tbody>
+				<div class="field-wrapper" id="fw_{0}">
+					<span class="field-label">{1}</span>
+					<div class="my-table" id="dtab_{2}">
+						<table id="id_{3}">
+							<thead><tr>{4}</tr></thead>
+							<tbody>{5}</tbody>
 						</table>
 					</div>
 					<span class="field-error"></span>
 				</div>
-				'''.format(split_thead[0], c.name, name, '\n'.join(thead), name, '\n'.join(tbody))
+				'''.format(
+					set_name,
+					champ.label.split('|')[0],
+					set_name,
+					set_name,
+					''.join(tab_thead),
+					''.join(tab_tbody)
+				)
+			else :
+				gab = gab_defaut.format(set_name, champ.label, champ)
 
-		if bal == '<textarea/>' :
-			gab = gab_base.format(c.label, c)
+		# Mise en forme d'une zone de texte
+		if balise_init == 'textarea' :
+			gab = gab_defaut.format(set_name, champ.label, champ)
 
-		if bal == '<ul/>' :
-			gab = gab_base.format(c.label, c)
+		# Mise en forme d'une zone de boutons radio
+		if balise_init == 'ul' :
+			gab = gab_defaut.format(set_name, champ.label, champ)
 
-		# J'empile le tableau de sortie s'il n'y a pas d'erreurs.
+		# Tentative d'empilage du tableau associatif de sortie
 		if gab :
-			t_champs[c.name] = safe(gab)
+			output[champ.name] = safe(gab)
 		else :
-			raise ValueError('Aucun gabarit n\'est disponible pour le champ « {0} ».'.format(c.name))
-
-	return t_champs
+			raise ValueError('Aucun gabarit n\'est disponible pour le champ « {0} ».'.format(set_name))
+		
+	return output
 
 '''
 Cette fonction retourne une fenêtre modale.
@@ -791,7 +759,7 @@ def init_fm(_s, _h, _b = '') :
 					<p class="modal-title">{h}</p>
 				</div>
 				<div class="modal-body">
-					<span id="za_{s}">
+					<span id="za_{s}" class="form-root">
 						{b}
 					</span>
 					<div class="modal-padding-bottom"></div>
@@ -802,6 +770,26 @@ def init_fm(_s, _h, _b = '') :
 	'''.format(s = _s, h = _h, b = _b)
 
 	return safe(fm)
+
+'''
+Initialisation des messages d'erreur
+_form : Formulaire source
+_sv : Dois-je ajouter un style visuel ?
+'''
+def init_mess_err(_form, _sv = True) :
+
+	# Import
+	from app.constants import ERROR_MESSAGES
+
+	for elem in _form.fields.keys() :
+		for cle, val in ERROR_MESSAGES.items() :
+			_form.fields[elem].error_messages[cle] = val
+
+		# Ajout d'un style visuel si le champ est requis
+		if _sv == True and _form.fields[elem].required == True :
+			spl = _form.fields[elem].label.split('|')
+			spl[0] = spl[0] + '<span class="required-field"></span>'
+			_form.fields[elem].label = '|'.join(spl)
 
 '''
 Cette fonction retourne le gabarit de chaque attribut d'une instance.

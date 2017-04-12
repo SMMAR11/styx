@@ -3,6 +3,7 @@
 
 # Imports
 from app.constants import *
+from app.functions import init_mess_err
 from django import forms
 
 class RechercherDossiers(forms.Form) :
@@ -12,7 +13,7 @@ class RechercherDossiers(forms.Form) :
 
 	# Je définis les champs du formulaire.
 	cbsm_org_moa = forms.MultipleChoiceField(
-		label = 'Maître(s) d\'ouvrage(s);Nom', required = False, widget = forms.SelectMultiple()
+		label = 'Maître(s) d\'ouvrage(s)|Nom|__zcc__', required = False, widget = forms.SelectMultiple()
 	)
 	zl_progr = forms.ChoiceField(
 		choices = [DEFAULT_OPTION], label = 'Programme', required = False, widget = forms.Select()
@@ -39,10 +40,14 @@ class RechercherDossiers(forms.Form) :
 		choices = [DEFAULT_OPTION], label = 'Nature du dossier', required = False, widget = forms.Select()
 	)
 	zd_dt_deb_delib_moa_doss = forms.DateField(
-		label = '', required = False, widget = forms.TextInput(attrs = { 'placeholder' : 'Du' })
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'Du' })
 	)
 	zd_dt_fin_delib_moa_doss = forms.DateField(
-		label = '', required = False, widget = forms.TextInput(attrs = { 'placeholder' : 'au' })
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'au' })
 	)
 	zl_av_cp = forms.ChoiceField(
 		choices = [DEFAULT_OPTION],
@@ -54,13 +59,13 @@ class RechercherDossiers(forms.Form) :
 		label = '',
 		required = False,
 		validators = [val_mont_pos],
-		widget = forms.TextInput(attrs = { 'placeholder' : '0 par défaut' })
+		widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro', 'placeholder' : '0 par défaut' })
 	)
 	zs_mont_doss_max = forms.FloatField(
 		label = '',
 		required = False,
 		validators = [val_mont_pos],
-		widget = forms.TextInput(attrs = { 'placeholder' : 'infini par défaut' })
+		widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro', 'placeholder' : 'infini par défaut' })
 	)
 	cb_doss_dep_nn_sold = forms.BooleanField(
 		label = 'Dossiers dont les dépenses sont non-soldées', required = False, widget = forms.CheckboxInput()
@@ -104,13 +109,10 @@ class RechercherDossiers(forms.Form) :
 		k_ss_axe = kwargs.pop('k_ss_axe', None)
 		
 		super(RechercherDossiers, self).__init__(*args, **kwargs)
-
-		# Je définis les messages d'erreurs personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
+		init_mess_err(self, False)
 
 		# J'alimente les listes déroulantes personalisées.
-		self.fields['cbsm_org_moa'].choices = [(m.pk, m) for m in TMoa.objects.filter(
+		self.fields['cbsm_org_moa'].choices = [[m.pk, '|'.join([str(m), '__zcc__'])] for m in TMoa.objects.filter(
 			peu_doss = True, en_act_doss = True
 		)]
 		self.fields['zl_progr'].choices += [(p.pk, p) for p in TProgramme.objects.all()]
@@ -149,7 +151,7 @@ class RechercherPrestations(forms.Form) :
 		choices = [DEFAULT_OPTION], label = 'Prestataire', required = False, widget = forms.Select()
 	)
 	cbsm_org_moa = forms.MultipleChoiceField(
-		label = 'Maître(s) d\'ouvrage(s);Nom', required = False, widget = forms.SelectMultiple()
+		label = 'Maître(s) d\'ouvrage(s)|Nom|__zcc__', required = False, widget = forms.SelectMultiple()
 	)
 	zl_progr = forms.ChoiceField(
 		choices = [DEFAULT_OPTION], label = 'Programme', required = False, widget = forms.Select()
@@ -173,10 +175,14 @@ class RechercherPrestations(forms.Form) :
 		widget = forms.Select(attrs = { 'class' : 'hide-field' })
 	)
 	zd_dt_deb_notif_prest = forms.DateField(
-		label = '', required = False, widget = forms.TextInput(attrs = { 'placeholder' : 'Du' })
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'Du' })
 	)
 	zd_dt_fin_notif_prest = forms.DateField(
-		label = '', required = False, widget = forms.TextInput(attrs = { 'placeholder' : 'au' })
+		label = '', 
+		required = False, 
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'au' })
 	)
 	zl_nat_prest = forms.ChoiceField(
 		choices = [DEFAULT_OPTION], label = 'Nature de la prestation', required = False, widget = forms.Select()
@@ -185,13 +191,13 @@ class RechercherPrestations(forms.Form) :
 		label = '',
 		required = False,
 		validators = [val_mont_pos],
-		widget = forms.TextInput(attrs = { 'placeholder' : '0 par défaut' })
+		widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro', 'placeholder' : '0 par défaut' })
 	)
 	zs_mont_prest_max = forms.FloatField(
 		label = '',
 		required = False,
 		validators = [val_mont_pos],
-		widget = forms.TextInput(attrs = { 'placeholder' : 'infini par défaut' })
+		widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro', 'placeholder' : 'infini par défaut' })
 	)
 	zl_dep = forms.ChoiceField(
 		choices = [DEFAULT_OPTION],
@@ -221,14 +227,11 @@ class RechercherPrestations(forms.Form) :
 		k_ss_axe = kwargs.pop('k_ss_axe', None)
 		
 		super(RechercherPrestations, self).__init__(*args, **kwargs)
-
-		# Je définis les messages d'erreurs personnalisés à chaque champ.
-		for cle, valeur in self.fields.items() :
-			self.fields[cle].error_messages = ERROR_MESSAGES
+		init_mess_err(self, False)
 
 		# J'alimente les listes déroulantes personalisées.
 		self.fields['zl_org_prest'].choices += [(p.pk, p) for p in TPrestataire.objects.all()]
-		self.fields['cbsm_org_moa'].choices = [(m.pk, m) for m in TMoa.objects.filter(
+		self.fields['cbsm_org_moa'].choices = [[m.pk, '|'.join([str(m), '__zcc__'])] for m in TMoa.objects.filter(
 			peu_doss = True, en_act_doss = True
 		)]
 		self.fields['zl_progr'].choices += [(p.pk, p) for p in TProgramme.objects.all()]

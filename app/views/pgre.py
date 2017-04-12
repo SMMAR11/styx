@@ -103,7 +103,7 @@ def cr_act_pgre(request) :
 				output = HttpResponse(
 					json.dumps({
 						'bypass' : True, 
-						'success' : { 'datatable' : t_atel_pgre, 'datatable_name' : 'ch_cbsm_atel_pgre' }
+						'success' : { 'datatable' : t_atel_pgre, 'datatable_name' : 'GererActionPgre-cbsm_atel_pgre' }
 					}), content_type = 'application/json'
 				)
 
@@ -272,7 +272,7 @@ def modif_act_pgre(request, _a) :
 				output = HttpResponse(
 					json.dumps({
 						'bypass' : True, 
-						'success' : { 'datatable' : t_atel_pgre, 'datatable_name' : 'ch_cbsm_atel_pgre' }
+						'success' : { 'datatable' : t_atel_pgre, 'datatable_name' : 'GererActionPgre-cbsm_atel_pgre' }
 					}), content_type = 'application/json'
 				)
 
@@ -712,7 +712,7 @@ def cons_act_pgre(request, _a) :
 			'chem_ph_pgre' : p.chem_ph_pgre,
 			'int_ph_pgre' : p.int_ph_pgre,
 			'int_ppv_ph_pgre' : p.id_ppv_ph,
-			'dt_pv_ph_pgre' : dt_fr(p.dt_pv_ph_pgre),
+			'dt_pv_ph_pgre' : dt_fr(p.dt_pv_ph_pgre) or '-',
 			'pk' : p.pk
 		} for p in qs_ph_pgre]
 
@@ -888,7 +888,9 @@ def cons_act_pgre(request, _a) :
 						'int_ph_pgre' : { 'label' : 'Intitulé de la photo', 'value' : o_ph_pgre.int_ph_pgre },
 						'descr_ph_pgre' : { 'label' : 'Description', 'value' : o_ph_pgre.descr_ph_pgre or '' },
 						'id_ppv_ph' : { 'label' : 'Période de prise de vue', 'value' : o_ph_pgre.id_ppv_ph },
-						'dt_pv_ph_pgre' : { 'label' : 'Date de prise de vue', 'value' : dt_fr(o_ph_pgre.dt_pv_ph_pgre) }
+						'dt_pv_ph_pgre' : {
+							'label' : 'Date de prise de vue', 'value' : dt_fr(o_ph_pgre.dt_pv_ph_pgre) or ''
+						}
 					}
 					
 					t_attrs_ph_pgre = init_pg_cons(t_attrs_ph_pgre)

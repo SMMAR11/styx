@@ -16,9 +16,7 @@
 			{{ f_modif_ddv.zl_fin }}
 			{{ f_modif_ddv.id_type_vers }}
 			{{ f_modif_ddv.int_ddv }}
-			{% if d.id_type_vers.int_type_vers == 'Acompte' or d.id_type_vers.int_type_vers == 'Solde' %}
-			{{ t_fact_doss | safe }}
-			{% endif %}
+			{{ f_modif_ddv.cbsm_fact }}
 			<div class="row">
 				<div class="col-md-6">{{ f_modif_ddv.mont_ht_ddv }}</div>
 				<div class="col-md-6">{{ f_modif_ddv.mont_ttc_ddv }}</div>
@@ -39,10 +37,9 @@
 			{{ f_modif_ddv.comm_ddv }}
 			<button class="center-block green-btn my-btn" type="submit">Valider</button>
 			<div class="form-remark">
-				**
-				<br/>
-				Il est impossible de renseigner un numéro de bordereau et un numéro de titre de recette tant qu'une
-				date de versement n'a pas été renseignée.
+				<ul class="my-list-style">
+					<li>Il est impossible de renseigner un numéro de bordereau et un numéro de titre de recette tant qu'une date de versement n'a pas été renseignée.</li>
+				</ul>
 			</div>
 		</div>
 	</fieldset>

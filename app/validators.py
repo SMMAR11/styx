@@ -19,19 +19,6 @@ def val_cdc(_v) :
 			raise ValidationError('Le caractère « {0} » est interdit.'.format(_v[i]))
 
 '''
-Ce validateur renvoie une erreur si le format du courriel saisi est incorrect.
-p_valeur : Courriel saisi
-'''
-def val_courr(_v) :
-
-	# Imports
-	from django.core.exceptions import ValidationError
-	import re
-
-	if not re.match(r'[^@]+@[^@]+\.[^@]+', _v) :
-		raise ValidationError('Veuillez saisir un courriel valide.')
-
-'''
 Ce validateur renvoie une erreur si l'extension d'un fichier uploadé n'est pas au format image autorisé.
 _v : Fichier uploadé
 '''

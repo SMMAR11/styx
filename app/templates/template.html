@@ -1,6 +1,5 @@
 {% load static %}
 {% load leaflet_tags %}
-
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -32,57 +31,66 @@
 			const URL_ALERT = '{% url 'alert' %}';
 
 		</script>
-		<link rel="stylesheet" type="text/css" href="{% static './vendors/bootstrap/css/bootstrap.css' %}">
-		<link rel="stylesheet" type="text/css" href="{% static './vendors/DataTables/css/jquery.dataTables.css' %}">
-		<link rel="stylesheet" type="text/css" href="{% static './vendors/jquery-typeahead-2.7.6/dist/jquery.typeahead.min.css' %}">
-		<link rel="stylesheet" type="text/css" href="{% static './css/template.css' %}">
-		<link rel="stylesheet" type="text/css" href="{% static './css/styles.css' %}">
+		<!-- Inclusion de la bibliothèque jQuery -->
 		<script type="text/javascript" src="{% static './vendors/bootstrap/js/jquery.js' %}"></script>
+		<!-- Inclusion du framework Bootstrap -->
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/bootstrap/css/bootstrap.css' %}">
 		<script type="text/javascript" src="{% static './vendors/bootstrap/js/bootstrap.js' %}"></script>
+		<!-- Inclusion de la bibliothèque Font Awesome -->
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+		<!-- Inclusion de la bibliothèque DataTables -->
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/DataTables/css/jquery.dataTables.css' %}">
 		<script type="text/javascript" src="{% static './vendors/DataTables/js/jquery.dataTables.js' %}"></script>
+		<!-- Inclusion de la bibliothèque jQuery Typeahead -->
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/jquery-typeahead-2.7.6/dist/jquery.typeahead.min.css' %}">
 		<script type="text/javascript" src="{% static './vendors/jquery-typeahead-2.7.6/dist/jquery.typeahead.min.js' %}"></script>
+		<!-- Inclusion de la bibliothèque Leaflet -->
 		{% leaflet_js %}
     	{% leaflet_css %}
+    	<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.draw/leaflet.draw.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.easybutton/easy-button.css' %}">
     	<script type="text/javascript" src="{% static './vendors/leaflet.draw/leaflet.draw-custom.js' %}"></script>
 		<script type="text/javascript" src="{% static './vendors/leaflet.easybutton/easy-button.js' %}"></script>
+		<!-- Inclusion de mon script carto personnalisé -->
 		<script type="text/javascript" src="{% static './js/scripts_carto.js' %}"></script>
-		<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.draw/leaflet.draw.css' %}">
-		<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.easybutton/easy-button.css' %}">
-		<link rel="stylesheet" type="text/css" href="{% static './vendors/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+		<!-- Inclusion de la bibliothèque bootstrap-datepicker -->
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/bootstrap-datepicker-1.6.4/css/bootstrap-datepicker.min.css' %}">
+		<script type="text/javascript" src="{% static './vendors/bootstrap-datepicker-1.6.4/js/bootstrap-datepicker.min.js' %}"></script>
+		<script type="text/javascript" src="{% static './vendors/bootstrap-datepicker-1.6.4/locales/bootstrap-datepicker.custom-fr.js' %}"></script>
+		<!-- Inclusion de la bibliothèque Flot -->
 		<script type="text/javascript" src="{% static './vendors/flot/jquery.flot.js' %}"></script>
 		<script type="text/javascript" src="{% static './vendors/flot/jquery.flot.time.js' %}"></script>
 		<script type="text/javascript" src="{% static './vendors/flot/jquery.flot.resize.js' %}"></script>
+		<!-- Inclusion de mes feuilles de style personnalisées -->
+		<link rel="stylesheet" type="text/css" href="{% static './css/template.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static './css/styles.css' %}">
 	</head>
 	<body>
 		<div class="container-fluid">
 			<div class="row" id="header">
-				<img src="{% static './pics/logos/styx.png' %}">
-			</div>
-			<div class="row">
-				<nav class="navbar navbar-default" id="main-nav">
+				<nav class="navbar">
 					<div class="navbar-header">
 						{% if user.is_authenticated %}
-						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#my-navbar">
+						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
 							<span class="icon-bar"></span>
 							<span class="icon-bar"></span>
 							<span class="icon-bar"></span>
 						</button>
 						{% endif %}
-						<a class="glyphicon glyphicon-home navbar-brand" href="{% url 'index' %}"></a>
+						<a class="navbar-brand" href="{% url 'index' %}" title="Revenir sur la page principale">
+							<img src="{% static './pics/logos/styx.png' %}">
+						</a>
 					</div>
 					{% if user.is_authenticated %}
-					<div id="my-navbar" class="collapse navbar-collapse">
+					<div id="navbar" class="collapse navbar-collapse">
 						{{ navbar }}
 						<ul class="nav navbar-nav navbar-right">
 							<li>
-								<a href="{% url 'alert' %}">
-									Alertes
-									<span class="my-badge" id="za_alert"></span>
-								</a>
+								<a href="{% url 'alert' %}"><span class="my-badge" id="za_alert"></span></a>
 							</li>
 							<li class="dropdown">
 								<a class="dropdown-toggle" data-toggle="dropdown" href="#">
-									<span class="glyphicon glyphicon-user"></span>
+									<span class="fa fa-lg fa-user-o"></span>
 									{{ user.first_name }} {{ user.last_name }}
 									<span class="caret"></span>
 								</a>
@@ -103,10 +111,9 @@
 					{% endif %}
 				</nav>
 			</div>
-			<div id="content">
+			<div id="content" class="form-root">
 				{% block content %}{% endblock content %}
 			</div>
-			<div class="row" id="pre-footer"></div>
 			<div class="row" id="footer">
 				<div class="col-md-5 footer-col">
 					<img src="{% static './pics/logos/smmar.png' %}">
@@ -126,6 +133,7 @@
 				{{ fm }}
 			{% endfor %}
 		</div>
+		<!-- Inclusion de mes scripts personnalisés -->
 		<script type="text/javascript" src="{% static './js/functions.js' %}"></script>
 		<script type="text/javascript" src="{% static './js/scripts.js' %}"></script>
 	</body>

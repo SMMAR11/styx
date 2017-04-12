@@ -292,7 +292,6 @@ class TCommunesCp(models.Model) :
 class TOrganisme(models.Model):
 
     # Imports
-    from app.validators import val_courr
     from app.validators import val_tel
 
     id_org = models.AutoField(primary_key = True)
@@ -302,9 +301,7 @@ class TOrganisme(models.Model):
     comm_org = models.TextField(blank = True, null = True, verbose_name = 'Commentaire')
     compl_adr_org = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Adresse (ligne 2)')
     cont_org = models.CharField(blank = True, max_length = 255, null = True)
-    courr_org = models.CharField(
-        blank = True, max_length = 255, null = True, validators = [val_courr], verbose_name = 'Adresse électronique'
-    )
+    courr_org = models.EmailField(blank = True, null = True, verbose_name = 'Adresse électronique')
     cp_org = models.CharField(blank = True, max_length = 5, null = True, verbose_name = 'Code postal')
     n_org = models.CharField(max_length = 255, verbose_name = 'Nom')
     port_org = models.CharField(
@@ -522,10 +519,14 @@ class TDossier(models.Model) :
     comm_doss = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
     comm_regl_doss = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
     dt_av_cp_doss = models.DateField(
-        blank = True, null = True, verbose_name = 'Date de l\'avis du comité de programmation'
+        blank = True,
+        null = True,
+        verbose_name = 'Date de l\'avis du comité de programmation <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
     dt_delib_moa_doss = models.DateField(
-        blank = True, null = True, verbose_name = 'Date de délibération au maître d\'ouvrage'
+        blank = True,
+        null = True,
+        verbose_name = 'Date de délibération au maître d\'ouvrage <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
     dt_int_doss = models.DateField(default = timezone.now())
     est_ttc_doss = models.BooleanField()
@@ -536,10 +537,10 @@ class TDossier(models.Model) :
         max_length = 255, validators = [val_cdc], verbose_name = 'Territoire ou lieu-dit précis'
     )
     mont_doss = models.FloatField(
-        validators = [val_mont_pos], verbose_name = 'Montant du dossier présenté au CD GEMAPI (en €)'
+        validators = [val_mont_pos], verbose_name = 'Montant du dossier présenté au CD GEMAPI'
     )
     mont_suppl_doss = models.FloatField(
-        default = 0, verbose_name = 'Dépassement du dossier (en €)', validators = [val_mont_nul]
+        default = 0, verbose_name = 'Dépassement du dossier', validators = [val_mont_nul]
     )
     num_act = models.CharField(blank = True, max_length = 1, null = True)
     num_axe = models.IntegerField(blank = True, null = True)
@@ -626,7 +627,11 @@ class TPhoto(models.Model) :
     descr_ph = models.CharField(
         blank = True, max_length = 255, null = True, validators = [val_cdc], verbose_name = 'Description'
     )
-    dt_pv_ph = models.DateField(verbose_name = 'Date de prise de vue')
+    dt_pv_ph = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date de prise de vue <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     int_ph = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la photo')
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
     id_ppv_ph = models.ForeignKey(TPeriodePriseVuePhoto, models.DO_NOTHING, verbose_name = 'Période de prise de vue')
@@ -665,9 +670,15 @@ class TArretesDossier(models.Model) :
     )
     comm_arr = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
     dt_lim_encl_trav_arr = models.DateField(
-        blank = True, null = True, verbose_name = 'Date limite d\'enclenchement des travaux'
+        blank = True,
+        null = True,
+        verbose_name = 'Date limite d\'enclenchement des travaux <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
-    dt_sign_arr = models.DateField(blank = True, null = True, verbose_name = 'Date de signature de l\'arrêté')
+    dt_sign_arr = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date de signature de l\'arrêté <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     num_arr = models.CharField(
         blank = True, max_length = 255, null = True, validators = [val_cdc], verbose_name = 'Numéro de l\'arrêté'
     )
@@ -756,8 +767,14 @@ class TPrestation(models.Model) :
         verbose_name = 'Insérer le contrat de prestation <span class="field-complement">(fichier PDF)</span>'
     )
     comm_prest = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
-    dt_fin_prest = models.DateField(verbose_name = 'Date de fin de la prestation')
-    dt_notif_prest = models.DateField(verbose_name = 'Date de notification de la prestation')
+    dt_fin_prest = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date de fin de la prestation <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
+    dt_notif_prest = models.DateField(
+        verbose_name = 'Date de notification de la prestation <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     int_prest = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la prestation')
     ref_prest = models.CharField(
         blank = True, max_length = 255, null = True, validators = [val_cdc], verbose_name = 'Référence de la prestation'
@@ -822,10 +839,17 @@ class TAvenant(models.Model) :
         verbose_name = 'Insérer le fichier scanné de l\'avenant <span class="field-complement">(fichier PDF)</span>'
     )
     comm_aven = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
-    dt_aven = models.DateField(verbose_name = 'Date de fin de l\'avenant')
+    dt_aven = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date de fin de l\'avenant <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     int_aven = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de l\'avenant')
     mont_aven = models.FloatField(
-        validators = [val_mont_nul], verbose_name = 'Montant [ht_ou_ttc] de l\'avenant (en €)'
+        blank = True,
+        null = True,
+        validators = [val_mont_nul],
+        verbose_name = 'Montant [ht_ou_ttc] de l\'avenant'
     )
     num_aven = models.IntegerField()
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
@@ -833,6 +857,7 @@ class TAvenant(models.Model) :
 
     class Meta :
         db_table = 't_avenant'
+        ordering = ['num_aven']
         verbose_name = 'T_AVENANT'
         verbose_name_plural = 'T_AVENANT'
 
@@ -863,14 +888,19 @@ class TFacture(models.Model) :
         verbose_name = 'Insérer le fichier scanné de la facture <span class="field-complement">(fichier PDF)</span>'
     )
     comm_fact = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
-    dt_mand_moa_fact = models.DateField(verbose_name = 'Date de mandatement par le maître d\'ouvrage'
+    dt_mand_moa_fact = models.DateField(
+        verbose_name = 'Date de mandatement par le maître d\'ouvrage <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
-    dt_rec_fact = models.DateField(blank = True, null = True, verbose_name = 'Date de réception de la facture')
+    dt_rec_fact = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date de réception de la facture <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     mont_ht_fact = models.FloatField(
-        blank = True, null = True, validators = [val_mont_pos], verbose_name = 'Montant HT de la facture (en €)'
+        blank = True, null = True, validators = [val_mont_pos], verbose_name = 'Montant HT de la facture'
     )
     mont_ttc_fact = models.FloatField(
-        blank = True, null = True, validators = [val_mont_pos], verbose_name = 'Montant TTC de la facture (en €)'
+        blank = True, null = True, validators = [val_mont_pos], verbose_name = 'Montant TTC de la facture'
     )
     num_bord_fact = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Numéro de bordereau')
     num_fact = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Numéro de facture')
@@ -881,7 +911,7 @@ class TFacture(models.Model) :
 
     class Meta :
         db_table = 't_facture'
-        ordering = ['id_prest']
+        ordering = ['-dt_mand_moa_fact', 'id_prest']
         verbose_name = 'T_FACTURE'
         verbose_name_plural = 'T_FACTURE'
 
@@ -927,21 +957,33 @@ class TFinancement(models.Model) :
         verbose_name = 'Insérer l\'arrêté de subvention <span class="field-complement">(fichier PDF)</span>'
     )
     comm_fin = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
-    dt_deb_elig_fin = models.DateField(blank = True, null = True, verbose_name = 'Date de début d\'éligibilité')
-    dt_lim_deb_oper_fin = models.DateField(
-        blank = True, null = True, verbose_name = 'Date limite du début de l\'opération'
+    dt_deb_elig_fin = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date de début d\'éligibilité <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
-    dt_lim_prem_ac_fin = models.DateField(blank = True, null = True, verbose_name = 'Date limite du premier acompte')
-    duree_pror_fin = models.IntegerField(default = 0, verbose_name = 'Durée de la prorogation (en mois)')
-    duree_valid_fin = models.IntegerField(default = 0, verbose_name = 'Durée de validité de l\'aide (en mois)')
+    dt_lim_deb_oper_fin = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date limite du début de l\'opération <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
+    dt_lim_prem_ac_fin = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date limite du premier acompte <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
+    duree_pror_fin = models.IntegerField(blank = True, null = True, verbose_name = 'Durée de la prorogation (en mois)')
+    duree_valid_fin = models.IntegerField(
+        blank = True, null = True, verbose_name = 'Durée de validité de l\'aide (en mois)'
+    )
     mont_elig_fin = models.FloatField(
         blank = True, 
         null = True, 
         validators = [val_mont_pos],
-        verbose_name = 'Montant [ht_ou_ttc] de l\'assiette éligible de la subvention (en €)'
+        verbose_name = 'Montant [ht_ou_ttc] de l\'assiette éligible de la subvention'
     )
     mont_part_fin = models.FloatField(
-        validators = [val_mont_pos], verbose_name = 'Montant [ht_ou_ttc] total de la participation (en €)'
+        validators = [val_mont_pos], verbose_name = 'Montant [ht_ou_ttc] total de la participation'
     )
     num_arr_fin = models.CharField(
         blank = True, 
@@ -1021,8 +1063,14 @@ class TDemandeVersement(models.Model) :
         '''
     )
     comm_ddv = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
-    dt_ddv = models.DateField(verbose_name = 'Date de la demande de versement')
-    dt_vers_ddv = models.DateField(blank = True, null = True, verbose_name = 'Date de versement')
+    dt_ddv = models.DateField(
+        verbose_name = 'Date de la demande de versement <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
+    dt_vers_ddv = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date de versement <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     int_ddv = models.CharField(
         max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la demande de versement'
     )
@@ -1030,19 +1078,25 @@ class TDemandeVersement(models.Model) :
         blank = True, 
         null = True, 
         validators = [val_mont_pos], 
-        verbose_name = 'Montant HT de la demande de versement (en €)'
+        verbose_name = 'Montant HT de la demande de versement'
     )
     mont_ht_verse_ddv = models.FloatField(
-        default = 0, validators = [val_mont_nul], verbose_name = 'Montant HT versé (en €)'
+        blank = True, 
+        null = True,
+        validators = [val_mont_nul],
+        verbose_name = 'Montant HT versé'
     )
     mont_ttc_ddv = models.FloatField(
         blank = True, 
         null = True, 
         validators = [val_mont_pos], 
-        verbose_name = 'Montant TTC de la demande de versement (en €)'
+        verbose_name = 'Montant TTC de la demande de versement'
     )
     mont_ttc_verse_ddv = models.FloatField(
-        default = 0, validators = [val_mont_nul], verbose_name = 'Montant TTC versé (en €)'
+        blank = True, 
+        null = True,
+        validators = [val_mont_nul],
+        verbose_name = 'Montant TTC versé'
     )
     id_fin = models.ForeignKey(TFinancement, models.DO_NOTHING)
     id_type_vers = models.ForeignKey(TTypeVersement, models.DO_NOTHING, verbose_name = 'Type de demande de versement')
@@ -1054,6 +1108,7 @@ class TDemandeVersement(models.Model) :
 
     class Meta :
         db_table = 't_demande_versement'
+        ordering = ['-dt_ddv']
         verbose_name = 'T_DEMANDE_VERSEMENT'
         verbose_name_plural = 'T_DEMANDE_VERSEMENT'
 
@@ -1168,8 +1223,12 @@ class TDossierPgre(models.Model) :
         verbose_name = 'Insérer la fiche action <span class="field-complement">(fichier PDF)</span>'
     )
     comm_doss_pgre = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
-    dt_deb_doss_pgre = models.DateField(verbose_name = 'Date de début de l\'action PGRE')
-    dt_fin_doss_pgre = models.DateField(verbose_name = 'Date de fin de l\'action PGRE')
+    dt_deb_doss_pgre = models.DateField(
+        verbose_name = 'Date de début de l\'action PGRE <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
+    dt_fin_doss_pgre = models.DateField(
+        verbose_name = 'Date de fin de l\'action PGRE <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     int_doss_pgre = models.CharField(
         max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de l\'action PGRE'
     )
@@ -1229,7 +1288,9 @@ class TMoaDossierPgre(models.Model) :
 class TControleDossierPgre(models.Model) :
 
     id_contr_doss_pgre = models.AutoField(primary_key = True)
-    dt_contr_doss_pgre = models.DateField(verbose_name = 'Date du contrôle')
+    dt_contr_doss_pgre = models.DateField(
+        verbose_name = 'Date du contrôle <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     obj_real_contr_doss_pgre = models.FloatField(
         verbose_name = 'Objectif réalisé en terme d\'économie de la ressource en eau (en m<sup>3</sup>)'
     )
@@ -1284,7 +1345,11 @@ class TPhotoPgre(models.Model) :
     descr_ph_pgre = models.CharField(
         blank = True, max_length = 255, null = True, validators = [val_cdc], verbose_name = 'Description'
     )
-    dt_pv_ph_pgre = models.DateField(verbose_name = 'Date de prise de vue')
+    dt_pv_ph_pgre = models.DateField(
+        blank = True,
+        null = True,
+        verbose_name = 'Date de prise de vue <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     int_ph_pgre = models.CharField(max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la photo')
     id_doss_pgre = models.ForeignKey(TDossierPgre, models.DO_NOTHING)
     id_ppv_ph = models.ForeignKey(TPeriodePriseVuePhoto, models.DO_NOTHING, verbose_name = 'Période de prise de vue')

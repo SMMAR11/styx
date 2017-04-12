@@ -683,7 +683,7 @@ class APrestataire(admin.ModelAdmin) :
 
 	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
-	list_display = ['n_org']
+	list_display = ['n_org', 'siret_org_prest']
 
 	# Je mets en forme le formulaire.
 	fieldsets = (

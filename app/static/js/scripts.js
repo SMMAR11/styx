@@ -1,31 +1,36 @@
 // Variables globales
+var nb_datepicker = 0;
+var nb_form = 0;
 var t_datat = {
-	'alert' : init_datat($('#t_alert'), [0]),
-	'ch_act_pgre' : init_datat($('#t_ch_act_pgre'), [6]),
-	'ch_cbsm_atel_pgre' : init_datat($('#t_ch_cbsm_atel_pgre'), [1]),
-	'ch_cbsm_org_moa' : init_datat($('#t_ch_cbsm_org_moa'), [1]),
-	'ch_doss' : init_datat($('#t_ch_doss'), [4]),
-	'ch_fact_ddv' : init_datat($('#t_ch_fact_ddv'), [4]),
-	'ch_prest' : init_datat($('#t_ch_prest'), [5]),
-	'cons_arr' : init_datat($('#t_cons_arr'), [5]),
-	'cons_aven' : init_datat($('#t_cons_aven'), [4]),
-	'cons_ddv' : init_datat($('#t_cons_ddv'), [6]),
-	'cons_doss_fam' : init_datat($('#t_cons_doss_fam'), [4]),
-	'cons_doss_prest' : init_datat($('#t_cons_doss_prest'), [3]),
-	'cons_droit' : init_datat($('#t_cons_droit'), [0, 1, 2, 3]),
-	'cons_fact' : init_datat($('#t_cons_fact'), [7]),
-	'cons_fact_ddv' : init_datat($('#t_cons_fact_ddv'), [4]),
-	'cons_fin' : init_datat($('#t_cons_fin'), [8]),
-	'cons_pdc' : init_datat($('#t_cons_pdc'), [2]),
-	'cons_ph' : init_datat($('#t_cons_ph'), [0, 4]),
-	'cons_prest' : init_datat($('#t_cons_prest'), [6]),
-	'modif_prest_doss' : init_datat($('#t_modif_prest_doss'), [0, 1, 2, 3, 4]),
-	'regr_prest' : init_datat($('#t_regr_prest'), []),
-	'select_doss' : init_datat($('#t_select_doss'), [4])
+	'alert' : init_datat('#t_alert', [false, [0], [0]]),
+	'ch_act_pgre' : init_datat('#t_ch_act_pgre', [false, [6], [6]]),
+	'ch_doss' : init_datat('#t_ch_doss', [true, [4], [4]]),
+	'ch_prest' : init_datat('#t_ch_prest', [false, [5], [5]]),
+	'cons_arr' : init_datat('#t_cons_arr', [false, [5], [5]]),
+	'cons_aven' : init_datat('#t_cons_aven', [false, [4], [4]]),
+	'cons_ddv' : init_datat('#t_cons_ddv', [false, [6], [6]]),
+	'cons_doss_fam' : init_datat('#t_cons_doss_fam', [false, [4], [4]]),
+	'cons_doss_prest' : init_datat('#t_cons_doss_prest', [false, [3], [3]]),
+	'cons_droit' : init_datat('#t_cons_droit', [false, [0, 1, 2, 3], [2, 3]]),
+	'cons_fact' : init_datat('#t_cons_fact', [false, [7], [7]]),
+	'cons_fact_ddv' : init_datat('#t_cons_fact_ddv', [false, [4], [4]]),
+	'cons_fin' : init_datat('#t_cons_fin', [false, [8], [8]]),
+	'cons_pdc' : init_datat('#t_cons_pdc', [false, [2], []]),
+	'cons_ph' : init_datat('#t_cons_ph', [false, [0, 4], []]),
+	'cons_prest' : init_datat('#t_cons_prest', [false, [6], []]),
+	'GererActionPgre-cbsm_atel_pgre' : init_datat('#dtab_GererActionPgre-cbsm_atel_pgre', [false, [1], [1]]),
+	'GererActionPgre-cbsm_org_moa' : init_datat('#dtab_GererActionPgre-cbsm_org_moa', [false, [1], [1]]),
+	'GererDemandeVersement-cbsm_fact' : init_datat('#dtab_GererDemandeVersement-cbsm_fact', [false, [4], [4]]),
+	'modif_prest_doss' : init_datat('#t_modif_prest_doss', [false, [0, 1, 2, 3, 4], []]),
+	'RechercherDossiers-cbsm_org_moa' : init_datat('#dtab_RechercherDossiers-cbsm_org_moa', [false, [1], [1]]),
+	'RechercherPrestations-cbsm_org_moa' : init_datat('#dtab_RechercherPrestations-cbsm_org_moa', [false, [1], [1]]),
+	'regr_prest' : init_datat('#t_regr_prest', [false, [], []]),
+	'select_doss' : init_datat('#t_select_doss', [false, [4], [4]])
 };
 var submit = false;
 var pt_prec = null;
 var est_init = false;
+var datat_cbsm_fact = t_datat['GererDemandeVersement-cbsm_fact'];
 
 /**
  * Ce script permet l'affichage d'un loader dès la fin du chargement du DOM.
@@ -77,11 +82,81 @@ $(window).load(function() {
 });
 
 /**
- * Ce script permet de retirer le focus du sous-menu sélectionné si et seulement je ferme celui-ci.
+ * Initialise certains éléments du DOM
  */
-$('#main-nav .dropdown').on('click', function() {
-	if ($(this).hasClass('open')) {
-		$('#main-nav .dropdown-toggle').blur();
+$(document).on('mousemove', function() {
+
+	// Suppression de l'attribut "required" de chaque champ
+	if (nb_form != $('form').length) {
+		nb_form = $('form').length;
+		$('form').each(function() {
+			for (var i = 0; i < $(this).length; i += 1) {
+				var form = $(this)[i];
+				for (var j = 0; j < form.length; j += 1) {
+					var champ = form[j];
+					$(champ).removeAttr('required');
+				}
+			}
+		});
+	}
+
+	// Mise en place d'un calendrier sur chaque champ "date"
+	if (nb_datepicker != $('.date').length) {
+		nb_datepicker = $('.date').length;
+		$('.date').datepicker({
+			autoclose : true,
+			endDate : '31/12/2999',
+			keyboardNavigation : false,
+			language : 'fr',
+			maxViewMode : 2,
+			orientation : 'bottom right',
+			startDate : '01/01/2000'
+		});
+	}
+});
+
+/**
+ * Affiche la date choisie via le calendrier
+ */
+$(document).on('change', 'input[name$="__datepicker"]', function() {
+
+	// Stockage de la valeur de la zone de saisie cachée
+	var get_name = $(this).attr('name');
+
+	// Transfert de la valeur vers la zone de date
+	var id = '#id_' + get_name.substr(0, get_name.length - 12);
+	$(id).val($(this).val());
+});
+
+/**
+ * Cochage/décochage automatique d'un groupe de cases à cocher
+ */
+$('input[type="checkbox"]').on('change', function() {
+
+	// Obtention d'un objet "case à cocher"
+	var obj = $(this);
+
+	if (obj.val() == '__all__') {
+
+		// Stockage du nom du groupe de cases à cocher
+		var get_name = obj.attr('id').substr(3);
+		get_name = get_name.substr(0, get_name.length - 5);
+
+		$('input[name="' + get_name + '"]').each(function() {
+			if (obj.is(':checked')) {
+				this.checked = true;
+			}
+			else {
+				this.checked = false;
+			}
+		});
+	}
+	else {
+
+		// Décochage de la case à cocher permettant le cochage/décochage automatique d'un groupe de cases à cocher
+		if (obj.is(':checked') == false) {
+			$('#id_' + obj.attr('name') + '__all').prop('checked', false);
+		}
 	}
 });
 
@@ -168,14 +243,14 @@ $('#id_GererDossier-rb_doss_ass_1, #id_GererActionPgre-rb_doss_corr_1, #bt_suppr
  * Ce script permet de cacher chaque liste déroulante possédant la classe hide-field.
  */
 $('.hide-field').each(function() {
-	point_fw($('#' + $(this).attr('id'))).hide();
+	$('#fw_' + $(this).attr('name')).hide();
 });
 
 /**
  * Ce script permet d'afficher chaque liste déroulante possédant la classe show-field.
  */
 $('.show-field').each(function() {
-	point_fw($('#' + $(this).attr('id'))).show();
+	$('#fw_' + $(this).attr('name')).show();
 	$(this).removeClass('show-field');
 });
 
@@ -345,21 +420,6 @@ $('#id_GererFinancement-id_paiem_prem_ac').on('change', function() {
 });
 
 /**
- * Ce script permet de retirer l'attribut "required" pour tous les champs de tous les formulaires de la page active.
- */
-$(document).on('mousemove', function() {
-	$('form').each(function() {
-		for (var i = 0; i < $(this).length; i += 1) {
-			var f = $(this)[i];
-			for (var j = 0; j < f.length; j += 1) {
-				var bal = f[j];
-				$(bal).removeAttr('required');
-			}
-		}
-	});
-});
-
-/**
  * Ce script permet de retirer chaque élément possédant la classe "forbidden" (restriction de droits).
  */
 if (forbidden == true) {
@@ -419,7 +479,7 @@ $(document).on('click', '#t_ch_prest .choose-icon', function() {
 			$(data).insertAfter($('#t_ch_prest'));
 
 			// J'initialise la datatable.
-			var datat = init_datat($('#t_red_prest'), [0, 1, 2, 3, 4]);
+			var datat = init_datat('#t_red_prest', [false, [0, 1, 2, 3, 4], []]);
 		},
 		error : function(xhr) {
 			alert('Erreur ' + xhr.status);
@@ -471,11 +531,11 @@ $.typeahead({
     delay : 500,
     dynamic : true,
     emptyTemplate : 'Aucun résultat pour {{query}}',
-    input : '#id_GererPrestation-zsac_siret_org_prest',
+    input : '#id_GererPrestation-zs_siret_org_prest',
     minLength : 1,
     source : {
         org_prest : {
-            display : 'siret_org_prest',
+            display : ['siret_org_prest', 'n_org'],
             data : [],
             ajax : function(query) {
             	return {
@@ -492,7 +552,7 @@ $.typeahead({
     },
     template : function(query, item) {
     	var tpl = [
-    		'{{siret_org_prest}}',
+    		'<span class="typeahead-value">{{siret_org_prest}}</span>',
     		'<br />',
     		'<span class="small">',
     		'{{n_org}}',
@@ -503,12 +563,20 @@ $.typeahead({
 });
 
 /**
+ * Obtention du SIRET d'un prestataire dont l'entrée est son nom
+ */
+$(document).on('click', 'a[data-group="org_prest"]', function() {
+	var val_siret_org = $(this).find('.typeahead-value').text();
+	$('#id_GererPrestation-zs_siret_org_prest').val(val_siret_org);
+});
+
+/**
  * Ce script permet de retourner le nom d'un fichier uploadé.
  */
 $(document).on('change', 'input[type="file"]', function() {
 
 	// Je pointe vers la racine du contrôle.
-	var fw = point_fw($(this));
+	var fw = $('#fw_' + $(this).attr('name'));
 
 	// Je retire l'élément HTML retournant le fichier uploadé.
 	fw.find('.input-file-return').remove();
@@ -546,9 +614,6 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 		aff_t += 1;
 	}
 
-	// Je pointe vers la datatable.
-	var datat = t_datat['ch_fact_ddv'];
-
 	if (aff_t == 2) {
 
 		// Je pointe vers l'objet "formulaire".
@@ -569,17 +634,17 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 			{
 				// Je retire le tableau des factures.
 				try {
-					point_fw($('#t_ch_fact_ddv')).remove();
+					$('#fw_GererDemandeVersement-cbsm_fact').remove();
 				}
 				catch (e) {
 
 				}
 				
 				// J'affiche le tableau des factures.
-				$(data).insertAfter(point_fw($('#id_GererDemandeVersement-int_ddv')));
+				$(data).insertAfter($('#fw_GererDemandeVersement-int_ddv'));
 
 				// J'initialise la datatable.
-				var datab = init_datat($('#t_ch_fact_ddv'), [4]);
+				datat_cbsm_fact = init_datat('#dtab_GererDemandeVersement-cbsm_fact', [false, [4], [4]]);
 			},
 			error : function(xhr) {
 				alert('Erreur ' + xhr.status);
@@ -591,13 +656,8 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 	}
 	else {
 
-		// Je retire le tableau des factures.
-		try {
-			point_fw($('#t_ch_fact_ddv')).remove();
-		}
-		catch (e) {
-
-		}
+		// Vidage de la datatable
+		datat_cbsm_fact.rows().remove().draw();
 	}
 });
 
@@ -614,68 +674,6 @@ $('#id_GererDemandeVersement-dt_vers_ddv').on('input', function() {
 		$('#id_GererDemandeVersement-num_titre_rec_ddv').attr('readonly', true);
 		$('#id_GererDemandeVersement-num_bord_ddv').val('');
 		$('#id_GererDemandeVersement-num_titre_rec_ddv').val('');
-	}
-});
-
-/** 
- * Ce script permet de pré-calculer automatiquement le montant d'une demande de versement.
- */
-$(document).on('change', 'input[name="GererDemandeVersement-cbsm_fact"]', function() {
-
-	// J'initialise le montant de la demande de versement.
-	var mont_ddv = 0;
-
-	// J'initialise certaines variables "compteurs".
-	var cpt = 0;
-	var cpt_ht = 0;
-	var cpt_ttc = 0;
-
-	$('input[name="GererDemandeVersement-cbsm_fact"]').each(function() {
-		if ($(this).is(':checked')) {
-
-			// Je mets en forme le montant de la facture.
-			var v_mont_fact = $(this).attr('montant');
-			if (v_mont_fact == '' || isNaN(v_mont_fact) == true) {
-				v_mont_fact = 0;
-			}
-
-			// Je mets en forme le pourcentage éligible du financement.
-			var v_pourc_elig_fin = $(this).attr('pourcentage');
-			if (v_pourc_elig_fin != '' && isNaN(v_pourc_elig_fin) == false) {
-				v_pourc_elig_fin = v_pourc_elig_fin / 100;
-			}
-			else {
-				v_pourc_elig_fin = 1;
-			}
-
-			// Je calcule le montant de la demande de versement.
-			mont_ddv += v_mont_fact * v_pourc_elig_fin;
-		}
-
-		// Je vérifie que toutes les cases à cocher ont le même mode de taxe.
-		cpt += 1;
-		if ($(this).attr('taxe') == 'HT') {
-			cpt_ht += 1;
-		}
-		if ($(this).attr('taxe') == 'TTC') {
-			cpt_ttc += 1;
-		}
-	});
-
-	// Je mets en forme le montant de la demande de versement.
-	if (mont_ddv == 0) {
-		mont_ddv = '';
-	}
-	else {
-		mont_ddv = mont_ddv.toFixed(2);
-	}
-	
-	// J'affiche le montant de la demande de versement.
-	if (cpt == cpt_ht) {
-		$('#id_GererDemandeVersement-mont_ht_ddv').val(mont_ddv);
-	}
-	if (cpt == cpt_ttc) {
-		$('#id_GererDemandeVersement-mont_ttc_ddv').val(mont_ddv);
 	}
 });
 
@@ -911,3 +909,11 @@ $('#id_RechercherPrestations-zl_progr, #id_RechercherPrestations-zl_axe, #id_Rec
 		);
 	}
 );
+
+/**
+ * Recherche dynamique d'un numéro SIRET sur le site www.societe.com/
+ */
+$('#btn_rech_siret').on('click', function() {
+	var req = $('#id_GererPrestation-zs_siret_org_prest').val();
+	open('http://www.societe.com/cgi-bin/liste?nom=' + req, '_blank');
+});
