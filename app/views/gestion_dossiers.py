@@ -2906,7 +2906,7 @@ def suppr_aven(request, _a) :
 		o_suivi_prest_doss = VSuiviPrestationsDossier.objects.get(id_doss = o_aven.id_doss, id_prest = o_aven.id_prest)
 
 		# Je mets à jour le montant de la prestation si incohérence il y a.
-		if o_suivi_prest_doss.mont_raf < o_aven.mont_aven :
+		if o_aven.mont_aven and o_suivi_prest_doss.mont_raf < o_aven.mont_aven :
 			TPrestationsDossier.objects.filter(pk = o_suivi_prest_doss.pk).update(
 				mont_prest_doss = F('mont_prest_doss') + o_aven.mont_aven
 			)
@@ -3030,7 +3030,9 @@ def cons_aven(request, _a) :
 
 				# Je prépare un message d'avertissement au cas où l'avenant couvre la facturation.
 				avert = ''
-				if VSuiviPrestationsDossier.objects.get(pk = o_prest_doss.pk).mont_raf < o_aven.mont_aven :
+				if o_aven.mont_aven and VSuiviPrestationsDossier.objects.get(
+					pk = o_prest_doss.pk
+				).mont_raf < o_aven.mont_aven :
 					avert = '''
 					Afin d'éviter une incohérence dans les chiffres, la suppression de l'avenant entraînera une
 					modification du montant {ht_ou_ttc} de la prestation « {prest} », causée par la facturation de 

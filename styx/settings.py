@@ -163,6 +163,6 @@ T_DONN_BDD_INT = {
     'DDTM_PK' : config('DDTM_PK', cast = int)
 }
 
-
+ADMINS = [(config('ADMIN_FULLNAME'), config('ADMIN_EMAIL'))]
 EMAIL_BACKEND = config('EMAIL_BACKEND')
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'mail_dumps')
