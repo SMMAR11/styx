@@ -120,7 +120,7 @@ def cr_act_pgre(request) :
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
 					d.num_doss,
-					'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+					d.get_int_doss(),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>'
@@ -289,7 +289,7 @@ def modif_act_pgre(request, _a) :
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
 					d.num_doss,
-					'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+					d.get_int_doss(),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>'

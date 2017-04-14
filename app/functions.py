@@ -277,7 +277,7 @@ def gen_t_ch_doss(request, _d_excl = None) :
 		</tr>
 		'''.format(
 			d,
-			'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+			d.get_int_doss(),
 			d.id_org_moa,
 			dt_fr(d.dt_delib_moa_doss) or '-'
 		)

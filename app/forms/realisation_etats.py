@@ -55,6 +55,16 @@ class RechercherDossiers(forms.Form) :
 		required = False,
 		widget = forms.Select()
 	)
+	zd_dt_deb_av_cp_doss = forms.DateField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'Du' })
+	)
+	zd_dt_fin_av_cp_doss = forms.DateField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'au' })
+	)
 	zs_mont_doss_min = forms.FloatField(
 		label = '',
 		required = False,
@@ -133,13 +143,20 @@ class RechercherDossiers(forms.Form) :
 		cleaned_data = super(RechercherDossiers, self).clean()
 		v_dt_deb_delib_moa_doss = cleaned_data.get('zd_dt_deb_delib_moa_doss')
 		v_dt_fin_delib_moa_doss = cleaned_data.get('zd_dt_fin_delib_moa_doss')
+		v_dt_deb_av_cp_doss = cleaned_data.get('zd_dt_deb_av_cp_doss')
+		v_dt_fin_av_cp_doss = cleaned_data.get('zd_dt_fin_av_cp_doss')
 
 		# Je gère le renseignement de la période de délibération au maître d'ouvrage d'un dossier.
 		if v_dt_deb_delib_moa_doss and not v_dt_fin_delib_moa_doss :
 			self.add_error('zd_dt_fin_delib_moa_doss', ERROR_MESSAGES['required'])
-
 		if v_dt_fin_delib_moa_doss and not v_dt_deb_delib_moa_doss :
 			self.add_error('zd_dt_deb_delib_moa_doss', ERROR_MESSAGES['required'])
+
+		# Gestion du renseignement de la période de l'avis du comité de programmation
+		if v_dt_deb_av_cp_doss and not v_dt_fin_av_cp_doss :
+			self.add_error('zd_dt_fin_av_cp_doss', ERROR_MESSAGES['required'])
+		if v_dt_fin_av_cp_doss and not v_dt_deb_av_cp_doss :
+			self.add_error('zd_dt_deb_av_cp_doss', ERROR_MESSAGES['required'])
 
 class RechercherPrestations(forms.Form) :
 

@@ -22,6 +22,11 @@
 						<div class="col-xs-6">{{ f_select_doss.zd_dt_fin_delib_moa_doss }}</div>
 					</div>
 					{{ f_select_doss.zl_av_cp }}
+					Période de l'avis du comité de programmation - CD GEMAPI
+					<div class="row">
+						<div class="col-xs-6">{{ f_select_doss.zd_dt_deb_av_cp_doss }}</div>
+						<div class="col-xs-6">{{ f_select_doss.zd_dt_fin_av_cp_doss }}</div>
+					</div>
 					Montant du dossier présenté au CD GEMAPI compris entre
 					<div class="row">
 						<div class="col-xs-6">{{ f_select_doss.zs_mont_doss_min }}</div>
@@ -50,17 +55,16 @@
 						<th>N° du dossier</th>
 						<th>Intitulé du dossier</th>
 						<th>Maître d'ouvrage</th>
-						<th>Date de délibération au maître d'ouvrage</th>
+						<th>Montant total du dossier (en €)</th>
 						<th></th>
 					</tr>
 				</thead>
 				<tbody></tbody>
+				<tfoot></tfoot>
 			</table>
 		</div>
 		<br />
-		<a href="?action=exporter-csv" class="csv-icon icon-link">Exporter au format CSV (mode non-complet)</a>
-		<br/>
-		<a href="?action=exporter-csv&all=true" class="csv-icon icon-link">Exporter au format CSV (mode complet)</a>
+		<a href="?action=exporter-csv" class="csv-icon icon-link">Exporter au format CSV</a>
 	</div>
 </div>
 {% endblock content %}

@@ -98,7 +98,7 @@ def cr_doss(request) :
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
 					d.num_doss,
-					'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+					d.get_int_doss(),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>'
@@ -282,7 +282,7 @@ def modif_doss(request, _d) :
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
 					d.num_doss,
-					'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+					d.get_int_doss(),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>'
@@ -545,7 +545,7 @@ def ch_doss(request) :
 		t_doss = [{
 			'pk' : d.pk,
 			'num_doss' : d,
-			'int_doss' : '{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+			'int_doss' : d.get_int_doss(),
 			'n_org' : d.id_org_moa,
 			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-'
 		} for d in qs_doss]
@@ -576,7 +576,7 @@ def ch_doss(request) :
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
 					d.num_doss,
-					'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+					d.get_int_doss(),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					'<a href="{0}" class="consult-icon pull-right" title="Consulter le dossier"></a>'.format(
@@ -743,7 +743,7 @@ def cons_doss(request, _d) :
 		# J'initialise le tableau des dossiers de la famille.
 		t_doss_fam = [{
 			'num_doss' : d,
-			'int_doss' : '{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+			'int_doss' : d.get_int_doss(),
 			'id_org_moa' : d.id_org_moa,
 			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-',
 			'pk' : d.pk
@@ -866,7 +866,7 @@ def cons_doss(request, _d) :
 				'mont_fact' : obt_mont(mont_fact),
 				'num_mandat_fact' : f.num_mandat_fact,
 				'num_bord_fact' : f.num_bord_fact,
-				'suivi_fact' : f.suivi_fact,
+				'suivi_fact' : f.get_suivi_fact(),
 				'pk' : f.pk
 			})
 			mont_fact_sum += mont_fact
@@ -3057,7 +3057,6 @@ def ajout_fact(request) :
 	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from app.models import TPrestation
-	from app.models import TPrestationsDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	import json
@@ -3083,28 +3082,10 @@ def ajout_fact(request) :
 			f_ajout_fact.fields['zl_prest'].choices = [(p.pk, p) for p in TPrestation.objects.filter(pk = post_prest)]
 
 		if f_ajout_fact.is_valid() :
-
-			# Je récupère les données du formulaire valide.
-			cleaned_data = f_ajout_fact.cleaned_data
-			v_num_doss = cleaned_data.get('za_num_doss')
-			v_prest = cleaned_data.get('zl_prest')
-			v_suivi_fact = cleaned_data.get('zl_suivi_fact')
-
-			# Je complète le suivi de la facture en cas d'un acompte.
-			o_prest_doss = None
-			if v_suivi_fact == 'Acompte' :
-				o_prest_doss = TPrestationsDossier.objects.get(id_doss__num_doss = v_num_doss, id_prest = v_prest)
-				v_suivi_fact += ' {0}'.format(o_prest_doss.seq_ac_prest_doss)
-
+			
 			# Je créé la nouvelle instance TFacture.
 			o_nvelle_fact = f_ajout_fact.save(commit = False)
-			o_nvelle_fact.suivi_fact = v_suivi_fact
 			o_nvelle_fact.save()
-
-			# Je mets à jour l'objet TPrestationsDossier en cas d'un acompte.
-			if o_prest_doss :
-				o_prest_doss.seq_ac_prest_doss = o_prest_doss.seq_ac_prest_doss + 1
-				o_prest_doss.save()
 
 			# J'affiche le message de succès.
 			output = HttpResponse(
@@ -3157,7 +3138,6 @@ def modif_fact(request, _f) :
 	from app.functions import init_fm
 	from app.functions import rempl_fich_log
 	from app.models import TFacture
-	from app.models import TPrestationsDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -3196,38 +3176,9 @@ def modif_fact(request, _f) :
 
 		if f_modif_fact.is_valid() :
 
-			# Je récupère les données du formulaire valide.
-			cleaned_data = f_modif_fact.cleaned_data
-			v_prest = cleaned_data.get('zl_prest')
-			v_suivi_fact = cleaned_data.get('zl_suivi_fact')
-
-			# J'initialise le suivi de la facture.
-			o_prest_doss = None
-			if v_suivi_fact == 'Acompte' :
-				if o_fact.suivi_fact == 'Solde' :
-
-					# Je traite le cas ou je passe de "Solde" vers "Acompte" sans changement de prestation.
-					o_prest_doss = TPrestationsDossier.objects.get(id_doss = o_fact.id_doss, id_prest = v_prest)
-					v_suivi_fact += ' {0}'.format(o_prest_doss.seq_ac_prest_doss)
-
-				else :
-					if o_fact.id_prest.pk == int(v_prest) :
-						v_suivi_fact = o_fact.suivi_fact
-					else :
-
-						# Je traite le cas ou je change de prestation (regénération du séquentiel "Acompte").
-						o_prest_doss = TPrestationsDossier.objects.get(id_doss = o_fact.id_doss, id_prest = v_prest)
-						v_suivi_fact += ' {0}'.format(o_prest_doss.seq_ac_prest_doss)
-
 			# Je modifie l'instance TFacture.
 			o_fact_modif = f_modif_fact.save(commit = False)
-			o_fact_modif.suivi_fact = v_suivi_fact
 			o_fact_modif.save()
-
-			# Je mets à jour l'objet TPrestationsDossier en cas d'un nouvel acompte.
-			if o_prest_doss :
-				o_prest_doss.seq_ac_prest_doss = o_prest_doss.seq_ac_prest_doss + 1
-				o_prest_doss.save()
 
 			# J'affiche le message de succès.
 			output = HttpResponse(
@@ -3392,7 +3343,7 @@ def cons_fact(request, _f) :
 			'dt_rec_fact' : { 'label' : 'Date de réception de la facture', 'value' : dt_fr(o_fact.dt_rec_fact) or '' },
 			'num_mandat_fact' : { 'label' : 'Numéro de mandat', 'value' : o_fact.num_mandat_fact },
 			'num_bord_fact' : { 'label' : 'Numéro de bordereau', 'value' : o_fact.num_bord_fact },
-			'suivi_fact' : { 'label' : 'Suivi de la facturation', 'value' : o_fact.suivi_fact },
+			'suivi_fact' : { 'label' : 'Suivi de la facturation', 'value' : o_fact.get_suivi_fact() },
 			'chem_pj_fact' : { 
 				'label' : 'Consulter le fichier scanné de la facture', 'value' : o_fact.chem_pj_fact, 'pdf' : True 
 			},
@@ -4493,9 +4444,7 @@ def impr_doss(request, _d) :
 			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
 			'int_doss' : {
 				'label' : 'Intitulé du dossier',
-				'value' : '{0} - {1} - {2} - {3}'.format(
-					o_doss.id_nat_doss, o_doss.id_type_doss, o_doss.lib_1_doss, o_doss.lib_2_doss
-				)
+				'value' : o_doss.get_int_doss()
 			},
 			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
 			'id_progr' : { 'label' : 'Programme', 'value' : o_doss.id_progr },
@@ -4535,7 +4484,7 @@ def impr_doss(request, _d) :
 		}
 		t_doss_fam = [{
 			'num_doss' : d,
-			'int_doss' : '{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+			'int_doss' : d.get_int_doss(),
 			'id_org_moa' : d.id_org_moa,
 			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-',
 			'pk' : d.pk
@@ -4605,7 +4554,7 @@ def impr_doss(request, _d) :
 				'mont_fact' : obt_mont(mont_fact),
 				'num_mandat_fact' : f.num_mandat_fact,
 				'num_bord_fact' : f.num_bord_fact,
-				'suivi_fact' : f.suivi_fact,
+				'suivi_fact' : f.get_suivi_fact(),
 			})
 			mont_fact_sum += mont_fact
 
@@ -4684,218 +4633,269 @@ def edit_lt_ddv(request, _d) :
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from styx.settings import MEDIA_ROOT
+	from styx.settings import T_DONN_BDD_STR
 	import time
 
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TDemandeVersement.
-	o_ddv = get_object_or_404(TDemandeVersement, pk = _d)
+	obj_ddv = get_object_or_404(TDemandeVersement, pk = _d)
 
 	# Je vérifie le droit d'écriture.
-	ger_droits(request.user, o_ddv.id_fin.id_doss, False)
+	ger_droits(request.user, obj_ddv.id_fin.id_doss, False)
 
 	if request.method == 'GET' :
 
-		# J'instancie un document Word.
+		# Déclaration d'un nouveau document Word
 		document = Document()
 
-		# Je définis la police et la taille de celle-ci.
+		# Définition de la police et de sa taille
 		style = document.styles['Normal']
 		font = style.font
 		font.name = 'Calibri'
 		font.size = Pt(10)
 
-		# Je pointe vers l'objet TDossier.
-		o_doss = o_ddv.id_fin.id_doss
+		# Obtention d'un objet TDossier
+		obj_doss = obj_ddv.id_fin.id_doss
 
-		# Je déclare un tableau "en-tête" qui va contenir l'intitulé du dossier.
-		table = document.add_table(rows = 0, cols = 1, style = 'TableGrid')
-		row_cells = table.add_row().cells
+		# Obtention d'un objet TMoa
+		obj_org_moa = obj_ddv.id_fin.id_doss.id_org_moa
 
-		# J'initialise le contenu du tableau "en-tête".
-		paragraph = row_cells[0].paragraphs[0]
-		run = paragraph.add_run('{0} - {1} - {2} - {3}'.format(
-			o_doss.id_nat_doss, o_doss.id_type_doss, o_doss.lib_1_doss, o_doss.lib_2_doss
-		).upper())
-
-		# J'applique des styles au tableau "en-tête".
-		run.font.size = Pt(8)
-		run.bold = True
-		paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-		paragraph = document.add_paragraph()
-		run1 = paragraph.add_run('Numéro du dossier : ')
-		run2 = paragraph.add_run(str(o_doss))
-		run2.bold = True
-		run2.add_break()
-		paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-		# Je déclare le tableau des factures.
-		table = document.add_table(rows = 1, cols = 7, style = 'TableGrid')
-
-		# Je prépare la ligne "en-tête".
-		header_cells = table.rows[0].cells
-		paragraph1 = header_cells[0].paragraphs[0]
-		run1 = paragraph1.add_run('Prestataire')
-		paragraph2 = header_cells[1].paragraphs[0]
-		run2 = paragraph2.add_run('Objet')
-		paragraph3 = header_cells[2].paragraphs[0]
-		run3 = paragraph3.add_run('Date de mandatement par le maître d\'ouvrage')
-		paragraph4 = header_cells[3].paragraphs[0]
-		run4 = paragraph4.add_run('N° de bordereau')
-		paragraph5 = header_cells[4].paragraphs[0]
-		run5 = paragraph5.add_run('N° de mandat')
-		paragraph6 = header_cells[5].paragraphs[0]
-		run6 = paragraph6.add_run('Montant HT (en €)')
-		paragraph7 = header_cells[6].paragraphs[0]
-		run7 = paragraph7.add_run('Montant TTC (en €)')
-
-		# Je mets en forme la ligne.
-		for r in [run1, run2, run3, run4, run5, run6, run7] :
-			r.font.size = Pt(8)
-			r.bold = True
-		for p in [paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
-			p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-		# Je vide les variables de type "paragraph" et "run" (précaution).
-		del paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
-		del run1, run2, run3, run4, run5, run6, run7
-
-		# Je parcours chaque facture.
-		mont_ht_fact_sum = 0
-		mont_ttc_fact_sum = 0
-		for fddv in TFacturesDemandeVersement.objects.filter(id_ddv = o_ddv) :
-
-			# Je pointe vers l'objet TFacture.
-			o_fact = fddv.id_fact
-
-			# Je prépare la ligne relative à la facture courante.
-			row_cells = table.add_row().cells
-			paragraph1 = row_cells[0].paragraphs[0]
-			run1 = paragraph1.add_run(str(o_fact.id_prest.id_org_prest))
-			paragraph2 = row_cells[1].paragraphs[0]
-			run2 = paragraph2.add_run(o_fact.id_prest.int_prest)
-			paragraph3 = row_cells[2].paragraphs[0]
-			run3 = paragraph3.add_run(dt_fr(o_fact.dt_mand_moa_fact))
-			paragraph4 = row_cells[3].paragraphs[0]
-			run4 = paragraph4.add_run(o_fact.num_bord_fact)
-			paragraph5 = row_cells[4].paragraphs[0]
-			run5 = paragraph5.add_run(o_fact.num_mandat_fact)
-			paragraph6 = row_cells[5].paragraphs[0]
-			run6 = paragraph6.add_run(obt_mont(o_fact.mont_ht_fact) or '-')
-			paragraph7 = row_cells[6].paragraphs[0]
-			run7 = paragraph7.add_run(obt_mont(o_fact.mont_ttc_fact) or '-')
-
-			# Je mets en forme la ligne.
-			for p in [paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
-				p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-			# Je vide les variables de type "paragraph" et "run" (précaution).
-			del paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
-			del run1, run2, run3, run4, run5, run6, run7
-
-			# Je calcule les sommes HT et TTC des factures du jeu de données.
-			mont_ht_fact_sum += o_fact.mont_ht_fact or 0
-			mont_ttc_fact_sum += o_fact.mont_ttc_fact or 0
-
-		# Je prépare la ligne "pied de page".
-		footer_cells = table.add_row().cells
-		paragraph1 = footer_cells[0].paragraphs[0]
-		run1 = paragraph1.add_run('Total (en €)')
-		run1.font.size = Pt(8)
-		paragraph2 = footer_cells[5].paragraphs[0]
-		run2 = paragraph2.add_run(obt_mont(mont_ht_fact_sum))
-		paragraph3 = footer_cells[6].paragraphs[0]
-		run3 = paragraph3.add_run(obt_mont(mont_ttc_fact_sum))
-
-		# Je mets en forme la ligne.
-		for r in [run1, run2, run3] :
-			r.bold = True
-		for p in [paragraph1, paragraph2, paragraph3] :
-			p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-		# Je vide les variables de type "paragraph" et "run" (précaution).
-		del paragraph1, paragraph2, paragraph3
-		del run1, run2, run3
-
-		# Je coloris le fond de chaque cellule "en-tête" et "pied de page" du tableau récapitulatif des factures.
-		for c in header_cells :
-			c._tc.get_or_add_tcPr().append(parse_xml(r'<w:shd {} w:fill="F6F6F6"/>'.format(nsdecls('w'))))
-		for c in footer_cells :
-			c._tc.get_or_add_tcPr().append(parse_xml(r'<w:shd {} w:fill="F6F6F6"/>'.format(nsdecls('w'))))
-
-		# Je saute une ligne.
-		document.add_paragraph()
-
-		# Je pointe vers l'objet TMoa.
-		o_org_moa = o_ddv.id_fin.id_doss.id_org_moa
-
-		# Je déclare un tableau qui va contenir les tampons de la trésorerie et du syndicat.
+		# Déclaration du tableau "en-tête"
 		table = document.add_table(rows = 0, cols = 2)
 		row_cells = table.add_row().cells
 
-		# J'initialise le bloc trésorerie.
+		# Insertion du logo du maître d'ouvrage
+		paragraph = row_cells[0].paragraphs[0]
+		if obj_org_moa.logo_org_moa :
+			run = paragraph.add_run().add_picture('{0}/{1}'.format(MEDIA_ROOT, obj_org_moa.logo_org_moa), Mm(40))
+		else :
+			run = paragraph.add_run('[LOGO]')
+
+		# Insertion de l'adresse complète du maître d'ouvrage
+		paragraph = row_cells[1].paragraphs[0]
+		run1 = paragraph.add_run(str(obj_org_moa))
+		run1.bold = True
+		run1.add_break()
+		run2 = paragraph.add_run('{0} - {1} {2}'.format(
+			obj_org_moa.adr_org or '[ADRESSE]',
+			obj_org_moa.cp_org or '[CODE POSTAL]',
+			obj_org_moa.num_comm.n_comm if obj_org_moa.num_comm else '[COMMUNE]'
+		))
+		run2.add_break()
+		run3 = paragraph.add_run('Tél :')
+		run3.underline = True
+		run4 = paragraph.add_run(' {} - '.format(obj_org_moa.tel_org or '[TÉLÉPHONE]'))
+		run5 = paragraph.add_run('Email :')
+		run5.underline = True
+		run6 = paragraph.add_run(' {}'.format(obj_org_moa.courr_org or '[EMAIL]'))
+
+		# Mise en forme de la cellule.
+		for r in [run1, run2, run3, run4, run5, run6] :
+			r.font.size = Pt(8)
+		paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+		# Nettoyage de certaines variables (précaution)
+		del run1, run2, run3, run4, run5, run6
+
+		# Obtention d'un objet TFinancement
+		obj_fin = obj_ddv.id_fin
+
+		# Insertion de certaines données liées au financement et au dossier
+		paragraph = document.add_paragraph()
+		run1 = paragraph.add_run().add_break()
+		run2 = paragraph.add_run('Financeur :')
+		run2.underline = True
+		run3 = paragraph.add_run(' {}'.format(obj_fin.id_org_fin))
+		run3.add_break()
+		run4 = paragraph.add_run('N° de l\'arrêté ou convention :')
+		run4.underline = True
+		run5 = paragraph.add_run(' {}'.format(obj_fin.num_arr_fin or '[NUMÉRO DE L\'ARRÊTÉ OU CONVENTION]'))
+		run5.add_break()
+		run6 = paragraph.add_run('Taux de l\'aide :')
+		run6.underline = True
+		run7 = paragraph.add_run(
+			' {} % (pourcentage éligible)'.format(obj_fin.pourc_elig_fin) if obj_fin.pourc_elig_fin else ' Aucun'
+		)
+		run8 = paragraph.add_run().add_break()
+		run9 = paragraph.add_run().add_break()
+		run10 = paragraph.add_run('Numéro du dossier SMMAR :')
+		run10.underline = True
+		run11 = paragraph.add_run(' {}'.format(obj_doss))
+		run11.add_break()
+		run12 = paragraph.add_run('Intitulé du dossier SMMAR :')
+		run12.underline = True
+		run13 = paragraph.add_run(' {}'.format(obj_doss.get_int_doss()))
+
+		# Mise en forme du paragraphe
+		paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+		# Nettoyage de certaines variables (précaution)
+		del run1, run2, run3, run4, run5, run6, run7, run8, run9, run10, run11, run12, run13
+
+		# Détermination du numéro de la demande de versment pour le couple dossier/financeur
+		i = None
+		qs_ddv = TDemandeVersement.objects.filter(
+			id_fin__id_doss = obj_doss, id_fin__id_org_fin = obj_fin.id_org_fin
+		).order_by('dt_ddv')
+		for index, d in enumerate(qs_ddv) :
+			if d == obj_ddv :
+				i = index + 1
+
+		# Insertion du titre de la demande de versement
+		paragraph = document.add_paragraph()
+		run = paragraph.add_run('Demande de versement de subvention n°{0} : {1}'.format(
+			i, str(obj_ddv.id_type_vers).lower())
+		)
+
+		# Initialisation des déterminants démonstratifs
+		tab_determ = {
+			T_DONN_BDD_STR['TVERS_ACOMPT'] : 'cet {}'.format(T_DONN_BDD_STR['TVERS_ACOMPT'].lower()),
+			T_DONN_BDD_STR['TVERS_AF'] : 'cette {}'.format(T_DONN_BDD_STR['TVERS_AF'].lower()),
+			T_DONN_BDD_STR['TVERS_SOLDE'] : 'ce {}'.format(T_DONN_BDD_STR['TVERS_SOLDE'].lower())
+		}
+
+		# Mise en forme du paragraphe
+		run.bold = True
+		run.underline = True
+		paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+		# Calcul du montant total des factures composant la demande de versement
+		qs_fact_ddv = TFacturesDemandeVersement.objects.filter(id_ddv = obj_ddv).order_by('id_fact')
+		mont_ht_fact_sum = 0
+		mont_ttc_fact_sum = 0
+		for fddv in qs_fact_ddv :
+			mont_ht_fact_sum += fddv.id_fact.mont_ht_fact or 0
+			mont_ttc_fact_sum += fddv.id_fact.mont_ttc_fact or 0
+
+		# Insertion du montant total des factures si besoin
+		if obj_ddv.id_type_vers.int_type_vers != T_DONN_BDD_STR['TVERS_AF'] :
+			paragraph = document.add_paragraph('Veuillez trouver ci-joint la demande de versement n°{0} correspondant à un montant de factures de {1} € {2} pour {3}, tel que présenté dans le tableau récapitulatif ci-dessous.'.format(
+				i,
+				mont_ttc_fact_sum if obj_doss.est_ttc_doss == True else mont_ht_fact_sum,
+				'TTC' if obj_doss.est_ttc_doss == True else 'HT',
+				tab_determ[obj_ddv.id_type_vers.int_type_vers]
+			))
+
+		# Insertion du montant de l'aide
+		paragraph = document.add_paragraph('L\'aide attendue pour {0} est de {1} € {2}.'.format(
+			tab_determ[obj_ddv.id_type_vers.int_type_vers],
+			obj_ddv.mont_ttc_ddv if obj_doss.est_ttc_doss == True else obj_ddv.mont_ht_ddv,
+			'TTC' if obj_doss.est_ttc_doss == True else 'HT'
+		))
+
+		if obj_ddv.id_type_vers.int_type_vers != T_DONN_BDD_STR['TVERS_AF'] :
+
+			# Déclaration du tableau des factures
+			table = document.add_table(rows = 1, cols = 7, style = 'TableGrid')
+
+			# Préparation de l'en-tête du tableau des factures
+			header_cells = table.rows[0].cells
+			paragraph1 = header_cells[0].paragraphs[0]
+			run1 = paragraph1.add_run('Prestataire')
+			paragraph2 = header_cells[1].paragraphs[0]
+			run2 = paragraph2.add_run('Objet')
+			paragraph3 = header_cells[2].paragraphs[0]
+			run3 = paragraph3.add_run('Date de mandatement par le maître d\'ouvrage')
+			paragraph4 = header_cells[3].paragraphs[0]
+			run4 = paragraph4.add_run('N° de bordereau')
+			paragraph5 = header_cells[4].paragraphs[0]
+			run5 = paragraph5.add_run('N° de mandat')
+			paragraph6 = header_cells[5].paragraphs[0]
+			run6 = paragraph6.add_run('Montant HT (en €)')
+			paragraph7 = header_cells[6].paragraphs[0]
+			run7 = paragraph7.add_run('Montant TTC (en €)')
+
+			# Mise en forme de l'en-tête du tableau des factures
+			for r in [run1, run2, run3, run4, run5, run6, run7] :
+				r.font.size = Pt(8)
+				r.bold = True
+			for p in [paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
+				p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+			# Nettoyage de certaines variables (précaution)
+			del paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
+			del run1, run2, run3, run4, run5, run6, run7
+
+			# Remplissage du tableau des factures
+			for fddv in qs_fact_ddv :
+
+				# Obtention d'une instance TFacture
+				obj_fact = fddv.id_fact
+
+				# Préparation d'une ligne du tableau des factures
+				row_cells = table.add_row().cells
+				paragraph1 = row_cells[0].paragraphs[0]
+				run1 = paragraph1.add_run(str(obj_fact.id_prest.id_org_prest))
+				paragraph2 = row_cells[1].paragraphs[0]
+				run2 = paragraph2.add_run(obj_fact.id_prest.int_prest)
+				paragraph3 = row_cells[2].paragraphs[0]
+				run3 = paragraph3.add_run(dt_fr(obj_fact.dt_mand_moa_fact) or '-')
+				paragraph4 = row_cells[3].paragraphs[0]
+				run4 = paragraph4.add_run(obj_fact.num_bord_fact)
+				paragraph5 = row_cells[4].paragraphs[0]
+				run5 = paragraph5.add_run(obj_fact.num_mandat_fact)
+				paragraph6 = row_cells[5].paragraphs[0]
+				run6 = paragraph6.add_run(obt_mont(obj_fact.mont_ht_fact) or '-')
+				paragraph7 = row_cells[6].paragraphs[0]
+				run7 = paragraph7.add_run(obt_mont(obj_fact.mont_ttc_fact) or '-')
+
+				# Mise en forme d'une ligne du tableau des factures
+				for p in [paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
+					p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+				# Nettoyage de certaines variables (précaution)
+				del paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
+				del run1, run2, run3, run4, run5, run6, run7
+
+			# Préparation de la ligne "Total"
+			footer_cells = table.add_row().cells
+			paragraph1 = footer_cells[0].paragraphs[0]
+			run1 = paragraph1.add_run('Total (en €)')
+			run1.font.size = Pt(8)
+			paragraph2 = footer_cells[5].paragraphs[0]
+			run2 = paragraph2.add_run(obt_mont(mont_ht_fact_sum))
+			paragraph3 = footer_cells[6].paragraphs[0]
+			run3 = paragraph3.add_run(obt_mont(mont_ttc_fact_sum))
+
+			# Mise en forme de la ligne "Total"
+			for r in [run1, run2, run3] :
+				r.bold = True
+			for p in [paragraph1, paragraph2, paragraph3] :
+				p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+			# Nettoyage de certaines variables (précaution)
+			del paragraph1, paragraph2, paragraph3
+			del run1, run2, run3
+
+			# Mise en forme générale du tableau des factures
+			for c in header_cells :
+				c._tc.get_or_add_tcPr().append(parse_xml(r'<w:shd {} w:fill="F6F6F6"/>'.format(nsdecls('w'))))
+			for c in footer_cells :
+				c._tc.get_or_add_tcPr().append(parse_xml(r'<w:shd {} w:fill="F6F6F6"/>'.format(nsdecls('w'))))
+
+			# Saut de ligne
+			document.add_paragraph()
+
+		# Déclaration du tableau des tampons
+		table = document.add_table(rows = 0, cols = 2)
+		row_cells = table.add_row().cells
+
+		# Insertion du tampon de la trésorerie
 		paragraph = row_cells[0].paragraphs[0]
 		run = paragraph.add_run('À [COMMUNE], le')
 		run.add_break()
 		run = paragraph.add_run('Le trésorier de [COMMUNE],')
 
-		# J'initialise le bloc syndicat.
+		# Insertion du tampon du syndicat
 		paragraph = row_cells[1].paragraphs[0]
 		run = paragraph.add_run('À [COMMUNE], le')
 		run.add_break()
-		run = paragraph.add_run('Le président du/de la/de l\'/des {0},'.format(o_org_moa))
+		run = paragraph.add_run('Le président du/de la/de l\'/des {},'.format(obj_org_moa))
 
-		# Je saute une ligne.
-		document.add_paragraph()
-		document.add_paragraph()
-		document.add_paragraph()
-		document.add_paragraph()
-		document.add_paragraph()
-
-		# J'initialise les coordonées du maître d'ouvrage.
-		adr_org = o_org_moa.adr_org
-		if not adr_org :
-			adr_org = '[ADRESSE]'
-		cp_org = o_org_moa.cp_org
-		if not cp_org :
-			cp_org = '[CODE POSTAL]'
-		if o_org_moa.num_comm :
-			n_comm = o_org_moa.num_comm.n_comm
-		else :
-			n_comm = '[COMMUNE]'
-		tel_org = o_org_moa.tel_org
-		if not tel_org :
-			tel_org = '[TÉLÉPHONE]'
-		courr_org = o_org_moa.courr_org
-		if not courr_org :
-			courr_org = '[EMAIL]'
-
-		# J'importe les coordonnées initialisées du maître d'ouvrage.
-		paragraph = document.add_paragraph()
-		run1 = paragraph.add_run(str(o_org_moa))
-		run1.bold = True
-		run1.add_break()
-		run2 = paragraph.add_run('{0} - {1} {2}'.format(adr_org, cp_org, n_comm, tel_org, courr_org))
-		run2.add_break()
-		run3 = paragraph.add_run('Tél :')
-		run3.underline = True
-		run4 = paragraph.add_run(' {0} - '.format(tel_org))
-		run5 = paragraph.add_run('Email :')
-		run5.underline = True
-		run6 = paragraph.add_run(' {0}'.format(courr_org))
-
-		# Je mets en forme la cellule.
-		for r in [run1, run2, run3, run4, run5, run6] :
-			r.font.size = Pt(8)
-		paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-		# Je vide les variables de type "run" (précaution).
-		del run1, run2, run3, run4, run5, run6
-
-		# Je sauvegarde le document Word et je permets le téléchargement.
+		# Sauvegarde du document Word et téléchargement de celui-ci
 		output = HttpResponse(content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-		output['Content-Disposition'] = 'attachment; filename={0}.docx'.format(gen_cdc())
+		output['Content-Disposition'] = 'attachment; filename={}.docx'.format(gen_cdc())
 		document.save(output)
 
 	return output

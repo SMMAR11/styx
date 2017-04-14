@@ -123,7 +123,7 @@ $(document).on('change', 'input[name$="__datepicker"]', function() {
 /**
  * Cochage/décochage automatique d'un groupe de cases à cocher
  */
-$('input[type="checkbox"]').on('change', function() {
+$(document).on('change', 'input[type="checkbox"]', function() {
 
 	// Obtention d'un objet "case à cocher"
 	var obj = $(this);

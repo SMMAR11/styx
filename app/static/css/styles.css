@@ -794,7 +794,7 @@ ul.my-list-style > li:before {
 .siret-search-icon {
 	background-image: url('../pics/icons/siret_search.png');
 	background-size: 58px;
-	-webkit-background-size: 57px;
+	-webkit-background-size: 57px 20px;
 	background-repeat: no-repeat;
 	width: 58px;
 	height: 20px;

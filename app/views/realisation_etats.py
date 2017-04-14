@@ -35,14 +35,13 @@ def select_doss(request) :
 	# Imports
 	from app.forms.realisation_etats import RechercherDossiers
 	from app.functions import alim_ld
-	from app.functions import dt_fr
 	from app.functions import gen_cdc
 	from app.functions import init_f
 	from app.functions import obt_doss_regr
+	from app.functions import obt_mont
 	from app.functions import suppr_doubl
 	from app.models import TDossier
 	from app.models import TFinancement
-	from app.models import TPrestationsDossier
 	from app.sql_views import VSuiviDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -58,7 +57,7 @@ def select_doss(request) :
 			if request.GET['action'] == 'exporter-csv' :
 
 				# Je génère le fichier CSV.
-				output = HttpResponse(content_type = 'text/csv')
+				output = HttpResponse(content_type = 'text/csv', charset = 'cp1252')
 				output['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(gen_cdc())
 
 				# Je m'autorise le droit d'écriture.
@@ -69,8 +68,8 @@ def select_doss(request) :
 				if 'select_doss' in request.session :
 					t_lg = request.session['select_doss']
 
-				# Je commence à préparer la ligne "en-tête".
-				header = [
+				# Écriture de l'en-tête
+				writer.writerow([
 					'Numéro du dossier',
 					'Intitulé du dossier',
 					'Dossier associé',
@@ -91,15 +90,9 @@ def select_doss(request) :
 					'Date de délibération au maître d\'ouvrage',
 					'Avis du comité de programmation - CD GEMAPI',
 					'Date de l\'avis du comité de programmation',
-					'Commentaire'
-				]
-
-				# Je complète la ligne "en-tête" en cas d'utilisation du mode complet.
-				if 'all' in request.GET and request.GET['all'] == 'true' :
-					header.append('Organismes financiers')
-					header.append('Prestataires')
-
-				writer.writerow(header)
+					'Commentaire',
+					'Organismes financiers'
+				])
 
 				for lg in t_lg :
 
@@ -107,17 +100,9 @@ def select_doss(request) :
 					o_doss = TDossier.objects.get(num_doss = lg[0])
 					o_suivi_doss = VSuiviDossier.objects.get(pk = o_doss.pk)
 
-					# Je définis le mode de taxe du dossier.
-					ht_ou_ttc = 'HT'
-					if o_doss.est_ttc_doss == True :
-						ht_ou_ttc = 'TTC'
-
-					# Je commence à préparer la ligne courante.
 					body = [
 						o_doss,
-						'{0} - {1} - {2} - {3}'.format(
-							o_doss.id_nat_doss, o_doss.id_type_doss, o_doss.lib_1_doss, o_doss.lib_2_doss
-						),
+						o_doss.get_int_doss(),
 						o_doss.id_doss_ass,
 						o_doss.id_org_moa,
 						o_doss.id_progr,
@@ -131,23 +116,18 @@ def select_doss(request) :
 						o_doss.mont_doss,
 						o_doss.mont_suppl_doss,
 						o_suivi_doss.mont_tot_doss,
-						ht_ou_ttc,
+						'TTC' if o_doss.est_ttc_doss == True else 'HT',
 						o_doss.id_av,
 						o_doss.dt_delib_moa_doss,
 						o_doss.id_av_cp,
 						o_doss.dt_av_cp_doss,
-						o_doss.comm_doss
+						o_doss.comm_doss,
 					]
 
-					# Je complète la ligne courante en cas d'utilisation du mode complet.
-					if 'all' in request.GET and request.GET['all'] == 'true' :
-						qs_fin = TFinancement.objects.filter(id_doss = o_doss).order_by('id_org_fin')
-						qs_prest = TPrestationsDossier.objects.filter(id_doss = o_doss).distinct(
-							'id_prest__id_org_prest'
-						)
-						body.append(', '.join([str(f.id_org_fin) for f in qs_fin]))
-						body.append(', '.join([str(p.id_prest.id_org_prest) for p in qs_prest]))
+					for f in TFinancement.objects.filter(id_doss = o_doss).order_by('id_org_fin') :
+						body.append('{0} : {1} €'.format(f.id_org_fin, f.mont_part_fin))
 
+					# Écriture d'une ligne
 					writer.writerow(body)
 		else :
 
@@ -193,6 +173,8 @@ def select_doss(request) :
 				v_dt_deb_delib_moa_doss = cleaned_data.get('zd_dt_deb_delib_moa_doss')
 				v_dt_fin_delib_moa_doss = cleaned_data.get('zd_dt_fin_delib_moa_doss')
 				v_av_cp = cleaned_data.get('zl_av_cp')
+				v_dt_deb_av_cp_doss = cleaned_data.get('zd_dt_deb_av_cp_doss')
+				v_dt_fin_av_cp_doss = cleaned_data.get('zd_dt_fin_av_cp_doss')
 				v_mont_doss_min = cleaned_data.get('zs_mont_doss_min')
 				v_mont_doss_max = cleaned_data.get('zs_mont_doss_max')
 				v_doss_dep_nn_sold = cleaned_data.get('cb_doss_dep_nn_sold')
@@ -220,6 +202,10 @@ def select_doss(request) :
 					t_sql['and']['dt_delib_moa_doss__lte'] = v_dt_fin_delib_moa_doss
 				if v_av_cp :
 					t_sql['and']['id_av_cp'] = v_av_cp
+				if v_dt_deb_av_cp_doss :
+					t_sql['and']['dt_av_cp_doss__gte'] = v_dt_deb_av_cp_doss
+				if v_dt_fin_av_cp_doss :
+					t_sql['and']['dt_av_cp_doss__lte'] = v_dt_fin_av_cp_doss
 				if v_mont_doss_min :
 					t_sql['and']['mont_doss__gte'] = v_mont_doss_min
 				if v_mont_doss_max :
@@ -249,9 +235,9 @@ def select_doss(request) :
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
 					str(d),
-					'{0} - {1} - {2} - {3}'.format(d.id_nat_doss, d.id_type_doss, d.lib_1_doss, d.lib_2_doss),
+					d.get_int_doss(),
 					str(d.id_org_moa),
-					dt_fr(d.dt_delib_moa_doss) or '-',
+					VSuiviDossier.objects.get(pk = d.pk).mont_tot_doss,
 					'<a href="{0}" class="consult-icon pull-right" title="Consulter le dossier"></a>'.format(
 						reverse('cons_doss', args = [d.pk])
 					)
@@ -269,10 +255,22 @@ def select_doss(request) :
 				# Je supprime les doublons du tableau des dossiers sélectionnés.
 				request.session['select_doss'] = suppr_doubl(request.session['select_doss'])
 
+				# Je prépare le tableau de sortie.
+				t_output = []
+				for elem in request.session['select_doss'] :
+					t_output.append([elem_2 for elem_2 in elem])
+
+				# Je prépare le tableau relatif à la balise <tfoot/> de la datatable.
+				tab_tfoot = ['Total', '', '', obt_mont(sum(elem[3] for elem in t_output)), '']
+
+				# Je mets en forme le tableau de sortie.
+				for elem in t_output :
+					elem[3] = obt_mont(elem[3])
+
 				# J'envoie le tableau des dossiers filtrés.
 				output = HttpResponse(
 					json.dumps({ 'success' : {
-						'datatable' : request.session['select_doss']
+						'datatable' : t_output, 'datatable_tfoot' : tab_tfoot
 					}}), content_type = 'application/json'
 				)
 
@@ -323,7 +321,7 @@ def regr_prest(request) :
 			if request.GET['action'] == 'exporter-csv' :
 
 				# Je génère le fichier CSV.
-				output = HttpResponse(content_type = 'text/csv')
+				output = HttpResponse(content_type = 'text/csv', charset = 'cp1252')
 				output['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(gen_cdc())
 
 				# Je m'autorise le droit d'écriture.

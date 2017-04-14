@@ -1032,14 +1032,15 @@ class GererFacture(forms.ModelForm) :
 
 			# J'affiche la valeur initiale de chaque champ personnalisé.
 			self.fields['zl_prest'].initial = i.id_prest.pk
-			v_suivi_fact = 'Acompte'
-			if i.suivi_fact == 'Solde' :
-				v_suivi_fact = 'Solde'
-			self.fields['zl_suivi_fact'].initial = v_suivi_fact
+			self.fields['zl_suivi_fact'].initial = i.suivi_fact
 
-			if len(TFacturesDemandeVersement.objects.filter(id_fact = i)) > 0 :
-				self.fields['mont_ht_fact'].widget.attrs['readonly'] = True
-				self.fields['mont_ttc_fact'].widget.attrs['readonly'] = True
+			# Interdiction de modifier le montant de la facture si reliée à une demande de versement
+			if TFacturesDemandeVersement.objects.filter(id_fact = i).count() > 0 :
+				if i.id_doss.est_ttc_doss == True :
+					cle = 'mont_ttc_fact'
+				else :
+					cle = 'mont_ht_fact'
+				self.fields[cle].widget.attrs['readonly'] = True
 
 		# J'alimente la liste déroulante des prestations du dossier.
 		t_prest_doss = [(pd.id_prest.pk, pd.id_prest) for pd in TPrestationsDossier.objects.filter(
@@ -1061,8 +1062,6 @@ class GererFacture(forms.ModelForm) :
 		cleaned_data = super(GererFacture, self).clean()
 		v_num_doss = cleaned_data.get('za_num_doss')
 		v_prest = cleaned_data.get('zl_prest')
-		v_mont_ht_fact = cleaned_data.get('mont_ht_fact')
-		v_mont_ttc_fact = cleaned_data.get('mont_ttc_fact')
 		v_suivi_fact = cleaned_data.get('zl_suivi_fact')
 
 		i = self.instance
@@ -1132,23 +1131,24 @@ class GererFacture(forms.ModelForm) :
 				if err == True :
 					self.add_error('zl_suivi_fact', 'Vous avez déjà émis une facture soldée pour cette prestation.')
 
-			# Je renvoie une erreur si le montant de la facture est modifié.
-			if v_mont_ht_fact and i.pk and float(v_mont_ht_fact) != i.mont_ht_fact :
-				self.add_error(
-					'mont_ht_fact', 
-					'''
-					Vous ne pouvez pas modifier le montant HT de la facture car elle est reliée à une demande de
-					versement.
-					'''
-				)
-			if v_mont_ttc_fact and i.pk and float(v_mont_ttc_fact) != i.mont_ttc_fact :
-				self.add_error(
-					'mont_ttc_fact', 
-					'''
-					Vous ne pouvez pas modifier le montant TTC de la facture car elle est reliée à une demande de 
-					versement.
-					'''
-				)
+			# Interdiction de modifier le montant de la facture si reliée à une demande de versement
+			if i.pk :
+
+				# Stockage du montant de la facture
+				if 'ht' in cle :
+					mont_fact = i.mont_ht_fact
+				if 'ttc' in cle :
+					mont_fact += i.mont_ttc_fact
+
+				nb_fact_ddv = TFacturesDemandeVersement.objects.filter(id_fact = i.pk).count()
+				if valeur and nb_fact_ddv > 0 and float(valeur) != mont_fact :
+					self.add_error(
+						cle, 
+						'''
+						Vous ne pouvez pas modifier le montant {} de la facture car elle est reliée à une demande de
+						versement.
+						'''.format('TTC' if 'ttc' in cle else 'HT')
+					)
 
 	def save(self, commit = True) :
 
@@ -1164,6 +1164,7 @@ class GererFacture(forms.ModelForm) :
 		else :
 			o.id_doss = TDossier.objects.get(num_doss = self.cleaned_data.get('za_num_doss'))
 		o.id_prest = TPrestation.objects.get(pk = self.cleaned_data.get('zl_prest'))
+		o.suivi_fact = self.cleaned_data.get('zl_suivi_fact')
 		if commit :
 			o.save()
 

@@ -569,6 +569,9 @@ class TDossier(models.Model) :
         verbose_name = 'T_DOSSIER'
         verbose_name_plural = 'T_DOSSIER'
 
+    def get_int_doss(self) :
+        return '{0} - {1} - {2} - {3}'.format(self.id_nat_doss, self.id_type_doss, self.lib_1_doss, self.lib_2_doss)
+
     def __str__(self) :
         return self.num_doss
 
@@ -806,7 +809,6 @@ class TPrestationsDossier(models.Model) :
     id_doss = models.ForeignKey(TDossier, models.DO_NOTHING)
     id_prest = models.ForeignKey(TPrestation, models.DO_NOTHING)
     mont_prest_doss = models.FloatField(validators = [val_mont_pos])
-    seq_ac_prest_doss = models.IntegerField(default = 1)
     seq_aven_prest_doss = models.IntegerField(default = 1)
 
     class Meta :
@@ -918,6 +920,26 @@ class TFacture(models.Model) :
         ordering = ['-dt_mand_moa_fact', 'id_prest']
         verbose_name = 'T_FACTURE'
         verbose_name_plural = 'T_FACTURE'
+
+    def get_suivi_fact(self) :
+
+        output = self.suivi_fact
+
+        # Stockage des factures du couple prestation/dossier, classées en acompte, avec une date de mandatement par le
+        # maître d'ouvrage
+        qs_fact = TFacture.objects.filter(
+            id_doss = self.id_doss, id_prest = self.id_prest, suivi_fact = 'Acompte'
+        ).exclude(dt_mand_moa_fact = None).order_by('dt_mand_moa_fact')
+
+        # Définition du numéro d'acompte
+        num_acompt = None
+        for index, f in enumerate(qs_fact) :
+            if f == self :
+                num_acompt = index + 1
+        if num_acompt :
+            output += ' {}'.format(num_acompt)
+
+        return output
 
     def __str__(self) :
         return self.num_fact
