@@ -57,8 +57,8 @@ class GererActionPgre(forms.ModelForm) :
 		# Mise en forme de certaines données
 		if instance :
 			kwargs.update(initial = {
-				'dt_deb_doss_pgre' : dt_fr(instance.dt_deb_doss_pgre),
-				'dt_fin_doss_pgre' : dt_fr(instance.dt_fin_doss_pgre)
+				'dt_deb_doss_pgre' : dt_fr(instance.dt_deb_doss_pgre) if instance.dt_deb_doss_pgre else '',
+				'dt_fin_doss_pgre' : dt_fr(instance.dt_fin_doss_pgre) if instance.dt_fin_doss_pgre else ''
 			})
 
 		super(GererActionPgre, self).__init__(*args, **kwargs)

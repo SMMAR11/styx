@@ -1250,9 +1250,13 @@ class TDossierPgre(models.Model) :
     )
     comm_doss_pgre = models.TextField(blank = True, null = True, validators = [val_cdc], verbose_name = 'Commentaire')
     dt_deb_doss_pgre = models.DateField(
+        blank = True,
+        null = True,
         verbose_name = 'Date de début de l\'action PGRE <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
     dt_fin_doss_pgre = models.DateField(
+        blank = True,
+        null = True,
         verbose_name = 'Date de fin de l\'action PGRE <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
     int_doss_pgre = models.CharField(

@@ -671,10 +671,10 @@ def cons_act_pgre(request, _a) :
 				'value' : o_act_pgre.ann_prev_deb_doss_pgre
 			},
 			'dt_deb_doss_pgre' : { 
-				'label' : 'Date de début de l\'action PGRE', 'value' : dt_fr(o_act_pgre.dt_deb_doss_pgre)
+				'label' : 'Date de début de l\'action PGRE', 'value' : dt_fr(o_act_pgre.dt_deb_doss_pgre) or ''
 			},
 			'dt_fin_doss_pgre' : { 
-				'label' : 'Date de fin de l\'action PGRE', 'value' : dt_fr(o_act_pgre.dt_fin_doss_pgre)
+				'label' : 'Date de fin de l\'action PGRE', 'value' : dt_fr(o_act_pgre.dt_fin_doss_pgre) or ''
 			},
 			'id_nat_doss' : { 'label' : 'Nature de l\'action PGRE', 'value' : o_act_pgre.id_nat_doss },
 			'id_av_pgre' : { 'label' : 'État d\'avancement', 'value' : o_act_pgre.id_av_pgre },
