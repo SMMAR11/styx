@@ -325,7 +325,7 @@ $('#id_GererDossier-id_av, #id_GererDossier-id_av_cp').on('change', function(_e)
 		var o_dt_delib_moa_doss = $('#id_GererDossier-dt_delib_moa_doss');
 		var o_dt_av_cp_doss = $('#id_GererDossier-dt_av_cp_doss');
 
-		if (v_int_av == AV_EP) {
+		if (v_int_av == AV_EP || v_int_av == AV_ABAND) {
 			o_dt_delib_moa_doss.val('');
 			o_dt_delib_moa_doss.attr('readonly', true);
 
@@ -909,3 +909,69 @@ $('#btn_rech_siret').on('click', function() {
 	var req = $('#id_GererPrestation-zs_siret_org_prest').val();
 	open('http://www.societe.com/cgi-bin/liste?nom=' + req, '_blank');
 });
+
+/** 
+ * Ce script permet de pré-calculer automatiquement le montant d'une demande de versement.
+ */
+$(document).on(
+	'change',
+	'input[name="GererDemandeVersement-cbsm_fact"], #id_GererDemandeVersement-cbsm_fact__all',
+	function() {
+
+		// J'initialise le montant de la demande de versement.
+		var mont_ddv = 0;
+
+		// J'initialise certaines variables "compteurs".
+		var cpt = 0;
+		var cpt_ht = 0;
+		var cpt_ttc = 0;
+
+		$('input[name="GererDemandeVersement-cbsm_fact"]').each(function() {
+			if ($(this).is(':checked')) {
+
+				// Je mets en forme le montant de la facture.
+				var v_mont_fact = $(this).attr('montant');
+				if (v_mont_fact == '' || isNaN(v_mont_fact) == true) {
+					v_mont_fact = 0;
+				}
+
+				// Je mets en forme le pourcentage éligible du financement.
+				var v_pourc_elig_fin = $(this).attr('pourcentage');
+				if (v_pourc_elig_fin != '' && isNaN(v_pourc_elig_fin) == false) {
+					v_pourc_elig_fin = v_pourc_elig_fin / 100;
+				}
+				else {
+					v_pourc_elig_fin = 1;
+				}
+
+				// Je calcule le montant de la demande de versement.
+				mont_ddv += v_mont_fact * v_pourc_elig_fin;
+			}
+
+			// Je vérifie que toutes les cases à cocher ont le même mode de taxe.
+			cpt += 1;
+			if ($(this).attr('taxe') == 'HT') {
+				cpt_ht += 1;
+			}
+			if ($(this).attr('taxe') == 'TTC') {
+				cpt_ttc += 1;
+			}
+		});
+
+		// Je mets en forme le montant de la demande de versement.
+		if (mont_ddv == 0) {
+			mont_ddv = '';
+		}
+		else {
+			mont_ddv = mont_ddv.toFixed(2);
+		}
+		
+		// J'affiche le montant de la demande de versement.
+		if (cpt == cpt_ht) {
+			$('#id_GererDemandeVersement-mont_ht_ddv').val(mont_ddv);
+		}
+		if (cpt == cpt_ttc) {
+			$('#id_GererDemandeVersement-mont_ttc_ddv').val(mont_ddv);
+		}
+	}
+);

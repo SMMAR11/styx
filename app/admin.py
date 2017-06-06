@@ -134,7 +134,8 @@ class AAvancement(admin.ModelAdmin) :
 		('Informations générales', {
 			'fields' : (
 				('int_av'),
-				('ordre_av')
+				('ordre_av'),
+				('id_av_pere'),
 			)
 		}),
 	)

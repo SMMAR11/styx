@@ -204,7 +204,7 @@ class GererDossier(forms.ModelForm) :
 						self.fields['zl_act'].widget.attrs['class'] += ' show-field'
 
 			# Je vérifie si certains champs doivent bénéficier ou non de la lecture seule.
-			if i.id_av.int_av == T_DONN_BDD_STR['AV_EP'] :
+			if i.id_av.int_av in [T_DONN_BDD_STR['AV_EP'], T_DONN_BDD_STR['AV_ABAND']] :
 				self.fields['dt_delib_moa_doss'].widget.attrs['readonly'] = True
 			if i.id_av_cp.int_av_cp in [T_DONN_BDD_STR['AV_CP_ACC'], T_DONN_BDD_STR['AV_CP_REF']] :
 				self.fields['dt_av_cp_doss'].widget.attrs['readonly'] = False
@@ -262,7 +262,7 @@ class GererDossier(forms.ModelForm) :
 		# Je rends obligatoire la date de délibération au maître d'ouvrage si l'état d'avancement du dossier n'est pas
 		# en projet.
 		if v_av :
-			if v_av.int_av != T_DONN_BDD_STR['AV_EP'] and not v_dt_delib_moa_doss :
+			if v_av.int_av not in [T_DONN_BDD_STR['AV_EP'], T_DONN_BDD_STR['AV_ABAND']] and not v_dt_delib_moa_doss :
 				self.add_error('dt_delib_moa_doss', ERROR_MESSAGES['required'])
 
 		# Je rends obligatoire la date de l'avis du comité de programmation si celui-ci est en attente ou sans objet.
@@ -333,13 +333,8 @@ class GererDossier(forms.ModelForm) :
 			# Je renvoie une erreur si je passe un dossier en projet alors que des éléments comptables ont déjà été
 			# saisis.
 			if v_av and v_av.int_av == T_DONN_BDD_STR['AV_EP'] :
-				mess = None
-				if len(TFinancement.objects.filter(id_doss = i)) > 0 :
-					mess = 'Un financement a déjà été déclaré pour ce dossier.' 
 				if len(TPrestationsDossier.objects.filter(id_doss = i)) > 0 :
-					mess = 'Une prestation a déjà été lancée pour ce dossier.'
-				if mess :
-					self.add_error('id_av', mess)
+					self.add_error('id_av', 'Une prestation a déjà été lancée pour ce dossier.')
 
 			# Je renvoie une erreur si le montant de dépassement d'un dossier dont l'avis du comité de programmation
 			# est différent de "Accordé" est strictement positif.
@@ -1237,9 +1232,6 @@ class GererDemandeVersement(forms.ModelForm) :
 
 		super(GererDemandeVersement, self).__init__(*args, **kwargs)
 		init_mess_err(self)
-		split = self.fields['cbsm_fact'].label.split('|')
-		split[0] += MAY_BE_REQUIRED
-		self.fields['cbsm_fact'].label = '|'.join(split)
 
 		# J'initialise le numéro du dossier par précaution.
 		num_doss = None
@@ -1313,7 +1305,11 @@ class GererDemandeVersement(forms.ModelForm) :
 					obt_mont(f.mont_ttc_fact) if k_fin.id_doss.est_ttc_doss == True else obt_mont(f.mont_ht_fact),
 					f.num_fact,
 					dt_fr(f.dt_mand_moa_fact) or '-',
-					'__zcc__' if est_zcc == True else ''
+					'__zcc__$montant:{}$pourcentage:{}$taxe:{}'.format(
+						f.mont_ttc_fact or '' if k_fin.id_doss.est_ttc_doss == True else f.mont_ht_fact or '',
+						k_fin.pourc_elig_fin or '',
+						'TTC' if k_fin.id_doss.est_ttc_doss == True else 'HT'
+					) if est_zcc == True else ''
 				])])
 
 			# Destruction des tableaux en cas d'avance forfaitaire
@@ -1339,7 +1335,6 @@ class GererDemandeVersement(forms.ModelForm) :
 		v_num_doss = cleaned_data.get('za_num_doss')
 		v_fin = cleaned_data.get('zl_fin')
 		v_type_vers = cleaned_data.get('id_type_vers')
-		v_fact = cleaned_data.get('cbsm_fact')
 
 		i = self.instance
 
@@ -1382,14 +1377,6 @@ class GererDemandeVersement(forms.ModelForm) :
 					)
 			else :
 				self.add_error(cle, ERROR_MESSAGES['required'])
-
-			# Je renvoie une erreur si aucune facture n'a été reliée à une demande de versement dont le type de 
-			# versement est différent de "Avance forfaitaire".
-			if v_type_vers :
-				if v_type_vers.int_type_vers in [
-					T_DONN_BDD_STR['TVERS_ACOMPT'], T_DONN_BDD_STR['TVERS_SOLDE']
-				] and not v_fact :
-					self.add_error('cbsm_fact', ERROR_MESSAGES['required'])
 
 			# Je récupère les demandes de versements soldées du financement.
 			qs_ddv = TDemandeVersement.objects.filter(

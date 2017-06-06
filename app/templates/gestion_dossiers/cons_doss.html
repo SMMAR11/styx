@@ -13,8 +13,8 @@
 		<div class="main-title">Dossier {{ d }}</div>
 		<ul class="my-nav-tabs nav nav-justified nav-tabs" id="tab_doss">
 			<li><a href="#ong_doss" data-toggle="tab">Caractéristiques</a></li>
-			{% if d.id_av.int_av != AV_EP %}
 			<li><a href="#ong_fin" data-toggle="tab">Plan de financement</a></li>
+			{% if d.id_av.int_av != AV_EP %}
 			<li><a href="#ong_prest" data-toggle="tab">Prestations</a></li>
 			<li><a href="#ong_fact" data-toggle="tab">Factures</a></li>
 			<li><a href="#ong_ddv" data-toggle="tab">Demandes de versements</a></li>
@@ -86,6 +86,7 @@
 							<div class="col-md-6">{{ t_attrs_doss.id_av }}</div>
 							<div class="col-md-6">{{ t_attrs_doss.dt_delib_moa_doss }}</div>
 						</div>
+						{{ t_attrs_doss.annee_prev_doss }}
 						<div class="row">
 							<div class="col-md-6">{{ t_attrs_doss.id_av_cp }}</div>
 							<div class="col-md-6">{{ t_attrs_doss.dt_av_cp_doss }}</div>
@@ -104,7 +105,6 @@
 					</div>
 				</div>
 			</div>
-			{% if d.id_av.int_av != AV_EP %}
 			<div id="ong_fin" class="fade tab-pane">
 				<div class="right">
 					<span data-target="#fm_ajout_fin" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter un organisme financier</span>
@@ -155,6 +155,7 @@
 				<div class="b red-color text-center">Attention, le maître d'ouvrage doit assumer en plus {{ mont_suppl_doss }} € {{ ht_ou_ttc }}.</div>
 				{% endif %}
 			</div>
+			{% if d.id_av.int_av != AV_EP %}
 			<div id="ong_prest" class="fade tab-pane">
 				<div class="right">
 					<span data-target="#fm_ajout_prest" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter/relier une prestation</span>

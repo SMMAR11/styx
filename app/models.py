@@ -74,10 +74,13 @@ class TAvancement(models.Model) :
     id_av = models.AutoField(primary_key = True)
     int_av = models.CharField(max_length = 255, verbose_name = 'Intitulé')
     ordre_av = models.IntegerField(verbose_name = 'Ordre dans la liste déroulante')
+    id_av_pere = models.ForeignKey(
+        'self', models.DO_NOTHING, blank = True, null = True, verbose_name = 'État d\'avancement père'
+    )
 
     class Meta :
         db_table = 't_avancement'
-        ordering = ['ordre_av']
+        ordering = ['ordre_av', 'int_av']
         verbose_name = 'T_AVANCEMENT'
         verbose_name_plural = 'T_AVANCEMENT'
 
@@ -481,7 +484,6 @@ class TDossier(models.Model) :
     from app.validators import val_cdc
     from app.validators import val_fich_pdf
     from app.validators import val_mont_nul
-    from app.validators import val_mont_pos
     from django.utils import timezone
 
     def set_chem_pj_doss_upload_to(_i, _fn) :
@@ -537,7 +539,7 @@ class TDossier(models.Model) :
         max_length = 255, validators = [val_cdc], verbose_name = 'Territoire ou lieu-dit précis'
     )
     mont_doss = models.FloatField(
-        validators = [val_mont_pos], verbose_name = 'Montant du dossier présenté au CD GEMAPI'
+        validators = [val_mont_nul], verbose_name = 'Montant du dossier présenté au CD GEMAPI'
     )
     mont_suppl_doss = models.FloatField(
         default = 0, verbose_name = 'Dépassement du dossier', validators = [val_mont_nul]
@@ -562,6 +564,7 @@ class TDossier(models.Model) :
     id_techn = models.ForeignKey(TTechnicien, models.DO_NOTHING)
     id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING)
     type_decl = models.ManyToManyField(TTypeDeclaration, through = 'TArretesDossier')
+    annee_prev_doss = models.IntegerField(blank = True, null = True, verbose_name = 'Année prévisionnelle du dossier')
 
     class Meta :
         db_table = 't_dossier'
@@ -920,26 +923,6 @@ class TFacture(models.Model) :
         ordering = ['-dt_mand_moa_fact', 'id_prest']
         verbose_name = 'T_FACTURE'
         verbose_name_plural = 'T_FACTURE'
-
-    def get_suivi_fact(self) :
-
-        output = self.suivi_fact
-
-        # Stockage des factures du couple prestation/dossier, classées en acompte, avec une date de mandatement par le
-        # maître d'ouvrage
-        qs_fact = TFacture.objects.filter(
-            id_doss = self.id_doss, id_prest = self.id_prest, suivi_fact = 'Acompte'
-        ).exclude(dt_mand_moa_fact = None).order_by('dt_mand_moa_fact')
-
-        # Définition du numéro d'acompte
-        num_acompt = None
-        for index, f in enumerate(qs_fact) :
-            if f == self :
-                num_acompt = index + 1
-        if num_acompt :
-            output += ' {}'.format(num_acompt)
-
-        return output
 
     def __str__(self) :
         return self.num_fact

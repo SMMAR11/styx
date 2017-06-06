@@ -689,13 +689,19 @@ def init_f(_form) :
 					for index, elem in enumerate(bs.find_all('option')) :
 						tab_td = []
 						for elem_2 in elem.text.split('|') :
-							if elem_2 == '__zcc__' :
+							if '__zcc__' in elem_2 :
+
+								# Détermination d'attributs
+								attrs = elem_2.split('$')[1:]
+								attrs_html = ['{}="{}"'.format(*attr.split(':')) for attr in attrs]
+								if elem.has_attr('selected') : attrs_html.append('checked=""')
+
 								elem_2 = '<input type="checkbox" id="id_{0}_{1}" name="{2}" value="{3}" {4}>'.format(
 									set_name,
 									index,
 									set_name,
 									elem['value'],
-									'checked' if elem.has_attr('selected') else ''
+									' '.join(attrs_html)
 								)
 							tab_td.append('<td>{0}</td>'.format(elem_2))
 						tab_tbody.append('<tr>{0}</tr>'.format(''.join(tab_td)))
@@ -811,21 +817,26 @@ def init_pg_cons(_t, _pdf = False) :
 		err = False
 
 		if 'label' in v and 'value' in v :
+
+			# Stockage du label et de la valeur attributaire
+			get_label = v['label']
+			get_value = v['value'] if v['value'] else ''
+
 			if _pdf == False :
 
 				# J'initialise le contenu du conteneur.
 				contr = '''
 				<span class="attribute-label">{0}</span>
 				<div class="attribute-control">{1}</div>
-				'''.format(v['label'], v['value'])
+				'''.format(get_label, get_value)
 
 				# Je surcharge le contenu du conteneur dans le cas d'un fichier PDF.
 				if 'pdf' in v :
 					if v['pdf'] == True :
-						if v['value'] :
+						if get_value :
 							contr = '''
 							<a href="{0}{1}" target="blank" class="icon-link pdf-icon">{2}</a>
-							'''.format(MEDIA_URL, v['value'], v['label'])
+							'''.format(MEDIA_URL, get_value, get_label)
 						else :
 							contr = None
 					else :
@@ -853,16 +864,16 @@ def init_pg_cons(_t, _pdf = False) :
 				contr = '''
 				<span class="pdf-attribute-label">{0}</span>
 				<span class="pdf-attribute-value">{1}</span>
-				'''.format(v['label'], v['value'])
+				'''.format(get_label, get_value)
 
 				# Je surcharge le contenu du conteneur dans le cas d'un fichier PDF.
 				if 'pdf' in v :
 					if v['pdf'] == True :
-						if v['value'] :
+						if get_value :
 							contr = '''
 							<span class="pdf-attribute-label">{label}</span>
 							<span class="pdf-attribute-value">{value}</span>
-							'''.format(label = v['label'], value = v['value'])
+							'''.format(label = get_label, value = get_value)
 						else :
 							contr = None
 					else :

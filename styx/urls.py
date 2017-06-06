@@ -104,3 +104,8 @@ handler500 = main.h_500
 
 if settings.DEBUG is True :
     urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+
+# Détermination de certains paramètres du site d'administration
+admin.site.index_title = 'Accueil'
+admin.site.site_header = 'Administration de STYX 2.0'
+admin.site.site_title = 'Site d\'administration de STYX 2.0'

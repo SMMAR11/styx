@@ -145,6 +145,7 @@ LEAFLET_CONFIG = {
 
 # Je déclare mes options personnelles.
 T_DONN_BDD_STR = {
+    'AV_ABAND' : 'Abandonné',
     'AV_EP' : 'En projet',
     'AV_SOLDE' : 'Soldé',
     'AV_CP_ACC' : 'Accordé',

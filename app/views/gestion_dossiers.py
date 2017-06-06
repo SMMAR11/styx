@@ -677,6 +677,7 @@ def cons_doss(request, _d) :
 		if v_act == None :
 			v_act = ''
 		t_attrs_doss = {
+			'annee_prev_doss' : { 'label' : 'Année prévisionnelle du dossier', 'value' : o_doss.annee_prev_doss },
 			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
 			'int_doss' : {
 				'label' : 'Intitulé du dossier',
@@ -711,7 +712,7 @@ def cons_doss(request, _d) :
 			'id_nat_doss' : { 'label' : 'Nature du dossier', 'value' : o_doss.id_nat_doss },
 			'id_type_doss' : { 'label' : 'Type de dossier', 'value' : o_doss.id_type_doss },
 			'id_techn' : { 'label' : 'Agent responsable', 'value' : o_doss.id_techn },
-			'id_sage' : { 'label' : 'SAGE', 'value' : o_doss.id_sage or '' },
+			'id_sage' : { 'label' : 'SAGE', 'value' : o_doss.id_sage },
 			'mont_doss' : {
 				'label' : 'Montant {0} du dossier présenté au CD GEMAPI (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_doss.mont_doss)
@@ -726,18 +727,18 @@ def cons_doss(request, _d) :
 			},
 			'id_av' : { 'label' : 'État d\'avancement', 'value' : o_doss.id_av },
 			'dt_delib_moa_doss' : { 
-				'label' : 'Date de délibération au maître d\'ouvrage', 'value' : dt_fr(o_doss.dt_delib_moa_doss) or ''
+				'label' : 'Date de délibération au maître d\'ouvrage', 'value' : dt_fr(o_doss.dt_delib_moa_doss)
 			},
 			'id_av_cp' : { 'label' : 'Avis du comité de programmation - CD GEMAPI', 'value' : o_doss.id_av_cp },
 			'dt_av_cp_doss' : { 
-				'label' : 'Date de l\'avis du comité de programmation', 'value' : dt_fr(o_doss.dt_av_cp_doss) or ''
+				'label' : 'Date de l\'avis du comité de programmation', 'value' : dt_fr(o_doss.dt_av_cp_doss)
 			},
 			'chem_pj_doss' : {
 				'label' : 'Consulter le fichier scanné du mémoire technique',
 				'value' : o_doss.chem_pj_doss,
 				'pdf' : True 
 			},
-			'comm_doss' : { 'label' : 'Commentaire', 'value' : o_doss.comm_doss or '' }
+			'comm_doss' : { 'label' : 'Commentaire', 'value' : o_doss.comm_doss }
 		}
 
 		# J'initialise le tableau des dossiers de la famille.
@@ -866,7 +867,7 @@ def cons_doss(request, _d) :
 				'mont_fact' : obt_mont(mont_fact),
 				'num_mandat_fact' : f.num_mandat_fact,
 				'num_bord_fact' : f.num_bord_fact,
-				'suivi_fact' : f.get_suivi_fact(),
+				'suivi_fact' : f.suivi_fact,
 				'pk' : f.pk
 			})
 			mont_fact_sum += mont_fact
@@ -3343,7 +3344,7 @@ def cons_fact(request, _f) :
 			'dt_rec_fact' : { 'label' : 'Date de réception de la facture', 'value' : dt_fr(o_fact.dt_rec_fact) or '' },
 			'num_mandat_fact' : { 'label' : 'Numéro de mandat', 'value' : o_fact.num_mandat_fact },
 			'num_bord_fact' : { 'label' : 'Numéro de bordereau', 'value' : o_fact.num_bord_fact },
-			'suivi_fact' : { 'label' : 'Suivi de la facturation', 'value' : o_fact.get_suivi_fact() },
+			'suivi_fact' : { 'label' : 'Suivi de la facturation', 'value' : o_fact.suivi_fact },
 			'chem_pj_fact' : { 
 				'label' : 'Consulter le fichier scanné de la facture', 'value' : o_fact.chem_pj_fact, 'pdf' : True 
 			},
@@ -4441,6 +4442,9 @@ def impr_doss(request, _d) :
 		if v_act == None :
 			v_act = '-'
 		t_attrs_doss = {
+			'annee_prev_doss' : {
+				'label' : 'Année prévisionnelle du dossier', 'value' : o_doss.annee_prev_doss or '-'
+			},
 			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
 			'int_doss' : {
 				'label' : 'Intitulé du dossier',
@@ -4554,7 +4558,7 @@ def impr_doss(request, _d) :
 				'mont_fact' : obt_mont(mont_fact),
 				'num_mandat_fact' : f.num_mandat_fact,
 				'num_bord_fact' : f.num_bord_fact,
-				'suivi_fact' : f.get_suivi_fact(),
+				'suivi_fact' : f.suivi_fact,
 			})
 			mont_fact_sum += mont_fact
 
