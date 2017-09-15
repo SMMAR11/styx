@@ -1,29 +1,40 @@
 // Variables globales
 var t_datat = {
-	'alert' : init_datat('#t_alert', [false, [0], [0]]),
-	'ch_act_pgre' : init_datat('#t_ch_act_pgre', [false, [6], [6]]),
-	'ch_doss' : init_datat('#t_ch_doss', [true, [4], [4]]),
-	'ch_prest' : init_datat('#t_ch_prest', [false, [5], [5]]),
-	'cons_arr' : init_datat('#t_cons_arr', [false, [5], [5]]),
-	'cons_aven' : init_datat('#t_cons_aven', [false, [4], [4]]),
-	'cons_ddv' : init_datat('#t_cons_ddv', [false, [6], [6]]),
-	'cons_doss_fam' : init_datat('#t_cons_doss_fam', [false, [4], [4]]),
-	'cons_doss_prest' : init_datat('#t_cons_doss_prest', [false, [3], [3]]),
-	'cons_droit' : init_datat('#t_cons_droit', [false, [0, 1, 2, 3], [2, 3]]),
-	'cons_fact' : init_datat('#t_cons_fact', [false, [7], [7]]),
-	'cons_fact_ddv' : init_datat('#t_cons_fact_ddv', [false, [4], [4]]),
-	'cons_fin' : init_datat('#t_cons_fin', [false, [8], [8]]),
-	'cons_pdc' : init_datat('#t_cons_pdc', [false, [2], []]),
-	'cons_ph' : init_datat('#t_cons_ph', [false, [0, 4], []]),
-	'cons_prest' : init_datat('#t_cons_prest', [false, [6], []]),
-	'GererActionPgre-cbsm_atel_pgre' : init_datat('#dtab_GererActionPgre-cbsm_atel_pgre', [false, [1], [1]]),
-	'GererActionPgre-cbsm_org_moa' : init_datat('#dtab_GererActionPgre-cbsm_org_moa', [false, [1], [1]]),
-	'GererDemandeVersement-cbsm_fact' : init_datat('#dtab_GererDemandeVersement-cbsm_fact', [false, [4], [4]]),
-	'modif_prest_doss' : init_datat('#t_modif_prest_doss', [false, [0, 1, 2, 3, 4], []]),
-	'RechercherDossiers-cbsm_org_moa' : init_datat('#dtab_RechercherDossiers-cbsm_org_moa', [false, [1], [1]]),
-	'RechercherPrestations-cbsm_org_moa' : init_datat('#dtab_RechercherPrestations-cbsm_org_moa', [false, [1], [1]]),
-	'regr_prest' : init_datat('#t_regr_prest', [false, [], []]),
-	'select_doss' : init_datat('#t_select_doss', [false, [4], [4]])
+	'alert' : init_datat('#t_alert', { 'autofit' : [0], 'unsorting' : [0] }),
+	'ch_act_pgre' : init_datat('#t_ch_act_pgre', { 'autofit' : [6], 'unsorting' : [6] }),
+	'ch_doss' : init_datat('#t_ch_doss', { 'autofit' : [4], 'paging' : true, 'unsorting' : [4] }),
+	'ch_prest' : init_datat('#t_ch_prest', { 'autofit' : [5], 'unsorting' : [5] }),
+	'cons_arr' : init_datat('#t_cons_arr', { 'autofit' : [5], 'unsorting' : [5] }),
+	'cons_aven' : init_datat('#t_cons_aven', { 'autofit' : [4], 'unsorting' : [4] }),
+	'cons_ddv' : init_datat('#t_cons_ddv', { 'autofit' : [6], 'unsorting' : [6] }),
+	'cons_doss_fam' : init_datat('#t_cons_doss_fam', { 'autofit' : [4], 'unsorting' : [4] }),
+	'cons_doss_prest' : init_datat('#t_cons_doss_prest', { 'autofit' : [3], 'unsorting' : [3] }),
+	'cons_droit' : init_datat('#t_cons_droit', { 'autofit' : [2, 3], 'unsorting' : '_all' }),
+	'cons_fact' : init_datat('#t_cons_fact', { 'autofit' : [7], 'unsorting' : [7] }),
+	'cons_fact_ddv' : init_datat('#t_cons_fact_ddv', { 'autofit' : [4], 'unsorting' : [4] }),
+	'cons_fin' : init_datat('#t_cons_fin', { 'autofit' : [8], 'unsorting' : [8] }),
+	'cons_pdc' : init_datat('#t_cons_pdc', { 'autofit' : [2, 3], 'unbordered' : [2, 3], 'unsorting' : [2, 3] }),
+	'cons_ph' : init_datat('#t_cons_ph', { 'autofit' : [0, 4, 5], 'unbordered' : [4, 5], 'unsorting' : [0, 4, 5] }),
+	'cons_prest' : init_datat('#t_cons_prest', { 'autofit' : [6, 7], 'unbordered' : [6, 7], 'unsorting' : [6, 7] }),
+	'FiltrerDossiers-cbsm_org_moa' : init_datat(
+		'#dtab_FiltrerDossiers-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
+	),
+	'GererActionPgre-cbsm_atel_pgre' : init_datat(
+		'#dtab_GererActionPgre-cbsm_atel_pgre', { 'autofit' : [1], 'unsorting' : [1] }
+	),
+	'GererActionPgre-cbsm_org_moa' : init_datat(
+		'#dtab_GererActionPgre-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
+	),
+	'GererDemandeVersement-cbsm_fact' : init_datat(
+		'#dtab_GererDemandeVersement-cbsm_fact', { 'autofit' : [4], 'unsorting' : [4] }
+	),
+	'modif_prest_doss' : init_datat('#t_modif_prest_doss', { 'unsorting' : '_all' }),
+	'RechercherPrestations-cbsm_org_moa' : init_datat(
+		'#dtab_RechercherPrestations-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
+	),
+	'regr_doss' : init_datat('#t_regr_doss'),
+	'regr_prest' : init_datat('#t_regr_prest'),
+	'select_doss' : init_datat('#t_select_doss', { 'autofit' : '__LAST__', 'unsorting' : '__LAST__' })
 };
 var submit = false;
 var pt_prec = null;
@@ -471,7 +482,7 @@ $(document).on('click', '#t_ch_prest .choose-icon', function() {
 			$(data).insertAfter($('#t_ch_prest'));
 
 			// J'initialise la datatable.
-			var datat = init_datat('#t_red_prest', [false, [0, 1, 2, 3, 4], []]);
+			var datat = init_datat('#t_red_prest', { 'unsorting' : [1] });
 		},
 		error : function(xhr) {
 			alert('Erreur ' + xhr.status);
@@ -636,7 +647,7 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 				$(data).insertAfter($('#fw_GererDemandeVersement-int_ddv'));
 
 				// J'initialise la datatable.
-				datat_cbsm_fact = init_datat('#dtab_GererDemandeVersement-cbsm_fact', [false, [4], [4]]);
+				datat_cbsm_fact = init_datat('#dtab_GererDemandeVersement-cbsm_fact', { 'autofit' : [4], 'unsorting' : [4] });
 			},
 			error : function(xhr) {
 				alert('Erreur ' + xhr.status);
@@ -735,20 +746,6 @@ $('#id_GererActionPgre-id_ic_pgre').on('change', function(_e) {
 		},
 		[$('form[name="f_ger_act_pgre"]'), '?action=filtrer-ateliers']
 	);
-});
-
-/**
- * Ce script permet de déterminer l'état d'alerte du compte.
- */
-$(window).load(function() {
-	$.getJSON(URL_ALERT + '?action=compter-alertes', function(_d) {
-		if (_d > 0) {
-			$('#za_alert').css('background-color', '#FF0921');
-		}
-		else {
-			$('#za_alert').css('background-color', '#94C054');
-		}
-	});
 });
 
 /**
@@ -852,36 +849,19 @@ $('form[name="f_ch_act_pgre"]').on('submit', function(_e) {
  * du formulaire de réalisation d'un état sur les dossiers.
  * _e : Objet DOM
  */
-$('#id_RechercherDossiers-zl_progr, #id_RechercherDossiers-zl_axe, #id_RechercherDossiers-zl_ss_axe').on(
+$('#id_FiltrerDossiers-id_progr, #id_FiltrerDossiers-zl_axe, #id_FiltrerDossiers-zl_ss_axe').on(
 	'change', function(_e) {
 		alim_ld(
 			_e,
 			[
-				'id_RechercherDossiers-zl_progr',
-				['id_RechercherDossiers-zl_axe'],
-				'id_RechercherDossiers-zl_ss_axe',
-				'id_RechercherDossiers-zl_act'
+				'id_FiltrerDossiers-id_progr',
+				['id_FiltrerDossiers-zl_axe'],
+				'id_FiltrerDossiers-zl_ss_axe',
+				'id_FiltrerDossiers-zl_act'
 			]
 		);
 	}
 );
-
-/**
- * Ce script permet de traiter le formulaire de réalisation d'un état en sélectionnant des dossiers.
- * _e : Objet DOM
- */
-$('form[name="f_select_doss"]').on('submit', function(_e) {
-	soum_f(
-		_e,
-		function() {
-			$('#t_select_doss tbody > tr').each(function() {
-				if ($(this).find('td:first-child').attr('class') != 'dataTables_empty') {
-					$(this).find('td:first-child').addClass('b');
-				}				
-			});
-		}
-	);
-});
 
 /**
  * Ce script permet de gérer l'affichage et les données des listes déroulantes des axes, des sous-axes et des actions

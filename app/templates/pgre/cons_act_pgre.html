@@ -69,6 +69,7 @@
 										<th>Date du contrôle</th>
 										<th>Objectif réalisé (en m<sup>3</sup>)</th>
 										<th></th>
+										<th></th>
 									</tr>
 								</thead>
 								<tbody>
@@ -76,10 +77,14 @@
 									<tr>
 										<td>{{ p.dt_contr_doss_pgre }}</td>
 										<td>{{ p.obj_real_contr_doss_pgre }}</td>
-										<td class="my-pull-right">
+										<td>
 											{% if p.pk and est_ddtm == True %}
-											<a href="{% url 'modif_pdc' p.pk %}" class="forbidden modify-icon" title="Modifier le dernier point de contrôle"></a>
-											<span action="?action=supprimer-point-de-controle&point-de-controle={{ p.pk }}" class="delete-icon forbidden pointer" onclick="html_ds_fm(event, 'suppr_pdc');" title="Supprimer le dernier point de contrôle"></span>
+											<a href="{% url 'modif_pdc' p.pk %}" class="forbidden modify-icon pull-right" title="Modifier le dernier point de contrôle"></a>
+											{% endif %}
+										</td>
+										<td>
+											{% if p.pk and est_ddtm == True %}
+											<span action="?action=supprimer-point-de-controle&point-de-controle={{ p.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_pdc');" title="Supprimer le dernier point de contrôle"></span>
 											{% endif %}
 										</td>
 									</tr>
@@ -89,7 +94,7 @@
 								<tfoot>
 									<tr>
 										<td>Total (en m<sup>3</sup>)</td>
-										<td colspan="2">{{ econ_tot }}</td>
+										<td colspan="3">{{ econ_tot }}</td>
 									</tr>
 								</tfoot>
 								{% endif %}
@@ -120,6 +125,7 @@
 								<th>Période de la prise de vue</th>
 								<th>Date de la prise de vue</th>
 								<th></th>
+								<th></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -131,10 +137,8 @@
 								<td>{{ p.int_ph_pgre }}</td>
 								<td>{{ p.int_ppv_ph_pgre }}</td>
 								<td>{{ p.dt_pv_ph_pgre }}</td>
-								<td class="my-pull-right">
-									<a class="forbidden modify-icon" href="{% url 'modif_ph_pgre' p.pk %}" title="Modifier la photo"></a>
-									<span action="?action=supprimer-photo&photo={{ p.pk }}" class="delete-icon forbidden pointer" onclick="html_ds_fm(event, 'suppr_ph');" title="Supprimer la photo"></span>	
-								</td>
+								<td><a class="forbidden modify-icon pull-right" href="{% url 'modif_ph_pgre' p.pk %}" title="Modifier la photo"></a></td>
+								<td><span action="?action=supprimer-photo&photo={{ p.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_ph');" title="Supprimer la photo"></span></td>
 							</tr>
 							{% endfor %}
 						</tbody>

@@ -28,7 +28,6 @@
 
 			// J'initialise les URLS utilisées dans les fichiers JS du dossier "static".
 			const URL_AUTOCOMPL = '{% url 'autocompl' %}';
-			const URL_ALERT = '{% url 'alert' %}';
 
 		</script>
 		<!-- Inclusion de la bibliothèque jQuery -->
@@ -83,10 +82,10 @@
 					</div>
 					{% if user.is_authenticated %}
 					<div id="navbar" class="collapse navbar-collapse">
-						{{ navbar }}
+						{{ navbar | safe }}
 						<ul class="nav navbar-nav navbar-right">
 							<li>
-								<a href="{% url 'alert' %}"><span class="my-badge" id="za_alert"></span></a>
+								<a href="{% url 'alert' %}"><span class="my-badge" style="background-color: {{ badge_color }};"></span></a>
 							</li>
 							<li class="dropdown">
 								<a class="dropdown-toggle" data-toggle="dropdown" href="#">

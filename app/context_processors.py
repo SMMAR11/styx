@@ -16,203 +16,195 @@ def get_bdd_settings(request) :
 	}
 
 '''
-Cette fonction permet d'obtenir les différents menus de l'application.
-request : Objet "requête"
-Retourne un tableau associatif
+Obtention du menu dans le template
+_req : Objet requête
+Retourne un tableau associatlf
 '''
-def get_menu(request) :
+def set_menus(_req) :
 
-	# Imports
-	from app.functions import get_menu_vign
-	from app.models import TUtilisateur
-	from django.core.urlresolvers import reverse
-	from django.template.defaultfilters import safe
-	from styx.settings import STATIC_URL
+	# Import
+	from app.functions import get_menu
 
 	output = {}
 
-	# Je mets en forme le gabarit d'une vignette.
-	gab_vign = '''
-	<a class="custom-thumbnail" href="{0}" target="{1}">
-		<img src="{2}">
-		<div>{3}</div>
-	</a>
-	'''
+	# Initialisation du menu
+	menu = get_menu() if _req.user.is_authenticated() else {}
 
-	# J'initialise le tableau relatif au menu de l'application.
-	t_menu = {
-		'gest_doss' : {
-			'mod_name' : 'Gestion des dossiers',
-			'mod_img' : STATIC_URL + 'pics/thumbnails/gestion_dossiers/main.png',
-			'mod_href' : reverse('gest_doss'),
-			'mod_href_blank' : '',
-			'mod_items' : [
-				{
-					'item_name' : 'Créer un dossier',
-					'item_img' : STATIC_URL + 'pics/thumbnails/gestion_dossiers/add.png',
-					'item_href' : reverse('cr_doss')
-				},
-				{
-					'item_name' : 'Consulter un dossier',
-					'item_img' : STATIC_URL + 'pics/thumbnails/gestion_dossiers/consult.png',
-					'item_href' : reverse('ch_doss')
-				}
-			],
-			'mod_rank' : 2
-		},
-		'pgre' : {
-			'mod_name' : 'PGRE',
-			'mod_img' : STATIC_URL + 'pics/thumbnails/pgre/main.jpg',
-			'mod_href' : reverse('pgre'),
-			'mod_href_blank' : '',
-			'mod_items' : [
-				{
-					'item_name' : 'Créer une action PGRE',
-					'item_img' : STATIC_URL + 'pics/thumbnails/pgre/add.jpg',
-					'item_href' : reverse('cr_act_pgre')
-				},
-				{
-					'item_name' : 'Consulter une action PGRE',
-					'item_img' : STATIC_URL + 'pics/thumbnails/pgre/consult.jpg',
-					'item_href' : reverse('ch_act_pgre')
-				},
-				{
-					'item_name' : 'Réalisation d\'états PGRE',
-					'item_img' : STATIC_URL + 'pics/thumbnails/pgre/realisation_etats.png',
-					'item_href' : '#'
-				}
-			],
-			'mod_rank' : 4
-		},
-		'port_cart' : {
-			'mod_name' : 'Portail cartographique',
-			'mod_img' : STATIC_URL + 'pics/thumbnails/portail_cartographique/main.jpg',
-			'mod_href' : 'http://carto.smmar.fr/styx',
-			'mod_href_blank' : 'target',
-			'mod_items' : [],
-			'mod_rank' : 1
-		},
-		'real_etats' : {
-			'mod_name' : 'Réalisation d\'états',
-			'mod_img' : STATIC_URL + 'pics/thumbnails/realisation_etats/main.png',
-			'mod_href' : reverse('real_etats'),
-			'mod_href_blank' : '',
-			'mod_items' : [
-				{
-					'item_name' : 'En sélectionnant des dossiers',
-					'item_img' : STATIC_URL + 'pics/thumbnails/realisation_etats/select_doss.png',
-					'item_href' : reverse('select_doss')
-				},
-				{
-					'item_name' : 'En cumulant des dossiers',
-					'item_img' : STATIC_URL + 'pics/thumbnails/realisation_etats/cumul_doss.jpg',
-					'item_href' : '#'
-				},
-				{ 
-					'item_name' : 'En regroupant des prestations',
-					'item_img' : STATIC_URL + 'pics/thumbnails/realisation_etats/regr_prest.jpg',
-					'item_href' : reverse('regr_prest')
-				}
-			],
-			'mod_rank' : 3
-		}
-	}
+	# Préparation du menu principal
+	elems = []
+	for elem in menu.values() :
 
-	# Je trie le tableau par ordre d'affichage.
-	t_menu = sorted(t_menu.items(), key = lambda l : l[1]['mod_rank'])
-
-	# J'initialise le menu principal à vignettes.
-	t_vign = []
-	
-	for cle, val in t_menu :
-
-		# Je prépare la vignette courante.
-		vign = gab_vign.format(val['mod_href'], val['mod_href_blank'], val['mod_img'], val['mod_name'])
-
-		# J'empile le tableau des vignettes.
-		t_vign.append(vign)
-
-	# J'empile le tableau de sortie.
-	output['main_thumbnails'] = get_menu_vign(t_vign, 3)
-
-	# J'initialise le tableau des éléments du navigateur.
-	t_elem_nav = []
-
-	for cle, val in t_menu :
-
-		# J'initialise chaque élément du navigateur selon le nombre de sous-éléments de celui-ci.
-		if len(val['mod_items']) > 0 :
-
-			# J'initialise et j'empile le tableau des sous-éléments de l'élément courant du navigateur.
-			t_li_ddown = ['<li><a href="{0}">{1}</a></li>'.format(
-				elem['item_href'], elem['item_name']
-			) for elem in val['mod_items']]
-
-			# Je prépare l'élément courant du navigateur.
+		# Mise en forme de l'élément
+		if len(elem['mod_items']) > 0 :
 			li = '''
 			<li class="dropdown">
 				<a class="dropdown-toggle" data-toggle="dropdown" href="#">
-					{0}
+					{}
 					<span class="caret"></span>
 				</a>
-				<ul class="dropdown-menu">{1}</ul>
+				<ul class="dropdown-menu">{}</ul>
 			</li>
-			'''.format(val['mod_name'], ''.join(t_li_ddown))
-
+			'''.format(
+				elem['mod_name'],
+				''.join(['<li><a href="{}">{}</a></li>'.format(
+					elem_2['item_href'], elem_2['item_name']
+				) for elem_2 in elem['mod_items']])
+			)
 		else :
-
-			# Je prépare l'élément courant du navigateur.
-			li = '<li><a href="{0}" target="{1}">{2}</a></li>'.format(
-				val['mod_href'], val['mod_href_blank'], val['mod_name']
+			li = '<li><a href="{}" target="{}">{}</a></li>'.format(
+				elem['mod_href'], elem['mod_href_blank'], elem['mod_name']
 			)
 
-		# J'empile le tableau des éléments du navigateur.
-		t_elem_nav.append(li)
+		elems.append(li)
 
-	# J'empile le tableau de sortie.
-	nav = '<ul class="nav navbar-nav">{0}</ul>'.format(''.join(t_elem_nav))
-	output['navbar'] = safe(nav)
-
-	# J'initialise le menu à vignettes du module de gestion des dossiers.
-	t_vign = []
-
-	for elem in dict(t_menu)['gest_doss']['mod_items'] :
-
-		# Je prépare la vignette courante.
-		vign = gab_vign.format(elem['item_href'], '', elem['item_img'], elem['item_name'])
-
-		# J'empile le tableau des vignettes.
-		t_vign.append(vign)
-
-	# J'empile le tableau de sortie.
-	output['gest_doss_thumbnails'] = get_menu_vign(t_vign, 3)
-
-	# J'initialise le menu à vignettes du module de réalisation d'états.
-	t_vign = []
-
-	for elem in dict(t_menu)['real_etats']['mod_items'] :
-
-		# Je prépare la vignette courante.
-		vign = gab_vign.format(elem['item_href'], '', elem['item_img'], elem['item_name'])
-
-		# J'empile le tableau des vignettes.
-		t_vign.append(vign)
-
-	# J'empile le tableau de sortie.
-	output['real_etats_thumbnails'] = get_menu_vign(t_vign, 3)
-
-	# J'initialise le menu à vignettes du module PGRE.
-	t_vign = []
-
-	for elem in dict(t_menu)['pgre']['mod_items'] :
-
-		# Je prépare la vignette courante.
-		vign = gab_vign.format(elem['item_href'], '', elem['item_img'], elem['item_name'])
-
-		# J'empile le tableau des vignettes.
-		t_vign.append(vign)
-
-	# J'empile le tableau de sortie.
-	output['pgre_thumbnails'] = get_menu_vign(t_vign, 3)
+	output['navbar'] = '<ul class="nav navbar-nav">{}</ul>'.format(''.join(elems))
 
 	return output
+
+def set_alerts(request) :
+
+	# Imports
+	from app.functions import obt_mont
+	from app.models import TDemandeVersement
+	from app.models import TDroit
+	from app.models import TMoa
+	from app.models import TRegroupementsMoa
+	from app.models import TTypeProgramme
+	from app.sql_views import VFinancement
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import render
+	from styx.settings import T_DONN_BDD_STR
+	import datetime
+	import json
+	
+	output = HttpResponse()
+
+	# J'initialise le tableau des alertes ainsi que le tableau des couleurs disponibles pour une alerte.
+	t_alert = []
+	t_pr_alert = {
+		1 : 'background-color: #F8B862;',
+		2 : 'background-color: #FF0921;',
+		3 : 'background-color: #000;'
+	}
+
+	if request.method == 'GET' and request.user.is_authenticated() :
+
+		t_coupl = []
+		for d in TDroit.objects.filter(id_util = request.user).order_by('id') :
+
+			# J'initialise le tableau des maîtres d'ouvrages (identifiants).
+			if d.id_org_moa :
+				t_org_moa = [rm.id_org_moa_anc.pk for rm in TRegroupementsMoa.objects.filter(id_org_moa_fil = d.id_org_moa)]
+				t_org_moa.append(d.id_org_moa.pk)
+			else :
+				t_org_moa = [m.pk for m in TMoa.objects.all()]
+
+			# J'initialise le tableau des types de programmes (identifiants).
+			if d.id_type_progr :
+				t_type_progr = [d.id_type_progr.pk]
+			else :
+				t_type_progr = [tp.pk for tp in TTypeProgramme.objects.all()]
+
+			# Je prépare le tableau des couples valides en écriture.
+			for i in t_org_moa :
+				for j in t_type_progr :
+					coupl = (i, j)
+					if d.en_ecr == True :
+						t_coupl.append(coupl)
+					else :
+						if coupl in t_coupl :
+							t_coupl.remove(coupl)
+
+		# Je retire les doublons.
+		t_coupl_uniq = set(t_coupl)
+
+		# Je stocke la date du jour.
+		today = datetime.date.today()
+
+		for t in t_coupl_uniq :
+
+			# Je stocke les financements du couple courant avec exclusion si le dossier est soldé.
+			qs_fin = VFinancement.objects.filter(
+				id_doss__id_org_moa = t[0], id_doss__id_progr__id_type_progr = t[1]
+			).exclude(id_doss__id_av__int_av = T_DONN_BDD_STR['AV_SOLDE'])
+
+			for f in qs_fin :
+
+				# Je vérifie l'alerte relative à la date de fin d'éligibilité d'un financement.
+				if f.dt_fin_elig_fin :
+
+					# Je vérifie dans un premier temps si le montant restant à demander est inférieur à un pourcentage
+					# par rapport au montant de participation.
+					if f.mont_rad > f.mont_part_fin * 0.1 :
+
+						# Je vérifie dans un second temps si la date de fin d'éligibilité est proche.
+						diff = (f.dt_fin_elig_fin - today).days
+						if diff <= 60 :
+							alert = {
+								'etat_alert' : [1, t_pr_alert[1]],
+								'int_alert' : 'Fin d\'éligibilité',
+								'descr_alert' : '''
+								Il reste {0} jour(s) avant la date de fin d'éligibilité du financeur « {1} » pour le
+								dossier {2}. Attention, {3} € n'ont pas encore été demandés.
+								'''.format(diff, f.id_org_fin, f.id_doss, obt_mont(f.mont_rad)),
+								'lien_alert' : reverse('cons_doss', args = [f.id_doss.pk])
+							}
+							if diff <= 30 :
+								alert['etat_alert'] = [2, t_pr_alert[2]]
+							if diff <= 15 :
+								alert['etat_alert'] = [3, t_pr_alert[3]]
+
+							# J'empile le tableau des alertes.
+							t_alert.append(alert)
+
+				# Je vérifie l'alerte relative à la date limite du début de l'opération.
+				if f.dt_lim_deb_oper_fin and f.a_inf_fin == 'Non' :
+
+					# Je vérifie si la date limite du début de l'opération est proche.
+					diff = (f.dt_lim_deb_oper_fin - today).days
+					if diff <= 60 :
+						alert = {
+							'etat_alert' : [1, t_pr_alert[1]],
+							'int_alert' : 'Début de l\'opération',
+							'descr_alert' : '''
+							Il reste {0} jour(s) avant la date limite du début de l'opération. Attention, veuillez
+							informer le financeur « {1} » du début de l'opération pour le dossier {2}.
+							'''.format(diff, f.id_org_fin, f.id_doss),
+							'lien_alert' : reverse('modif_fin', args = [f.pk])
+						}
+						if diff <= 30 :
+							alert['etat_alert'] = [2, t_pr_alert[2]]
+						if diff <= 15 :
+							alert['etat_alert'] = [3, t_pr_alert[3]]
+
+						# J'empile le tableau des alertes.
+						t_alert.append(alert)
+
+				# Je vérifie l'alerte relative à la date limite du premier acompte.
+				if f.dt_lim_prem_ac_fin and len(TDemandeVersement.objects.filter(id_fin = f.pk)) == 0 :
+
+					# Je vérifie si la date limite du premier acompte est proche.
+					diff = (f.dt_lim_prem_ac_fin - today).days
+					if diff <= 60 :
+						alert = {
+							'etat_alert' : [1, t_pr_alert[1]],
+							'int_alert' : 'Premier acompte',
+							'descr_alert' : '''
+							Il reste {0} jour(s) avant la date limite du premier acompte. Attention, veuillez effectuer
+							une demande de versement pour le financeur « {1} » du dossier {2}.
+							'''.format(diff, f.id_org_fin, f.id_doss),
+							'lien_alert' : reverse('cons_doss', args = [f.id_doss.pk])
+						}
+						if diff <= 30 :
+							alert['etat_alert'] = [2, t_pr_alert[2]]
+						if diff <= 15 :
+							alert['etat_alert'] = [3, t_pr_alert[3]]
+
+						# J'empile le tableau des alertes.
+						t_alert.append(alert)
+
+	return {
+		'alerts_list' : sorted(t_alert, key = lambda l : (-l['etat_alert'][0], l['int_alert'])),
+		'badge_color' : '#FF0921' if len(t_alert) > 0 else '#82C46C'
+	}

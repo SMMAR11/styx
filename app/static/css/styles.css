@@ -565,15 +565,6 @@ form > fieldset.my-fieldset > div {
 	color: #3770B1;
 }
 
-.my-pull-right a,
-.my-pull-right span {
-	display: inline-block;
-}
-
-.my-pull-right {
-	text-align: right;
-}
-
 ul {
 	margin: 0;
 }
@@ -676,19 +667,19 @@ ul.my-list-style > li:before {
 
 .choose-icon {
 	background-image: url('../pics/icons/choose.png');
-	background-size: 23.7px;
-	-webkit-background-size: 22.7px;
+	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
-	width: 23.7px;
+	width: 20px;
 	height: 20px;
 }
 
 .chosen-icon {
 	background-image: url('../pics/icons/chosen.png');
-	background-size: 23.7px;
-	-webkit-background-size: 22.7px;
+	background-size: 20px;
+	-webkit-background-size: 19px;
 	background-repeat: no-repeat;
-	width: 23.7px;
+	width: 20px;
 	height: 20px;
 }
 
@@ -859,17 +850,17 @@ ul.my-list-style > li:before {
 
 /* Tableaux HTML */
 .my-table {
-	overflow: auto;
 	font-size: 12px;
+	overflow: auto;
 	margin-bottom: 2.5px;
 }
 
 .my-table table.dataTable {
+	border-collapse: collapse;
 	width: calc(100% - 2px);
 }
 
 .my-table table.dataTable.no-footer {
-	border: solid 1px #DDD;
 	box-shadow: none;
 }
 
@@ -879,11 +870,11 @@ ul.my-list-style > li:before {
 }
 
 .my-table thead > tr > th {
-	font-weight: normal;
+	border: solid 1px #DDD;
 	font-style: italic;
-	text-align: justify;
+	font-weight: normal;
 	padding: 2.5px 7.5px;
-	border: none;
+	text-align: center;
 	white-space: nowrap;
 }
 
@@ -899,9 +890,17 @@ ul.my-list-style > li:before {
 	background-color: #2A5485;
 }
 
+.my-table thead > tr > th.unbordered,
+.my-table tbody > tr > td.unbordered {
+	border: none;
+	border-bottom: solid 1px #DDD;
+}
+
 .my-table tbody > tr > td {
+	border: solid 1px #DDD;
 	color: #555;
 	padding: 2.5px 7.5px;
+	text-align: justify;
 }
 
 .my-table tbody > tr {
@@ -923,9 +922,9 @@ ul.my-list-style > li:before {
 
 .my-table .dataTables_wrapper .dataTables_paginate {
 	float: left;
+	padding-top: 5px;
 	text-align: center;
 	width: 100%; 
-	padding-top: 5px;
 }
 
 @media (max-width: 767px) {
@@ -935,31 +934,31 @@ ul.my-list-style > li:before {
 }
 
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button {
-	padding: 2.5px 7.5px;
-	margin-left: 5px;
 	border: solid 1px transparent;
 	border-radius: 0;
+	margin-left: 5px;
+	padding: 2.5px 7.5px;
 }
 
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-	color: #FFF !important;
-	border: solid 1px transparent;
 	background: #2A5485;
+	border: solid 1px transparent;
+	color: #FFF !important;
 }
 
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:active {
-	color: #555 !important;
-	border: solid 1px transparent;
 	background-color: transparent;
+	border: solid 1px transparent;
+	color: #555 !important;
 }
 
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-	color: #FFF !important;
-	border: solid 1px transparent;
 	background: #3770B1;
+	border: solid 1px transparent;
+	color: #FFF !important;
 }
 
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button:active {
@@ -974,7 +973,7 @@ ul.my-list-style > li:before {
 	padding: 2.5px 7.5px;
 	background-color: #3770B1;
 	color: #FFF;
-	border: none;
+	border: solid 1px #DDD;
 	white-space: nowrap;
 }
 

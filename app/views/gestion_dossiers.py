@@ -13,6 +13,7 @@ request : Objet requête
 def index(request) :
 
 	# Imports
+	from app.functions import get_thumbnails_menu
 	from django.http import HttpResponse
 	from django.shortcuts import render
 
@@ -21,7 +22,9 @@ def index(request) :
 	if request.method == 'GET' :
 
 		# J'affiche le template.
-		output = render(request, './gestion_dossiers/main.html', { 'title' : 'Gestion des dossiers' })
+		output = render(request, './gestion_dossiers/main.html', {
+			'menu' : get_thumbnails_menu('gest_doss', 2), 'title' : 'Gestion des dossiers'
+		})
 
 	return output
 
@@ -667,15 +670,6 @@ def cons_doss(request, _d) :
 		o_suivi_doss = VSuiviDossier.objects.get(id_doss = o_doss.pk)
 
 		# Je prépare l'onglet "Caractéristiques".
-		v_axe = o_doss.num_axe
-		if v_axe == None :
-			v_axe = ''
-		v_ss_axe = o_doss.num_ss_axe
-		if v_ss_axe == None :
-			v_ss_axe = ''
-		v_act = o_doss.num_act
-		if v_act == None :
-			v_act = ''
 		t_attrs_doss = {
 			'annee_prev_doss' : { 'label' : 'Année prévisionnelle du dossier', 'value' : o_doss.annee_prev_doss },
 			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
@@ -706,9 +700,11 @@ def cons_doss(request, _d) :
 			},
 			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
 			'id_progr' : { 'label' : 'Programme', 'value' : o_doss.id_progr },
-			'num_axe' : { 'label' : 'Axe', 'value' : v_axe },
-			'num_ss_axe' : { 'label' : 'Sous-axe', 'value' : v_ss_axe },
-			'num_act' : { 'label' : 'Action', 'value' : v_act },
+			'num_axe' : { 'label' : 'Axe', 'value' : str(o_doss.num_axe) if o_doss.num_axe is not None else '' },
+			'num_ss_axe' : {
+				'label' : 'Sous-axe', 'value' : str(o_doss.num_ss_axe) if o_doss.num_ss_axe is not None else ''
+			},
+			'num_act' : { 'label' : 'Action', 'value' : str(o_doss.num_act) if o_doss.num_act is not None else '' },
 			'id_nat_doss' : { 'label' : 'Nature du dossier', 'value' : o_doss.id_nat_doss },
 			'id_type_doss' : { 'label' : 'Type de dossier', 'value' : o_doss.id_type_doss },
 			'id_techn' : { 'label' : 'Agent responsable', 'value' : o_doss.id_techn },
@@ -843,7 +839,7 @@ def cons_doss(request, _d) :
 			'''.format(
 				pmd.id_org_prest.n_org, 
 				pmd.int_prest, 
-				dt_fr(pmd.dt_notif_prest), 
+				dt_fr(pmd.dt_notif_prest) or '-', 
 				obt_mont(VPrestation.objects.get(pk = pmd.pk).mont_prest), 
 				', '.join([(dp.id_doss.num_doss) for dp in TPrestationsDossier.objects.filter(id_prest = pmd).order_by(
 					'id_doss'
@@ -1181,7 +1177,7 @@ def cons_doss(request, _d) :
 				t_ajout_org_prest['comm_org']
 			),
 			'ajout_prest' : '''
-			{0}
+			<form>{0}</form>
 			<div id="za_nvelle_prest">
 				<form action="{1}" enctype="multipart/form-data" name="f_ajout_prest" method="post" onsubmit="soum_f(event)">
 					<input name="csrfmiddlewaretoken" type="hidden" value="{2}">
@@ -1298,6 +1294,7 @@ def cons_doss(request, _d) :
 		# Je déclare un tableau de fenêtres modales.
 		t_fm = [
 			init_fm('ajout_arr', 'Ajouter un arrêté', t_cont_fm['ajout_arr']),
+			init_fm('ajout_fin', 'Ajouter un organisme financier', t_cont_fm['ajout_fin']),
 			init_fm('ajout_ph', 'Ajouter une photo', t_cont_fm['ajout_ph']),
 			init_fm('modif_carto', 'Modifier un dossier'),
 			init_fm('modif_doss_regl', 'Modifier un dossier'),
@@ -1309,7 +1306,6 @@ def cons_doss(request, _d) :
 			t_fm += [	
 				init_fm('ajout_aven', 'Ajouter un avenant'),
 				init_fm('ajout_fact', 'Ajouter une facture', t_cont_fm['ajout_fact']),
-				init_fm('ajout_fin', 'Ajouter un organisme financier', t_cont_fm['ajout_fin']),
 				init_fm('ajout_org_prest', 'Ajouter un prestataire', t_cont_fm['ajout_org_prest']),
 				init_fm('ajout_prest', 'Ajouter/relier une prestation', t_cont_fm['ajout_prest']),
 				init_fm('ger_ddv', 'Ajouter une demande de versement', t_cont_fm['ajout_ddv']),
@@ -4432,15 +4428,6 @@ def impr_doss(request, _d) :
 			ht_ou_ttc = 'TTC'
 
 		# Je prépare le bloc "Caractéristiques".
-		v_axe = o_doss.num_axe
-		if v_axe == None :
-			v_axe = '-'
-		v_ss_axe = o_doss.num_ss_axe
-		if v_ss_axe == None :
-			v_ss_axe = '-'
-		v_act = o_doss.num_act
-		if v_act == None :
-			v_act = '-'
 		t_attrs_doss = {
 			'annee_prev_doss' : {
 				'label' : 'Année prévisionnelle du dossier', 'value' : o_doss.annee_prev_doss or '-'
@@ -4452,9 +4439,11 @@ def impr_doss(request, _d) :
 			},
 			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
 			'id_progr' : { 'label' : 'Programme', 'value' : o_doss.id_progr },
-			'num_axe' : { 'label' : 'Axe', 'value' : v_axe },
-			'num_ss_axe' : { 'label' : 'Sous-axe', 'value' : v_ss_axe },
-			'num_act' : { 'label' : 'Action', 'value' : v_act },
+			'num_axe' : { 'label' : 'Axe', 'value' : str(o_doss.num_axe) if o_doss.num_axe is not None else '' },
+			'num_ss_axe' : {
+				'label' : 'Sous-axe', 'value' : str(o_doss.num_ss_axe) if o_doss.num_ss_axe is not None else ''
+			},
+			'num_act' : { 'label' : 'Action', 'value' : str(o_doss.num_act) if o_doss.num_act is not None else '' },
 			'id_nat_doss' : { 'label' : 'Nature du dossier', 'value' : o_doss.id_nat_doss },
 			'id_type_doss' : { 'label' : 'Type de dossier', 'value' : o_doss.id_type_doss },
 			'id_techn' : { 'label' : 'Agent responsable', 'value' : o_doss.id_techn },

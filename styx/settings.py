@@ -70,7 +70,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'app.context_processors.get_bdd_settings',
-                'app.context_processors.get_menu'
+                'app.context_processors.set_alerts',
+                'app.context_processors.set_menus'
             ],
         },
     },

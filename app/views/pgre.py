@@ -13,6 +13,7 @@ request : Objet requête
 def index(request) :
 
 	# Imports
+	from app.functions import get_thumbnails_menu
 	from django.http import HttpResponse
 	from django.shortcuts import render
 
@@ -21,7 +22,9 @@ def index(request) :
 	if request.method == 'GET' :
 
 		# J'affiche le template.
-		output = render(request, './pgre/main.html', { 'title' : 'Gestion des actions PGRE' })
+		output = render(request, './pgre/main.html', {
+			'menu' : get_thumbnails_menu('pgre', 3), 'title' : 'Gestion des actions PGRE'
+		})
 
 	return output
 

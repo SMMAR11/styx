@@ -70,6 +70,30 @@ def alim_ld(request) :
 	}
 
 '''
+Réinitialisation d'une datatable
+_html : Code HTML
+_datas : Données de sortie sous forme de tableau associatif
+Retourne une réponse HTTP
+'''
+def datatable_reset(_html, _datas = {}) :
+
+	# Imports
+	from bs4 import BeautifulSoup
+	from django.http import HttpResponse
+	import json
+
+	# Possibilité de manier le code HTML
+	html = BeautifulSoup(_html)
+
+	# Initialisation des données de sortie
+	success = { cle : val for cle, val in _datas.items() }
+	success['datatable'] = [[''.join(str(elem) for elem in td.contents if elem != '\n') for td in tr.find_all('td')] \
+	for tr in html.find_all('tbody')[0].find_all('tr')]
+	success['datatable_name'] = html.find_all('div', { 'class' : 'my-table'})[0]['id'][2:]
+
+	return HttpResponse(json.dumps({ 'success' : success }), content_type = 'application/json')
+
+'''
 Cette fonction retourne une date au format français.
 _d : Date convertie
 Retourne une chaîne de caractères
@@ -402,58 +426,178 @@ def ger_droits(_u, _d, _g = True, _h = True) :
 		return trouve
 
 '''
-Cette fonction retourne un menu à vignettes.
-_t : Tableau de vignettes
-_l : Limite par ligne
+Obtention du menu
+Retourne un tableau associatif
+'''
+def get_menu() :
+
+	# Imports
+	from collections import OrderedDict
+	from django.core.urlresolvers import reverse
+
+	output = {
+		'port_cart' : {
+			'mod_name' : 'Portail cartographique',
+			'mod_img' : 'pics/thumbnails/portail_cartographique/main.jpg',
+			'mod_href' : 'http://carto.smmar.fr/styx',
+			'mod_href_blank' : 'target',
+			'mod_items' : [],
+			'mod_rank' : 1
+		},
+		'gest_doss' : {
+			'mod_name' : 'Gestion des dossiers',
+			'mod_img' : 'pics/thumbnails/gestion_dossiers/main.png',
+			'mod_href' : reverse('gest_doss'),
+			'mod_href_blank' : '',
+			'mod_items' : [
+				{
+					'item_name' : 'Créer un dossier',
+					'item_img' : 'pics/thumbnails/gestion_dossiers/add.png',
+					'item_href' : reverse('cr_doss')
+				},
+				{
+					'item_name' : 'Consulter un dossier',
+					'item_img' : 'pics/thumbnails/gestion_dossiers/consult.png',
+					'item_href' : reverse('ch_doss')
+				}
+			],
+			'mod_rank' : 2
+		},
+		'real_etats' : {
+			'mod_name' : 'Réalisation d\'états',
+			'mod_img' : 'pics/thumbnails/realisation_etats/main.png',
+			'mod_href' : reverse('real_etats'),
+			'mod_href_blank' : '',
+			'mod_items' : [
+				{
+					'item_name' : 'En sélectionnant des dossiers',
+					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
+					'item_href' : reverse('select_doss')
+				},
+				{
+					'item_name' : 'En regroupant des dossiers',
+					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
+					'item_href' : reverse('regroup_doss')
+				},
+				{
+					'item_name' : 'En sélectionnant des prestations',
+					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
+					'item_href' : '#'
+				},
+				{ 
+					'item_name' : 'En regroupant des prestations',
+					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
+					'item_href' : '#'
+				}
+			],
+			'mod_rank' : 3
+		},
+		'pgre' : {
+			'mod_name' : 'PGRE',
+			'mod_img' : 'pics/thumbnails/pgre/main.jpg',
+			'mod_href' : reverse('pgre'),
+			'mod_href_blank' : '',
+			'mod_items' : [
+				{
+					'item_name' : 'Créer une action PGRE',
+					'item_img' : 'pics/thumbnails/pgre/add.jpg',
+					'item_href' : reverse('cr_act_pgre')
+				},
+				{
+					'item_name' : 'Consulter une action PGRE',
+					'item_img' : 'pics/thumbnails/pgre/consult.jpg',
+					'item_href' : reverse('ch_act_pgre')
+				},
+				{
+					'item_name' : 'Réalisation d\'états PGRE',
+					'item_img' : 'pics/thumbnails/pgre/realisation_etats.png',
+					'item_href' : '#'
+				}
+			],
+			'mod_rank' : 4
+		}
+	}
+
+	return OrderedDict(sorted(output.items(), key = lambda x : x[1]['mod_rank']))
+
+'''
+Mise en forme d'un menu à vignettes
+_module : Module source (ou __ALL__)
+_lim : Limite de vignettes
 Retourne une chaîne de caractères
 '''
-def get_menu_vign(_t, _l) :
+def get_thumbnails_menu(_module, _lim) :
 
-	# Import
+	# Imports
+	from app.functions import get_menu
+	from django.conf import settings
+	from django.core.urlresolvers import reverse
 	from django.template.defaultfilters import safe
 
-	# Je stocke la longueur du tableau à vignettes.
-	long_t = len(_t)
+	# Gestion des erreurs
+	if type(_lim) is int :
+		if not 0 < _lim < 5 :
+			raise ValueError('La valeur du paramètre _lim doit être comprise dans l\'intervalle ]0; 4].')
+	else :
+		raise ValueError('La valeur du paramètre _lim doit être un nombre entier.')
 
-	# Je stocke le nombre de lignes complètes (lignes comportant "_lim" vignettes).
-	nb_lg = int(long_t / _l)
+	# Stockage du menu
+	menu = get_menu()
 
-	# J'initialise le tableau des lignes (éléments <div/> possédant la classe "row").
-	t_lg = []
+	# Mise en forme d'une vignette
+	thumbnail = '''
+	<a class="custom-thumbnail" href="{}" target="{}">
+		<img src="{}">
+		<div>{}</div>
+	</a>
+	'''
 
-	for i in range(0, nb_lg) :
+	# Initialisation des vignettes
+	if _module in menu.keys() :
+		thumbnails = [thumbnail.format(
+			elem['item_href'],
+			'',
+			settings.STATIC_URL + elem['item_img'],
+			elem['item_name']
+		) for elem in menu[_module]['mod_items']]
+	else :
+		if _module == '__ALL__' :
+			thumbnails = [thumbnail.format(
+				val['mod_href'],
+				val['mod_href_blank'],
+				settings.STATIC_URL + val['mod_img'],
+				val['mod_name']
+			) for key, val in menu.items()]
+		else :
+			thumbnails = []
 
-		# Je stocke l'indice de la première vignette de la ligne courante.
-		ind = i * _l
+	'''
+	Création d'une ligne
+	_array : Tableau source
+	_start : Indice de départ
+	_lim : Limite de vignettes
+	Retourne une chaîne de caractères
+	'''
+	def create_row(_array, _start, _lim) :
+		return '<div class="row">{}</div>'.format(
+			''.join(['<div class="col-sm-{}">{}</div>'.format(
+				'{0:g}'.format(12 / _lim), _array[_start + i]
+			) for i in range(_lim)])
+		)
 
-		# J'initialise et j'empile le tableau des colonnes de la ligne courante.
-		t_col = []
-		for j in range(0, _l) :
-			t_col.append('<div class="col-sm-{0}">{1}</div>'.format(int(12 / _l), _t[ind + j]))
+	# Stockage du nombre de vignettes ainsi que du nombre de vignettes non-assignées à une ligne complète
+	thumbnails__length = len(thumbnails)
+	missing_thumbnails__length = thumbnails__length % _lim
 
-		# J'empile le tableau des lignes.
-		t_lg.append('<div class="row">{0}</div>'.format(''.join(t_col)))
+	# Initialisation des lignes
+	rows = []
+	for i in range(thumbnails__length // _lim) : rows.append(create_row(thumbnails, i * _lim, _lim))
+	if missing_thumbnails__length > 0 :
+		rows.append(
+			create_row(thumbnails, thumbnails__length - missing_thumbnails__length, missing_thumbnails__length)
+		)
 
-	# Je stocke le nombre de vignettes non-assignées.
-	nb_vign_rest = long_t % _l
-
-	if nb_vign_rest > 0 :
-
-		# Je stocke l'indice de la première vignette de la dernière ligne.
-		ind = nb_lg * _l
-
-		# J'initialise et j'empile le tableau des colonnes de la dernière ligne.
-		t_col = []
-		for i in range(0, nb_vign_rest) :
-			t_col.append('<div class="col-sm-{0}">{1}</div>'.format(int(12 / nb_vign_rest), _t[ind + i]))
-
-		# J'empile le tableau des lignes.
-		t_lg.append('<div class="row">{0}</div>'.format(''.join(t_col)))
-
-	# Je prépare le menu à vignettes.
-	menu_vign = '<div class="thumbnails-row">{0}</div>'.format(''.join(t_lg))
-
-	return safe(menu_vign)
+	return safe('<div class="thumbnails-row">{}</div>'.format(''.join(rows)) if len(rows) > 0 else '')
 
 '''
 Obtention d'un gabarit normé pour chaque champ d'un formulaire
@@ -1082,28 +1226,6 @@ def suppr(_v, _m = '') :
 	t_lg.reverse()
 
 	return '<div class="br"></div>'.join(t_lg)
-
-''' 
-Cette fonction supprime les doublons d'un tableau.
-_t : Tableau à traiter
-Retourne un tableau
-'''
-def suppr_doubl(_t) :
-
-	# J'initialise un ensemble vide.
-	t_tupl = set()
-
-	# J'initialise et j'empile le tableau de sortie.
-	t = []
-	for lg in _t :
-		tupl = tuple(lg)
-		if tupl not in t_tupl :
-			t.append(tupl)
-
-			# J'empile le tableau des tuples uniques.
-			t_tupl.add(tupl)
-
-	return t
 
 '''
 Cette fonction vérifie si l'extension d'un fichier uploadé est autorisée.

@@ -161,47 +161,62 @@ class GererDossier(forms.ModelForm) :
 			self.fields['zl_techn'].initial = i.id_techn.pk
 			self.fields['rb_est_ttc_doss'].initial = i.est_ttc_doss
 
-			if i.num_axe is not None :
+			# Stockage des axes du programme
+			axes = [(a.pk, a.num_axe) for a in TAxe.objects.filter(id_progr = i.id_progr)]
 
-				# J'alimente la liste déroulante des axes.
-				t_axe = [(a.pk, a.num_axe) for a in TAxe.objects.filter(id_progr = i.id_progr)]
-				t_axe.insert(0, DEFAULT_OPTION)
-				self.fields['zl_axe'].choices = t_axe
+			if len(axes) > 0 :
 
-				# Je pointe vers l'objet TAxe.
-				o_axe = TAxe.objects.get(id_progr = i.id_progr, num_axe = i.num_axe).pk
+				# Définition des choix de la liste déroulante des axes
+				axes.insert(0, DEFAULT_OPTION)
+				self.fields['zl_axe'].choices = axes
 
-				# J'affiche le contrôle en sélectionnant l'axe de l'instance.
-				self.fields['zl_axe'].initial = o_axe
+				# Affichage de la liste déroulante
 				self.fields['zl_axe'].widget.attrs['class'] += ' show-field'
 
-				if i.num_ss_axe is not None :
+				if i.num_axe is not None :
 
-					# J'alimente la liste déroulante des sous-axes.
-					t_ss_axe = [(sa.pk, sa.num_ss_axe) for sa in TSousAxe.objects.filter(id_axe = o_axe)]
-					t_ss_axe.insert(0, DEFAULT_OPTION)
-					self.fields['zl_ss_axe'].choices = t_ss_axe
+					# Obtention d'une instance TAxe
+					obj_axe = TAxe.objects.get(id_progr = i.id_progr, num_axe = i.num_axe)
 
-					# Je pointe vers l'objet TSousAxe.
-					o_ss_axe = TSousAxe.objects.get(id_axe = o_axe, num_ss_axe = i.num_ss_axe).pk
+					# Affichage de la valeur initiale
+					self.fields['zl_axe'].initial = obj_axe.pk
 
-					# J'affiche le contrôle en sélectionnant le sous-axe de l'instance.
-					self.fields['zl_ss_axe'].initial = o_ss_axe
-					self.fields['zl_ss_axe'].widget.attrs['class'] += ' show-field'
+					# Stockage des sous-axes de l'axe
+					ss_axes = [(sa.pk, sa.num_ss_axe) for sa in TSousAxe.objects.filter(id_axe = obj_axe)]
 
-					if i.num_act is not None :
+					if len(ss_axes) > 0 :
 
-						# J'alimente la liste déroulante des actions.
-						t_act = [(a.pk, a.num_act) for a in TAction.objects.filter(id_ss_axe = o_ss_axe)]
-						t_act.insert(0, DEFAULT_OPTION)
-						self.fields['zl_act'].choices = t_act
+						# Définition des choix de la liste déroulante des sous-axes
+						ss_axes.insert(0, DEFAULT_OPTION)
+						self.fields['zl_ss_axe'].choices = ss_axes
 
-						# Je pointe vers l'objet TAction.
-						o_act = TAction.objects.get(id_ss_axe = o_ss_axe, num_act = i.num_act).pk
+						# Affichage de la liste déroulante
+						self.fields['zl_ss_axe'].widget.attrs['class'] += ' show-field'
 
-						# J'affiche le contrôle en sélectionnant l'action de l'instance.
-						self.fields['zl_act'].initial = o_act
-						self.fields['zl_act'].widget.attrs['class'] += ' show-field'
+						if i.num_ss_axe is not None :
+
+							# Obtention d'une instance TSousAxe
+							obj_ss_axe = TSousAxe.objects.get(id_axe = obj_axe, num_ss_axe = i.num_ss_axe)
+
+							# Affichage de la valeur initiale
+							self.fields['zl_ss_axe'].initial = obj_ss_axe.pk
+
+							# Stockage des actions du sous-axe
+							acts = [(a.pk, a.num_act) for a in TAction.objects.filter(id_ss_axe = obj_ss_axe)]
+
+							if len(acts) > 0 :
+
+								# Définition des choix de la liste déroulante des actions
+								acts.insert(0, DEFAULT_OPTION)
+								self.fields['zl_act'].choices = acts
+
+								# Affichage de la liste déroulante
+								self.fields['zl_act'].widget.attrs['class'] += ' show-field'
+
+								# Affichage de la valeur initiale
+								if i.num_ss_axe is not None :
+									self.fields['zl_act'].initial = \
+									TAction.objects.get(id_ss_axe = obj_ss_axe, num_act = i.num_act).pk
 
 			# Je vérifie si certains champs doivent bénéficier ou non de la lecture seule.
 			if i.id_av.int_av in [T_DONN_BDD_STR['AV_EP'], T_DONN_BDD_STR['AV_ABAND']] :

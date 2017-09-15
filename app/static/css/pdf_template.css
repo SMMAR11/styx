@@ -41,6 +41,7 @@ div[class^="pdf-title-"] {
 }
 
 .pdf-lg {
+	display: inline-block;
 	width: 100%;
 }
 
@@ -53,7 +54,7 @@ div[class^="pdf-col-"] {
 }
 
 .pdf-col-2 {
-	width: 16.66666667%;
+	width: calc(100% / 6);
 }
 
 /* Tableaux HTML */

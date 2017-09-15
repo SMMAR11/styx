@@ -14,9 +14,9 @@
 			</tr>
 		</thead>
 		<tbody>
-			{% for a in t_alert %}
+			{% for a in alerts_list %}
 			<tr>
-				<td class="text-center"><span class="my-badge" style="background-color: {{ a.etat_alert }};"></span></td>
+				<td class="text-center"><span class="my-badge" style="{{ a.etat_alert.1 }}"></span></td>
 				<td>{{ a.int_alert }}</td>
 				<td>{{ a.descr_alert }}</td>
 				<td><a href="{{ a.lien_alert }}">{{ a.lien_alert }}</a></td>

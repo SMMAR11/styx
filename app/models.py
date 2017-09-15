@@ -548,7 +548,7 @@ class TDossier(models.Model) :
     num_axe = models.IntegerField(blank = True, null = True)
     num_doss = models.CharField(max_length = 255, unique = True)
     num_ss_axe = models.IntegerField(blank = True, null = True)
-    id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING)
+    id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, verbose_name = 'Programme')
     id_av = models.ForeignKey(TAvancement, models.DO_NOTHING, verbose_name = 'État d\'avancement')
     id_av_cp = models.ForeignKey(
         TAvisCp, 
@@ -558,11 +558,11 @@ class TDossier(models.Model) :
     )
     id_doss_ass = models.ForeignKey('self', models.DO_NOTHING, blank = True, null = True)
     id_fam = models.ForeignKey(TFamille, models.DO_NOTHING)
-    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING)
+    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, verbose_name = 'Nature du dossier')
     id_org_moa = models.ForeignKey(TMoa, models.DO_NOTHING)
     id_sage = models.ForeignKey(TSage, models.DO_NOTHING, blank = True, null = True, verbose_name = 'SAGE')
-    id_techn = models.ForeignKey(TTechnicien, models.DO_NOTHING)
-    id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING)
+    id_techn = models.ForeignKey(TTechnicien, models.DO_NOTHING, verbose_name = 'Agent responsable')
+    id_type_doss = models.ForeignKey(TTypeDossier, models.DO_NOTHING, verbose_name = 'Type de dossier')
     type_decl = models.ManyToManyField(TTypeDeclaration, through = 'TArretesDossier')
     annee_prev_doss = models.IntegerField(blank = True, null = True, verbose_name = 'Année prévisionnelle du dossier')
 

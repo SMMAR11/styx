@@ -223,22 +223,48 @@ function html_ds_fm(_e, _s)
 }
 
 /**
- * Cette fonction permet l'initialisation d'une datatable.
- * _d : Datatable à initialiser
- * _t : Tableau d'options
- * Retourne un objet "datatable"
+ * Initialisation d'une datatable
+ * _id : Identifiant
+ * _params : Paramètres sous forme de tableau associatif
+ * Retourne un objet datatable
  */
-function init_datat(_d, _t = [false, [], []]) {
+function init_datat(_id, _params = {}) {
+
+	// Initialisation des paramètres
+	var params = { 'autofit' : [], 'paging' : false, 'unbordered' : [], 'unsorting' : [] };
+	for (cle in _params) {
+		params[cle] = _params[cle];
+	}
 
 	// Ajustement dynamique de certaines colonnes
-	$(_d + ' table th').each(function(_index) {
-		if ($.inArray(_index, _t[2]) > -1) {
-			$(this).css({ 'width' : '1%' });
+	if ($.isArray(params['autofit']) == true) {
+		$(_id + ' table tr:first-child th').each(function(_index) {
+			if ($.inArray(_index, params['autofit']) > -1) {
+				$(this).css({ 'width' : '1%' });
+			}
+		});
+	}
+	else {
+		if (params['autofit'] == '__LAST__') {
+			$(_id + ' table tr:first-child th').last().css({ 'width' : '1%' });
 		}
-	});
+	}
 
-	return $(_d).find('table').DataTable({
-		'aoColumnDefs' : [{ 'aTargets' : _t[1], 'bSortable' : false }],
+	// Détermination du paramètre unsorting
+	var unsorting = params['unsorting'];
+	if ($.isArray(unsorting) == false && unsorting == '__LAST__') {
+
+		// Fonctionne sur deux <tr/> (à voir sur 3 ou plus...)
+		var ths = $(_id + ' table th').length - $(_id + ' table th[colspan]').length;
+		unsorting = [ths - 1];
+	}
+
+	return $(_id + ' table').DataTable({
+		'aoColumnDefs' : [{
+			'aTargets' : unsorting, 'bSortable' : false
+		}, {
+			className : 'unbordered', 'targets' : params['unbordered']
+		}],
 		'autoWidth' : false,
 		'info' : false,
 		'language' : {
@@ -246,9 +272,9 @@ function init_datat(_d, _t = [false, [], []]) {
 			'lengthMenu': 'Afficher _MENU_ enregistrements',
 			'paginate' : { 'next' : 'Suivant', 'previous' : 'Précédent' }
 		},
-		'lengthMenu' : [[-1, 10, 25, 50], ['---------', 10, 25, 50]],
+		'lengthMenu' : [[-1, 5, 10, 25, 50], ['---------', 5, 10, 25, 50]],
 		'order' : [],
-		'paging' : _t[0],
+		'paging' : params['paging'],
 		'searching' : false
 	});
 }
@@ -409,22 +435,85 @@ function soum_f(_e, _s = function(){}, _t = []) {
 					// Je traite le cas où je dois ajouter un "pied de datatable".
 					if (data['success']['datatable_tfoot']) {
 
-						// Je vide le "pied de datatable".
-						$('#t_' + suff_datat).find('tfoot').empty();
+						// Suppression du pied
+						$('#t_' + suff_datat + ' tfoot').remove();
 
 						if (data['success']['datatable'].length > 0) {
 
-							// Je prépare le "pied de datatable".
-							var tr = $('<tr/>');
-							for (var i = 0; i < data['success']['datatable_tfoot'].length; i += 1) {
-								var td = $('<td/>', { html : data['success']['datatable_tfoot'][i] });
-								tr.append(td);
+							// Initialisation des indices qui contiendront une valeur dans le pied
+							var indices = [];
+							var tab = data['success']['datatable_tfoot'];
+							var i = tab.indexOf(true);
+							while (i != -1) {
+								indices.push(i);
+								i = tab.indexOf(true, i + 1);
 							}
 
-							// J'affiche le "pied de datatable" actualisé.
-							$('#t_' + suff_datat).find('tfoot').append(tr);
+							// Bornage des indices
+							var indices_td = indices;
+							indices_td.unshift(0);
+							if ($.inArray(tab.length, indices_td) == -1) {
+								indices_td.push(tab.length);
+							}
+
+							// Préparation du pied
+							var tr = $('<tr/>');
+							for (var i = 0; i < indices_td.length; i += 1) {
+
+								// Stockage des éléments i et i+1
+								var i_1 = indices_td[i];
+								var i_2 = indices_td[i + 1];
+
+								if (i_2 != undefined) {
+
+									// Initialisation du contenu de la balise <td/>
+									var html = 0;
+
+									if (i == 0) {
+										html = 'Total'; // Contenu de la première balise <td/>
+									}
+									else {
+
+										// Bouclage sur toutes les balises <tr/> du <tbody/>
+										$('#t_' + suff_datat + ' tbody tr').each(function() {
+
+											// Récupération du contenu
+											var val = $(this).find('td:eq(' + i_1 + ')').text();
+
+											// Suppression des espaces (str <-> float)
+											val = val.replace(' ', '');
+
+											// Somme sur la colonne
+											html += parseFloat(val);
+										});
+									}
+
+									// Mise en place d'un séparateur de milliers
+									if ($.type(html) == 'number') {
+										var l;
+										while ((
+											l = html.toString().replace(/(\d)([\d]{3})(\.|\s|\b)/,"$1 $2$3"
+										)) && l != html) {
+											html = l;
+										}
+									}
+
+									// Empilement des balises <td/>
+									tr.append($('<td/>', { 'colspan' : i_2 - i_1, html : html }));
+								}
+							}
+
+							// Affichage du pied
+							var tfoot = $('<tfoot/>');
+							tfoot.append(tr);
+							tfoot.insertAfter($('#t_' + suff_datat + ' tbody'));
 						}
 					}
+
+				// Remplacement de texte
+				if (data['success']['replace']) {
+					$(data['success']['replace'][0]).text(data['success']['replace'][1]);
+				}
 
 					// J'applique les styles.
 					_s();
