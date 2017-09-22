@@ -511,7 +511,7 @@ def get_menu() :
 				{
 					'item_name' : 'Réalisation d\'états PGRE',
 					'item_img' : 'pics/thumbnails/pgre/realisation_etats.png',
-					'item_href' : '#'
+					'item_href' : reverse('select_act_pgre')
 				}
 			],
 			'mod_rank' : 4

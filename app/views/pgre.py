@@ -1351,3 +1351,103 @@ def suppr_pdc(request, _p) :
 		)
 
 	return output
+
+'''
+Affichage du formulaire de réalisation d'un état "action PGRE" ou traitement d'une requête quelconque
+_req : Objet "requête"
+'''
+@verif_acc
+def filtr_act_pgre(_req) :
+
+	# Imports
+	from app.forms.pgre import FiltrerActionsPgre
+	from app.functions import datatable_reset
+	from app.functions import dt_fr
+	from app.functions import gen_cdc
+	from app.models import TDossierPgre
+	from django.http import HttpResponse
+	from django.shortcuts import render
+	import csv
+	import json
+
+	output = None
+
+	if _req.method == 'GET' :
+		if 'action' in _req.GET :
+			if _req.GET['action'] == 'exporter-csv' :
+
+				# Génération d'un fichier au format CSV
+				output = HttpResponse(content_type = 'text/csv', charset = 'cp1252')
+				output['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(gen_cdc())
+
+				# Accès en écriture
+				writer = csv.writer(output, delimiter = ';')
+
+				# Initialisation des données "historique"
+				donnees = _req.session.get('filtr_act_pgre') if 'filtr_act_pgre' in _req.session else []
+
+				# Définition de l'en-tête
+				writer.writerow([
+					'Numéro de l\'action PGRE',
+					'Intitulé de l\'action PGRE',
+					'Instance de concertation',
+					'Atelier(s) concerné(s)',
+					'Dossier de correspondance',
+					'Maître(s) d\'ouvrage(s)',
+					'Priorité',
+					'Objectifs d\'économie de la ressource en eau (en m3)',
+					'Année prévisionnelle du début de l\'action PGRE',
+					'Date de début de l\'action PGRE',
+					'Date de fin de l\'action PGRE',
+					'Nature de l\'action PGRE',
+					'État d\'avancement',
+					'Commentaire'
+				])
+
+				for dpgre in TDossierPgre.objects.filter(pk__in = donnees) :
+
+					# Ajout d'une nouvelle ligne
+					writer.writerow([
+						dpgre.num_doss_pgre,
+						dpgre.int_doss_pgre,
+						dpgre.id_ic_pgre,
+						', '.join([str(apgre) for apgre in dpgre.atel_pgre.all()]),
+						dpgre.id_doss,
+						', '.join([str(m) for m in dpgre.moa.all()]),
+						dpgre.id_pr_pgre,
+						dpgre.obj_econ_ress_doss_pgre,
+						dpgre.ann_prev_deb_doss_pgre,
+						dt_fr(dpgre.dt_deb_doss_pgre),
+						dt_fr(dpgre.dt_fin_doss_pgre),
+						dpgre.id_nat_doss,
+						dpgre.id_av_pgre,
+						dpgre.comm_doss_pgre
+					])
+
+		else :
+
+			# Initialisation de la variable "historique"
+			_req.session['filtr_act_pgre'] = []
+
+			# Initialisation du formulaire et de ses attributs
+			form_filtr_act_pgre = FiltrerActionsPgre()
+
+			# Affichage du template
+			output = render(_req, './pgre/filtr_act_pgre.html', {
+				'dtab_filtr_act_pgre' : form_filtr_act_pgre.get_datatable(_req),
+				'form_filtr_act_pgre' : form_filtr_act_pgre.get_form(_req),
+				'title' : 'Réalisation d\'états PGRE en sélectionnant des actions PGRE'
+			})
+
+	else :
+
+		# Soumission du formulaire
+		form_filtr_act_pgre = FiltrerActionsPgre(_req.POST)
+
+		# Rafraîchissement de la datatable ou affichage des erreurs
+		if form_filtr_act_pgre.is_valid() :
+			output = datatable_reset(form_filtr_act_pgre.get_datatable(_req))
+		else :
+			output = HttpResponse(json.dumps(form_filtr_act_pgre.errors), content_type = 'application/json')
+
+	return output

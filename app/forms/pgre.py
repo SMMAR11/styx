@@ -384,3 +384,294 @@ class ChoisirActionPgre(forms.Form) :
 		t_nat_doss = [(nd.pk, nd) for nd in TNatureDossier.objects.filter(peu_doss_pgre = True)]
 		t_nat_doss.insert(0, DEFAULT_OPTION)
 		self.fields['zl_nat_doss'].choices = t_nat_doss
+
+class FiltrerActionsPgre(forms.ModelForm) :
+
+	# Import
+	from app.models import TProgramme
+
+	# Champs
+	cbsm_atel_pgre = forms.MultipleChoiceField(
+		label = 'Atelier(s) concerné(s)|Nom|__zcc__', required = False, widget = forms.SelectMultiple()
+	)
+	zl_progr = forms.ModelChoiceField(
+		label = 'Programme du dossier de correspondance', queryset = TProgramme.objects.all(), required = False
+	)
+	cbsm_org_moa = forms.MultipleChoiceField(
+		label = 'Maître(s) d\'ouvrage(s)|Nom|__zcc__', required = False, widget = forms.SelectMultiple()
+	)
+	zs_obj_econ_min_ress_doss_pgre = forms.FloatField(
+		label = '',
+		required = False,
+		widget = forms.NumberInput(attrs = { 'placeholder' : '- infini par défaut' })
+	)
+	zs_obj_econ_max_ress_doss_pgre = forms.FloatField(
+		label = '',
+		required = False,
+		widget = forms.NumberInput(attrs = { 'placeholder' : 'infini par défaut' })
+	)
+	zs_ann_prev_min_deb_doss_pgre = forms.IntegerField(
+		label = '', required = False, widget = forms.NumberInput(attrs = { 'placeholder' : 'De' })
+	)
+	zs_ann_prev_max_deb_doss_pgre = forms.IntegerField(
+		label = '', required = False, widget = forms.NumberInput(attrs = { 'placeholder' : 'à' })
+	)
+	zd_dt_deb_min_doss_pgre = forms.DateField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'Du' })
+	)
+	zd_dt_deb_max_doss_pgre = forms.DateField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'au' })
+	)
+	zd_dt_fin_min_doss_pgre = forms.DateField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'Du' })
+	)
+	zd_dt_fin_max_doss_pgre = forms.DateField(
+		label = '',
+		required = False,
+		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'au' })
+	)
+	cb_ajout_select_exist = forms.BooleanField(
+		label = 'Ajouter à la sélection existante', required = False, widget = forms.CheckboxInput()
+	)
+
+	class Meta :
+
+		# Import
+		from app.models import TDossierPgre
+
+		fields = [
+			'id_av_pgre',
+			'id_ic_pgre',
+			'id_nat_doss',
+			'id_pr_pgre'
+		]
+		model = TDossierPgre
+
+	def __init__(self, *args, **kwargs) :
+
+		# Imports
+		from app.models import TAtelierPgre
+		from app.models import TMoa
+
+		super(FiltrerActionsPgre, self).__init__(*args, **kwargs)
+
+		# Passage des champs requis à l'état non-requis
+		for elem in list(self.fields) : self.fields[elem].required = False
+
+		init_mess_err(self)
+
+		# Définition des choix de certaines listes déroulantes
+		self.fields['cbsm_atel_pgre'].choices = \
+		[[apgre.pk, '|'.join([str(apgre), '__zcc__'])] for apgre in TAtelierPgre.objects.all()]
+		self.fields['cbsm_org_moa'].choices = [[m.pk, '|'.join([str(m), '__zcc__'])] for m in TMoa.objects.filter(
+			peu_doss_pgre = True, en_act_doss_pgre = True
+		)]
+
+	def get_form(self, _req) :
+
+		# Imports
+		from app.functions import init_f
+		from django.template.context_processors import csrf
+
+		form = init_f(self)
+
+		return '''
+		<form action="" method="post" name="f_filtr_act_pgre" onsubmit="soum_f(event);">
+			<input name="csrfmiddlewaretoken" type="hidden" value="{}">
+			<fieldset class="my-fieldset">
+				<legend>Rechercher par</legend>
+				<div>
+					{}
+					{}
+					{}
+					{}
+					{}
+					Objectifs d'économie de la ressource en eau compris entre (en m<sup>3</sup>)
+					<div class="row">
+						<div class="col-xs-6">{}</div>
+						<div class="col-xs-6">{}</div>
+					</div>
+					Année prévisionnelle du début de l'action PGRE
+					<div class="row">
+						<div class="col-xs-6">{}</div>
+						<div class="col-xs-6">{}</div>
+					</div>
+					Période de début de l'action PGRE
+					<div class="row">
+						<div class="col-xs-6">{}</div>
+						<div class="col-xs-6">{}</div>
+					</div>
+					Période de fin de l'action PGRE
+					<div class="row">
+						<div class="col-xs-6">{}</div>
+						<div class="col-xs-6">{}</div>
+					</div>
+					{}
+					{}
+					<div class="checkboxes-group">{}</div>
+					<div class="buttons-group">
+						<button class="green-btn my-btn" type="reset">Réinitialiser</button>
+						<button class="green-btn my-btn" type="submit">Valider</button>
+					</div>
+				</div>
+			</fieldset>
+		</form>
+		'''.format(
+			csrf(_req)['csrf_token'],
+			form['id_ic_pgre'],
+			form['cbsm_atel_pgre'],
+			form['zl_progr'],
+			form['cbsm_org_moa'],
+			form['id_pr_pgre'],
+			form['zs_obj_econ_min_ress_doss_pgre'],
+			form['zs_obj_econ_max_ress_doss_pgre'],
+			form['zs_ann_prev_min_deb_doss_pgre'],
+			form['zs_ann_prev_max_deb_doss_pgre'],
+			form['zd_dt_deb_min_doss_pgre'],
+			form['zd_dt_deb_max_doss_pgre'],
+			form['zd_dt_fin_min_doss_pgre'],
+			form['zd_dt_fin_max_doss_pgre'],
+			form['id_nat_doss'],
+			form['id_av_pgre'],
+			form['cb_ajout_select_exist']
+		)
+
+	def get_datatable(self, _req, *args, **kwargs) :
+
+		# Imports
+		from app.functions import dt_fr
+		from app.models import TDossierPgre
+		from django.core.urlresolvers import reverse
+
+		# Stockage des données du formulaire
+		if _req.method == 'GET' :
+			val_ic_pgre = self.fields['id_ic_pgre'].initial
+			val_atel_pgre = self.fields['cbsm_atel_pgre'].initial
+			val_progr = self.fields['zl_progr'].initial
+			val_org_moa = self.fields['cbsm_org_moa'].initial
+			val_pr_pgre = self.fields['id_pr_pgre'].initial
+			val_obj_econ_min_ress_doss_pgre = self.fields['zs_obj_econ_min_ress_doss_pgre'].initial
+			val_obj_econ_max_ress_doss_pgre = self.fields['zs_obj_econ_max_ress_doss_pgre'].initial
+			val_ann_prev_min_deb_doss_pgre = self.fields['zs_ann_prev_min_deb_doss_pgre'].initial
+			val_ann_prev_max_deb_doss_pgre = self.fields['zs_ann_prev_max_deb_doss_pgre'].initial
+			val_dt_deb_min_doss_pgre = self.fields['zd_dt_deb_min_doss_pgre'].initial
+			val_dt_deb_max_doss_pgre = self.fields['zd_dt_deb_max_doss_pgre'].initial
+			val_dt_fin_min_doss_pgre = self.fields['zd_dt_fin_min_doss_pgre'].initial
+			val_dt_fin_max_doss_pgre = self.fields['zd_dt_fin_max_doss_pgre'].initial
+			val_nat_doss = self.fields['id_nat_doss'].initial
+			val_av_pgre = self.fields['id_av_pgre'].initial
+			val_ajout_select_exist = self.fields['cb_ajout_select_exist'].initial
+		else :
+			cleaned_data = self.cleaned_data
+			val_ic_pgre = cleaned_data.get('id_ic_pgre')
+			val_atel_pgre = cleaned_data.get('cbsm_atel_pgre')
+			val_progr = cleaned_data.get('zl_progr')
+			val_org_moa = cleaned_data.get('cbsm_org_moa')
+			val_pr_pgre = cleaned_data.get('id_pr_pgre')
+			val_obj_econ_min_ress_doss_pgre = cleaned_data.get('zs_obj_econ_min_ress_doss_pgre')
+			val_obj_econ_max_ress_doss_pgre = cleaned_data.get('zs_obj_econ_max_ress_doss_pgre')
+			val_ann_prev_min_deb_doss_pgre = cleaned_data.get('zs_ann_prev_min_deb_doss_pgre')
+			val_ann_prev_max_deb_doss_pgre = cleaned_data.get('zs_ann_prev_max_deb_doss_pgre')
+			val_dt_deb_min_doss_pgre = cleaned_data.get('zd_dt_deb_min_doss_pgre')
+			val_dt_deb_max_doss_pgre = cleaned_data.get('zd_dt_deb_max_doss_pgre')
+			val_dt_fin_min_doss_pgre = cleaned_data.get('zd_dt_fin_min_doss_pgre')
+			val_dt_fin_max_doss_pgre = cleaned_data.get('zd_dt_fin_max_doss_pgre')
+			val_nat_doss = cleaned_data.get('id_nat_doss')
+			val_av_pgre = cleaned_data.get('id_av_pgre')
+			val_ajout_select_exist = cleaned_data.get('cb_ajout_select_exist')
+
+		# Initialisation des conditions de la requête
+		ands = {}
+
+		# Préparation des conditions
+		if val_ic_pgre : ands['id_ic_pgre'] = val_ic_pgre
+		if val_atel_pgre : ands['tatelierspgredossierpgre__id_atel_pgre__in'] = val_atel_pgre
+		if val_progr : ands['id_doss__id_progr'] = val_progr
+		if val_org_moa : ands['tmoadossierpgre__id_org_moa__in'] = val_org_moa
+		if val_pr_pgre : ands['id_pr_pgre'] = val_pr_pgre
+		if val_obj_econ_min_ress_doss_pgre is not None :
+			ands['obj_econ_ress_doss_pgre__gte'] = val_obj_econ_min_ress_doss_pgre
+		if val_obj_econ_max_ress_doss_pgre is not None :
+			ands['obj_econ_ress_doss_pgre__lte'] = val_obj_econ_max_ress_doss_pgre
+		if val_ann_prev_min_deb_doss_pgre is not None :
+			ands['ann_prev_deb_doss_pgre__gte'] = val_ann_prev_min_deb_doss_pgre
+		if val_ann_prev_max_deb_doss_pgre is not None :
+			ands['ann_prev_deb_doss_pgre__lte'] = val_ann_prev_max_deb_doss_pgre
+		if val_dt_deb_min_doss_pgre : ands['dt_deb_doss_pgre__gte'] = val_dt_deb_min_doss_pgre
+		if val_dt_deb_max_doss_pgre : ands['dt_deb_doss_pgre__lte'] = val_dt_deb_max_doss_pgre
+		if val_dt_fin_min_doss_pgre : ands['dt_fin_doss_pgre__gte'] = val_dt_fin_min_doss_pgre
+		if val_dt_fin_max_doss_pgre : ands['dt_fin_doss_pgre__lte'] = val_dt_fin_max_doss_pgre
+		if val_nat_doss : ands['id_nat_doss'] = val_nat_doss
+		if val_av_pgre : ands['id_av_pgre'] = val_av_pgre
+
+		# Préparation du jeu de données des actions PGRE
+		qs_doss_pgre = TDossierPgre.objects.filter(**ands) if len(ands) > 0 else TDossierPgre.objects.none()
+
+		# Réinitialisation de la variable "historique" si l'option "Ajouter à la sélection existante" n'est pas cochée
+		if not val_ajout_select_exist : _req.session['filtr_act_pgre'] = []
+
+		# Empilement de la variable "historique"
+		_req.session['filtr_act_pgre'] += [dpgre.pk for dpgre in qs_doss_pgre]
+
+		# Initialisation des balises <tr/>
+		trs = []
+
+		for dpgre in TDossierPgre.objects.filter(pk__in = _req.session.get('filtr_act_pgre')) :
+
+			# Préparation des colonnes
+			tds = [
+				dpgre.num_doss_pgre,
+				dpgre.int_doss_pgre,
+				dpgre.id_ic_pgre,
+				', '.join([str(apgre) for apgre in dpgre.atel_pgre.all()]),
+				dpgre.id_doss or '-',
+				', '.join([str(m) for m in dpgre.moa.all()]),
+				dpgre.id_pr_pgre,
+				'{0:g}'.format(dpgre.obj_econ_ress_doss_pgre),
+				dpgre.ann_prev_deb_doss_pgre,
+				dt_fr(dpgre.dt_deb_doss_pgre) or '-',
+				dt_fr(dpgre.dt_fin_doss_pgre) or '-',
+				dpgre.id_nat_doss,
+				dpgre.id_av_pgre,
+				'<a href="{0}" class="consult-icon pull-right" title="Consulter l\'action PGRE"></a>'.format(
+					reverse('cons_act_pgre', args = [dpgre.pk])
+				)
+			]
+
+			# Empilement des balises <tr/>
+			trs.append('<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(td) for td in tds])))
+
+		return '''
+		<div class="my-table" id="t_select_act_pgre">
+			<table>
+				<thead>
+					<tr>
+						<th rowspan="2">N° de l'action PGRE</th>
+						<th rowspan="2">Intitulé de l'action PGRE</th>
+						<th rowspan="2">Instance de concertation</th>
+						<th rowspan="2">Atelier(s) concerné(s)</th>
+						<th rowspan="2">Dossier de correspondance</th>
+						<th rowspan="2">Maître(s) d'ouvrage(s)</th>
+						<th rowspan="2">Priorité</th>
+						<th rowspan="2">Objectifs d'économie de la ressource en eau (en m<sup>3</sup>)</th>
+						<th rowspan="2">Année prévisionnelle du début de l'action PGRE</th>
+						<th colspan="2">Dates de l'action PGRE</th>
+						<th rowspan="2">Nature de l'action PGRE</th>
+						<th rowspan="2">État d'avancement</th>
+						<th rowspan="2"></th>
+					</tr>
+					<tr>
+						<th>Début</th>
+						<th>Fin</th>
+					</tr>
+				</thead>
+				<tbody>{}</tbody>
+			</table>
+		</div>
+		'''.format(''.join(trs))

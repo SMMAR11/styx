@@ -105,7 +105,8 @@ urlpatterns = [
     url(r'^modules/pgre/modifier-photo/([0-9]+)/$', pgre.modif_ph_pgre, name = 'modif_ph_pgre'),
     url(r'^modules/pgre/supprimer-photo/([0-9]+)/$', pgre.suppr_ph_pgre, name = 'suppr_ph_pgre'),
     url(r'^modules/pgre/modifier-point-de-controle/([0-9]+)/$', pgre.modif_pdc, name = 'modif_pdc'),
-    url(r'^modules/pgre/supprimer-point-de-controle/([0-9]+)/$', pgre.suppr_pdc, name = 'suppr_pdc')
+    url(r'^modules/pgre/supprimer-point-de-controle/([0-9]+)/$', pgre.suppr_pdc, name = 'suppr_pdc'),
+    url(r'^modules/pgre/selectionner-actions-pgre/$', pgre.filtr_act_pgre, name = 'select_act_pgre')
 ]
 
 handler403 = main.h_403

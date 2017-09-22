@@ -1257,7 +1257,7 @@ class TDossierPgre(models.Model) :
     )
     id_pr_pgre = models.ForeignKey(TPrioritePgre, models.DO_NOTHING, verbose_name = 'Priorité')
     id_av_pgre = models.ForeignKey(TAvancementPgre, models.DO_NOTHING, verbose_name = 'État d\'avancement')
-    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING)
+    id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, verbose_name = 'Nature de l\'action PGRE')
     atel_pgre = models.ManyToManyField(TAtelierPgre, through = 'TAteliersPgreDossierPgre')
     moa = models.ManyToManyField(TMoa, through = 'TMoaDossierPgre')
 

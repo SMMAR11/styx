@@ -71,6 +71,14 @@ fieldset.my-div-fieldset > div {
 	background-color: #C7944F;
 }
 
+.buttons-group {
+	text-align: center;
+}
+
+.buttons-group button {
+	display: inline-block;
+}
+
 /* Calendriers */
 .datepicker {
 	border-radius: 0;

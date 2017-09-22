@@ -180,7 +180,6 @@ class FiltrerDossiers(forms.ModelForm) :
 
 		# Imports
 		from app.functions import init_f
-		from app.models import TDossier
 		from django.template.context_processors import csrf
 
 		form = init_f(self)
@@ -228,7 +227,10 @@ class FiltrerDossiers(forms.ModelForm) :
 						{}
 					</div>
 					{}
-					<button class="center-block green-btn my-btn" type="submit">Valider</button>
+					<div class="buttons-group">
+						<button class="green-btn my-btn" type="reset">Réinitialiser</button>
+						<button class="green-btn my-btn" type="submit">Valider</button>
+					</div>
 				</div>
 			</fieldset>
 		</form>
@@ -264,7 +266,6 @@ class FiltrerDossiers(forms.ModelForm) :
 
 		# Imports
 		from app.functions import dt_fr
-		from app.functions import obt_doss_regr
 		from app.functions import obt_mont
 		from app.models import TAvancement
 		from app.models import TAvisCp
@@ -334,48 +335,54 @@ class FiltrerDossiers(forms.ModelForm) :
 			val_ajout_select_exist = cleaned_data.get('cb_ajout_select_exist')
 			val_gby = cleaned_data.get('zl_gby')
 
-		# Initialisation du jeu de données des dossiers
-		qs_doss = TDossier.objects.none()
+		# Initialisation des conditions de la requête
+		ands = {}
 
+		# Préparation des conditions
 		if val_org_moa :
+			ids = val_org_moa
+			for m in val_org_moa :
+				ids += [rm.id_org_moa_anc.pk for rm in TRegroupementsMoa.objects.filter(id_org_moa_fil = m)]
+			ands['id_org_moa__in'] = ids
+		if val_progr : ands['id_progr'] = val_progr
+		if val_axe : ands['num_axe'] = val_axe.split('_')[-1]
+		if val_ss_axe : ands['num_ss_axe'] = val_ss_axe.split('_')[-1]
+		if val_act : ands['num_act'] = val_act.split('_')[-1]
+		if val_nat_doss : ands['id_nat_doss'] = val_nat_doss
+		if val_type_doss : ands['id_type_doss'] = val_type_doss
+		if val_techn : ands['id_techn'] = val_techn
+		if val_av :
+			ands['id_av__in'] = [val_av] + [a.pk for a in TAvancement.objects.filter(id_av_pere = val_av)]
+		if val_dt_deb_delib_moa_doss : ands['dt_delib_moa_doss__gte'] = val_dt_deb_delib_moa_doss
+		if val_dt_fin_delib_moa_doss : ands['dt_delib_moa_doss__lte'] = val_dt_fin_delib_moa_doss
+		if val_av_cp : ands['id_av_cp'] = val_av_cp
+		if val_dt_deb_av_cp_doss : ands['dt_av_cp_doss__gte'] = val_dt_deb_av_cp_doss
+		if val_dt_fin_av_cp_doss : ands['dt_av_cp_doss__lte'] = val_dt_fin_av_cp_doss
+		if val_mont_doss_min : ands['mont_doss__gte'] = val_mont_doss_min
+		if val_mont_doss_max : ands['mont_doss__lte'] = val_mont_doss_max
+		if val_org_fin : ands['tfinancement__id_org_fin'] = val_org_fin
+		if val_org_prest : ands['tprestationsdossier__id_prest__id_org_prest'] = val_org_prest
 
-			# Initialisation des conditions de la requête
-			ands = {}
+		# Préparation du jeu de données des dossiers
+		qs_doss = TDossier.objects.filter(**ands) if len(ands) > 0 else TDossier.objects.none()
 
-			# Préparation des conditions
-			if val_progr : ands['id_progr'] = val_progr
-			if val_axe : ands['num_axe'] = val_axe.split('_')[-1]
-			if val_ss_axe : ands['num_ss_axe'] = val_ss_axe.split('_')[-1]
-			if val_act : ands['num_act'] = val_act.split('_')[-1]
-			if val_nat_doss : ands['id_nat_doss'] = val_nat_doss
-			if val_type_doss : ands['id_type_doss'] = val_type_doss
-			if val_techn : ands['id_techn'] = val_techn
-			if val_av :
-				ands['id_av__in'] = [val_av] + [a.pk for a in TAvancement.objects.filter(id_av_pere = val_av)]
-			if val_dt_deb_delib_moa_doss : ands['dt_delib_moa_doss__gte'] = val_dt_deb_delib_moa_doss
-			if val_dt_fin_delib_moa_doss : ands['dt_delib_moa_doss__lte'] = val_dt_fin_delib_moa_doss
-			if val_av_cp : ands['id_av_cp'] = val_av_cp
-			if val_dt_deb_av_cp_doss : ands['dt_av_cp_doss__gte'] = val_dt_deb_av_cp_doss
-			if val_dt_fin_av_cp_doss : ands['dt_av_cp_doss__lte'] = val_dt_fin_av_cp_doss
-			if val_mont_doss_min : ands['mont_doss__gte'] = val_mont_doss_min
-			if val_mont_doss_max : ands['mont_doss__lte'] = val_mont_doss_max
-			if val_org_fin : ands['tfinancement__id_org_fin'] = val_org_fin
-			if val_org_prest : ands['tprestationsdossier__id_prest__id_org_prest'] = val_org_prest
+		# Ajout des dossiers non-soldés (première couche)
+		if len(ands) == 0 and val_doss_dep_nn_sold == True :
+			qs_doss |= TDossier.objects.filter(
+				id_av__in = [a.pk for a in TAvancement.objects.exclude(int_av = settings.T_DONN_BDD_STR['AV_SOLDE'])]
+			)
 
-			# Préparation du jeu de données des dossiers
-			for m in val_org_moa : qs_doss |= obt_doss_regr(m).filter(**ands)
+		# Ajout des dossiers associés
+		if val_integr_doss_ass == True :
+			qs_doss_temp = TDossier.objects.none()
+			for d in qs_doss :
+				qs_doss_temp |= TDossier.objects.filter(id_fam = d.id_fam)
+				qs_doss |= qs_doss_temp
+			del qs_doss_temp
 
-			# Ajout des dossiers associés
-			if val_integr_doss_ass == True :
-				qs_doss_temp = TDossier.objects.none()
-				for d in qs_doss :
-					qs_doss_temp |= TDossier.objects.filter(id_fam = d.id_fam)
-					qs_doss |= qs_doss_temp
-				del qs_doss_temp
-
-			# Retrait des dossiers soldés
-			if val_doss_dep_nn_sold == True :
-				qs_doss = qs_doss.exclude(id_av__int_av = settings.T_DONN_BDD_STR['AV_SOLDE'])
+		# Retrait des dossiers soldés (seconde couche)
+		if val_doss_dep_nn_sold == True :
+			qs_doss = qs_doss.exclude(id_av__int_av = settings.T_DONN_BDD_STR['AV_SOLDE'])
 
 		# Initialisation des balises <tr/>
 		trs = []

@@ -1,6 +1,8 @@
 // Variables globales
 var t_datat = {
 	'alert' : init_datat('#t_alert', { 'autofit' : [0], 'unsorting' : [0] }),
+	'cbsm_atel_pgre' : init_datat('#dtab_cbsm_atel_pgre', { 'autofit' : [1], 'unsorting' : [1] }),
+	'cbsm_org_moa' : init_datat('#dtab_cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }),
 	'ch_act_pgre' : init_datat('#t_ch_act_pgre', { 'autofit' : [6], 'unsorting' : [6] }),
 	'ch_doss' : init_datat('#t_ch_doss', { 'autofit' : [4], 'paging' : true, 'unsorting' : [4] }),
 	'ch_prest' : init_datat('#t_ch_prest', { 'autofit' : [5], 'unsorting' : [5] }),
@@ -34,7 +36,8 @@ var t_datat = {
 	),
 	'regr_doss' : init_datat('#t_regr_doss'),
 	'regr_prest' : init_datat('#t_regr_prest'),
-	'select_doss' : init_datat('#t_select_doss', { 'autofit' : '__LAST__', 'unsorting' : '__LAST__' })
+	'select_doss' : init_datat('#t_select_doss', { 'autofit' : '__LAST__', 'unsorting' : '__LAST__' }),
+	'select_act_pgre' : init_datat('#t_select_act_pgre', { 'autofit' : '__LAST__', 'unsorting' : '__LAST__' })
 };
 var submit = false;
 var pt_prec = null;
