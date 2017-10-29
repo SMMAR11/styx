@@ -95,6 +95,18 @@ urlpatterns = [
         { '_gby' : True },
         name = 'regroup_doss'
     ),
+    url(
+        r'^modules/realisation-etats/selectionner-prestations/$',
+        realisation_etats.filtr_prest,
+        { '_gby' : False },
+        name = 'select_prest'
+    ),
+    url(
+        r'^modules/realisation-etats/regrouper-prestations/$',
+        realisation_etats.filtr_prest,
+        { '_gby' : True },
+        name = 'regroup_prest'
+    ),
     url(r'^modules/pgre/$', pgre.index, name = 'pgre'),
     url(r'^modules/pgre/creer-action-pgre/$', pgre.cr_act_pgre, name = 'cr_act_pgre'),
     url(r'^modules/pgre/modifier-action-pgre/([0-9]+)/$', pgre.modif_act_pgre, name = 'modif_act_pgre'),

@@ -2589,7 +2589,7 @@ def cons_prest(request, _pd) :
 				'label' : 'Montant {0} de la prestation (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_prest_doss.mont_prest_doss)
 			},
-			'nb_aven' : { 'label' : 'Nombre d\'avenants', 'value' : o_suivi_prest_doss.nb_aven },
+			'nb_aven' : { 'label' : 'Nombre d\'avenants', 'value' : str(o_suivi_prest_doss.nb_aven) },
 			'mont_aven_sum' : { 
 				'label' : 'Somme {0} des avenants (en €)'.format(ht_ou_ttc), 
 				'value' : obt_mont(o_suivi_prest_doss.mont_aven_sum)

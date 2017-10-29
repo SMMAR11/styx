@@ -21,6 +21,9 @@ var t_datat = {
 	'FiltrerDossiers-cbsm_org_moa' : init_datat(
 		'#dtab_FiltrerDossiers-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
 	),
+	'FiltrerPrestations-cbsm_org_moa' : init_datat(
+		'#dtab_FiltrerPrestations-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
+	),
 	'GererActionPgre-cbsm_atel_pgre' : init_datat(
 		'#dtab_GererActionPgre-cbsm_atel_pgre', { 'autofit' : [1], 'unsorting' : [1] }
 	),
@@ -37,6 +40,7 @@ var t_datat = {
 	'regr_doss' : init_datat('#t_regr_doss'),
 	'regr_prest' : init_datat('#t_regr_prest'),
 	'select_doss' : init_datat('#t_select_doss', { 'autofit' : '__LAST__', 'unsorting' : '__LAST__' }),
+	'select_prest' : init_datat('#t_select_prest', { 'autofit' : [11], 'unsorting' : [11] }),
 	'select_act_pgre' : init_datat('#t_select_act_pgre', { 'autofit' : '__LAST__', 'unsorting' : '__LAST__' })
 };
 var submit = false;
@@ -871,15 +875,15 @@ $('#id_FiltrerDossiers-id_progr, #id_FiltrerDossiers-zl_axe, #id_FiltrerDossiers
  * du formulaire de réalisation d'un état sur les prestations.
  * _e : Objet DOM
  */
-$('#id_RechercherPrestations-zl_progr, #id_RechercherPrestations-zl_axe, #id_RechercherPrestations-zl_ss_axe').on(
+$('#id_FiltrerPrestations-zl_progr, #id_FiltrerPrestations-zl_axe, #id_FiltrerPrestations-zl_ss_axe').on(
 	'change', function(_e) {
 		alim_ld(
 			_e,
 			[
-				'id_RechercherPrestations-zl_progr',
-				['id_RechercherPrestations-zl_axe'],
-				'id_RechercherPrestations-zl_ss_axe',
-				'id_RechercherPrestations-zl_act'
+				'id_FiltrerPrestations-zl_progr',
+				['id_FiltrerPrestations-zl_axe'],
+				'id_FiltrerPrestations-zl_ss_axe',
+				'id_FiltrerPrestations-zl_act'
 			]
 		);
 	}

@@ -482,12 +482,12 @@ def get_menu() :
 				{
 					'item_name' : 'En sélectionnant des prestations',
 					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
-					'item_href' : '#'
+					'item_href' : reverse('select_prest')
 				},
 				{ 
 					'item_name' : 'En regroupant des prestations',
 					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
-					'item_href' : '#'
+					'item_href' : reverse('regroup_prest')
 				}
 			],
 			'mod_rank' : 3

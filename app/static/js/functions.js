@@ -431,92 +431,30 @@ function soum_f(_e, _s = function(){}, _t = []) {
 						// J'ajoute une ligne à la datatable.
 						t_datat[suff_datat].row.add(lg).draw(true);
 					}
-
-					// Je traite le cas où je dois ajouter un "pied de datatable".
-					if (data['success']['datatable_tfoot']) {
-
-						// Suppression du pied
-						$('#t_' + suff_datat + ' tfoot').remove();
-
-						if (data['success']['datatable'].length > 0) {
-
-							// Initialisation des indices qui contiendront une valeur dans le pied
-							var indices = [];
-							var tab = data['success']['datatable_tfoot'];
-							var i = tab.indexOf(true);
-							while (i != -1) {
-								indices.push(i);
-								i = tab.indexOf(true, i + 1);
-							}
-
-							// Bornage des indices
-							var indices_td = indices;
-							indices_td.unshift(0);
-							if ($.inArray(tab.length, indices_td) == -1) {
-								indices_td.push(tab.length);
-							}
-
-							// Préparation du pied
-							var tr = $('<tr/>');
-							for (var i = 0; i < indices_td.length; i += 1) {
-
-								// Stockage des éléments i et i+1
-								var i_1 = indices_td[i];
-								var i_2 = indices_td[i + 1];
-
-								if (i_2 != undefined) {
-
-									// Initialisation du contenu de la balise <td/>
-									var html = 0;
-
-									if (i == 0) {
-										html = 'Total'; // Contenu de la première balise <td/>
-									}
-									else {
-
-										// Bouclage sur toutes les balises <tr/> du <tbody/>
-										$('#t_' + suff_datat + ' tbody tr').each(function() {
-
-											// Récupération du contenu
-											var val = $(this).find('td:eq(' + i_1 + ')').text();
-
-											// Suppression des espaces (str <-> float)
-											val = val.replace(' ', '');
-
-											// Somme sur la colonne
-											html += parseFloat(val);
-										});
-									}
-
-									// Mise en place d'un séparateur de milliers
-									if ($.type(html) == 'number') {
-										var l;
-										while ((
-											l = html.toString().replace(/(\d)([\d]{3})(\.|\s|\b)/,"$1 $2$3"
-										)) && l != html) {
-											html = l;
-										}
-									}
-
-									// Empilement des balises <td/>
-									tr.append($('<td/>', { 'colspan' : i_2 - i_1, html : html }));
-								}
-							}
-
-							// Affichage du pied
-							var tfoot = $('<tfoot/>');
-							tfoot.append(tr);
-							tfoot.insertAfter($('#t_' + suff_datat + ' tbody'));
-						}
-					}
+				}
 
 				// Remplacement de texte
 				if (data['success']['replace']) {
 					$(data['success']['replace'][0]).text(data['success']['replace'][1]);
 				}
 
-					// J'applique les styles.
-					_s();
+				// Surchargement d'éléments
+				if (data['success']['elements']) {
+					for (var i = 0; i < data['success']['elements'].length; i += 1) {
+
+						// Stockage de l'élément courant
+						var elem = data['success']['elements'][i];
+
+						// Renommage de l'élément à supprimer
+						var elem_to_remove = $(elem[0]).attr('id') + '__old';
+						$(elem[0]).attr('id', elem_to_remove);
+
+						// Insertion du nouvel élément
+						$(elem[1]).insertAfter('#' + elem_to_remove);
+
+						// Suppression de l'ancien élément
+						$('#' + elem_to_remove).remove();
+					}
 				}
 
 				// Je traite le cas où je dois effectuer une opération sans rafraîchissement (ajout, mise à jour).
@@ -547,6 +485,9 @@ function soum_f(_e, _s = function(){}, _t = []) {
 						$('#za_' + suff).show();
 					}, 2000);
 				}
+
+				// J'applique les styles.
+				_s();
 			}
 			else {
 				var erreur_glob;

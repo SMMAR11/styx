@@ -432,7 +432,7 @@ form > fieldset.my-fieldset > div {
 }
 
 .field-error > ul > li {
-	font-size : 12px;
+	font-size : 10px;
 	position: absolute;
 	bottom: -15px;
 	color : #FF0921;

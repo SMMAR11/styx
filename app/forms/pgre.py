@@ -611,7 +611,7 @@ class FiltrerActionsPgre(forms.ModelForm) :
 		if val_av_pgre : ands['id_av_pgre'] = val_av_pgre
 
 		# Préparation du jeu de données des actions PGRE
-		qs_doss_pgre = TDossierPgre.objects.filter(**ands) if len(ands) > 0 else TDossierPgre.objects.none()
+		qs_doss_pgre = TDossierPgre.objects.filter(**ands)
 
 		# Réinitialisation de la variable "historique" si l'option "Ajouter à la sélection existante" n'est pas cochée
 		if not val_ajout_select_exist : _req.session['filtr_act_pgre'] = []
