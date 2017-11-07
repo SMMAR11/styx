@@ -398,6 +398,9 @@ class FiltrerDossiers(forms.ModelForm) :
 			# Empilement de la variable "historique"
 			_req.session['filtr_doss'] += [d.pk for d in qs_doss]
 
+			# Suppression de variables
+			del qs_doss
+
 			# Initialisation du jeu de données des dossiers
 			_qs_doss = TDossier.objects.filter(pk__in = _req.session.get('filtr_doss'))
 
@@ -414,6 +417,9 @@ class FiltrerDossiers(forms.ModelForm) :
 					else :
 						mont_part_fin = 0
 					fins.append(mont_part_fin)
+
+					# Suppression de variables
+					del f, mont_part_fin
 
 				# Préparation des colonnes
 				tds = [
@@ -441,6 +447,9 @@ class FiltrerDossiers(forms.ModelForm) :
 				# Empilement des balises <tr/>
 				trs.append('<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(td) for td in tds])))
 
+				# Suppression de variables
+				del d, fins, obj_sd, tds
+
 			# Stockage des financeurs
 			org_fins = ['<th>Autofinancement</th>'] + ['<th>{}</th>'.format(f) for f in TFinanceur.objects.all()]
 
@@ -467,11 +476,20 @@ class FiltrerDossiers(forms.ModelForm) :
 							mont_part_fin = 0
 						sums_fins[index + 1].append(mont_part_fin)
 
-					# Mise en forme des balises <td/>
-					tds_fins = []
-					for index, elem in enumerate(sums_fins) :
-						td = '<td>{}</td>' if index + 1 != len(sums_fins) else '<td colspan="2">{}</td>'
-						tds_fins.append(td.format(obt_mont(sum(elem))))
+						# Suppression de variables
+						del f, index, mont_part_fin
+
+					# Suppression de variables
+					del d, obj_sd
+
+				# Mise en forme des balises <td/>
+				tds_fins = []
+				for index, elem in enumerate(sums_fins) :
+					td = '<td>{}</td>' if index + 1 != len(sums_fins) else '<td colspan="2">{}</td>'
+					tds_fins.append(td.format(obt_mont(sum(elem))))
+
+					# Suppression de variables
+					del elem, index, td
 
 				tfoot = '''
 				<tr>
@@ -491,8 +509,15 @@ class FiltrerDossiers(forms.ModelForm) :
 					obt_mont(sum([sd.mont_fact_sum for sd in _qs_suivi_doss])),
 					''.join(tds_fins)
 				)
+
+				# Suppression de variables
+				del _qs_suivi_doss, sums_fins, tds_fins
+
 			else :
 				tfoot = ''
+
+			# Suppression de variables
+			del _qs_doss
 
 			return '''
 			<div class="my-table" id="t_select_doss">
@@ -566,6 +591,9 @@ class FiltrerDossiers(forms.ModelForm) :
 				# Calcul de la colonne "Total"
 				_sum = sum([elem[1] for elem in trs__untagged])
 
+				# Suppression de variables
+				del trs__untagged
+
 			else :
 				if val_gby == 'ORG_MOA' :
 
@@ -584,6 +612,12 @@ class FiltrerDossiers(forms.ModelForm) :
 						# Calcul de la colonne "Total"
 						_sum += tds[1]
 
+						# Suppression de variables
+						del ids, m, tds
+
+			# Suppression de variables
+			del params
+
 			# Détermination de la balise <tfoot/>
 			if len(trs) > 0 :
 				tfoot = '''
@@ -592,6 +626,10 @@ class FiltrerDossiers(forms.ModelForm) :
 					<td>{}</td>
 				</tr>
 				'''.format(_sum)
+
+				# Suppression de variables
+				del _sum
+
 			else :
 				tfoot = ''
 
@@ -860,6 +898,9 @@ class FiltrerPrestations(forms.Form) :
 		# Préparation du jeu de données des prestations
 		qs_prest = TPrestationsDossier.objects.filter(**ands)
 
+		# Suppression de variables
+		del ands
+
 		# Initialisation des balises <tr/>
 		trs = []
 
@@ -901,6 +942,9 @@ class FiltrerPrestations(forms.Form) :
 				# Empilement des balises <tr/>
 				trs.append('<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(td) for td in tds])))
 
+				# Suppression de variables
+				del obj_spd, pd, tds
+
 			# Détermination de la balise <tfoot/>
 			if _qs_prest.count() > 0 :
 
@@ -919,8 +963,15 @@ class FiltrerPrestations(forms.Form) :
 					sum([spd.nb_aven for spd in _qs_spd]),
 					obt_mont(sum([spd.mont_aven_sum for spd in _qs_spd])),
 				)
+
+				# Suppression de variables
+				del _qs_spd
+
 			else :
 				tfoot = ''
+
+			# Suppression de variables
+			del qs_prest
 
 			return '''
 			<div class="my-table" id="t_select_prest">
@@ -971,16 +1022,19 @@ class FiltrerPrestations(forms.Form) :
 
 				# Calcul du montant total des prestations pour le prestataire courant (utile au calcul de l'indice de
 				# contractualisation)
-				mont_prest_doss__sum = sum([pop.mont_prest_doss for pop in qs_pop])
+				mont_pdop__sum = sum([pop.mont_prest_doss for pop in qs_pop])
+
+				# Calcul du montant total des prestations (utile au calcul de l'indice de contractualisation)
+				mont_prest_doss__sum = sum([pd.mont_prest_doss for pd in qs_prest])
 
 				# Calcul du pourcentage de contractualisation pour le prestataire courant
-				pourc_contr = (mont_prest_doss__sum / sum([pd.mont_prest_doss for pd in qs_prest])) * 100
+				pourc_contr = (mont_pdop__sum / mont_prest_doss__sum) * 100 if mont_prest_doss__sum > 0 else 0
 
 				# Préparation des colonnes
 				_tds = [
 					str(p),
 					qs_pop.count(),
-					mont_prest_doss__sum,
+					mont_pdop__sum,
 					qs_pop_ec.count(),
 					sum([pop.mont_prest_doss for pop in qs_pop_ec]),
 					qs_pop_clot.count(),
@@ -1004,6 +1058,9 @@ class FiltrerPrestations(forms.Form) :
 
 				# Calcul du total lié aux pourcentages de contractualisation (100 normalement)
 				_sum += pourc_contr
+
+				# Suppression de variables
+				del mont_pdop__sum, mont_prest_doss__sum, p, pourc_contr, qs_pop, qs_pop_clot, qs_pop_ec, _tds, tds
 
 			# Détermination de la balise <tfoot/>
 			if len(trs) > 0 :
@@ -1036,8 +1093,15 @@ class FiltrerPrestations(forms.Form) :
 					obt_mont(sum([pd.mont_prest_doss for pd in qs_prest_clot])),
 					obt_pourc(_sum)
 				)
+
+				# Suppression de variables
+				del qs_prest_clot, qs_prest_ec
+
 			else :
 				tfoot = ''
+
+			# Suppression de variables
+			del qs_prest, _sum
 
 			output = '''
 			<div class="my-table" id="t_regr_prest">

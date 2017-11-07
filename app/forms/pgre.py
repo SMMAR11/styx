@@ -619,6 +619,9 @@ class FiltrerActionsPgre(forms.ModelForm) :
 		# Empilement de la variable "historique"
 		_req.session['filtr_act_pgre'] += [dpgre.pk for dpgre in qs_doss_pgre]
 
+		# Suppression de variables
+		del ands, qs_doss_pgre
+
 		# Initialisation des balises <tr/>
 		trs = []
 
@@ -646,6 +649,9 @@ class FiltrerActionsPgre(forms.ModelForm) :
 
 			# Empilement des balises <tr/>
 			trs.append('<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(td) for td in tds])))
+
+			# Suppression de variables
+			del dpgre, tds
 
 		return '''
 		<div class="my-table" id="t_select_act_pgre">
