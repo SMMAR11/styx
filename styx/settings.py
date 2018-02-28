@@ -142,6 +142,8 @@ LEAFLET_CONFIG = {
     'DEFAULT_ZOOM' : 12,
     'MIN_ZOOM' : 9,
     'MAX_ZOOM' : 20,
+    'TILES': [],
+    'RESET_VIEW': False
 }
 
 # Je déclare mes options personnelles.

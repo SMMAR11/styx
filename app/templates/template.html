@@ -46,10 +46,11 @@
 		<!-- Inclusion de la bibliothèque Leaflet -->
 		{% leaflet_js %}
     	{% leaflet_css %}
-    	<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.draw/leaflet.draw.css' %}">
-		<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.easybutton/easy-button.css' %}">
     	<script type="text/javascript" src="{% static './vendors/leaflet.draw/leaflet.draw-custom.js' %}"></script>
+    	<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.draw/leaflet.draw.css' %}">
 		<script type="text/javascript" src="{% static './vendors/leaflet.easybutton/easy-button.js' %}"></script>
+		<link rel="stylesheet" type="text/css" href="{% static './vendors/leaflet.easybutton/easy-button.css' %}">
+		<script type="text/javascript" data-key="pb5uiemi0eqc028c50fuw7fi" src="{% static './vendors/geoportail/GpPluginLeaflet.js' %}"></script>
 		<!-- Inclusion de mon script carto personnalisé -->
 		<script type="text/javascript" src="{% static './js/scripts_carto.js' %}"></script>
 		<!-- Inclusion de la bibliothèque bootstrap-datepicker -->
