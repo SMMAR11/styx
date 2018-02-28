@@ -31,6 +31,12 @@ window.addEventListener('map:init', function(e) {
     var detail = e.detail;
     map = detail.map;
 
+    // Ajout du fond Géoportail
+    L.geoportalLayer.WMS({
+        layer: "SCAN25TOPO_PYR-JPEG_WLD_WM"
+    }).addTo(map);
+
+
     // J'ajoute la couche des géométries.
     map.addLayer(editableLayers);
 
