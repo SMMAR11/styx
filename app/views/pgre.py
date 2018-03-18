@@ -611,7 +611,6 @@ def cons_act_pgre(request, _a) :
 	from app.models import TPhotoPgre
 	from app.models import TUtilisateur
 	from datetime import date
-	from django.conf import settings
 	from django.contrib.gis import geos
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -831,8 +830,8 @@ def cons_act_pgre(request, _a) :
 
 		# Je regarde si l'utilisateur connecté provient de la DDTM.
 		est_ddtm = False
-		if not settings.CONSTRAINT_DDTM : est_ddtm = True
-		if TUtilisateur.objects.get(pk = request.user.pk).id_org.pk == T_DONN_BDD_INT['DDTM_PK'] : est_ddtm = True
+		if TUtilisateur.objects.get(pk = request.user.pk).id_org.pk == T_DONN_BDD_INT['DDTM_PK'] :
+			est_ddtm = True
 
 		# Je complète le tableau de fenêtres modales dans le cas où l'utilisateur connecté provient de la DDTM.
 		if est_ddtm == True :

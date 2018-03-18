@@ -170,5 +170,3 @@ T_DONN_BDD_INT = {
 ADMINS = [(config('ADMIN_FULLNAME'), config('ADMIN_EMAIL'))]
 EMAIL_BACKEND = config('EMAIL_BACKEND')
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'mail_dumps')
-
-CONSTRAINT_DDTM = config('CONSTRAINT_DDTM', cast = bool)
