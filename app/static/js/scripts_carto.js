@@ -31,11 +31,20 @@ window.addEventListener('map:init', function(e) {
     var detail = e.detail;
     map = detail.map;
 
-    // Ajout du fond Géoportail
+    // Ajout des fonds Géoportail
     L.geoportalLayer.WMS({
-        layer: "SCAN25TOPO_PYR-JPEG_WLD_WM"
+        layer: "SCAN25TOPO_PYR-JPEG_WLD_WM",
+    },{
+        minZoom : 8,
+        maxZoom : 16
     }).addTo(map);
 
+    L.geoportalLayer.WMS({
+        layer: "ORTHOIMAGERY.ORTHOPHOTOS.BDORTHO",
+    },{
+        minZoom : 17,
+        maxZoom : 20
+    }).addTo(map);
 
     // J'ajoute la couche des géométries.
     map.addLayer(editableLayers);
