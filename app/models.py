@@ -581,9 +581,9 @@ class TDossier(models.Model) :
 class TDossierGeom(gismodels.Model) :
 
     gid = models.UUIDField(default = uuid.uuid4, editable = False, primary_key = True)
-    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 2154)
-    geom_pct = gismodels.PointField(blank = True, null = True, srid = 2154)
-    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 2154)
+    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 4326)
+    geom_pct = gismodels.PointField(blank = True, null = True, srid = 4326)
+    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 4326)
     objects = gismodels.GeoManager()
     id_doss = models.ForeignKey(TDossier, on_delete = models.CASCADE)
 
@@ -1327,9 +1327,9 @@ class TControleDossierPgre(models.Model) :
 class TDossierPgreGeom(gismodels.Model) :
 
     gid = models.UUIDField(default = uuid.uuid4, editable = False, primary_key = True)
-    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 2154)
-    geom_pct = gismodels.PointField(blank = True, null = True, srid = 2154)
-    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 2154)
+    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 4326)
+    geom_pct = gismodels.PointField(blank = True, null = True, srid = 4326)
+    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 4326)
     objects = gismodels.GeoManager()
     id_doss_pgre = models.ForeignKey(TDossierPgre, on_delete = models.CASCADE)
 

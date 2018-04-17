@@ -2,4 +2,4 @@
 *.pyc
 mail_dumps/
 media/
-app/migrations/
+app/migrations/__pycache__
