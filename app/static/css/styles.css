@@ -219,7 +219,7 @@ fieldset.my-div-fieldset > div {
 .attribute-wrapper .attribute-control {
 	display: block;
 	width: 100%;
-	min-height: 25px;
+	min-height: 100px;
 	background-color: #F6F6F6;
 	color: #555;
 	padding: 0 5px;
@@ -246,7 +246,7 @@ fieldset.my-div-fieldset > div {
 }
 
 .field-wrapper .field-control textarea {
-	min-height: 25px;
+	min-height: 100px;
 	resize: vertical;
 }
 
@@ -426,9 +426,9 @@ form > fieldset.my-fieldset > div {
 }
 
 .field-error > ul {
-	list-style : none; 
+	list-style : none;
 	padding-left: 0;
-	font-weight : bold;	
+	font-weight : bold;
 }
 
 .field-error > ul > li {
@@ -932,7 +932,7 @@ ul.my-list-style > li:before {
 	float: left;
 	padding-top: 5px;
 	text-align: center;
-	width: 100%; 
+	width: 100%;
 }
 
 @media (max-width: 767px) {

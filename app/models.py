@@ -241,9 +241,9 @@ class TAction(models.Model) :
 
     def __str__(self) :
         return '{0}.{1}.{2} - {3}'.format(
-            self.id_ss_axe.id_axe.num_axe, 
-            self.id_ss_axe.num_ss_axe, 
-            self.num_act, 
+            self.id_ss_axe.id_axe.num_axe,
+            self.id_ss_axe.num_ss_axe,
+            self.num_act,
             self.int_act
         )
 
@@ -285,7 +285,7 @@ class TCommunesCp(models.Model) :
     num_comm = models.ForeignKey(TCommune, models.DO_NOTHING)
 
     class Meta :
-        db_table = 't_communes_cp' 
+        db_table = 't_communes_cp'
         verbose_name = 'T_COMMUNES_CP'
         verbose_name_plural = 'T_COMMUNES_CP'
 
@@ -308,9 +308,9 @@ class TOrganisme(models.Model):
     cp_org = models.CharField(blank = True, max_length = 5, null = True, verbose_name = 'Code postal')
     n_org = models.CharField(max_length = 255, verbose_name = 'Nom')
     port_org = models.CharField(
-        blank = True, 
-        max_length = 10, 
-        null = True, 
+        blank = True,
+        max_length = 10,
+        null = True,
         validators = [val_tel],
         verbose_name = 'Numéro de téléphone portable'
     )
@@ -342,10 +342,10 @@ class TMoa(TOrganisme) :
     dim_org_moa = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Diminutif')
     en_act_doss = models.BooleanField(verbose_name = 'En activité (gestion des dossiers)')
     logo_org_moa = models.FileField(
-        blank = True, 
-        null = True, 
-        upload_to = set_logo_org_moa_upload_to, 
-        validators = [val_fich_img], 
+        blank = True,
+        null = True,
+        upload_to = set_logo_org_moa_upload_to,
+        validators = [val_fich_img],
         verbose_name = 'Logo'
     )
     moa = models.ManyToManyField('self', related_name = '+', symmetrical = False, through = 'TRegroupementsMoa')
@@ -393,10 +393,10 @@ class TUtilisateur(User) :
 
     id_util = models.OneToOneField(User)
     port_util = models.CharField(
-        blank = True, 
-        max_length = 10, 
-        null = True, 
-        validators = [val_tel], 
+        blank = True,
+        max_length = 10,
+        null = True,
+        validators = [val_tel],
         verbose_name = 'Numéro de téléphone portable'
     )
     tel_util = models.CharField(
@@ -510,7 +510,7 @@ class TDossier(models.Model) :
 
     id_doss = models.AutoField(primary_key = True)
     chem_pj_doss = models.FileField(
-        blank = True, 
+        blank = True,
         null = True,
         upload_to = set_chem_pj_doss_upload_to,
         validators = [val_fich_pdf],
@@ -551,9 +551,9 @@ class TDossier(models.Model) :
     id_progr = models.ForeignKey(TProgramme, models.DO_NOTHING, verbose_name = 'Programme')
     id_av = models.ForeignKey(TAvancement, models.DO_NOTHING, verbose_name = 'État d\'avancement')
     id_av_cp = models.ForeignKey(
-        TAvisCp, 
-        models.DO_NOTHING, 
-        default = set_id_av_cp_default, 
+        TAvisCp,
+        models.DO_NOTHING,
+        default = set_id_av_cp_default,
         verbose_name = 'Avis du comité de programmation - CD GEMAPI'
     )
     id_doss_ass = models.ForeignKey('self', models.DO_NOTHING, blank = True, null = True)
@@ -766,8 +766,8 @@ class TPrestation(models.Model) :
 
     id_prest = models.AutoField(primary_key = True)
     chem_pj_prest = models.FileField(
-        blank = True, 
-        null = True, 
+        blank = True,
+        null = True,
         upload_to = set_chem_pj_prest_upload_to,
         validators = [val_fich_pdf],
         verbose_name = 'Insérer le contrat de prestation <span class="field-complement">(fichier PDF)</span>'
@@ -839,8 +839,8 @@ class TAvenant(models.Model) :
 
     id_aven = models.AutoField(primary_key = True)
     chem_pj_aven = models.FileField(
-        blank = True, 
-        null = True, 
+        blank = True,
+        null = True,
         upload_to = set_chem_pj_aven_upload_to,
         validators = [val_fich_pdf],
         verbose_name = 'Insérer le fichier scanné de l\'avenant <span class="field-complement">(fichier PDF)</span>'
@@ -959,8 +959,8 @@ class TFinancement(models.Model) :
 
     id_fin = models.AutoField(primary_key = True)
     chem_pj_fin = models.FileField(
-        blank = True, 
-        null = True, 
+        blank = True,
+        null = True,
         upload_to = set_chem_pj_fin_upload_to,
         validators = [val_fich_pdf],
         verbose_name = 'Insérer l\'arrêté de subvention <span class="field-complement">(fichier PDF)</span>'
@@ -986,8 +986,8 @@ class TFinancement(models.Model) :
         blank = True, null = True, verbose_name = 'Durée de validité de l\'aide (en mois)'
     )
     mont_elig_fin = models.FloatField(
-        blank = True, 
-        null = True, 
+        blank = True,
+        null = True,
         validators = [val_mont_pos],
         verbose_name = 'Montant [ht_ou_ttc] de l\'assiette éligible de la subvention'
     )
@@ -995,10 +995,10 @@ class TFinancement(models.Model) :
         validators = [val_mont_pos], verbose_name = 'Montant [ht_ou_ttc] total de la participation'
     )
     num_arr_fin = models.CharField(
-        blank = True, 
-        max_length = 255, 
-        null = True, 
-        validators = [val_cdc], 
+        blank = True,
+        max_length = 255,
+        null = True,
+        validators = [val_cdc],
         verbose_name = 'Numéro de l\'arrêté ou convention'
     )
     pourc_elig_fin = models.FloatField(
@@ -1011,13 +1011,13 @@ class TFinancement(models.Model) :
     id_org_fin = models.ForeignKey(TFinanceur, models.DO_NOTHING, verbose_name = 'Organisme financeur')
     id_paiem_prem_ac = models.ForeignKey(
         TPaiementPremierAcompte,
-        models.DO_NOTHING, 
-        blank = True, 
-        null = True, 
+        models.DO_NOTHING,
+        blank = True,
+        null = True,
         verbose_name = 'Premier acompte payé en fonction de'
     )
     a_inf_fin = models.CharField(
-        choices = [('Oui', 'Oui'), ('Non', 'Non'), ('Sans objet', 'Sans objet')], 
+        choices = [('Oui', 'Oui'), ('Non', 'Non'), ('Sans objet', 'Sans objet')],
         default = 'Sans objet',
         max_length = 255,
         verbose_name = 'Avez-vous informé le partenaire financier du début de l\'opération ?'
@@ -1084,25 +1084,25 @@ class TDemandeVersement(models.Model) :
         max_length = 255, validators = [val_cdc], verbose_name = 'Intitulé de la demande de versement'
     )
     mont_ht_ddv = models.FloatField(
-        blank = True, 
-        null = True, 
-        validators = [val_mont_pos], 
+        blank = True,
+        null = True,
+        validators = [val_mont_pos],
         verbose_name = 'Montant HT de la demande de versement'
     )
     mont_ht_verse_ddv = models.FloatField(
-        blank = True, 
+        blank = True,
         null = True,
         validators = [val_mont_nul],
         verbose_name = 'Montant HT versé'
     )
     mont_ttc_ddv = models.FloatField(
-        blank = True, 
-        null = True, 
-        validators = [val_mont_pos], 
+        blank = True,
+        null = True,
+        validators = [val_mont_pos],
         verbose_name = 'Montant TTC de la demande de versement'
     )
     mont_ttc_verse_ddv = models.FloatField(
-        blank = True, 
+        blank = True,
         null = True,
         validators = [val_mont_nul],
         verbose_name = 'Montant TTC versé'
@@ -1213,6 +1213,7 @@ class TDossierPgre(models.Model) :
     # Imports
     from app.validators import val_cdc
     from app.validators import val_fich_pdf
+    from app.validators import val_mont_nul
 
     def set_chem_pj_doss_pgre_upload_to(_i, _fn) :
 
@@ -1225,9 +1226,9 @@ class TDossierPgre(models.Model) :
     id_doss_pgre = models.AutoField(primary_key = True)
     ann_prev_deb_doss_pgre = models.IntegerField(verbose_name = 'Année prévisionnelle du début de l\'action PGRE')
     chem_pj_doss_pgre = models.FileField(
-        blank = True, 
-        null = True, 
-        upload_to = set_chem_pj_doss_pgre_upload_to, 
+        blank = True,
+        null = True,
+        upload_to = set_chem_pj_doss_pgre_upload_to,
         validators = [val_fich_pdf],
         verbose_name = 'Insérer la fiche action <span class="field-complement">(fichier PDF)</span>'
     )
@@ -1260,6 +1261,11 @@ class TDossierPgre(models.Model) :
     id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, verbose_name = 'Nature de l\'action PGRE')
     atel_pgre = models.ManyToManyField(TAtelierPgre, through = 'TAteliersPgreDossierPgre')
     moa = models.ManyToManyField(TMoa, through = 'TMoaDossierPgre')
+    mont_doss_pgre = models.FloatField(
+        verbose_name='Montant dossier PGRE',
+        default=0.0,
+        validators = [val_mont_nul],
+    )
 
     class Meta :
         db_table = 't_dossier_pgre'
@@ -1351,7 +1357,7 @@ class TPhotoPgre(models.Model) :
 
     id_ph_pgre = models.AutoField(primary_key = True)
     chem_ph_pgre = models.FileField(
-        upload_to = set_chem_ph_pgre_upload_to, 
+        upload_to = set_chem_ph_pgre_upload_to,
         validators = [val_fich_img],
         verbose_name = 'Insérer une photo <span class="field-complement">(taille limitée à 3 Mo)</span>'
     )

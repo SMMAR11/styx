@@ -36,7 +36,7 @@ class GererActionPgre(forms.ModelForm) :
 		model = TDossierPgre
 		widgets = {
 			'dt_deb_doss_pgre' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
-			'dt_fin_doss_pgre' : forms.TextInput(attrs = { 'input-group-addon' : 'date' })
+			'dt_fin_doss_pgre' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
 		}
 
 	def __init__(self, *args, **kwargs) :
@@ -58,7 +58,7 @@ class GererActionPgre(forms.ModelForm) :
 		if instance :
 			kwargs.update(initial = {
 				'dt_deb_doss_pgre' : dt_fr(instance.dt_deb_doss_pgre) if instance.dt_deb_doss_pgre else '',
-				'dt_fin_doss_pgre' : dt_fr(instance.dt_fin_doss_pgre) if instance.dt_fin_doss_pgre else ''
+				'dt_fin_doss_pgre' : dt_fr(instance.dt_fin_doss_pgre) if instance.dt_fin_doss_pgre else '',
 			})
 
 		super(GererActionPgre, self).__init__(*args, **kwargs)
@@ -127,7 +127,7 @@ class GererActionPgre(forms.ModelForm) :
 					self.add_error(
 						'cbsm_org_moa',
 						'''
-						Vous n\'avez pas les permissions requises pour créer une action PGRE pour le maître d\'ouvrage 
+						Vous n\'avez pas les permissions requises pour créer une action PGRE pour le maître d\'ouvrage
 						« {0} ».
 						'''.format(o_org_moa)
 					)
@@ -313,7 +313,7 @@ class GererControleActionPgre(forms.ModelForm) :
 			qs_aggr_pdc = qs_aggr_pdc.exclude(pk = i.pk)
 		qs_aggr_pdc = qs_aggr_pdc.aggregate(Max('dt_contr_doss_pgre'))
 		v_dt_contr_doss_pgre_max = qs_aggr_pdc['dt_contr_doss_pgre__max']
-		
+
 		# Je renvoie une erreur si la date du contrôle est antérieure ou égale à la date du dernier point de contrôle.
 		if v_dt_contr_doss_pgre and v_dt_contr_doss_pgre_max and v_dt_contr_doss_pgre.year == annee:
 			if v_dt_contr_doss_pgre <= v_dt_contr_doss_pgre_max :
