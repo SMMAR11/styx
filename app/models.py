@@ -2,6 +2,7 @@
 #-*- coding: utf-8
 
 # Imports
+from django.apps import apps
 from django.contrib.auth.models import User
 from django.contrib.gis.db import models as gismodels
 from django.db import models
@@ -581,9 +582,9 @@ class TDossier(models.Model) :
 class TDossierGeom(gismodels.Model) :
 
     gid = models.UUIDField(default = uuid.uuid4, editable = False, primary_key = True)
-    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 4326)
-    geom_pct = gismodels.PointField(blank = True, null = True, srid = 4326)
-    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 4326)
+    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 2154)
+    geom_pct = gismodels.PointField(blank = True, null = True, srid = 2154)
+    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 2154)
     objects = gismodels.GeoManager()
     id_doss = models.ForeignKey(TDossier, on_delete = models.CASCADE)
 
@@ -1276,6 +1277,23 @@ class TDossierPgre(models.Model) :
     def __str__(self) :
         return self.num_doss_pgre
 
+    def save(self, *args, **kwargs):
+        TAvancementPgreTraces = apps.get_model('app', model_name='TAvancementPgreTraces')
+        import pdb; pdb.set_trace()
+        # Tracer les changements d’état d’avancement de chaque dossier PGRE
+        if not self.id_doss_pgre:
+            TAvancementPgreTraces.objects.create(
+                id_doss_pgre=self,
+                id_av_pgre=self.id_av_pgre)
+        if self.id_doss_pgre:
+            original_dossier_pgre = TDossierPgre.objects.get(id_doss_pgre=self.id_doss_pgre)
+            if original_dossier_pgre.id_av_pgre != self.id_av_pgre:
+                TAvancementPgreTraces.objects.create(
+                    id_doss_pgre=self,
+                    id_av_pgre=self.id_av_pgre)
+
+        return super().save(*args, **kwargs)
+
 class TAteliersPgreDossierPgre(models.Model) :
 
     id_atel_pgre = models.ForeignKey(TAtelierPgre, models.DO_NOTHING)
@@ -1327,9 +1345,9 @@ class TControleDossierPgre(models.Model) :
 class TDossierPgreGeom(gismodels.Model) :
 
     gid = models.UUIDField(default = uuid.uuid4, editable = False, primary_key = True)
-    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 4326)
-    geom_pct = gismodels.PointField(blank = True, null = True, srid = 4326)
-    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 4326)
+    geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 2154)
+    geom_pct = gismodels.PointField(blank = True, null = True, srid = 2154)
+    geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 2154)
     objects = gismodels.GeoManager()
     id_doss_pgre = models.ForeignKey(TDossierPgre, on_delete = models.CASCADE)
 
@@ -1380,3 +1398,32 @@ class TPhotoPgre(models.Model) :
 
     def __str__(self) :
         return self.int_ph_pgre
+
+class TAvancementPgreTraces(models.Model):
+
+    id_trace = models.AutoField(primary_key = True)
+    id_doss_pgre = models.ForeignKey('TDossierPgre', on_delete = models.CASCADE, db_column = 'id_doss_pgre_integer')
+    id_av_pgre = models.ForeignKey('TAvancementPgre', on_delete = models.CASCADE, db_column = 'id_av_pgre')
+    date_modif_av = models.DateTimeField("Horodatage du changement d'état d'avancement", auto_now_add=True)
+
+    class Meta :
+        db_table = 't_avancement_pgre_traces'
+        ordering = ('id_trace', )
+
+class TDossierSsAction(models.Model):
+
+    id_ss_act = models.AutoField(primary_key = True)
+    lib_ss_act = models.CharField(max_length = 255, verbose_name = 'Libellé')
+    desc_ss_act = models.TextField(blank = True, null = True, verbose_name = 'Descriptif')
+    comm_ss_act = models.TextField(blank = True, null = True, verbose_name = 'Commentaire')
+    dt_prevision_ss_action_pgre =  models.DateTimeField(verbose_name = 'Prévisionnel')
+    dt_deb_ss_action_pgre =  models.DateTimeField(blank = True, null = True, verbose_name = 'Début')
+    dt_fin_ss_action_pgre =  models.DateTimeField(blank = True, null = True, verbose_name = 'Fin')
+    mont_ss_action_pgre = models.FloatField(verbose_name = 'Montant')
+    obj_econ_ress_ss_action_pgre = models.FloatField(verbose_name = "Objectif d'économie de ressource")
+    t_nature_dossier = models.ForeignKey('TNatureDossier', on_delete = models.CASCADE, db_column = 'id_nat_doss')
+    id_av_pgre = models.ForeignKey('TAvancementPgre', on_delete = models.CASCADE, db_column = 'id_av_pgre')
+    moa = models.ManyToManyField(TMoa)
+
+    class Meta :
+        db_table = 't_dossier_pgre_ss_action'

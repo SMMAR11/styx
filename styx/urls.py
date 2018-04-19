@@ -39,15 +39,15 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/supprimer-prestation/([0-9]+)/$', gestion_dossiers.suppr_prest, name = 'suppr_prest'),
     url(r'^modules/gestion-dossiers/consulter-prestation/([0-9]+)/$', gestion_dossiers.cons_prest, name = 'cons_prest'),
     url(
-        r'^modules/gestion-dossiers/ajouter-avenant/$', 
-        gestion_dossiers.ajout_aven, 
-        { '_r' : 'cons_prest' }, 
+        r'^modules/gestion-dossiers/ajouter-avenant/$',
+        gestion_dossiers.ajout_aven,
+        { '_r' : 'cons_prest' },
         name = 'ajout_aven'
     ),
     url(
-        r'^modules/gestion-dossiers/ajouter-avenant-raccourci/$', 
-        gestion_dossiers.ajout_aven, 
-        { '_r' : 'cons_doss' }, 
+        r'^modules/gestion-dossiers/ajouter-avenant-raccourci/$',
+        gestion_dossiers.ajout_aven,
+        { '_r' : 'cons_doss' },
         name = 'ajout_aven_racc'
     ),
     url(r'^modules/gestion-dossiers/modifier-avenant/([0-9]+)/$', gestion_dossiers.modif_aven, name = 'modif_aven'),
@@ -65,8 +65,8 @@ urlpatterns = [
     ),
     url(r'^modules/gestion-dossiers/supprimer-demande-de-versement/([0-9]+)/$', gestion_dossiers.suppr_ddv, name = 'suppr_ddv'),
     url(
-        r'^modules/gestion-dossiers/consulter-demande-de-versement/([0-9]+)/$', 
-        gestion_dossiers.cons_ddv, 
+        r'^modules/gestion-dossiers/consulter-demande-de-versement/([0-9]+)/$',
+        gestion_dossiers.cons_ddv,
         name = 'cons_ddv'
     ),
     url(
@@ -111,6 +111,11 @@ urlpatterns = [
     url(r'^modules/pgre/creer-action-pgre/$', pgre.cr_act_pgre, name = 'cr_act_pgre'),
     url(r'^modules/pgre/modifier-action-pgre/([0-9]+)/$', pgre.modif_act_pgre, name = 'modif_act_pgre'),
     url(r'^modules/pgre/supprimer-action-pgre/([0-9]+)/$', pgre.suppr_act_pgre, name = 'suppr_act_pgre'),
+
+    url(r'^modules/pgre/creer-sous-action-pgre/$', pgre.cr_ss_act_pgre, name = 'cr_ss_act_pgre'),
+    # url(r'^modules/pgre/modifier-sous-action-pgre/([0-9]+)/$', pgre.modif_ss_act_pgre, name = 'modif_ss_act_pgre'),
+    # url(r'^modules/pgre/supprimer-ss-action-pgre/([0-9]+)/$', pgre.suppr_ss_act_pgre, name = 'suppr_ss_act_pgre'),
+
     url(r'^modules/pgre/choisir-action-pgre/$', pgre.ch_act_pgre, name = 'ch_act_pgre'),
     url(r'^modules/pgre/consulter-action-pgre/([0-9]+)/$', pgre.cons_act_pgre, name = 'cons_act_pgre'),
     url(r'^modules/pgre/ajouter-photo/$', pgre.ajout_ph_pgre, name = 'ajout_ph_pgre'),

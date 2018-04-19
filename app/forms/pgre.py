@@ -681,3 +681,10 @@ class FiltrerActionsPgre(forms.ModelForm) :
 			</table>
 		</div>
 		'''.format(''.join(trs))
+
+
+class GererSsActionPgre(forms.ModelForm):
+	class Meta:
+		from app.models import TDossierSsAction
+		model = TDossierSsAction
+		fields = '__all__'

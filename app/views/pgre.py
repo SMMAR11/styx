@@ -70,7 +70,7 @@ def cr_act_pgre(request) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./pgre/cr_act_pgre.html',
 			{ 'f_cr_act_pgre' : init_f(f_cr_act_pgre), 't_fm' : t_fm, 'title' : 'Créer une action PGRE' }
 		)
@@ -94,7 +94,7 @@ def cr_act_pgre(request) :
 					t_atel_pgre = [(
 						a.id_atel_pgre.int_atel_pgre,
 						'''
-						<input type="checkbox" class="pull-right" id="id_GererActionPgre-cbsm_atel_pgre_{0}" 
+						<input type="checkbox" class="pull-right" id="id_GererActionPgre-cbsm_atel_pgre_{0}"
 						name="GererActionPgre-cbsm_atel_pgre" value="{1}">
 						'''.format(index, a.id_atel_pgre.pk)
 					) for index, a in enumerate(qs_ic_pgre_atel_pgre)]
@@ -105,7 +105,7 @@ def cr_act_pgre(request) :
 				# J'envoie le tableau des ateliers filtrés.
 				output = HttpResponse(
 					json.dumps({
-						'bypass' : True, 
+						'bypass' : True,
 						'success' : { 'datatable' : t_atel_pgre, 'datatable_name' : 'GererActionPgre-cbsm_atel_pgre' }
 					}), content_type = 'application/json'
 				)
@@ -139,7 +139,7 @@ def cr_act_pgre(request) :
 			# Je soumets le formulaire.
 			f_cr_act_pgre = GererActionPgre(
 				request.POST,
-				request.FILES, 
+				request.FILES,
 				prefix = 'GererActionPgre',
 				k_util = request.user,
 				k_ic_pgre = request.POST.get('GererActionPgre-id_ic_pgre')
@@ -156,7 +156,7 @@ def cr_act_pgre(request) :
 					json.dumps({ 'success' : {
 						'message' : 'L\'action PGRE N°{0} a été créée avec succès.'.format(o_nvelle_act_pgre),
 						'redirect' : reverse('cons_act_pgre', args = [o_nvelle_act_pgre.pk])
-					}}), 
+					}}),
 					content_type = 'application/json'
 				)
 
@@ -234,7 +234,7 @@ def modif_act_pgre(request, _a) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./pgre/modif_act_pgre.html',
 			{
 				'a' : o_act_pgre,
@@ -263,7 +263,7 @@ def modif_act_pgre(request, _a) :
 					t_atel_pgre = [(
 						a.id_atel_pgre.int_atel_pgre,
 						'''
-						<input type="checkbox" class="pull-right" id="id_GererActionPgre-cbsm_atel_pgre_{0}" 
+						<input type="checkbox" class="pull-right" id="id_GererActionPgre-cbsm_atel_pgre_{0}"
 						name="GererActionPgre-cbsm_atel_pgre" value="{1}">
 						'''.format(index, a.id_atel_pgre.pk)
 					) for index, a in enumerate(qs_ic_pgre_atel_pgre)]
@@ -274,7 +274,7 @@ def modif_act_pgre(request, _a) :
 				# J'envoie le tableau des ateliers filtrés.
 				output = HttpResponse(
 					json.dumps({
-						'bypass' : True, 
+						'bypass' : True,
 						'success' : { 'datatable' : t_atel_pgre, 'datatable_name' : 'GererActionPgre-cbsm_atel_pgre' }
 					}), content_type = 'application/json'
 				)
@@ -310,7 +310,7 @@ def modif_act_pgre(request, _a) :
 				TDossierPgreGeom.objects.filter(id_doss_pgre = o_act_pgre).delete()
 
 				if request.POST['edit-geom'] :
-					
+
 					# Je récupère les objets créés.
 					editgeom = request.POST['edit-geom'].split(';')
 
@@ -333,7 +333,7 @@ def modif_act_pgre(request, _a) :
 						La géométrie de l'action PGRE N°{0} a été mise à jour avec succès.
 						'''.format(o_act_pgre),
 						'redirect' : reverse('cons_act_pgre', args = [o_act_pgre.pk])
-					}}), 
+					}}),
 					content_type = 'application/json'
 				)
 
@@ -360,7 +360,7 @@ def modif_act_pgre(request, _a) :
 					json.dumps({ 'success' : {
 						'message' : 'L\'action PGRE N°{0} a été modifiée avec succès.'.format(o_act_pgre_modif),
 						'redirect' : reverse('cons_act_pgre', args = [o_act_pgre_modif.pk])
-					}}), 
+					}}),
 					content_type = 'application/json'
 				)
 
@@ -451,7 +451,7 @@ def suppr_act_pgre(request, _a) :
 				json.dumps({ 'success' : {
 					'message' : 'L\'action PGRE N°{0} a été supprimée avec succès.'.format(o_act_pgre_suppr),
 					'redirect' : reverse('ch_act_pgre')
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -526,7 +526,7 @@ def ch_act_pgre(request) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./pgre/ch_act_pgre.html',
 			{ 'f_ch_act_pgre' : init_f(f_ch_act_pgre), 't_act_pgre' : t_act_pgre, 'title' : 'Choisir une action PGRE' }
 		)
@@ -671,13 +671,13 @@ def cons_act_pgre(request, _a) :
 				'value' : o_act_pgre.obj_econ_ress_doss_pgre
 			},
 			'ann_prev_deb_doss_pgre' : {
-				'label' : 'Année prévisionnelle du début de l\'action PGRE', 
+				'label' : 'Année prévisionnelle du début de l\'action PGRE',
 				'value' : o_act_pgre.ann_prev_deb_doss_pgre
 			},
-			'dt_deb_doss_pgre' : { 
+			'dt_deb_doss_pgre' : {
 				'label' : 'Date de début de l\'action PGRE', 'value' : dt_fr(o_act_pgre.dt_deb_doss_pgre) or ''
 			},
-			'dt_fin_doss_pgre' : { 
+			'dt_fin_doss_pgre' : {
 				'label' : 'Date de fin de l\'action PGRE', 'value' : dt_fr(o_act_pgre.dt_fin_doss_pgre) or ''
 			},
 			'id_nat_doss' : { 'label' : 'Nature de l\'action PGRE', 'value' : o_act_pgre.id_nat_doss },
@@ -843,7 +843,7 @@ def cons_act_pgre(request, _a) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./pgre/cons_act_pgre.html',
 			{
 				'a' : o_act_pgre,
@@ -896,7 +896,7 @@ def cons_act_pgre(request, _a) :
 							'label' : 'Date de prise de vue', 'value' : dt_fr(o_ph_pgre.dt_pv_ph_pgre) or ''
 						}
 					}
-					
+
 					t_attrs_ph_pgre = init_pg_cons(t_attrs_ph_pgre)
 
 					output = HttpResponse(
@@ -947,7 +947,7 @@ def cons_act_pgre(request, _a) :
 								o_nv_pdc.id_doss_pgre
 							),
 							'redirect' : reverse('cons_act_pgre', args = [o_nv_pdc.id_doss_pgre.pk])
-						}}), 
+						}}),
 						content_type = 'application/json'
 					)
 
@@ -1019,7 +1019,7 @@ def ajout_ph_pgre(request) :
 			o_act_pgre_droit = None
 		if o_act_pgre_droit :
 			ger_droits(
-				request.user, 
+				request.user,
 				[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
 					id_doss_pgre = o_act_pgre_droit
 				)],
@@ -1042,7 +1042,7 @@ def ajout_ph_pgre(request) :
 						o_nvelle_ph_pgre.id_doss_pgre
 					),
 					'redirect' : reverse('cons_act_pgre', args = [o_nvelle_ph_pgre.id_doss_pgre.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -1108,9 +1108,9 @@ def modif_ph_pgre(request, _p) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./pgre/modif_ph_pgre.html',
-			{ 
+			{
 				'f_modif_ph_pgre' : init_f(f_modif_ph_pgre),
 				'p' : o_ph_pgre,
 				't_fm' : t_fm,
@@ -1134,7 +1134,7 @@ def modif_ph_pgre(request, _p) :
 				json.dumps({ 'success' : {
 					'message' : 'La photo a été mise à jour avec succès.',
 					'redirect' : reverse('cons_act_pgre', args = [o_ph_pgre.id_doss_pgre.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -1197,7 +1197,7 @@ def suppr_ph_pgre(request, _p) :
 			json.dumps({ 'success' : {
 				'message' : 'La photo a été supprimée avec succès de l\'action PGRE N°{0}.'.format(o_act_pgre),
 				'redirect' : reverse('cons_act_pgre', args = [o_act_pgre.pk])
-			}}), 
+			}}),
 			content_type = 'application/json'
 		)
 
@@ -1255,9 +1255,9 @@ def modif_pdc(request, _p) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./pgre/modif_pdc.html',
-			{ 
+			{
 				'f_modif_pdc' : init_f(f_modif_pdc),
 				'p' : o_pdc,
 				't_fm' : t_fm,
@@ -1285,7 +1285,7 @@ def modif_pdc(request, _p) :
 					Le dernier point de contrôle de l'action PGRE N°{0} a été mis à jour avec succès.
 					'''.format(o_pdc_modif.id_doss_pgre),
 					'redirect' : reverse('cons_act_pgre', args = [o_pdc_modif.id_doss_pgre.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -1347,7 +1347,7 @@ def suppr_pdc(request, _p) :
 				Le dernier point de contrôle de l'action PGRE N°{0} a été supprimé avec succès.
 				'''.format(o_act_pgre),
 				'redirect' : reverse('cons_act_pgre', args = [o_act_pgre.pk])
-			}}), 
+			}}),
 			content_type = 'application/json'
 		)
 
@@ -1450,5 +1450,147 @@ def filtr_act_pgre(_req) :
 			output = datatable_reset(form_filtr_act_pgre.get_datatable(_req))
 		else :
 			output = HttpResponse(json.dumps(form_filtr_act_pgre.errors), content_type = 'application/json')
+
+	return output
+
+
+'''
+Cette vue permet d'afficher la page de création d'une sous action PGRE ou de traiter une sous action.
+request : Objet requête
+'''
+@verif_acc
+@csrf_exempt
+def cr_ss_act_pgre(request) :
+
+	# Imports
+	from app.forms.pgre import GererSsActionPgre
+	from app.functions import alim_ld
+	from app.functions import dt_fr
+	from app.functions import filtr_doss
+	from app.functions import gen_t_ch_doss
+	from app.functions import init_f
+	from app.functions import init_fm
+	from app.models import TInstancesConcertationPgreAtelierPgre
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import render
+	import json
+
+	output = HttpResponse()
+
+	if request.method == 'GET' :
+		# J'instancie un objet "formulaire".
+		f_cr_ss_act_pgre = GererSsActionPgre(prefix = 'GererActionPgre')
+
+		# # Je déclare un tableau qui stocke le contenu de certaines fenêtres modales.
+		# t_cont_fm = {
+		# 	'ch_doss' : gen_t_ch_doss(request)
+		# }
+		#
+		# # Je déclare un tableau de fenêtres modales.
+		# t_fm = [
+		# 	init_fm('ch_doss', 'Choisir un dossier de correspondance', t_cont_fm['ch_doss']),
+		# 	init_fm('ger_act_pgre', 'Créer une action PGRE')
+		# ]
+
+		# J'affiche le template.
+		output = render(
+			request,
+			'./pgre/cr_ss_act_pgre.html',
+			{ 'f_cr_ss_act_pgre' : init_f(f_cr_ss_act_pgre), 'title' : 'Créer une sous action PGRE' }
+		)
+
+	else :
+		if 'action' in request.GET :
+
+			# Je stocke la valeur du paramètre "GET" dont la clé est "action".
+			get_action = request.GET['action']
+
+			# Je traite le cas où je dois filtrer les ateliers selon l'instance de concertation choisie.
+			if get_action == 'filtrer-ateliers' :
+
+				try :
+
+					# Je stocke les ateliers concernés par l'instance de concertation.
+					qs_ic_pgre_atel_pgre = TInstancesConcertationPgreAtelierPgre.objects.filter(
+						id_ic_pgre = request.POST.get('GererActionPgre-id_ic_pgre')
+					).order_by('id_atel_pgre')
+
+					t_atel_pgre = [(
+						a.id_atel_pgre.int_atel_pgre,
+						'''
+						<input type="checkbox" class="pull-right" id="id_GererActionPgre-cbsm_atel_pgre_{0}"
+						name="GererActionPgre-cbsm_atel_pgre" value="{1}">
+						'''.format(index, a.id_atel_pgre.pk)
+					) for index, a in enumerate(qs_ic_pgre_atel_pgre)]
+
+				except :
+					t_atel_pgre = []
+
+				# J'envoie le tableau des ateliers filtrés.
+				output = HttpResponse(
+					json.dumps({
+						'bypass' : True,
+						'success' : { 'datatable' : t_atel_pgre, 'datatable_name' : 'GererActionPgre-cbsm_atel_pgre' }
+					}), content_type = 'application/json'
+				)
+
+			# Je traite le cas où je dois alimenter les listes déroulantes des axes, des sous-axes, des actions et des
+			# types de dossiers.
+			if get_action == 'alimenter-listes' :
+
+				# J'affiche ou je cache certaines listes déroulantes selon les données qu'elles contiennent.
+				output = HttpResponse(json.dumps(alim_ld(request)), content_type = 'application/json')
+
+			# Je traite le cas où je dois filtrer les dossiers selon certains critères.
+			if get_action == 'filtrer-dossiers' :
+
+				# Je prépare le tableau des dossiers filtrés.
+				t_doss = [(
+					d.num_doss,
+					d.get_int_doss(),
+					d.id_org_moa.n_org,
+					dt_fr(d.dt_delib_moa_doss) or '-',
+					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>'
+				) for d in filtr_doss(request)]
+
+				# J'envoie le tableau des dossiers filtrés.
+				output = HttpResponse(
+					json.dumps({ 'success' : { 'datatable' : t_doss }}), content_type = 'application/json'
+				)
+
+		else :
+
+			# Je soumets le formulaire.
+			f_cr_act_pgre = GererActionPgre(
+				request.POST,
+				request.FILES,
+				prefix = 'GererActionPgre',
+				k_util = request.user,
+				k_ic_pgre = request.POST.get('GererActionPgre-id_ic_pgre')
+			)
+
+			if f_cr_act_pgre.is_valid() :
+
+				# Je créé la nouvelle instance TDossierPgre.
+				o_nvelle_act_pgre = f_cr_act_pgre.save(commit = False)
+				o_nvelle_act_pgre.save()
+
+				# J'affiche le message de succès.
+				output = HttpResponse(
+					json.dumps({ 'success' : {
+						'message' : 'L\'action PGRE N°{0} a été créée avec succès.'.format(o_nvelle_act_pgre),
+						'redirect' : reverse('cons_act_pgre', args = [o_nvelle_act_pgre.pk])
+					}}),
+					content_type = 'application/json'
+				)
+
+			else :
+
+				# J'affiche les erreurs.
+				t_err = {}
+				for k, v in f_cr_act_pgre.errors.items() :
+					t_err['GererActionPgre-{0}'.format(k)] = v
+				output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
 
 	return output

@@ -48,6 +48,9 @@
 						<br/>
 						<span action="?action=supprimer-action-pgre" class="delete-icon icon-link" onclick="html_ds_fm(event, 'suppr_act_pgre');">Supprimer l'action PGRE</span>
 					</div>
+					<div class="col-sm-3 forbidden">
+						<a href="{% url 'cr_ss_act_pgre' %}" class="icon-link add-icon">Créer une sous-action PGRE</a>
+					</div>
 				</div>
 			</div>
 			<div id="ong_pdc" class="fade tab-pane">
@@ -152,7 +155,7 @@
 			</div>
 			<div id="ong_carto" class="fade tab-pane">
 				<form action="{% url 'modif_act_pgre' a.pk %}?action=modifier-geom" method="post" name="f_modif_carto" onsubmit="soum_f(event)">
-					{% csrf_token %}			
+					{% csrf_token %}
 					<!-- Je stocke la géométrie définie pour le dossier. -->
 					<input id="edit-geom" name="edit-geom" type="hidden">
 					<script type="text/javascript">

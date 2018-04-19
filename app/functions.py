@@ -38,7 +38,7 @@ def alim_ld(request) :
 	t_ss_axes = []
 	t_act = []
 	t_types_doss = []
-	
+
 	# Je prépare et mets en forme les données des tableaux de sortie.
 	if v_progr :
 		qs_axes = TAxe.objects.filter(id_progr = v_progr)
@@ -179,7 +179,7 @@ def filtr_doss(request, _d_excl = None) :
 
 	else :
 		qs_doss = []
-		
+
 	return qs_doss
 
 '''
@@ -329,7 +329,7 @@ def gen_t_ch_doss(request, _d_excl = None) :
 			</div>
 		</fieldset>
 	</form>
-	<div class="br"></div>		
+	<div class="br"></div>
 	<div class="my-table" id="t_ch_doss">
 		<table>
 			<thead>
@@ -484,7 +484,7 @@ def get_menu() :
 					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
 					'item_href' : reverse('select_prest')
 				},
-				{ 
+				{
 					'item_name' : 'En regroupant des prestations',
 					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
 					'item_href' : reverse('regroup_prest')
@@ -508,6 +508,16 @@ def get_menu() :
 					'item_img' : 'pics/thumbnails/pgre/consult.jpg',
 					'item_href' : reverse('ch_act_pgre')
 				},
+				# {
+				# 	'item_name' : 'Créer une sous-action PGRE',
+				# 	'item_img' : 'pics/thumbnails/pgre/add.jpg',
+				# 	'item_href' : reverse('cr_ss_act_pgre')
+				# },
+				# {
+				# 	'item_name' : 'Consulter une sous-action PGRE',
+				# 	'item_img' : 'pics/thumbnails/pgre/consult.jpg',
+				# 	'item_href' : reverse('ch_ss_act_pgre')
+				# },
 				{
 					'item_name' : 'Réalisation d\'états PGRE',
 					'item_img' : 'pics/thumbnails/pgre/realisation_etats.png',
@@ -668,13 +678,13 @@ def init_f(_form) :
 				<span class="field-error"></span>
 			</div>
 			'''.format(
-				set_name, 
-				champ.label, 
+				set_name,
+				champ.label,
 				tab_input[len(tab_input) - 1],
-				bs.find_all('a')[0]['href'], 
+				bs.find_all('a')[0]['href'],
 				span
 			)
-		
+
 		if balise_init == 'input' :
 
 			# Mise en forme d'une zone de saisie de type "checkbox"
@@ -885,7 +895,7 @@ def init_f(_form) :
 			output[champ.name] = safe(gab)
 		else :
 			raise ValueError('Aucun gabarit n\'est disponible pour le champ « {0} ».'.format(set_name))
-		
+
 	return output
 
 '''
@@ -1105,7 +1115,7 @@ def obt_doss_regr(_m) :
 		qs_doss = TDossier.objects.filter(reduce(operator.or_, t_sql))
 
 	return qs_doss
-	
+
 '''
 Cette fonction retourne un entier ou un nombre décimal sous forme de montant.
 _v : Valeur dont on veux avoir le montant
@@ -1126,7 +1136,7 @@ def obt_mont(_v) :
 		# Je retire les zéros non-significatifs si besoin.
 		if output.endswith('.00') :
 			output = output[:-3]
-		
+
 	return output
 
 '''
@@ -1148,7 +1158,7 @@ def obt_pourc(_v) :
 			output = output[:-3]
 		if '.' in output and output.endswith('0') :
 			output = output[:-1]
-			
+
 	return output
 
 '''
@@ -1163,7 +1173,7 @@ def rempl_fich_log(_t) :
 	import time
 
 	try :
-		
+
 		# Je mets en forme le chemin du fichier log.
 		chem_fich = '{0}/log.csv'.format(MEDIA_ROOT)
 		chem_fich = chem_fich.replace('\\', '/')
