@@ -1277,25 +1277,19 @@ class TDossierPgre(models.Model) :
     def __str__(self) :
         return self.num_doss_pgre
 
-    # def save(self, *args, **kwargs) :
-    #
-    #     TAvancementPgreTraces = apps.get_model('app', model_name='TAvancementPgreTraces')
-    #     # Si création d'un dossier je garde une trace de l'avancement originale
-    #     if not self.id_doss_pgre:
-    #         instance_buff = super().save(*args, **kwargs)
-    #         TAvancementPgreTraces.objects.create(
-    #             id_doss_pgre=instance_buff,
-    #             id_av_pgre=instance_buff.id_av_pgre)
-    #         return instance_buff
-    #
-    #     # Sinon je garde une trace si le champ id_av_pgre a été modifié par l'opération en cours
-    #     instance_old = TDossierPgre.objects.get(id_doss_pgre=self.id_doss_pgre)
-    #     if self.id_av_pgre != instance_old.id_av_pgre:
-    #         instance_buff = super().save(*args, **kwargs)
-    #         TAvancementPgreTraces.objects.create(
-    #             id_doss_pgre=instance_buff,
-    #             id_av_pgre=self.id_av_pgre)
-    #         return instance_buff
+    def save(self, *args, **kwargs) :
+
+        TAvancementPgreTraces = apps.get_model('app', model_name='TAvancementPgreTraces')
+
+        # Si création d'un dossier je garde une trace de l'avancement originale
+        # Sinon je garde une trace si le champ id_av_pgre a été modifié par l'opération en cours
+        old = TDossierPgre.objects.get(id_doss_pgre=self.id_doss_pgre) if self.id_doss_pgre else None
+        super().save(*args, **kwargs)
+        if not old or self.id_av_pgre != old.id_av_pgre:
+            TAvancementPgreTraces.objects.create(
+                id_doss_pgre=self,
+                id_av_pgre=self.id_av_pgre)
+
 
 
 class TAteliersPgreDossierPgre(models.Model) :
