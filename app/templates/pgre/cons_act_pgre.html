@@ -16,6 +16,7 @@
 			<li><a href="#ong_pdc" data-toggle="tab">Points de contrôle {{ annee }}</a></li>
 			<li><a href="#ong_ph" data-toggle="tab">Photos</a></li>
 			<li><a href="#ong_carto" data-toggle="tab">Cartographie</a></li>
+			<li><a href="#ong_ss_action" data-toggle="tab">Sous-actions</a></li>
 		</ul>
 		<div class="tab-content">
 			<div id="ong_act_pgre" class="fade tab-pane">
@@ -47,9 +48,8 @@
 						<a href="{% url 'modif_act_pgre' a.pk %}" class="icon-link modify-icon">Modifier l'action PGRE</a>
 						<br/>
 						<span action="?action=supprimer-action-pgre" class="delete-icon icon-link" onclick="html_ds_fm(event, 'suppr_act_pgre');">Supprimer l'action PGRE</span>
-					</div>
-					<div class="col-sm-3 forbidden">
-						<a href="{% url 'cr_ss_act_pgre' %}" class="icon-link add-icon">Créer une sous-action PGRE</a>
+						<br/>
+
 					</div>
 				</div>
 			</div>
@@ -153,6 +153,45 @@
 				</div>
 				{% endif %}
 			</div>
+
+			<!-- Dev onglet sous-actions -->
+			<div id="ong_ss_action" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_ajout_ss_action" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter une sous-action</span>
+				</div>
+				<div class="my-table" id="t_cons_ss_action">
+					<table>
+						<thead>
+							<tr>
+								<th>Libellé</th>
+								<th>Commentaire</th>
+								<th>Description</th>
+								<th>Prévisionnel</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for ssa in t_ss_action_pgre %}
+							<tr>
+								<td>
+									<span action="?action=consulter-sous-action-pgre&sous-action={{ ssa.pk }}" onclick="html_ds_fm(event, 'cons_ss_action');" title="Consulter la photo" style="display: block; margin: 0 auto; max-width: 80px;"></span>
+								</td>
+								<td>{{ ssa.lib_ss_act }}</td>
+								<td>{{ ssa.desc_ss_act }}</td>
+								<td>{{ ssa.comm_ss_act }}</td>
+								<td>{{ ssa.dt_prevision_ss_action_pgre }}</td>
+								<td>
+									<a class="forbidden modify-icon pull-right" href="{% url 'modif_ss_act_pgre' ssa.pk %}" title="Modifier la sous-action"></a>
+								</td>
+								<td>
+									<span action="?action=supprimer-sous-action-pgre&sous-action={{ ssa.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_ss_action');" title="Supprimer la sous-action"></span>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+
 			<div id="ong_carto" class="fade tab-pane">
 				<form action="{% url 'modif_act_pgre' a.pk %}?action=modifier-geom" method="post" name="f_modif_carto" onsubmit="soum_f(event)">
 					{% csrf_token %}

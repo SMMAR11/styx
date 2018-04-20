@@ -17,6 +17,7 @@ var t_datat = {
 	'cons_fin' : init_datat('#t_cons_fin', { 'autofit' : [8], 'unsorting' : [8] }),
 	'cons_pdc' : init_datat('#t_cons_pdc', { 'autofit' : [2, 3], 'unbordered' : [2, 3], 'unsorting' : [2, 3] }),
 	'cons_ph' : init_datat('#t_cons_ph', { 'autofit' : [0, 4, 5], 'unbordered' : [4, 5], 'unsorting' : [0, 4, 5] }),
+	'cons_ss_action' : init_datat('#t_cons_ss_action', { 'autofit' : [0, 4, 5], 'unbordered' : [4, 5], 'unsorting' : [0, 4, 5] }),
 	'cons_prest' : init_datat('#t_cons_prest', { 'autofit' : [6, 7], 'unbordered' : [6, 7], 'unsorting' : [6, 7] }),
 	'FiltrerDossiers-cbsm_org_moa' : init_datat(
 		'#dtab_FiltrerDossiers-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
@@ -64,7 +65,7 @@ $(document).ready(function() {
 		'Chargement de la page'
 	];
 
-	// Je prépare le contenu du loader principal que j'insère dans un premier temps dans un conteneur afin de le 
+	// Je prépare le contenu du loader principal que j'insère dans un premier temps dans un conteneur afin de le
 	// centrer verticalement.
 	var div = $('<div/>', { 'id' : 'main-loader' });
 	var div_wrapp = $('<div/>');
@@ -244,7 +245,7 @@ $('#id_GererDossier-rb_doss_ass_1, #id_GererActionPgre-rb_doss_corr_1, #bt_suppr
 		$(this).addClass('choose-icon pointer');
 		$(this).attr('title', 'Choisir le dossier');
 	});
-	
+
 	$('#id_GererDossier-za_doss_ass').val('');
 	$('#id_GererActionPgre-za_doss_corr').val('');
 });
@@ -305,7 +306,7 @@ $('form[name="f_ch_doss"]').on('submit', function(_e) {
 			$('#t_ch_doss tbody > tr').each(function() {
 				if ($(this).find('td:first-child').attr('class') != 'dataTables_empty') {
 					$(this).find('td:first-child').addClass('b');
-				}				
+				}
 			});
 		}
 	);
@@ -401,7 +402,7 @@ $('#id_GererFinancement-mont_elig_fin, #id_GererFinancement-pourc_elig_fin').on(
 
 	var o_mont_part_fin = $('#id_GererFinancement-mont_part_fin');
 	if (readonly == true) {
-		o_mont_part_fin.attr('readonly', true);	
+		o_mont_part_fin.attr('readonly', true);
 	}
 	else {
 		o_mont_part_fin.removeAttr('readonly');
@@ -410,7 +411,7 @@ $('#id_GererFinancement-mont_elig_fin, #id_GererFinancement-pourc_elig_fin').on(
 });
 
 /**
- * Ce script permet d'activer ou de désactiver la lecture seule du contrôle lié au pourcentage de réalisation des 
+ * Ce script permet d'activer ou de désactiver la lecture seule du contrôle lié au pourcentage de réalisation des
  * travaux.
  */
 $('#id_GererFinancement-id_paiem_prem_ac').on('change', function() {
@@ -459,7 +460,7 @@ $(document).on('click', '#t_ch_prest .choose-icon', function() {
 
 	// Je garde en mémoire la prestation choisie.
 	var o_prest = $(this);
-	
+
 	// Je lance une requête AJAX.
 	$.ajax({
 		type : 'post',
@@ -568,7 +569,7 @@ $.typeahead({
     		'{{n_org}}',
     		'</span>'
     	];
-        return tpl.join('\n'); 
+        return tpl.join('\n');
     }
 });
 
@@ -649,7 +650,7 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 				catch (e) {
 
 				}
-				
+
 				// J'affiche le tableau des factures.
 				$(data).insertAfter($('#fw_GererDemandeVersement-int_ddv'));
 
@@ -688,7 +689,7 @@ $('#id_GererDemandeVersement-dt_vers_ddv').on('input', function() {
 });
 
 /**
- * Ces deux scripts permettent la gestion d'affichage des fenêtres modales d'ajout d'une prestation et d'un 
+ * Ces deux scripts permettent la gestion d'affichage des fenêtres modales d'ajout d'une prestation et d'un
  * prestataire.
  */
 $('#bt_ajout_org_prest').on('click', function() {
@@ -747,7 +748,7 @@ $('input[type="checkbox"]').on('change', function() {
  */
 $('#id_GererActionPgre-id_ic_pgre').on('change', function(_e) {
 	soum_f(
-		_e, 
+		_e,
 		function() {
 			$('#id_GererActionPgre-cbsm_atel_pgre__all').attr('checked', false);
 		},
@@ -791,7 +792,7 @@ $(function() {
 		    		});
 		    	}
 		    	catch (e) {
-		    		
+
 		    	}
 	    	});
 	    }
@@ -799,7 +800,7 @@ $(function() {
 });
 
 /**
- * Ce script permet l'affichage de la zone d'information relative à l'un des points du graphique des points de 
+ * Ce script permet l'affichage de la zone d'information relative à l'un des points du graphique des points de
  * contrôle.
  */
 $('#zg_pdc').bind('plothover', function(_e, _p, item) {
@@ -845,7 +846,7 @@ $('form[name="f_ch_act_pgre"]').on('submit', function(_e) {
 			$('#t_ch_act_pgre tbody > tr').each(function() {
 				if ($(this).find('td:first-child').attr('class') != 'dataTables_empty') {
 					$(this).find('td:first-child').addClass('b');
-				}				
+				}
 			});
 		}
 	);
@@ -897,7 +898,7 @@ $('#btn_rech_siret').on('click', function() {
 	open('http://www.societe.com/cgi-bin/liste?nom=' + req, '_blank');
 });
 
-/** 
+/**
  * Ce script permet de pré-calculer automatiquement le montant d'une demande de versement.
  */
 $(document).on(
@@ -952,7 +953,7 @@ $(document).on(
 		else {
 			mont_ddv = mont_ddv.toFixed(2);
 		}
-		
+
 		// J'affiche le montant de la demande de versement.
 		if (cpt == cpt_ht) {
 			$('#id_GererDemandeVersement-mont_ht_ddv').val(mont_ddv);

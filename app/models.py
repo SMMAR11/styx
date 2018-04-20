@@ -1262,10 +1262,11 @@ class TDossierPgre(models.Model) :
     id_nat_doss = models.ForeignKey(TNatureDossier, models.DO_NOTHING, verbose_name = 'Nature de l\'action PGRE')
     atel_pgre = models.ManyToManyField(TAtelierPgre, through = 'TAteliersPgreDossierPgre')
     moa = models.ManyToManyField(TMoa, through = 'TMoaDossierPgre')
+    ss_action_pgre = models.ManyToManyField('TDossierSsAction')
     mont_doss_pgre = models.FloatField(
         verbose_name='Montant dossier PGRE',
         default=0.0,
-        validators = [val_mont_nul],
+        validators=[val_mont_nul],
     )
 
     class Meta :

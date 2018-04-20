@@ -508,16 +508,6 @@ def get_menu() :
 					'item_img' : 'pics/thumbnails/pgre/consult.jpg',
 					'item_href' : reverse('ch_act_pgre')
 				},
-				# {
-				# 	'item_name' : 'Créer une sous-action PGRE',
-				# 	'item_img' : 'pics/thumbnails/pgre/add.jpg',
-				# 	'item_href' : reverse('cr_ss_act_pgre')
-				# },
-				# {
-				# 	'item_name' : 'Consulter une sous-action PGRE',
-				# 	'item_img' : 'pics/thumbnails/pgre/consult.jpg',
-				# 	'item_href' : reverse('ch_ss_act_pgre')
-				# },
 				{
 					'item_name' : 'Réalisation d\'états PGRE',
 					'item_img' : 'pics/thumbnails/pgre/realisation_etats.png',

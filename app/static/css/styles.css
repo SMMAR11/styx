@@ -219,7 +219,7 @@ fieldset.my-div-fieldset > div {
 .attribute-wrapper .attribute-control {
 	display: block;
 	width: 100%;
-	min-height: 100px;
+	min-height: 25px;
 	background-color: #F6F6F6;
 	color: #555;
 	padding: 0 5px;

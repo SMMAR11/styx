@@ -8,6 +8,8 @@ from django import forms
 
 class GererActionPgre(forms.ModelForm) :
 
+	from app.models import TDossierSsAction
+
 	cbsm_atel_pgre = forms.MultipleChoiceField(
 		label = 'Atelier(s) concerné(s)|Nom|__zcc__', widget = forms.SelectMultiple()
 	)
@@ -25,6 +27,10 @@ class GererActionPgre(forms.ModelForm) :
 		label = 'Maître(s) d\'ouvrage(s)|Nom|__zcc__', widget = forms.SelectMultiple()
 	)
 	zl_nat_doss = forms.ChoiceField(label = 'Nature de l\'action PGRE', widget = forms.Select())
+
+	ss_action_pgre = forms.ModelMultipleChoiceField(
+		TDossierSsAction.objects.all(), required=True,
+		label="Sous Actions PGRE")
 
 	class Meta :
 
@@ -101,6 +107,7 @@ class GererActionPgre(forms.ModelForm) :
 				id_doss_pgre = i
 			)]
 			self.fields['zl_nat_doss'].initial = i.id_nat_doss.pk
+
 
 	def clean(self) :
 
@@ -684,7 +691,95 @@ class FiltrerActionsPgre(forms.ModelForm) :
 
 
 class GererSsActionPgre(forms.ModelForm):
+
+	from app.models import TNatureDossier
+	from app.models import TAvancementPgre
+
+	lib_ss_act = forms.CharField(label = 'Libellé', required = True)
+	desc_ss_act = forms.CharField(
+		label = 'Descriptif', widget = forms.TextInput(), required = False)
+	comm_ss_act = forms.CharField(
+		label = 'Commentaire', widget = forms.TextInput(), required = False)
+
+	dt_prevision_ss_action_pgre = forms.DateField(
+		label='Prévisionnel', required=True,
+        widget=forms.TextInput(
+            attrs={ 'input-group-addon' : 'date' }))
+
+	dt_deb_ss_action_pgre = forms.DateField(
+		label = 'Début', required=True,
+		widget=forms.TextInput(
+			attrs={ 'input-group-addon' : 'date' }))
+
+	dt_fin_ss_action_pgre = forms.DateField(
+		label = 'Fin', required=True,
+        widget=forms.TextInput(
+            attrs={ 'input-group-addon' : 'date' }))
+
+	mont_ss_action_pgre = forms.FloatField(label = "Montant", required = True)
+	obj_econ_ress_ss_action_pgre = forms.FloatField(label = "Objectif d'économie de ressource", required = True)
+
+	moa = forms.MultipleChoiceField(
+		label = 'Maître(s) d\'ouvrage(s)|Nom|__zcc__', required = False, widget = forms.SelectMultiple()
+	)
+
+	t_nature_dossier = forms.ModelChoiceField(
+		label = 'Nature de la sous-action PGRE',
+		queryset = TNatureDossier.objects.filter(peu_doss_pgre = True),
+		empty_label="Sélectionnez une nature de sous-action")
+
+	id_av_pgre = forms.ModelChoiceField(
+		label = 'Avancement de la sous-action',
+		queryset = TAvancementPgre.objects.all(),
+		empty_label="Sélectionnez l'etat d'avancement de la sous-action")
+
 	class Meta:
 		from app.models import TDossierSsAction
 		model = TDossierSsAction
 		fields = '__all__'
+
+	def __init__(self, *args, **kwargs):
+
+		from app.models import TMoa
+		from app.models import TNatureDossier
+
+		# Je déclare le tableau des arguments.
+		instance = kwargs.get('instance', None)
+		self.action_parent = kwargs.pop('action_parent', None)
+
+		# Mise en forme de certaines données
+		if instance :
+			kwargs.update(initial = {
+				'dt_prevision_ss_action_pgre' : dt_fr(instance.dt_prevision_ss_action_pgre) if instance.dt_prevision_ss_action_pgre else '',
+				'dt_deb_ss_action_pgre' : dt_fr(instance.dt_deb_ss_action_pgre) if instance.dt_deb_ss_action_pgre else '',
+				'dt_fin_ss_action_pgre' : dt_fr(instance.dt_fin_ss_action_pgre) if instance.dt_fin_ss_action_pgre else '',
+			})
+
+
+		super().__init__(*args, **kwargs)
+		init_mess_err(self)
+
+		# Définition des choix de certaines listes déroulantes
+		self.fields['moa'].choices = [[m.pk, '|'.join([str(m), '__zcc__'])] for m in TMoa.objects.filter(
+			peu_doss_pgre = True, en_act_doss_pgre = True
+		)]
+
+		# J'alimente la liste déroulante des natures de sous actions PGRE.
+		# t_nat_doss = [(nd.pk, nd) for nd in TNatureDossier.objects.filter(peu_doss_pgre = True)]
+		# t_nat_doss.insert(0, DEFAULT_OPTION)
+		# self.fields['t_nature_dossier'].choices = t_nat_doss
+
+	def clean(self):
+		# Je renvoie une erreur s'il y a une incohérence entre les dates de début et de fin de l'action PGRE.
+		dt_deb_ss_action_pgre = self.cleaned_data.get('dt_deb_ss_action_pgre')
+		dt_fin_ss_action_pgre = self.cleaned_data.get('dt_fin_ss_action_pgre')
+		if dt_deb_ss_action_pgre and dt_fin_ss_action_pgre and dt_deb_ss_action_pgre > dt_fin_ss_action_pgre :
+			self.add_error(
+				'dt_deb_ss_action_pgre', 'Veuillez saisir une date de début postérieure ou égale à la date de fin.'
+			)
+			self.add_error(
+				'dt_fin_ss_action_pgre', 'Veuillez saisir une date de fin antérieure ou égale à la date de début.'
+			)
+
+	def save(self, commit=True, *args, **kwargs):
+		return super().save(*args, **kwargs)
