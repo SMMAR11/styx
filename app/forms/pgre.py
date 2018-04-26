@@ -29,7 +29,7 @@ class GererActionPgre(forms.ModelForm) :
 	zl_nat_doss = forms.ChoiceField(label = 'Nature de l\'action PGRE', widget = forms.Select())
 
 	ss_action_pgre = forms.ModelMultipleChoiceField(
-		TDossierSsAction.objects.all(), required=True,
+		TDossierSsAction.objects.all(), required=False,
 		label="Sous Actions PGRE")
 
 	class Meta :
@@ -696,10 +696,12 @@ class GererSsActionPgre(forms.ModelForm):
 	from app.models import TAvancementPgre
 
 	lib_ss_act = forms.CharField(label = 'Libellé', required = True)
+
 	desc_ss_act = forms.CharField(
 		label = 'Descriptif', widget = forms.TextInput(), required = False)
+
 	comm_ss_act = forms.CharField(
-		label = 'Commentaire', widget = forms.TextInput(), required = False)
+		label = 'Commentaire', widget = forms.Textarea, required = False)
 
 	dt_prevision_ss_action_pgre = forms.DateField(
 		label='Prévisionnel', required=True,
@@ -717,7 +719,9 @@ class GererSsActionPgre(forms.ModelForm):
             attrs={ 'input-group-addon' : 'date' }))
 
 	mont_ss_action_pgre = forms.FloatField(label = "Montant", required = True)
-	obj_econ_ress_ss_action_pgre = forms.FloatField(label = "Objectif d'économie de ressource", required = True)
+
+	obj_econ_ress_ss_action_pgre = forms.FloatField(
+		label = "Objectif d'économie de ressource", required = True)
 
 	moa = forms.MultipleChoiceField(
 		label = 'Maître(s) d\'ouvrage(s)|Nom|__zcc__', required = False, widget = forms.SelectMultiple()
@@ -733,6 +737,12 @@ class GererSsActionPgre(forms.ModelForm):
 		queryset = TAvancementPgre.objects.all(),
 		empty_label="Sélectionnez l'etat d'avancement de la sous-action")
 
+	za_num_doss_pgre = forms.CharField(
+		label = 'Numéro de l\'action PGRE',
+		required = False,
+		widget = forms.TextInput(attrs = { 'readonly' : True })
+	)
+
 	class Meta:
 		from app.models import TDossierSsAction
 		model = TDossierSsAction
@@ -745,7 +755,7 @@ class GererSsActionPgre(forms.ModelForm):
 
 		# Je déclare le tableau des arguments.
 		instance = kwargs.get('instance', None)
-		self.action_parent = kwargs.pop('action_parent', None)
+		self.k_doss_pgre = kwargs.pop('k_doss_pgre', None)
 
 		# Mise en forme de certaines données
 		if instance :
@@ -763,11 +773,12 @@ class GererSsActionPgre(forms.ModelForm):
 		self.fields['moa'].choices = [[m.pk, '|'.join([str(m), '__zcc__'])] for m in TMoa.objects.filter(
 			peu_doss_pgre = True, en_act_doss_pgre = True
 		)]
+		self.fields['za_num_doss_pgre'].initial = self.k_doss_pgre
 
 		# J'alimente la liste déroulante des natures de sous actions PGRE.
-		# t_nat_doss = [(nd.pk, nd) for nd in TNatureDossier.objects.filter(peu_doss_pgre = True)]
-		# t_nat_doss.insert(0, DEFAULT_OPTION)
-		# self.fields['t_nature_dossier'].choices = t_nat_doss
+		t_nat_doss = [(nd.pk, nd) for nd in TNatureDossier.objects.filter(peu_doss_pgre = True)]
+		t_nat_doss.insert(0, DEFAULT_OPTION)
+		self.fields['t_nature_dossier'].choices = t_nat_doss
 
 	def clean(self):
 		# Je renvoie une erreur s'il y a une incohérence entre les dates de début et de fin de l'action PGRE.
@@ -780,6 +791,5 @@ class GererSsActionPgre(forms.ModelForm):
 			self.add_error(
 				'dt_fin_ss_action_pgre', 'Veuillez saisir une date de fin antérieure ou égale à la date de début.'
 			)
-
-	def save(self, commit=True, *args, **kwargs):
+	def save(self, *args, **kwargs):
 		return super().save(*args, **kwargs)

@@ -349,10 +349,7 @@ def modif_act_pgre(request, _a) :
 				k_ic_pgre = request.POST.get('GererActionPgre-id_ic_pgre')
 			)
 
-			# Je soumet le jeu de formulaire des sous actions
-			ss_action_formset = SsActionFormSet(request.POST)
-
-			if f_modif_act_pgre.is_valid() and ss_action_formset.isvalid():
+			if f_modif_act_pgre.is_valid():
 
 				# Je modifie l'instance TDossierPgre.
 				o_act_pgre_modif = f_modif_act_pgre.save(commit = False)
@@ -733,7 +730,7 @@ def cons_act_pgre(request, _a) :
 			'lib_ss_act' : ssa.lib_ss_act,
 			'comm_ss_act' : ssa.comm_ss_act,
 			'desc_ss_act' : ssa.desc_ss_act,
-			'dt_dt_prevision_ss_action_pgre' : dt_fr(ssa.dt_dt_prevision_ss_action_pgre) or '-'
+			'dt_prevision_ss_action_pgre' : dt_fr(ssa.dt_prevision_ss_action_pgre) or '-'
 		} for ssa in qs_ss_action_pgre]
 
 		# J'initialise le tableau des géométries de l'action PGRE.
@@ -772,12 +769,13 @@ def cons_act_pgre(request, _a) :
 		# J'instancie des objets "formulaire".
 		f_ajout_ph_pgre = GererPhotoPgre(prefix = 'GererPhotoPgre', k_doss_pgre = o_act_pgre)
 		f_ajout_contr_act_pgre = GererControleActionPgre(prefix = 'GererControleActionPgre', k_doss_pgre = o_act_pgre)
-		f_ajout_ss_action_pgre = GererSsActionPgre(prefix = 'GererSsActionPgre', action_parent=o_act_pgre)
+		f_ajout_ss_action_pgre = GererSsActionPgre(prefix = 'GererSsActionPgre', k_doss_pgre = o_act_pgre)
 
 		# J'initialise le gabarit de chaque champ de chaque formulaire.
 		t_ajout_ph_pgre = init_f(f_ajout_ph_pgre)
 		t_ajout_contr_act_pgre = init_f(f_ajout_contr_act_pgre)
 		t_ajout_ss_action_pgre = init_f(f_ajout_ss_action_pgre)
+
 		# Je déclare un tableau qui stocke le contenu de certaines fenêtres modales.
 		t_cont_fm = {
 			'ajout_pdc' : '''
@@ -833,28 +831,41 @@ def cons_act_pgre(request, _a) :
 				'\n'.join(t_ph_pgre_diap['div'])
 			),
 			'ajout_ss_action' : '''
-			<form action="{0}" enctype="multipart/form-data" name="f_ajout_ph" method="post" onsubmit="soum_f(event)">
-				<input name="csrfmiddlewaretoken" type="hidden" value="{1}">
-				{2}
+			<form action="{action}" enctype="multipart/form-data" name="f_ajout_ph" method="post" onsubmit="soum_f(event)">
+				<input name="csrfmiddlewaretoken" type="hidden" value="{csrf}">
+				{pk}
 				<div class="row">
-					<div class="col-sm-6">{3}</div>
-					<div class="col-sm-6">{4}</div>
-					<div class="col-sm-6">{5}</div>
-					<div class="col-sm-6">{6}</div>
+					<div class="col-sm-6">{lib}</div>
+					<div class="col-sm-6">{desc}</div>
+					<div class="col-sm-12">{comm}</div>
+					<div class="col-sm-12">{dt_prev}</div>
+					<div class="col-sm-6">{dt_deb}</div>
+					<div class="col-sm-6">{dt_fin}</div>
+					<div class="col-sm-6">{mont}</div>
+					<div class="col-sm-6">{obj_econ}</div>
+					<div class="col-sm-12">{moa}</div>
+					<div class="col-sm-6">{nat_doss}</div>
+					<div class="col-sm-6">{id_av_pgre}</div>
 				</div>
 				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 			</form>
 			'''.format(
-				reverse('ajout_ss_act_pgre'),
-				csrf(request)['csrf_token'],
-				o_act_pgre.pk,
-				t_ajout_ss_action_pgre['lib_ss_act'],
-				t_ajout_ss_action_pgre['comm_ss_act'],
-				t_ajout_ss_action_pgre['desc_ss_act'],
-				t_ajout_ss_action_pgre['dt_prevision_ss_action_pgre']
+				action=reverse('ajout_ss_act_pgre'),
+				csrf=csrf(request)['csrf_token'],
+				pk=t_ajout_ss_action_pgre['za_num_doss_pgre'],
+				lib=t_ajout_ss_action_pgre['lib_ss_act'],
+				comm=t_ajout_ss_action_pgre['comm_ss_act'],
+				desc=t_ajout_ss_action_pgre['desc_ss_act'],
+				dt_prev=t_ajout_ss_action_pgre['dt_prevision_ss_action_pgre'],
+				dt_deb=t_ajout_ss_action_pgre['dt_deb_ss_action_pgre'],
+				dt_fin=t_ajout_ss_action_pgre['dt_fin_ss_action_pgre'],
+				mont=t_ajout_ss_action_pgre['mont_ss_action_pgre'],
+				obj_econ=t_ajout_ss_action_pgre['obj_econ_ress_ss_action_pgre'],
+				moa=t_ajout_ss_action_pgre['moa'],
+				nat_doss=t_ajout_ss_action_pgre['t_nature_dossier'],
+				id_av_pgre=t_ajout_ss_action_pgre['id_av_pgre'],
 			)
 		}
-
 		# Je déclare un tableau de fenêtres modales.
 		t_fm = [
 			init_fm('ajout_ph', 'Ajouter une photo', t_cont_fm['ajout_ph']),
@@ -1510,7 +1521,7 @@ Cette vue permet de traiter le formulaire d'ajout d'une sous-action.
 request : Objet requête
 '''
 @verif_acc
-def ajout_ss_action(request) :
+def ajout_ss_act_pgre(request) :
 
 	# Imports
 	from app.forms.pgre import GererSsActionPgre
@@ -1552,12 +1563,15 @@ def ajout_ss_action(request) :
 			# Je créé la nouvelle instance TPhotoPgre.
 			o_nvelle_ss_act_pgre = f_ajout_ss_action_pgre.save()
 
+			# J'ajoute la sous-action à son action parente
+			o_act_pgre.ss_action_pgre.add(o_nvelle_ss_act_pgre)
+
 			# J'affiche le message de succès.
 			output = HttpResponse(
 				json.dumps({ 'success' : {
 					'message' : "La sous-action N°{0} a été crée pour l'action PGRE N°{1}.".format(
 						o_nvelle_ss_act_pgre.id_ss_act, o_act_pgre.id_doss_pgre),
-					'redirect' : reverse('modif_act_pgre', args = [o_act_pgre.pk])
+					'redirect' : reverse('cons_act_pgre', args = [o_act_pgre.pk])
 				}}),
 				content_type = 'application/json'
 			)
@@ -1570,105 +1584,6 @@ def ajout_ss_action(request) :
 			# J'affiche les erreurs.
 			t_err = {}
 			for k, v in f_ajout_ss_action_pgre.errors.items() :
-				t_err['GererSsActionPgre-{0}'.format(k)] = v
-			output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
-
-	return output
-
-
-'''
-Cette vue permet d'afficher la page de création d'une sous action PGRE.
-request : Objet requête
-_a: identifiant de l'action parente
-'''
-@verif_acc
-@csrf_exempt
-def cr_ss_act_pgre(request, _a) :
-
-	# Imports
-	from app.forms.pgre import GererSsActionPgre
-	from app.functions import alim_ld
-	from app.functions import dt_fr
-	from app.functions import filtr_doss
-	from app.functions import gen_t_ch_doss
-	from app.functions import ger_droits
-	from app.functions import init_f
-	from app.functions import init_fm
-	from app.models import TDossierPgre
-	from app.models import TDossierPgreGeom
-	from app.models import TInstancesConcertationPgreAtelierPgre
-	from app.models import TMoaDossierPgre
-	from django.contrib.gis import geos
-	from django.core.urlresolvers import reverse
-	from django.http import HttpResponse
-	from django.shortcuts import get_object_or_404
-	from django.shortcuts import render
-	from styx.settings import T_DONN_BDD_INT
-	import json
-
-	output = HttpResponse()
-
-	# Je vérifie l'existence d'un objet TDossierPgre.
-	o_act_pgre = get_object_or_404(TDossierPgre, pk = _a)
-
-	# Je vérifie le droit d'écriture.
-	ger_droits(
-		request.user,
-		[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
-			id_doss_pgre = o_act_pgre
-		)],
-		False
-	)
-
-	if request.method == 'GET' :
-		# J'instancie un objet "formulaire".
-		f_cr_ss_act_pgre = GererSsActionPgre(action_parent=o_act_pgre)
-
-		# # Je déclare un tableau qui stocke le contenu de certaines fenêtres modales.
-		# t_cont_fm = {
-		# 	'ch_doss' : gen_t_ch_doss(request)
-		# }
-		#
-		# # Je déclare un tableau de fenêtres modales.
-		# t_fm = [
-		# 	init_fm('ch_doss', 'Choisir un dossier de correspondance', t_cont_fm['ch_doss']),
-		# 	init_fm('ger_act_pgre', 'Créer une action PGRE')
-		# ]
-
-		# J'affiche le template.
-		output = render(
-			request,
-			'./pgre/cr_ss_act_pgre.html',
-			{ 'f_cr_ss_act_pgre' : init_f(f_cr_ss_act_pgre), 'title' : 'Créer une sous action PGRE' }
-		)
-
-	else :
-
-		# Je soumets le formulaire.
-		f_cr_ss_act_pgre = GererSsActionPgre(
-			request.POST,
-			request.FILES,
-			action_parent = o_act_pgre,
-		)
-		if f_cr_ss_act_pgre.is_valid() :
-			# Je créé la nouvelle instance TDossierSsAction.
-			o_nvelle_ss_act_pgre = f_cr_ss_act_pgre.save()
-
-			# J'affiche le message de succès.
-			output = HttpResponse(
-				json.dumps({ 'success' : {
-					'message' : "La sous-action N°{0} a été crée pour l'action PGRE N°{1}.".format(
-						o_nvelle_ss_act_pgre.id_ss_act, o_act_pgre.id_doss_pgre),
-					'redirect' : reverse('modif_act_pgre', args = [o_act_pgre.pk])
-				}}),
-				content_type = 'application/json'
-			)
-
-		else :
-
-			# J'affiche les erreurs.
-			t_err = {}
-			for k, v in f_cr_ss_act_pgre.errors.items() :
 				t_err['GererSsActionPgre-{0}'.format(k)] = v
 			output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
 

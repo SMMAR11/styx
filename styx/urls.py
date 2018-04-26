@@ -112,7 +112,7 @@ urlpatterns = [
     url(r'^modules/pgre/modifier-action-pgre/([0-9]+)/$', pgre.modif_act_pgre, name = 'modif_act_pgre'),
     url(r'^modules/pgre/supprimer-action-pgre/([0-9]+)/$', pgre.suppr_act_pgre, name = 'suppr_act_pgre'),
 
-    url(r'^modules/pgre/ajout-sous-action-pgre/$', pgre.ajout_ss_action, name = 'ajout_ss_act_pgre'),
+    url(r'^modules/pgre/ajout-sous-action-pgre/$', pgre.ajout_ss_act_pgre, name = 'ajout_ss_act_pgre'),
     # url(r'^modules/pgre/modifier-sous-action-pgre/([0-9]+)/$', pgre.modif_ss_act_pgre, name = 'modif_ss_act_pgre'),
     # url(r'^modules/pgre/supprimer-ss-action-pgre/([0-9]+)/$', pgre.suppr_ss_act_pgre, name = 'suppr_ss_act_pgre'),
 
