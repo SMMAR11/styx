@@ -154,7 +154,6 @@
 				{% endif %}
 			</div>
 
-			<!-- Dev onglet sous-actions -->
 			<div id="ong_ss_action" class="fade tab-pane">
 				<div class="right">
 					<span data-target="#fm_ajout_ss_action" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter une sous-action</span>
@@ -163,22 +162,22 @@
 					<table>
 						<thead>
 							<tr>
+								<th>Identifiant</th>
 								<th>Libellé</th>
-								<th>Commentaire</th>
 								<th>Description</th>
-								<th>Prévisionnel</th>
+								<th>Modifier</th>
+								<th>Supprimer</th>
 							</tr>
 						</thead>
 						<tbody>
 							{% for ssa in t_ss_action_pgre %}
 							<tr>
-								<td>
-									<span action="?action=consulter-sous-action-pgre&sous-action={{ ssa.pk }}" onclick="html_ds_fm(event, 'cons_ss_action');" title="Consulter la photo" style="display: block; margin: 0 auto; max-width: 80px;"></span>
-								</td>
+								<!-- <td>
+									<a href="{% url 'modif_ss_act_pgre' ssa.pk %}" class="forbidden modify-icon pull-right" title="Modifier la sous-action"></a>
+								</td> -->
+								<td>{{ ssa.pk }}</td>
 								<td>{{ ssa.lib_ss_act }}</td>
 								<td>{{ ssa.desc_ss_act }}</td>
-								<td>{{ ssa.comm_ss_act }}</td>
-								<td>{{ ssa.dt_prevision_ss_action_pgre }}</td>
 								<td>
 									<a class="forbidden modify-icon pull-right" href="{% url 'modif_ss_act_pgre' ssa.pk %}" title="Modifier la sous-action"></a>
 								</td>

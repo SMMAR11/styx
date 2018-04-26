@@ -726,6 +726,7 @@ def cons_act_pgre(request, _a) :
 
 		# J'initialise le tableau des sous-actions de l'action PGRE.
 		t_ss_action_pgre = [{
+			'pk' : ssa.pk,
 			'id_ss_act' : ssa.id_ss_act,
 			'lib_ss_act' : ssa.lib_ss_act,
 			'comm_ss_act' : ssa.comm_ss_act,
@@ -1514,8 +1515,6 @@ def filtr_act_pgre(_req) :
 
 	return output
 
-
-
 '''
 Cette vue permet de traiter le formulaire d'ajout d'une sous-action.
 request : Objet requête
@@ -1588,3 +1587,119 @@ def ajout_ss_act_pgre(request) :
 			output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
 
 	return output
+
+'''
+Cette vue permet d'afficher la page de modification d'une sous-action ou de traiter le formulaire de mise à jour
+d'une sous-action.
+request : Objet requête
+_ssa : Identifiant d'une sous-action
+'''
+@verif_acc
+def modif_ss_act_pgre(request, _ssa) :
+
+	# Imports
+	from app.forms.pgre import GererSsActionPgre
+	from app.functions import init_f
+	from app.functions import init_fm
+	from app.functions import ger_droits
+	from app.models import TDossierPgre
+	from app.models import TMoaDossierPgre
+	from app.models import TDossierSsAction
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from styx.settings import T_DONN_BDD_INT
+	from django.shortcuts import get_object_or_404
+	from django.shortcuts import render
+	import json
+
+	output = HttpResponse()
+
+	o_ss_action_pgre = get_object_or_404(TDossierSsAction, pk=_ssa)
+
+	if request.method == 'POST' :
+
+		# Je vérifie le droit d'écriture.
+
+		try :
+			o_act_pgre = TDossierPgre.objects.get(
+				num_doss_pgre = o_ss_action_pgre.tdossierpgre_set.first()
+			)
+		except :
+			o_act_pgre = None
+
+		if o_act_pgre :
+			ger_droits(
+				request.user,
+				[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+					id_doss_pgre = o_act_pgre
+				)],
+				False
+			)
+
+		# Je soumets le formulaire.
+		f_modif_ss_action_pgre = GererSsActionPgre(
+			request.POST, request.FILES,
+			prefix = 'GererSsActionPgre',
+			instance=o_ss_action_pgre)
+
+		if f_modif_ss_action_pgre.is_valid() :
+
+			# Je créé la nouvelle instance TPhotoPgre.
+			o_ss_act_pgre = f_modif_ss_action_pgre.save()
+
+
+			# J'affiche le message de succès.
+			output = HttpResponse(
+				json.dumps({ 'success' : {
+					'message' : "La sous-action N°{0} a bien été mise à jour pour l'action PGRE N°{1}.".format(
+						o_ss_act_pgre.id_ss_act, o_act_pgre.id_doss_pgre),
+					'redirect' : reverse('cons_act_pgre', args = [o_act_pgre.pk])
+				}}),
+				content_type = 'application/json'
+			)
+
+			# Je renseigne l'onglet actif après rechargement de la page.
+			request.session['tab_act_pgre'] = '#ong_ss_action'
+
+		else :
+
+			# J'affiche les erreurs.
+			t_err = {}
+			for k, v in f_ajout_ss_action_pgre.errors.items() :
+				t_err['GererSsActionPgre-{0}'.format(k)] = v
+			output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
+
+	if request.method == 'GET' :
+
+		# J'instancie un objet "formulaire".
+		f_modif_ss_action_pgre = GererSsActionPgre(
+			instance = o_ss_action_pgre,
+			prefix = 'GererSsActionPgre')
+
+		# # Je déclare un tableau de fenêtres modales.
+		t_fm = [
+			init_fm('modif_ss_action_pgre', 'Modifier une sous-action')
+		]
+
+		# J'affiche le template.
+		output = render(
+			request,
+			'pgre/modif_ss_act_pgre.html',
+			{
+				'f_modif_ss_action_pgre' : init_f(f_modif_ss_action_pgre),
+				'p_act' : o_ss_action_pgre.tdossierpgre_set.first(),
+				't_fm' : t_fm,
+				'title' : 'Modifier une sous-action'
+			}
+		)
+	return output
+'''
+Cette vue permet de traiter le formulaire de suppression d'une sous-action.
+request : Objet requête
+_ssa : Identifiant d'une sous-action
+'''
+@verif_acc
+@csrf_exempt
+def suppr_ss_act_pgre(request, _ssa) :
+
+	return HttpResponse()

@@ -752,6 +752,7 @@ class GererSsActionPgre(forms.ModelForm):
 
 		from app.models import TMoa
 		from app.models import TNatureDossier
+		from app.functions import dt_fr
 
 		# Je déclare le tableau des arguments.
 		instance = kwargs.get('instance', None)
