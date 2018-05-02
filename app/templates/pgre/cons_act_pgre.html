@@ -33,6 +33,7 @@
 						{{ t_attrs_act_pgre.id_doss }}
 						{{ t_attrs_act_pgre.moa }}
 						{{ t_attrs_act_pgre.id_pr_pgre }}
+						{{ t_attrs_act_pgre.mont_doss_pgre }}
 						{{ t_attrs_act_pgre.obj_econ_ress_doss_pgre }}
 						{{ t_attrs_act_pgre.ann_prev_deb_doss_pgre }}
 						<div class="row">
@@ -49,7 +50,6 @@
 						<br/>
 						<span action="?action=supprimer-action-pgre" class="delete-icon icon-link" onclick="html_ds_fm(event, 'suppr_act_pgre');">Supprimer l'action PGRE</span>
 						<br/>
-
 					</div>
 				</div>
 			</div>
@@ -164,20 +164,29 @@
 							<tr>
 								<th>Identifiant</th>
 								<th>Libellé</th>
-								<th>Description</th>
-								<th>Modifier</th>
-								<th>Supprimer</th>
+								<th>Montant dossier</th>
+								<th>Objectif économie</th>
+								<th>Nature</th>
+								<th>Avancement</th>
+								<th>Début</th>
+								<th>Fin</th>
+								<th>Prévision</th>
+								<th></th>
+								<th></th>
 							</tr>
 						</thead>
 						<tbody>
 							{% for ssa in t_ss_action_pgre %}
 							<tr>
-								<!-- <td>
-									<a href="{% url 'modif_ss_act_pgre' ssa.pk %}" class="forbidden modify-icon pull-right" title="Modifier la sous-action"></a>
-								</td> -->
 								<td>{{ ssa.pk }}</td>
 								<td>{{ ssa.lib_ss_act }}</td>
-								<td>{{ ssa.desc_ss_act }}</td>
+								<td>{{ ssa.mont_ss_action_pgre }}</td>
+								<td>{{ ssa.obj_econ_ress_ss_action_pgre }}</td>
+								<td>{{ ssa.t_nature_dossier }}</td>
+								<td>{{ ssa.id_av_pgre }}</td>
+								<td>{{ ssa.dt_deb_ss_action_pgre }}</td>
+								<td>{{ ssa.dt_fin_ss_action_pgre }}</td>
+								<td>{{ ssa.dt_prevision_ss_action_pgre }}</td>
 								<td>
 									<a class="forbidden modify-icon pull-right" href="{% url 'modif_ss_act_pgre' ssa.pk %}" title="Modifier la sous-action"></a>
 								</td>

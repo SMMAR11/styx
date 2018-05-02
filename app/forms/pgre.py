@@ -5,6 +5,7 @@
 from app.constants import *
 from app.functions import init_mess_err
 from django import forms
+from django.db.models import Sum
 
 class GererActionPgre(forms.ModelForm) :
 
@@ -28,9 +29,20 @@ class GererActionPgre(forms.ModelForm) :
 	)
 	zl_nat_doss = forms.ChoiceField(label = 'Nature de l\'action PGRE', widget = forms.Select())
 
+	mont_doss_pgre = forms.FloatField(
+		label = 'Montant dossier PGRE',
+		required = True
+	)
+
+	obj_econ_ress_doss_pgre = forms.FloatField(
+		label= "Objectifs d'économie de la ressource en eau (en m<sup>3</sup>)",
+		required = True
+	)
+
 	ss_action_pgre = forms.ModelMultipleChoiceField(
 		TDossierSsAction.objects.all(), required=False,
 		label="Sous Actions PGRE")
+
 
 	class Meta :
 
@@ -62,9 +74,14 @@ class GererActionPgre(forms.ModelForm) :
 
 		# Mise en forme de certaines données
 		if instance :
+			mont_doss_pgre = instance.ss_action_pgre.all().aggregate(montant=Sum('mont_ss_action_pgre')).get('montant', 0)
+			obj_econ_ress_doss_pgre = instance.ss_action_pgre.all().aggregate(objectif=Sum('obj_econ_ress_ss_action_pgre')).get('objectif', 0)
+
 			kwargs.update(initial = {
 				'dt_deb_doss_pgre' : dt_fr(instance.dt_deb_doss_pgre) if instance.dt_deb_doss_pgre else '',
 				'dt_fin_doss_pgre' : dt_fr(instance.dt_fin_doss_pgre) if instance.dt_fin_doss_pgre else '',
+				'mont_doss_pgre' : mont_doss_pgre,
+				'obj_econ_ress_doss_pgre' : obj_econ_ress_doss_pgre,
 			})
 
 		super(GererActionPgre, self).__init__(*args, **kwargs)
@@ -107,6 +124,9 @@ class GererActionPgre(forms.ModelForm) :
 				id_doss_pgre = i
 			)]
 			self.fields['zl_nat_doss'].initial = i.id_nat_doss.pk
+			if i.ss_action_pgre.exists():
+				self.fields['mont_doss_pgre'].disabled = True
+				self.fields['obj_econ_ress_doss_pgre'].disabled = True
 
 
 	def clean(self) :
@@ -688,7 +708,6 @@ class FiltrerActionsPgre(forms.ModelForm) :
 			</table>
 		</div>
 		'''.format(''.join(trs))
-
 
 class GererSsActionPgre(forms.ModelForm):
 

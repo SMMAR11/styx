@@ -17,7 +17,7 @@ var t_datat = {
 	'cons_fin' : init_datat('#t_cons_fin', { 'autofit' : [8], 'unsorting' : [8] }),
 	'cons_pdc' : init_datat('#t_cons_pdc', { 'autofit' : [2, 3], 'unbordered' : [2, 3], 'unsorting' : [2, 3] }),
 	'cons_ph' : init_datat('#t_cons_ph', { 'autofit' : [0, 4, 5], 'unbordered' : [4, 5], 'unsorting' : [0, 4, 5] }),
-	'cons_ss_action' : init_datat('#t_cons_ss_action', { 'autofit' : [0, 4, 5], 'unbordered' : [4, 5], 'unsorting' : [0, 4, 5] }),
+	'cons_ss_action' : init_datat('#t_cons_ss_action', { 'autofit' : [0, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'unbordered' : [9, 10], 'unsorting' : [9, 10] }),
 	'cons_prest' : init_datat('#t_cons_prest', { 'autofit' : [6, 7], 'unbordered' : [6, 7], 'unsorting' : [6, 7] }),
 	'FiltrerDossiers-cbsm_org_moa' : init_datat(
 		'#dtab_FiltrerDossiers-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }

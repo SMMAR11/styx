@@ -4,7 +4,7 @@
 # Imports
 from app.decorators import *
 from django.views.decorators.csrf import csrf_exempt
-
+from django.db.models import Sum
 '''
 Cette vue permet d'afficher le menu principal du module de gestion des actions PGRE.
 request : Objet requête
@@ -649,6 +649,15 @@ def cons_act_pgre(request, _a) :
 			request.session['tab_act_pgre'] = '#ong_act_pgre'
 
 		# Je prépare l'onglet "Caractéristiques".
+		if o_act_pgre.ss_action_pgre.exists():
+			mont_doss_pgre = o_act_pgre.ss_action_pgre.all().aggregate(
+				montant=Sum('mont_ss_action_pgre')).get('montant', 0)
+			obj_econ_ress_doss_pgre = o_act_pgre.ss_action_pgre.all().aggregate(
+				objectif=Sum('obj_econ_ress_ss_action_pgre')).get('objectif', 0)
+		if not o_act_pgre.ss_action_pgre.exists():
+			mont_doss_pgre = o_act_pgre.mont_doss_pgre
+			obj_econ_ress_doss_pgre = o_act_pgre.obj_econ_ress_doss_pgre
+
 		t_attrs_act_pgre = {
 			'num_doss_pgre' : { 'label' : 'Numéro de l\'action PGRE', 'value' : o_act_pgre },
 			'id_ic_pgre' : { 'label' : 'Instance de concertation', 'value' : o_act_pgre.id_ic_pgre },
@@ -667,9 +676,10 @@ def cons_act_pgre(request, _a) :
 				).order_by('id_org_moa')])
 			},
 			'id_pr_pgre' : { 'label' : 'Priorité', 'value' : o_act_pgre.id_pr_pgre },
+			'mont_doss_pgre' : { 'label' : 'Montant dossier PGRE', 'value' : mont_doss_pgre },
 			'obj_econ_ress_doss_pgre' : {
 				'label' : 'Objectifs d\'économie de la ressource en eau (en m<sup>3</sup>)',
-				'value' : o_act_pgre.obj_econ_ress_doss_pgre
+				'value' : obj_econ_ress_doss_pgre
 			},
 			'ann_prev_deb_doss_pgre' : {
 				'label' : 'Année prévisionnelle du début de l\'action PGRE',
@@ -729,8 +739,12 @@ def cons_act_pgre(request, _a) :
 			'pk' : ssa.pk,
 			'id_ss_act' : ssa.id_ss_act,
 			'lib_ss_act' : ssa.lib_ss_act,
-			'comm_ss_act' : ssa.comm_ss_act,
-			'desc_ss_act' : ssa.desc_ss_act,
+			'mont_ss_action_pgre' : ssa.mont_ss_action_pgre,
+			'obj_econ_ress_ss_action_pgre' : ssa.obj_econ_ress_ss_action_pgre,
+			't_nature_dossier' : ssa.t_nature_dossier,
+			'id_av_pgre' : ssa.id_av_pgre,
+			'dt_deb_ss_action_pgre' : dt_fr(ssa.dt_deb_ss_action_pgre),
+			'dt_fin_ss_action_pgre' :  dt_fr(ssa.dt_fin_ss_action_pgre),
 			'dt_prevision_ss_action_pgre' : dt_fr(ssa.dt_prevision_ss_action_pgre) or '-'
 		} for ssa in qs_ss_action_pgre]
 
@@ -832,7 +846,7 @@ def cons_act_pgre(request, _a) :
 				'\n'.join(t_ph_pgre_diap['div'])
 			),
 			'ajout_ss_action' : '''
-			<form action="{action}" enctype="multipart/form-data" name="f_ajout_ph" method="post" onsubmit="soum_f(event)">
+			<form action="{action}" enctype="multipart/form-data" name="f_ajout_ss_action" method="post" onsubmit="soum_f(event)">
 				<input name="csrfmiddlewaretoken" type="hidden" value="{csrf}">
 				{pk}
 				<div class="row">
@@ -1044,6 +1058,11 @@ def cons_act_pgre(request, _a) :
 			if get_action == 'supprimer-point-de-controle' :
 				if request.GET['point-de-controle'] :
 					output = HttpResponse(suppr(reverse('suppr_pdc', args = [request.GET['point-de-controle']])))
+
+			# Je traite le cas où je dois supprimer une sous-action.
+			if get_action == 'supprimer-sous-action-pgre' :
+				if request.GET['sous-action'] :
+					output = HttpResponse(suppr(reverse('suppr_ss_act_pgre', args = [request.GET['sous-action']])))
 
 			# Je traite le cas où je dois une action PGRE.
 			if get_action == 'supprimer-action-pgre' :
@@ -1619,14 +1638,7 @@ def modif_ss_act_pgre(request, _ssa) :
 	if request.method == 'POST' :
 
 		# Je vérifie le droit d'écriture.
-
-		try :
-			o_act_pgre = TDossierPgre.objects.get(
-				num_doss_pgre = o_ss_action_pgre.tdossierpgre_set.first()
-			)
-		except :
-			o_act_pgre = None
-
+		o_act_pgre = o_ss_action_pgre.tdossierpgre_set.first() or None
 		if o_act_pgre :
 			ger_droits(
 				request.user,
@@ -1646,7 +1658,6 @@ def modif_ss_act_pgre(request, _ssa) :
 
 			# Je créé la nouvelle instance TPhotoPgre.
 			o_ss_act_pgre = f_modif_ss_action_pgre.save()
-
 
 			# J'affiche le message de succès.
 			output = HttpResponse(
@@ -1702,4 +1713,49 @@ _ssa : Identifiant d'une sous-action
 @csrf_exempt
 def suppr_ss_act_pgre(request, _ssa) :
 
-	return HttpResponse()
+	# Imports
+	from app.functions import ger_droits
+	from app.models import TMoaDossierPgre
+	from app.models import TDossierSsAction
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	from styx.settings import T_DONN_BDD_INT
+	import json
+
+	output = HttpResponse()
+
+
+	# Je vérifie l'existance d'un objet TDossierSsAction
+	o_ss_action_pgre = get_object_or_404(TDossierSsAction, pk=_ssa)
+
+	o_act_pgre = o_ss_action_pgre.tdossierpgre_set.first() or None
+
+	if o_act_pgre :
+		# Je vérifie le droit d'écriture.
+		ger_droits(
+			request.user,
+			[(m.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']) for m in TMoaDossierPgre.objects.filter(
+				id_doss_pgre = o_act_pgre
+			)],
+			False
+		)
+
+	if request.method == 'POST' :
+
+		# Je supprime l'objet TDossierSsAction.
+		o_ss_action_pgre.delete()
+
+		# J'affiche le message de succès.
+		output = HttpResponse(
+			json.dumps({ 'success' : {
+				'message' : 'La sous-action a été supprimée avec succès de l\'action PGRE N°{0}.'.format(o_act_pgre),
+				'redirect' : reverse('cons_act_pgre', args = [o_act_pgre.pk])
+			}}),
+			content_type = 'application/json'
+		)
+
+		# Je renseigne l'onglet actif après rechargement de la page.
+		request.session['tab_act_pgre'] = '#ong_ss_action'
+
+	return output

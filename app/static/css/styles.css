@@ -20,6 +20,11 @@
 	opacity: 0.5;
 }
 
+#t_cons_ss_action img:hover {
+	cursor: pointer;
+	opacity: 0.5;
+}
+
 /* Blocs d'informations */
 fieldset.my-div-fieldset {
 	color: #3770B1;
