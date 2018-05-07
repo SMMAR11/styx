@@ -5,7 +5,7 @@
 from app.constants import *
 from app.functions import init_mess_err
 from django import forms
-from django.db.models import Sum
+
 
 class GererActionPgre(forms.ModelForm) :
 
@@ -74,14 +74,12 @@ class GererActionPgre(forms.ModelForm) :
 
 		# Mise en forme de certaines données
 		if instance :
-			mont_doss_pgre = instance.ss_action_pgre.all().aggregate(montant=Sum('mont_ss_action_pgre')).get('montant', 0)
-			obj_econ_ress_doss_pgre = instance.ss_action_pgre.all().aggregate(objectif=Sum('obj_econ_ress_ss_action_pgre')).get('objectif', 0)
 
 			kwargs.update(initial = {
 				'dt_deb_doss_pgre' : dt_fr(instance.dt_deb_doss_pgre) if instance.dt_deb_doss_pgre else '',
 				'dt_fin_doss_pgre' : dt_fr(instance.dt_fin_doss_pgre) if instance.dt_fin_doss_pgre else '',
-				'mont_doss_pgre' : mont_doss_pgre,
-				'obj_econ_ress_doss_pgre' : obj_econ_ress_doss_pgre,
+				'mont_doss_pgre' : instance.mont_doss_pgre_ppt,
+				'obj_econ_ress_doss_pgre' : instance.obj_econ_ress_doss_pgre_ppt,
 			})
 
 		super(GererActionPgre, self).__init__(*args, **kwargs)

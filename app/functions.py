@@ -992,13 +992,23 @@ def init_pg_cons(_t, _pdf = False) :
 					<span class="attribute-help-text">{0}</span>
 					'''.format(v['help-text'])
 
+				# Je surcharge le contenu du conteneur dans le cas d'un champs commentaire.
+				is_text_area = v.get('text_area', False)
+				if is_text_area :
+					contr = '''
+					<span class="attribute-label">{0}</span>
+					<div class="attribute-control-com">{1}</div>
+					'''.format(get_label, get_value)
+
 				# J'initialise le gabarit.
 				if contr :
+					# Je change le conteneur si attribut de champs commentaire (pardon)
+					wrapper = "attribute-wrapper-com" if is_text_area else "attribute-wrapper"
 					cont = '''
-					<div class="attribute-wrapper">
-						{0}
+					<div class={0}>
+						{1}
 					</div>
-					'''.format(contr)
+					'''.format(wrapper, contr)
 				else :
 					cont = ''
 

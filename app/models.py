@@ -6,19 +6,21 @@ from django.apps import apps
 from django.contrib.auth.models import User
 from django.contrib.gis.db import models as gismodels
 from django.db import models
+from django.db.models import Sum
 import uuid
+
 
 class TFamille(models.Model) :
 
     id_fam = models.AutoField(primary_key = True)
 
     class Meta :
-    	db_table = 't_famille'
-    	verbose_name = 'T_FAMILLE'
-    	verbose_name_plural = 'T_FAMILLE'
+        db_table = 't_famille'
+        verbose_name = 'T_FAMILLE'
+        verbose_name_plural = 'T_FAMILLE'
 
     def __str__(self) :
-    	return self.id_fam
+        return self.id_fam
 
 class TNatureDossier(models.Model) :
 
@@ -1290,6 +1292,18 @@ class TDossierPgre(models.Model) :
             TAvancementPgreTraces.objects.create(
                 id_doss_pgre=self,
                 id_av_pgre=self.id_av_pgre)
+
+    @property
+    def mont_doss_pgre_ppt(self):
+        if self.ss_action_pgre.exists():
+            return self.ss_action_pgre.all().aggregate(montant=Sum('mont_ss_action_pgre')).get('montant', 0)
+        return self.mont_doss_pgre
+
+    @property
+    def obj_econ_ress_doss_pgre_ppt(self):
+        if self.ss_action_pgre.exists():
+            return self.ss_action_pgre.all().aggregate(objectif=Sum('obj_econ_ress_ss_action_pgre')).get('objectif', 0)
+        return self.obj_econ_ress_doss_pgre
 
 
 

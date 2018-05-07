@@ -232,6 +232,17 @@ fieldset.my-div-fieldset > div {
 	cursor: text;
 }
 
+.attribute-wrapper-com .attribute-control-com {
+	display: block;
+	width: 100%;
+	min-height: 100px;
+	background-color: #F6F6F6;
+	color: #555;
+	padding: 0 5px;
+	border: 1px solid #DDD;
+	cursor: text;
+}
+
 .field-wrapper .field-control input[type="checkbox"] {
 	display: inline-block;
 }

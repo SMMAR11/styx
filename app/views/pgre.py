@@ -4,7 +4,7 @@
 # Imports
 from app.decorators import *
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Sum
+
 '''
 Cette vue permet d'afficher le menu principal du module de gestion des actions PGRE.
 request : Objet requête
@@ -649,15 +649,6 @@ def cons_act_pgre(request, _a) :
 			request.session['tab_act_pgre'] = '#ong_act_pgre'
 
 		# Je prépare l'onglet "Caractéristiques".
-		if o_act_pgre.ss_action_pgre.exists():
-			mont_doss_pgre = o_act_pgre.ss_action_pgre.all().aggregate(
-				montant=Sum('mont_ss_action_pgre')).get('montant', 0)
-			obj_econ_ress_doss_pgre = o_act_pgre.ss_action_pgre.all().aggregate(
-				objectif=Sum('obj_econ_ress_ss_action_pgre')).get('objectif', 0)
-		if not o_act_pgre.ss_action_pgre.exists():
-			mont_doss_pgre = o_act_pgre.mont_doss_pgre
-			obj_econ_ress_doss_pgre = o_act_pgre.obj_econ_ress_doss_pgre
-
 		t_attrs_act_pgre = {
 			'num_doss_pgre' : { 'label' : 'Numéro de l\'action PGRE', 'value' : o_act_pgre },
 			'id_ic_pgre' : { 'label' : 'Instance de concertation', 'value' : o_act_pgre.id_ic_pgre },
@@ -676,10 +667,10 @@ def cons_act_pgre(request, _a) :
 				).order_by('id_org_moa')])
 			},
 			'id_pr_pgre' : { 'label' : 'Priorité', 'value' : o_act_pgre.id_pr_pgre },
-			'mont_doss_pgre' : { 'label' : 'Montant dossier PGRE', 'value' : mont_doss_pgre },
+			'mont_doss_pgre' : { 'label' : 'Montant dossier PGRE', 'value' : o_act_pgre.mont_doss_pgre_ppt },
 			'obj_econ_ress_doss_pgre' : {
 				'label' : 'Objectifs d\'économie de la ressource en eau (en m<sup>3</sup>)',
-				'value' : obj_econ_ress_doss_pgre
+				'value' : o_act_pgre.obj_econ_ress_doss_pgre_ppt
 			},
 			'ann_prev_deb_doss_pgre' : {
 				'label' : 'Année prévisionnelle du début de l\'action PGRE',
@@ -696,7 +687,7 @@ def cons_act_pgre(request, _a) :
 			'chem_pj_doss_pgre' : {
 				'label' : 'Consulter la fiche action', 'value' : o_act_pgre.chem_pj_doss_pgre, 'pdf' : True
 			},
-			'comm_doss_pgre' : { 'label' : 'Commentaire', 'value' : o_act_pgre.comm_doss_pgre or '' }
+			'comm_doss_pgre' : { 'label' : 'Commentaire', 'value' : o_act_pgre.comm_doss_pgre or '', 'text_area': True}
 		}
 
 		# J'initialise le tableau des points de contrôle de l'année courante.
@@ -1477,17 +1468,18 @@ def filtr_act_pgre(_req) :
 					'Dossier de correspondance',
 					'Maître(s) d\'ouvrage(s)',
 					'Priorité',
+					'Montant',
 					'Objectifs d\'économie de la ressource en eau (en m3)',
 					'Année prévisionnelle du début de l\'action PGRE',
 					'Date de début de l\'action PGRE',
 					'Date de fin de l\'action PGRE',
 					'Nature de l\'action PGRE',
 					'État d\'avancement',
-					'Commentaire'
+					'Commentaire',
+					'Action parente',
 				])
 
 				for dpgre in TDossierPgre.objects.filter(pk__in = donnees) :
-
 					# Ajout d'une nouvelle ligne
 					writer.writerow([
 						dpgre.num_doss_pgre,
@@ -1497,14 +1489,36 @@ def filtr_act_pgre(_req) :
 						dpgre.id_doss,
 						', '.join([str(m) for m in dpgre.moa.all()]),
 						dpgre.id_pr_pgre,
-						dpgre.obj_econ_ress_doss_pgre,
+						dpgre.mont_doss_pgre_ppt,
+						dpgre.obj_econ_ress_doss_pgre_ppt,
 						dpgre.ann_prev_deb_doss_pgre,
 						dt_fr(dpgre.dt_deb_doss_pgre),
 						dt_fr(dpgre.dt_fin_doss_pgre),
 						dpgre.id_nat_doss,
 						dpgre.id_av_pgre,
-						dpgre.comm_doss_pgre
+						dpgre.comm_doss_pgre,
+						'',  # Action parente
 					])
+					for ssa in dpgre.ss_action_pgre.all():
+						# Ajout d'une nouvelle ligne pour les sous-action
+						writer.writerow([
+							'',  # Numéro de l'action PGRE
+							ssa.lib_ss_act,
+							'',  # Instance de concertation
+							'',  # Ateliers concernés
+							'',  # Dossier de correspondance
+							', '.join([str(m) for m in ssa.moa.all()]),
+							'',  # Priorité
+							ssa.mont_ss_action_pgre,
+							ssa.obj_econ_ress_ss_action_pgre,
+							ssa.dt_prevision_ss_action_pgre.year,
+							dt_fr(ssa.dt_deb_ss_action_pgre),
+							dt_fr(ssa.dt_fin_ss_action_pgre),
+							ssa.t_nature_dossier,
+							ssa.id_av_pgre,
+							ssa.comm_ss_act,
+							dpgre.num_doss_pgre,
+						])
 
 		else :
 
