@@ -1148,7 +1148,7 @@ class GererFacture(forms.ModelForm) :
 				if 'ht' in cle :
 					mont_fact = i.mont_ht_fact
 				if 'ttc' in cle :
-					mont_fact += i.mont_ttc_fact
+					mont_fact = i.mont_ttc_fact
 
 				nb_fact_ddv = TFacturesDemandeVersement.objects.filter(id_fact = i.pk).count()
 				if valeur and nb_fact_ddv > 0 and float(valeur) != mont_fact :
