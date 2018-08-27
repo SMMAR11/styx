@@ -488,7 +488,12 @@ def get_menu() :
 					'item_name' : 'En regroupant des prestations',
 					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
 					'item_href' : reverse('regroup_prest')
-				}
+				},
+				{
+					'item_name' : "État d'avancement d'un programme",
+					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
+					'item_href' : reverse('avancement_programme')
+				},
 			],
 			'mod_rank' : 3
 		},

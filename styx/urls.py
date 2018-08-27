@@ -3,6 +3,7 @@ from app.views import gestion_dossiers
 from app.views import main
 from app.views import pgre
 from app.views import realisation_etats
+from app.views.avancement_programme import AvancementProgrammeView
 from django.conf import settings
 from django.conf.urls import handler403
 from django.conf.urls import handler404
@@ -106,6 +107,11 @@ urlpatterns = [
         realisation_etats.filtr_prest,
         { '_gby' : True },
         name = 'regroup_prest'
+    ),
+    url(
+        r'^modules/realisation-etats/avancement-programme/$',
+        AvancementProgrammeView.as_view(),
+        name = 'avancement_programme'
     ),
     url(r'^modules/pgre/$', pgre.index, name = 'pgre'),
     url(r'^modules/pgre/creer-action-pgre/$', pgre.cr_act_pgre, name = 'cr_act_pgre'),

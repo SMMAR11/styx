@@ -203,7 +203,6 @@ def filtr_doss(_req, _gby) :
 					dico = {
 						'elements' : [['#za_tfoot_select_doss', str(bs.find('tfoot', id = 'za_tfoot_select_doss'))]]
 					}
-				
 				output = datatable_reset(dtab, dico)
 			else :
 				output = HttpResponse(json.dumps({
@@ -211,6 +210,7 @@ def filtr_doss(_req, _gby) :
 				}), content_type = 'application/json')
 
 	return output
+
 
 '''
 Affichage du formulaire de réalisation d'un état "prestation" ou traitement d'une requête quelconque
@@ -359,7 +359,7 @@ def filtr_prest(_req, _gby) :
 					dico = {
 						'elements' : [['#za_tfoot_select_prest', str(bs.find('tfoot', id = 'za_tfoot_select_prest'))]]
 					}
-				
+
 				output = datatable_reset(dtab, dico)
 			else :
 				output = HttpResponse(json.dumps({

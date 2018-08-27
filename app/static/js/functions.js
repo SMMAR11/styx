@@ -123,7 +123,7 @@ function alim_ld(_e, _t, _f = undefined) {
 			},
 			success : function(data) {
 				desalim_ld(t_ld);
-				
+
 				// J'initialise le tableau des listes déroulantes à alimenter (listes déroulantes du niveau supérieur).
 				var c_sup = c_o + 1;
 				var v_sup = t_ld[c_sup];
@@ -153,7 +153,7 @@ function alim_ld(_e, _t, _f = undefined) {
 						var div = $('#fw_' + t_ld_alim[i].substr(3));
 						if ($.type(div) == 'object') {
 							div.show();
-						}	
+						}
 					}
 				}
 			},
@@ -353,7 +353,7 @@ function soum_f(_e, _s = function(){}, _t = []) {
 
 	// Je stocke la valeur de l'attribut "onsubmit".
 	var get_onsubmit = o_f.attr('onsubmit');
-	
+
 	// Je lance une requête AJAX.
 	$.ajax({
 		type : 'post',
@@ -513,7 +513,7 @@ function soum_f(_e, _s = function(){}, _t = []) {
 					}
 				}
 
-				// Affichage du message d'erreur global si défini 
+				// Affichage du message d'erreur global si défini
 				if (erreur_glob != undefined) {
 					var div = $('<div/>', {
 						'class' : 'custom-alert-danger row',
@@ -625,4 +625,34 @@ function zfill(_v, _s) {
 	}
 
 	return v;
+}
+
+/**
+ * Cette fonction permet d'afficher uniquement les axes correspondant au programme selectionné.
+ *
+ */
+function filterAxe() {
+
+	var programme = document.getElementById("id_AvancementProgramme-id_progr").value,
+	wrapperAxe = document.getElementById("fw_AvancementProgramme-zl_axe");
+
+	if (programme == "all") {
+
+		wrapperAxe.setAttribute("class", "hide");
+
+	} else {
+
+		wrapperAxe.setAttribute("class", "show");;
+		var options = document.getElementById("id_AvancementProgramme-zl_axe").children;
+
+		for (var i = 0; i < options.length; i++){
+
+			if (options[i].getAttribute("id_progr") == "all" ||options[i].getAttribute("id_progr") == programme) {
+				options[i].style.display = "block";
+			} else {
+				options[i].style.display = "none";
+
+			}
+		}
+	}
 }
