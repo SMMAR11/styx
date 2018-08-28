@@ -52,10 +52,10 @@ class AvancementProgrammeView(View):
         """
         return self.fetch_raw_data(sql)
 
-    def download_csv(self, data):
+    def download_csv(self, data, fieldnames):
         response = HttpResponse(content_type='text/csv', charset='cp1252')
         response['Content-Disposition'] = "attachment; filename={}.csv".format(gen_cdc())
-        writer = csv.DictWriter(response, data[0].keys(), delimiter=';')
+        writer = csv.DictWriter(response, fieldnames, delimiter=';')
         writer.writeheader()
         writer.writerows(data)
         return response
@@ -81,7 +81,7 @@ class AvancementProgrammeView(View):
 
         if action == 'exporter-csv':
             data_to_export = request.session.get('v_progs_detailles_complet', dataset)
-            return self.download_csv(data_to_export)
+            return self.download_csv(data_to_export, fieldnames=dataset[0].keys())
 
         context = {}
         context = self.availables_choices(dataset)
