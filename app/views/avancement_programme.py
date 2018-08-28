@@ -1,16 +1,16 @@
-from app.functions import gen_cdc
+# from app.functions import gen_cdc
 from app.models import TAxe
 from app.models import TMoa
 from app.models import TProgramme
 from collections import OrderedDict
 from django.contrib.auth.decorators import login_required
 from django.db import connections
-from django.http import HttpResponse
+# from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
-import csv
+# import csv
 
 decorators = [csrf_exempt, login_required(login_url='index')]
 
@@ -52,13 +52,14 @@ class AvancementProgrammeView(View):
         """
         return self.fetch_raw_data(sql)
 
-    def download_csv(self, data, fieldnames):
-        response = HttpResponse(content_type='text/csv', charset='cp1252')
-        response['Content-Disposition'] = "attachment; filename={}.csv".format(gen_cdc())
-        writer = csv.DictWriter(response, fieldnames, delimiter=';')
-        writer.writeheader()
-        writer.writerows(data)
-        return response
+    # def download_csv(self, data, fieldnames):
+    #     response = HttpResponse(content_type='text/csv', charset='cp1252')
+    #     response['Content-Disposition'] = "attachment; filename={}.csv".format(gen_cdc())
+    #     writer = csv.DictWriter(response, fieldnames, delimiter=';')
+    #     writer.writeheader()
+    #     writer.writerows(data)
+    #
+    #     return response
 
     def availables_choices(self, dataset, context={}):
         intitules_programme = set(row.get('intitule_programme') for row in dataset)
@@ -77,11 +78,11 @@ class AvancementProgrammeView(View):
     def get(self, request, *args, **kwargs):
 
         dataset = self.v_progs_detailles_complet()
-        action = request.GET.get('action')
+        # action = request.GET.get('action')
 
-        if action == 'exporter-csv':
-            data_to_export = request.session.get('v_progs_detailles_complet', dataset)
-            return self.download_csv(data_to_export, fieldnames=dataset[0].keys())
+        # if action == 'exporter-csv':
+        #     data_to_export = request.session.get('v_progs_detailles_complet', dataset)
+        #     return self.download_csv(data_to_export, fieldnames=dataset[0].keys())
 
         context = {}
         context = self.availables_choices(dataset)
@@ -91,7 +92,6 @@ class AvancementProgrammeView(View):
         return render(request, self.template_name, context=context)
 
     def post(self, request, *args, **kwargs):
-
         context = {}
         dataset = self.v_progs_detailles_complet()
         context = self.availables_choices(dataset)
@@ -116,6 +116,6 @@ class AvancementProgrammeView(View):
             dataset_moa = [row for row in ds if row.get('id_org_moa_id') in [int(id) for id in org_moa]]
             context['v_progs_detailles_complet'] = dataset_moa
 
-        request.session['v_progs_detailles_complet'] = context['v_progs_detailles_complet']
+        # request.session['v_progs_detailles_complet'] = context['v_progs_detailles_complet']
 
         return render(request, self.template_name, context=context)
