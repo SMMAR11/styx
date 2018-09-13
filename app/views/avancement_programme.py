@@ -86,6 +86,7 @@ class AvancementProgrammeView(View):
 
         context = {}
         context = self.availables_choices(dataset)
+        context['title'] = 'Réalisation d\'états - État d\'avancement d\'un programme' # Contenu de la balise <title/>
         context['v_progs_detailles_complet_keys'] = dataset[0].keys()
         context['v_progs_detailles_complet'] = dataset
 
@@ -95,7 +96,7 @@ class AvancementProgrammeView(View):
         context = {}
         dataset = self.v_progs_detailles_complet()
         context = self.availables_choices(dataset)
-
+        context['title'] = 'Réalisation d\'états - État d\'avancement d\'un programme' # Contenu de la balise <title/>
         context['v_progs_detailles_complet'] = dataset
         context['v_progs_detailles_complet_keys'] = dataset[0].keys()
 

@@ -858,7 +858,7 @@ def init_f(_form) :
 				gab = '''
 				<div class="field-wrapper" id="fw_{0}">
 					<span class="field-label">{1}</span>
-					<div class="my-table" id="dtab_{2}">
+					<div class="my-table" id="t_{2}">
 						<table id="id_{3}">
 							<thead><tr>{4}</tr></thead>
 							<tbody>{5}</tbody>

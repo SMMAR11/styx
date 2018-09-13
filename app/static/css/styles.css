@@ -46,18 +46,55 @@ fieldset.my-div-fieldset > div {
 }
 
 /* Boutons */
-.my-btn {
-	display: block;
-	padding: 2.5px 7.5px;
+.my-btn,
+.my-btn-sm {
 	border: none;
 	border-radius: 5px;
 	color: #FFF;
 }
 
+.my-btn {
+	display: block;
+	line-height: 30px;
+	padding: 0 15px;
+}
+
+.my-btn-sm {
+	display: inline-block;
+	line-height: 20px;
+	padding: 0 7.5px;
+}
+
+.my-btn:focus,
+.my-btn-sm:focus,
 .my-btn:hover,
-.my-btn:focus {
+.my-btn-sm:hover {
 	color: #FFF;
 	text-decoration: none;
+}
+
+.buttons-group {
+	text-align: center;
+}
+
+.buttons-group button {
+	display: inline-block;
+}
+
+.my-btn-sm.excel {
+	background-color: #02723B;
+}
+
+.my-btn-sm.excel:hover {
+	background-color: #025C30;
+}
+
+.my-btn-sm.html {
+	background-color: #E44D26;
+}
+
+.my-btn-sm.html:hover {
+	background-color: #B73E1F;
 }
 
 .green-btn {
@@ -74,14 +111,6 @@ fieldset.my-div-fieldset > div {
 
 .orange-btn:hover {
 	background-color: #C7944F;
-}
-
-.buttons-group {
-	text-align: center;
-}
-
-.buttons-group button {
-	display: inline-block;
 }
 
 /* Calendriers */
@@ -902,6 +931,10 @@ ul.my-list-style > li:before {
 	white-space: nowrap;
 }
 
+.my-table thead > tr > th.autofit {
+	width: 1%;
+}
+
 .my-table table.dataTable > thead .sorting,
 .my-table table.dataTable > thead .sorting_asc,
 .my-table table.dataTable > thead .sorting_desc {
@@ -1004,6 +1037,18 @@ ul.my-list-style > li:before {
 .my-table tfoot > tr > td:first-child {
 	font-weight: normal;
 	font-style: italic;
+}
+
+.my-table .dataTables_info {
+	color: #555;
+	padding: 0;
+	text-align: left;
+	width: 100%;
+}
+
+.my-table .toolbar {
+	color: #555;
+	width: 100%;
 }
 
 /* Vignettes */

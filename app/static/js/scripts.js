@@ -1,56 +1,11 @@
 // Variables globales
-var t_datat = {
-	'alert' : init_datat('#t_alert', { 'autofit' : [0], 'unsorting' : [0] }),
-	'cbsm_atel_pgre' : init_datat('#dtab_cbsm_atel_pgre', { 'autofit' : [1], 'unsorting' : [1] }),
-	'cbsm_org_moa' : init_datat('#dtab_cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }),
-	'ch_act_pgre' : init_datat('#t_ch_act_pgre', { 'autofit' : [6], 'unsorting' : [6] }),
-	'ch_doss' : init_datat('#t_ch_doss', { 'autofit' : [4], 'paging' : true, 'unsorting' : [4] }),
-	'ch_prest' : init_datat('#t_ch_prest', { 'autofit' : [5], 'unsorting' : [5] }),
-	'cons_arr' : init_datat('#t_cons_arr', { 'autofit' : [5], 'unsorting' : [5] }),
-	'cons_aven' : init_datat('#t_cons_aven', { 'autofit' : [4], 'unsorting' : [4] }),
-	'cons_ddv' : init_datat('#t_cons_ddv', { 'autofit' : [6], 'unsorting' : [6] }),
-	'cons_doss_fam' : init_datat('#t_cons_doss_fam', { 'autofit' : [4], 'unsorting' : [4] }),
-	'cons_doss_prest' : init_datat('#t_cons_doss_prest', { 'autofit' : [3], 'unsorting' : [3] }),
-	'cons_droit' : init_datat('#t_cons_droit', { 'autofit' : [2, 3], 'unsorting' : '_all' }),
-	'cons_fact' : init_datat('#t_cons_fact', { 'autofit' : [7], 'unsorting' : [7] }),
-	'cons_fact_ddv' : init_datat('#t_cons_fact_ddv', { 'autofit' : [4], 'unsorting' : [4] }),
-	'cons_fin' : init_datat('#t_cons_fin', { 'autofit' : [8], 'unsorting' : [8] }),
-	'cons_pdc' : init_datat('#t_cons_pdc', { 'autofit' : [2, 3], 'unbordered' : [2, 3], 'unsorting' : [2, 3] }),
-	'cons_ph' : init_datat('#t_cons_ph', { 'autofit' : [0, 4, 5], 'unbordered' : [4, 5], 'unsorting' : [0, 4, 5] }),
-	'cons_ss_action' : init_datat('#t_cons_ss_action', { 'autofit' : [0, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'unbordered' : [9, 10], 'unsorting' : [9, 10] }),
-	'cons_prest' : init_datat('#t_cons_prest', { 'autofit' : [6, 7], 'unbordered' : [6, 7], 'unsorting' : [6, 7] }),
-	'FiltrerDossiers-cbsm_org_moa' : init_datat(
-		'#dtab_FiltrerDossiers-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
-	),
-	'FiltrerPrestations-cbsm_org_moa' : init_datat(
-		'#dtab_FiltrerPrestations-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
-	),
-	'GererActionPgre-cbsm_atel_pgre' : init_datat(
-		'#dtab_GererActionPgre-cbsm_atel_pgre', { 'autofit' : [1], 'unsorting' : [1] }
-	),
-	'GererActionPgre-cbsm_org_moa' : init_datat(
-		'#dtab_GererActionPgre-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
-	),
-	'GererDemandeVersement-cbsm_fact' : init_datat(
-		'#dtab_GererDemandeVersement-cbsm_fact', { 'autofit' : [4], 'unsorting' : [4] }
-	),
-	'modif_prest_doss' : init_datat('#t_modif_prest_doss', { 'unsorting' : '_all' }),
-	'RechercherPrestations-cbsm_org_moa' : init_datat(
-		'#dtab_RechercherPrestations-cbsm_org_moa', { 'autofit' : [1], 'unsorting' : [1] }
-	),
-	'regr_doss' : init_datat('#t_regr_doss'),
-	'regr_prest' : init_datat('#t_regr_prest'),
-	'select_doss' : init_datat('#t_select_doss', { 'autofit' : '__LAST__', 'unsorting' : '__LAST__' }),
-	'select_prest' : init_datat('#t_select_prest', { 'autofit' : [11], 'unsorting' : [11] }),
-	'select_act_pgre' : init_datat('#t_select_act_pgre', { 'autofit' : '__LAST__', 'unsorting' : '__LAST__' })
-};
 var submit = false;
 var pt_prec = null;
 var est_init = false;
-var datat_cbsm_fact = t_datat['GererDemandeVersement-cbsm_fact'];
 
 /**
- * Ce script permet l'affichage d'un loader dès la fin du chargement du DOM.
+ * Ce script permet l'affichage d'un loader dès la fin du chargement du DOM, ainsi que l'initialisation de tableaux de
+ * données.
  */
 $(document).ready(function() {
 
@@ -76,6 +31,59 @@ $(document).ready(function() {
 
 	// J'affiche le loader principal.
 	$('body').prepend(div);
+
+	// J'initialise les tableaux de données
+	new MyDataTable('alert').set_datatable({ 'autofit' : ['FIRST:1'], 'unsorting' : ['FIRST:1'] });
+	new MyDataTable('AvancementProgramme-cbsm_org_moa').set_datatable({
+		'autofit' : ['LAST:1'], 'exports' : false, 'unsorting' : ['LAST:1']
+	});
+	new MyDataTable('cbsm_atel_pgre').set_datatable({ 'autofit' : [1], 'exports' : false, 'unsorting' : [1] });
+	new MyDataTable('cbsm_org_moa').set_datatable({ 'autofit' : [1], 'exports' : false, 'unsorting' : [1] });
+	new MyDataTable('ch_act_pgre').set_datatable({ 'autofit' : [6], 'unsorting' : [6] });
+	new MyDataTable('ch_doss').set_datatable({ 'autofit' : [4], 'paging' : true, 'unsorting' : [4] });
+	new MyDataTable('ch_prest').set_datatable({ 'autofit' : [5], 'unsorting' : [5] });
+	new MyDataTable('cons_arr').set_datatable({ 'autofit' : [5], 'unsorting' : [5] });
+	new MyDataTable('cons_aven').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
+	new MyDataTable('cons_ddv').set_datatable({ 'autofit' : [6], 'unsorting' : [6] });
+	new MyDataTable('cons_doss_fam').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
+	new MyDataTable('cons_doss_prest').set_datatable({ 'autofit' : [3], 'unsorting' : [3] });
+	new MyDataTable('cons_droit').set_datatable({ 'autofit' : [2, 3], 'unsorting' : ['LAST:99'] });
+	new MyDataTable('cons_fact').set_datatable({ 'autofit' : [7], 'unsorting' : [7] });
+	new MyDataTable('cons_fact_ddv').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
+	new MyDataTable('cons_fin').set_datatable({ 'autofit' : [8], 'unsorting' : [8] });
+	new MyDataTable('cons_pdc').set_datatable({ 'autofit' : [2, 3], 'unbordered' : [2, 3], 'unsorting' : [2, 3] });
+	new MyDataTable('cons_ph').set_datatable({
+		'autofit' : [0, 4, 5], 'unbordered' : [4, 5], 'unsorting' : [0, 4, 5]
+	});
+	new MyDataTable('cons_ss_action').set_datatable({
+		'autofit' : [0, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'unbordered' : [9, 10], 'unsorting' : [9, 10]
+	});
+	new MyDataTable('cons_prest').set_datatable({ 'autofit' : [6, 7], 'unbordered' : [6, 7], 'unsorting' : [6, 7] });
+	new MyDataTable('FiltrerDossiers-cbsm_org_moa').set_datatable({
+		'autofit' : [1], 'exports' : false, 'unsorting' : [1]
+	});
+	new MyDataTable('FiltrerPrestations-cbsm_org_moa').set_datatable({
+		'autofit' : [1], 'exports' : false, 'unsorting' : [1]
+	});
+	new MyDataTable('GererActionPgre-cbsm_atel_pgre').set_datatable({
+		'autofit' : [1], 'exports' : false, 'unsorting' : [1]
+	});
+	new MyDataTable('GererActionPgre-cbsm_org_moa').set_datatable({
+		'autofit' : [1], 'exports' : false, 'unsorting' : [1]
+	});
+	new MyDataTable('GererDemandeVersement-cbsm_fact').set_datatable({
+		'autofit' : [4], 'exports' : false, 'unsorting' : [4]
+	});
+	new MyDataTable('modif_prest_doss').set_datatable({ 'exports' : false, 'unsorting' : ['LAST:99'] });
+	new MyDataTable('RechercherPrestations-cbsm_org_moa').set_datatable({
+		'autofit' : [1], 'exports' : false, 'unsorting' : [1]
+	});
+	new MyDataTable('regr_doss').set_datatable();
+	new MyDataTable('regr_prest').set_datatable();
+	new MyDataTable('select_doss').set_datatable({ 'autofit' : ['LAST:1'], 'unsorting' : ['LAST:1'] });
+	new MyDataTable('select_prest').set_datatable({ 'autofit' : [11], 'unsorting' : [11] });
+	new MyDataTable('select_act_pgre').set_datatable({ 'autofit' : ['LAST:99'], 'unsorting' : ['LAST:99'] });
+
 });
 
 /**
@@ -490,7 +498,7 @@ $(document).on('click', '#t_ch_prest .choose-icon', function() {
 			$(data).insertAfter($('#t_ch_prest'));
 
 			// J'initialise la datatable.
-			var datat = init_datat('#t_red_prest', { 'unsorting' : [1] });
+			var datat = new MyDataTable('red_prest').set_datatable({ 'unsorting' : [1] });
 		},
 		error : function(xhr) {
 			alert('Erreur ' + xhr.status);
@@ -654,8 +662,10 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 				// J'affiche le tableau des factures.
 				$(data).insertAfter($('#fw_GererDemandeVersement-int_ddv'));
 
-				// J'initialise la datatable.
-				datat_cbsm_fact = init_datat('#dtab_GererDemandeVersement-cbsm_fact', { 'autofit' : [4], 'unsorting' : [4] });
+				// Je réinitialise la datatable.
+				new MyDataTable('GererDemandeVersement-cbsm_fact').set_datatable({
+					'autofit' : [4], 'exports' : false, 'unsorting' : [4]
+				});
 			},
 			error : function(xhr) {
 				alert('Erreur ' + xhr.status);
@@ -667,8 +677,8 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 	}
 	else {
 
-		// Vidage de la datatable
-		datat_cbsm_fact.rows().remove().draw();
+		// Je vide la datatable
+		new MyDataTable('GererDemandeVersement-cbsm_fact').get_datatable().rows().remove().draw();
 	}
 });
 

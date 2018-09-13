@@ -223,63 +223,6 @@ function html_ds_fm(_e, _s)
 }
 
 /**
- * Initialisation d'une datatable
- * _id : Identifiant
- * _params : Paramètres sous forme de tableau associatif
- * Retourne un objet datatable
- */
-function init_datat(_id, _params = {}) {
-
-	// Initialisation des paramètres
-	var params = { 'autofit' : [], 'paging' : false, 'unbordered' : [], 'unsorting' : [] };
-	for (cle in _params) {
-		params[cle] = _params[cle];
-	}
-
-	// Ajustement dynamique de certaines colonnes
-	if ($.isArray(params['autofit']) == true) {
-		$(_id + ' table tr:first-child th').each(function(_index) {
-			if ($.inArray(_index, params['autofit']) > -1) {
-				$(this).css({ 'width' : '1%' });
-			}
-		});
-	}
-	else {
-		if (params['autofit'] == '__LAST__') {
-			$(_id + ' table tr:first-child th').last().css({ 'width' : '1%' });
-		}
-	}
-
-	// Détermination du paramètre unsorting
-	var unsorting = params['unsorting'];
-	if ($.isArray(unsorting) == false && unsorting == '__LAST__') {
-
-		// Fonctionne sur deux <tr/> (à voir sur 3 ou plus...)
-		var ths = $(_id + ' table th').length - $(_id + ' table th[colspan]').length;
-		unsorting = [ths - 1];
-	}
-
-	return $(_id + ' table').DataTable({
-		'aoColumnDefs' : [{
-			'aTargets' : unsorting, 'bSortable' : false
-		}, {
-			className : 'unbordered', 'targets' : params['unbordered']
-		}],
-		'autoWidth' : false,
-		'info' : false,
-		'language' : {
-			'emptyTable' : 'Aucun enregistrement',
-			'lengthMenu': 'Afficher _MENU_ enregistrements',
-			'paginate' : { 'next' : 'Suivant', 'previous' : 'Précédent' }
-		},
-		'lengthMenu' : [[-1, 5, 10, 25, 50], ['---------', 5, 10, 25, 50]],
-		'order' : [],
-		'paging' : params['paging'],
-		'searching' : false
-	});
-}
-
-/**
  * Cette procédure permet de retirer les erreurs d'un formulaire afin de le remettre à zéro.
  * _f : Formulaire dont on doit retirer les erreurs
  */
@@ -414,8 +357,11 @@ function soum_f(_e, _s = function(){}, _t = []) {
 						suff_datat = data['success']['datatable_name'];
 					}
 
-					// Je vide la datatable ("t_datat[]" est issue des variables globales de l'application).
-					t_datat[suff_datat].clear().draw();
+					// J'obtiens la table de données.
+					var dtable = new MyDataTable(suff_datat).get_datatable();
+
+					// Je vide la datatable.
+					dtable.clear().draw();
 
 					for (var i = 0; i < data['success']['datatable'].length; i += 1) {
 
@@ -429,7 +375,7 @@ function soum_f(_e, _s = function(){}, _t = []) {
 						}
 
 						// J'ajoute une ligne à la datatable.
-						t_datat[suff_datat].row.add(lg).draw(true);
+						dtable.row.add(lg).draw(true);
 					}
 				}
 

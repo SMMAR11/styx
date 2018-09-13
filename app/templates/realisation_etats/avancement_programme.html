@@ -52,7 +52,7 @@ $(document).ready(function () {
 
 </script>
 
-<div class="main-title">Réalisation d'états d'avancement d'un programme</div>
+<div class="main-title">Réalisation d'états - État d'avancement d'un programme</div>
 <div class="row">
 	<div class="br-md-after col-md-4">
 		<form action="" method="post" name="form">
@@ -72,29 +72,26 @@ $(document).ready(function () {
 					<span class="field-error"></span><br>
 					<div class="field-wrapper" id="fw_AvancementProgramme-cbsm_org_moa">
 						<span class="field-label">Maître(s) d'ouvrage(s)</span>
-						<div class="my-table" id="dtab_AvancementProgramme-cbsm_org_moa">
-							<div id="id_AvancementProgramme-cbsm_org_moa_wrapper" class="dataTables_wrapper no-footer">
-								<table id="id_AvancementProgramme-cbsm_org_moa" class="dataTable no-footer" role="grid">
+						<div class="my-table" id="t_AvancementProgramme-cbsm_org_moa">
+							<table id="id_AvancementProgramme-cbsm_org_moa">
 								<thead>
-									<tr role="row">
-										<th class="sorting" tabindex="0" aria-controls="id_AvancementProgramme-cbsm_org_moa"
-											rowspan="1" colspan="1" aria-label="Nom: activate to sort column ascending">Nom</th>
-										<th style="width: 1%;" class="sorting_disabled" rowspan="1" colspan="1" aria-label="">
+									<tr>
+										<th>Nom</th>
+										<th>
 											<input id="id_AvancementProgramme-cbsm_org_moa__all" value="__all__" type="checkbox">
 										</th>
 									</tr>
 								</thead>
 								<tbody>
 									{% for row in org_moas %}
-									<tr role="row" class="odd">
+									<tr>
 										<td>{{ row.id_org_moa_id }} - {{ row.dim_org_moa|default:"N/A" }}</td>
 										<td><input id="id_AvancementProgramme-cbsm_org_moa_"+"{{row.id_org_moa_id}}"
 											name="AvancementProgramme-cbsm_org_moa"+"{{row.id_org_moa_id}}" value="{{row.id_org_moa_id}}" type="checkbox"></td>
 									</tr>
 									{% endfor %}
 								</tbody>
-								</table>
-							</div>
+							</table>
 						</div>
 						<span class="field-error"></span>
 					</div>
@@ -117,7 +114,7 @@ $(document).ready(function () {
 		</form>
 	</div>
 	<div class="col-md-8">
-		<a href="#" id="t_avancement" class="csv-icon icon-link">Exporter au format CSV</a>
+		<!--<a href="#" id="t_avancement" class="csv-icon icon-link">Exporter au format CSV</a>-->
 		<div class="my-table" id="t_select_doss">
 			<table id=avancementProg>
 				<thead>
