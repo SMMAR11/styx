@@ -3,10 +3,6 @@
 <div class="main-title">{{ title }}</div>
 <div class="row">
 	<div class="br-md-after col-md-4">{{ form_filtr_prest | safe }}</div>
-	<div class="col-md-8">
-		{{ dtab_filtr_prest | safe }}
-		<div class="br"></div>
-		<a href="?action=exporter-csv&group-by={{ gby }}" class="csv-icon icon-link">Exporter au format CSV</a>
-	</div>
+	<div class="col-md-8">{{ dtab_filtr_prest | safe }}</div>
 </div>
 {% endblock content %}

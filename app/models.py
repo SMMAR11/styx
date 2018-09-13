@@ -575,8 +575,20 @@ class TDossier(models.Model) :
         verbose_name = 'T_DOSSIER'
         verbose_name_plural = 'T_DOSSIER'
 
+    def get_axe_doss(self) :
+        '''Axe complet'''
+        nums = []
+        if self.num_axe is not None :
+            nums.append(str(self.num_axe))
+            if self.num_ss_axe is not None :
+                nums.append(str(self.num_ss_axe))
+                if self.num_act is not None :
+                    nums.append(str(self.num_act))
+        return '.'.join(nums)
+
     def get_int_doss(self) :
-        return '{0} - {1} - {2} - {3}'.format(self.id_nat_doss, self.id_type_doss, self.lib_1_doss, self.lib_2_doss)
+        '''Intitulé complet'''
+        return ' - '.join(str(i) for i in [self.id_nat_doss, self.id_type_doss, self.lib_1_doss, self.lib_2_doss])
 
     def __str__(self) :
         return self.num_doss

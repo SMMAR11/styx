@@ -75,7 +75,7 @@ class MyDataTable {
 		}
 
 		// Stockage de la table
-		var table = this.get_html_table();
+		var table = this.get_html_table(false);
 
 		// Définition des délimiteurs
 		var cdel = delim;
@@ -100,7 +100,7 @@ class MyDataTable {
 
 			// Empilement des lignes
 			rows.push(cols.join(cdel));
-			
+
 		}
 
 		// Balise <tbody/>
@@ -141,13 +141,20 @@ class MyDataTable {
 	}
 
 	// Obtention d'une table HTML sans mise en forme supplémentaire
-	get_html_table() {
+	get_html_table(include_tfoot = true) {
+
+		var trs = [this.get_obj.find('thead tr'), this.get_obj.find('tbody tr')];
+		if (include_tfoot) {
+			trs.push(this.get_obj.find('tfoot tr'));
+		}
 
 		// Mise en forme d'une table HTML sans mise en forme supplémentaire
 		var html = '<table border="1">';
-		this.get_obj.find('tr').each(function() {
-			html += '<tr>' + $(this).html() + '</tr>';
-		});
+		for (var i in trs) {
+			trs[i].each(function() {
+				html += '<tr>' + $(this).html() + '</tr>';
+			});
+		}
 		html += '</table>';
 
 		// Retrait d'éléments indésirables

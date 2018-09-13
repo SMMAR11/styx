@@ -432,6 +432,15 @@ function soum_f(_e, _s = function(){}, _t = []) {
 					}, 2000);
 				}
 
+				// Je traite le cas où je dois initialiser des tables de données dynamiques.
+				if (data['success']['new_datatables']) {
+					var dtables = data['success']['new_datatables'];
+					for (var ndx in dtables) {
+						var dtable = dtables[ndx];
+						new MyDataTable(dtable[0]).set_datatable(dtable[1]);
+					}
+				}
+
 				// J'applique les styles.
 				_s();
 			}

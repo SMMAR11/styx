@@ -282,6 +282,8 @@ class FiltrerDossiers(forms.ModelForm) :
 		from app.models import TProgramme
 		from app.models import TRegroupementsMoa
 		from app.models import TTypeDossier
+		from app.sql_views import VDemandeVersement
+		from app.sql_views import VFinancement
 		from app.sql_views import VSuiviDossier
 		from bs4 import BeautifulSoup
 		from django.conf import settings
@@ -425,17 +427,23 @@ class FiltrerDossiers(forms.ModelForm) :
 				tds = [
 					d,
 					d.get_int_doss(),
+					d.id_doss_ass or '-',
 					d.id_org_moa,
 					d.id_progr,
+					d.get_axe_doss() or '-',
 					d.id_nat_doss,
 					d.id_type_doss,
+					d.id_techn,
+					d.id_sage or '-',
 					obt_mont(d.mont_doss),
 					obt_mont(d.mont_suppl_doss),
 					obt_mont(obj_sd.mont_tot_doss),
 					'TTC' if d.est_ttc_doss == True else 'HT',
+					d.id_av,
+					dt_fr(d.dt_delib_moa_doss) or '-',
+					d.annee_prev_doss or '-',
 					d.id_av_cp,
 					dt_fr(d.dt_av_cp_doss) or '-',
-					d.id_av,
 					obt_mont(obj_sd.mont_tot_prest_doss),
 					obt_mont(obj_sd.mont_fact_sum),
 					*fins,
@@ -493,10 +501,10 @@ class FiltrerDossiers(forms.ModelForm) :
 
 				tfoot = '''
 				<tr>
-					<td colspan="6">Total</td>
+					<td colspan="10">Total</td>
 					<td>{}</td>
 					<td>{}</td>
-					<td colspan="5">{}</td>
+					<td colspan="7">{}</td>
 					<td>{}</td>
 					<td>{}</td>
 					{}
@@ -526,14 +534,20 @@ class FiltrerDossiers(forms.ModelForm) :
 						<tr>
 							<th rowspan="2">N° du dossier</th>
 							<th rowspan="2">Intitulé du dossier</th>
+							<th rowspan="2">Dossier associé et/ou contrepartie</th>
 							<th rowspan="2">Maître d'ouvrage</th>
 							<th rowspan="2">Programme</th>
+							<th rowspan="2">Axe</th>
 							<th rowspan="2">Nature du dossier</th>
 							<th rowspan="2">Type de dossier</th>
+							<th rowspan="2">Agent responsable</th>
+							<th rowspan="2">SAGE</th>
 							<th colspan="4">Montant du dossier</th>
+							<th rowspan="2">État d'avancement</th>
+							<th rowspan="2">Date de délibération au maître d'ouvrage</th>
+							<th rowspan="2">Année prévisionnelle du dossier</th>
 							<th rowspan="2">Avis du comité de programmation - CD GEMAPI</th>
 							<th rowspan="2">Date de l'avis du comité de programmation</th>
-							<th rowspan="2">État d'avancement</th>
 							<th rowspan="2">Montant commandé (en €)</th>
 							<th rowspan="2">Montant payé (en €)</th>
 							<th colspan="{}">Financement</th>
@@ -558,78 +572,217 @@ class FiltrerDossiers(forms.ModelForm) :
 			# Réinitialisation de la variable "historique"
 			_req.session['filtr_doss'] = []
 
-			# Initialisation des paramètres de regroupement
-			params = {
-				'AV_CP' : [TAvisCp.objects.all(), 'id_av_cp'],
-				'NAT_DOSS' : [TNatureDossier.objects.all(), 'id_nat_doss'],
-				'ORG_FIN' : [TFinanceur.objects.all(), 'tfinancement__id_org_fin'],
-				'PROGR' : [TProgramme.objects.all(), 'id_progr'],
-				'TYPE_DOSS' : [TTypeDossier.objects.all(), 'id_type_doss']
+			# Initialisation des lignes
+			rows = []
+
+			# Initialisation des paramètres globaux
+			gparams = {
+				'AV_CP' : {
+					'numbers' : ['TOTAL', 'COMMANDE', 'FACTURE', 'DDV', 'VERSE'],
+					'queryset' : [TAvisCp.objects.all(), 'id_av_cp']
+				},
+				'NAT_DOSS' : {
+					'numbers' : ['TOTAL', 'COMMANDE', 'FACTURE', 'DDV', 'VERSE'],
+					'queryset' : [TNatureDossier.objects.all(), 'id_nat_doss']
+				},
+				'ORG_FIN' : {
+					'numbers' : ['TOTAL', 'PARTICIPATION', 'DDV', 'VERSE'],
+					'queryset' : [TFinanceur.objects.all(), 'tfinancement__id_org_fin']
+				},
+				'ORG_MOA' : {
+					'numbers' : ['TOTAL', 'COMMANDE', 'FACTURE', 'DDV', 'VERSE'],
+					'queryset' : None
+				},
+				'PROGR' : {
+					'numbers' : ['TOTAL', 'COMMANDE', 'FACTURE', 'DDV', 'VERSE'],
+					'queryset' : [TProgramme.objects.all(), 'id_progr']
+				},
+				'TYPE_DOSS' : {
+					'numbers' : ['TOTAL', 'COMMANDE', 'FACTURE', 'DDV', 'VERSE'],
+					'queryset' : [TTypeDossier.objects.all(), 'id_type_doss']
+				}
 			}
 
-			if val_gby in params : 
+			# Initialisation des balises <th/>
+			ths = [dict(self.fields['zl_gby'].choices)[val_gby], 'Nombre de dossiers']
 
-				# Initialisation des données de chaque balise <tr/>
-				trs__untagged = []
+			# Initialisation des lignes
+			rows = []
 
-				# Préparation des données de chaque balise <tr/>
-				for elem in params[val_gby][0] :
-					trs__untagged.append([str(elem), qs_doss.filter(**{ params[val_gby][1] : elem }).count()])
+			if val_gby in gparams.keys() :
 
-				# Ajout de la ligne "Autofinancement" et tri du tableau
-				if val_gby == 'ORG_FIN' :
-					trs__untagged.append([
-						'Autofinancement',
-						VSuiviDossier.objects.filter(pk__in = [d.pk for d in qs_doss], mont_raf__gt = 0).count()
-					])
-					trs__untagged = sorted(trs__untagged, key = lambda l : l[0])
+				# Récupération des paramètres locaux
+				lparams = gparams[val_gby]
 
-				# Empilement des balises <tr/>
-				for tr in trs__untagged :
-					trs.append('<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(td) for td in tr])))
+				if lparams['queryset'] :
 
-				# Calcul de la colonne "Total"
-				_sum = sum([elem[1] for elem in trs__untagged])
+					# Étape n°1...
+					for i in lparams['queryset'][0] :
 
-				# Suppression de variables
-				del trs__untagged
+						# Récupération des dossiers utiles
+						ldoss = qs_doss.filter(**{ lparams['queryset'][1] : i }).values_list('pk', flat = True)
 
-			else :
-				if val_gby == 'ORG_MOA' :
+						# Empilement des lignes
+						rows.append([ldoss, i.pk, str(i)])
 
-					_sum = 0
+					# Étape n°1 bis...
+					if val_gby == 'ORG_FIN' :
 
-					for m in TMoa.objects.filter(peu_doss = True, en_act_doss = True) :
+						# Récupération des dossiers utiles
+						ldoss = VSuiviDossier.objects.filter(
+							pk__in = [d.pk for d in qs_doss], mont_raf__gt = 0
+						).values_list('pk', flat = True)
 
-						# Préparation des maîtres d'ouvrages père/fils
-						ids = [rm.id_org_moa_anc.pk for rm in TRegroupementsMoa.objects.filter(id_org_moa_fil = m)] \
-						+ [m.pk]
+						# Empilement des lignes (intégration de l'autofinancement) + tri par ordre alphabétique
+						rows.append([ldoss, None, 'Autofinancement'])
+						rows = sorted(rows, key = lambda l : l[2])
 
-						# Empilement des balises <tr/>
-						tds = [m, qs_doss.filter(id_org_moa__in = ids).count()]
-						trs.append('<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(td) for td in tds])))
+				else :
 
-						# Calcul de la colonne "Total"
-						_sum += tds[1]
+					# Étape n°1...
+					if val_gby == 'ORG_MOA' :
+						for moa in TMoa.objects.filter(peu_doss = True, en_act_doss = True) :
 
-						# Suppression de variables
-						del ids, m, tds
+							# Récupération des maîtres d'ouvrages utiles
+							lmoas = list(TRegroupementsMoa.objects.filter(id_org_moa_fil = moa).values_list(
+								'id_org_moa_anc__pk', flat = True
+							)) + [moa.pk]
 
-			# Suppression de variables
-			del params
+							# Récupération des dossiers utiles
+							ldoss = qs_doss.filter(id_org_moa__in = lmoas).values_list('pk', flat = True)
 
-			# Détermination de la balise <tfoot/>
-			if len(trs) > 0 :
-				tfoot = '''
-				<tr>
-					<td>Total</td>
-					<td>{}</td>
-				</tr>
-				'''.format(_sum)
+							# Empilement des lignes
+							rows.append([ldoss, None, str(moa)])
 
-				# Suppression de variables
-				del _sum
+				# Initialisation des paramètres montants
+				thsparams = {
+					'TOTAL' : 'Montant HT total (en €);Montant TTC total (en €)',
+					'PARTICIPATION' : 'Montant HT de participation (en €);Montant TTC de participation (en €)',
+					'COMMANDE' : 'Montant HT commandé (en €);Montant TTC commandé (en €)',
+					'FACTURE' : 'Montant HT facturé (en €);Montant TTC facturé (en €)',
+					'DDV' : 'Montant HT demandé (en €);Montant TTC demandé (en €)',
+					'VERSE' : 'Montant HT versé (en €);Montant TTC versé (en €)'
+				}
 
+				# Empilement des balises </th>
+				ths += [j for i in lparams['numbers'] for j in thsparams[i].split(';')]
+
+			for row in rows :
+
+				# Stockage des identifiants de dossiers
+				doss = row[0]
+
+				# Empilement des colonnes de la ligne courante (nombre de dossiers)
+				row.append(len(doss))
+
+				for i in lparams['numbers'] :
+
+					# Intégration des montants totaux
+					if i == 'TOTAL' :
+
+						# Calcul des montants totaux
+						mnts = { 'HT' : 0, 'TTC' : 0 }
+						for sd in VSuiviDossier.objects.filter(pk__in = doss) :
+							mnts['HT' if not sd.est_ttc_doss else 'TTC'] += sd.mont_tot_doss
+
+						# Empilement des colonnes de la ligne courante
+						row.append(mnts['HT'])
+						row.append(mnts['TTC'])
+
+					# Intégration des montants de participation
+					if i == 'PARTICIPATION' :
+
+						# Stockage de l'identifiant du financeur
+						fin = row[1]
+
+						# Calcul des montants de participation
+						mnts = { 'HT' : 0, 'TTC' : 0 }
+
+						# Hors autofinancement
+						if fin is not None :
+							for f in VFinancement.objects.filter(id_doss__in = doss, id_org_fin = fin) :
+								mnts['HT' if not f.id_doss.est_ttc_doss else 'TTC'] += f.mont_part_fin
+
+						# Autofinancement
+						else :
+							for sd in VSuiviDossier.objects.filter(pk__in = doss) :
+								mnts['HT' if not f.id_doss.est_ttc_doss else 'TTC'] += sd.mont_raf
+
+						# Empilement des colonnes de la ligne courante
+						row.append(mnts['HT'])
+						row.append(mnts['TTC'])
+
+					# Intégration des montants commandés
+					if i == 'COMMANDE' :
+
+						# Calcul des montants commandés
+						mnts = { 'HT' : 0, 'TTC' : 0 }
+						for sd in VSuiviDossier.objects.filter(pk__in = doss) :
+							mnts['HT' if not sd.est_ttc_doss else 'TTC'] += sd.mont_tot_prest_doss
+
+						# Empilement des colonnes de la ligne courante
+						row.append(mnts['HT'])
+						row.append(mnts['TTC'])
+
+					# Intégration des montants facturés
+					if i == 'FACTURE' :
+
+						# Calcul des montants facturés
+						mnts = { 'HT' : 0, 'TTC' : 0 }
+						for sd in VSuiviDossier.objects.filter(pk__in = doss) :
+							mnts['HT' if not sd.est_ttc_doss else 'TTC'] += sd.mont_fact_sum
+
+						# Empilement des colonnes de la ligne courante
+						row.append(mnts['HT'])
+						row.append(mnts['TTC'])
+
+					# Intégration des montants demandés
+					if i == 'DDV' :
+
+						# Calcul des montants demandés
+						mnts = { 'HT' : 0, 'TTC' : 0 }
+						for ddv in VDemandeVersement.objects.filter(id_doss__in = doss) :
+							mnts['HT'] += ddv.mont_ht_ddv or 0
+							mnts['TTC'] += ddv.mont_ttc_ddv or 0
+
+						# Empilement des colonnes de la ligne courante
+						row.append(mnts['HT'])
+						row.append(mnts['TTC'])
+
+					# Intégration des montants versés
+					if i == 'VERSE' :
+
+						# Calcul des montants versés
+						mnts = { 'HT' : 0, 'TTC' : 0 }
+
+						# Détermination du jeu de données
+						if val_gby != 'ORG_FIN' :
+							ddvs = VDemandeVersement.objects.filter(id_doss__in = doss)
+						else :
+							ddvs = VDemandeVersement.objects.filter(id_doss__in = doss, id_org_fin = fin)
+
+						for ddv in ddvs :
+							mnts['HT'] += ddv.mont_ht_verse_ddv or 0
+							mnts['TTC'] += ddv.mont_ttc_verse_ddv or 0
+
+						# Empilement des colonnes de la ligne courante
+						row.append(mnts['HT'])
+						row.append(mnts['TTC'])
+
+				# Suppression des deux premières colonnes (devenues inutiles)
+				for i in range(2) : del row[0]
+
+			# Initialisation des colonnes de la balise <tfoot/>
+			tfoot_cols = []
+			for ndx, row in enumerate(rows) :
+				if ndx == 0 : tfoot_cols = (len(row) - 1) * [0] # Réinitialisation des colonnes de la balise <tfoot/>
+				for i in range(1, len(row)) : tfoot_cols[i - 1] += row[i]
+
+			# Mise en forme de la balise <tfoot/>
+			if tfoot_cols :
+				tfoot = '<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(i) for i in (
+					['Total'] + [obt_mont(j) if ndx > 0 else j for ndx, j in enumerate(tfoot_cols)]
+				)]))
 			else :
 				tfoot = ''
 
@@ -637,22 +790,19 @@ class FiltrerDossiers(forms.ModelForm) :
 			<div class="my-table" id="t_regr_doss">
 				<table>
 					<thead>
-						<tr>
-							<th id="za_regr_doss_0">{}</th>
-							<th>Nombre de dossiers</th>
-						</tr>
+						<tr>{}</tr>
 					</thead>
 					<tbody>{}</tbody>
-					<tfoot id="za_tfoot_regr_doss">{}</tfoot>
+					<tfoot>{}</tfoot>
 				</table>
 			</div>
-			'''.format(dict(self.fields['zl_gby'].choices)[val_gby], ''.join(trs), tfoot)
-
-			# Empilement de la variable "historique"
-			lgs = []
-			for elem in ['thead', 'tbody'] : lgs += BeautifulSoup(output).find(elem).find_all('tr')
-			for lg in lgs :
-				_req.session['filtr_doss'].append([col.contents[0] for col in lg.find_all()])
+			'''.format(
+				''.join(['<th>{}</th>'.format(th) for th in ths]),
+				''.join(['<tr>{}</tr>'.format(''.join([
+					'<td>{}</td>'.format(obt_mont(td) if ndx > 1 else td) for ndx, td in enumerate(tr)
+				])) for tr in rows]),
+				tfoot
+			)
 
 			return output
 
@@ -926,11 +1076,16 @@ class FiltrerPrestations(forms.Form) :
 					pd.id_doss,
 					pd.id_doss.get_int_doss(),
 					pd.id_prest.int_prest,
+					pd.id_prest.ref_prest,
 					pd.id_prest.id_nat_prest,
 					pd.id_prest.id_org_prest,
 					obt_mont(pd.mont_prest_doss),
 					obj_spd.nb_aven,
 					obt_mont(obj_spd.mont_aven_sum),
+					obt_mont(obj_spd.mont_tot_prest_doss),
+					obt_mont(obj_spd.mont_ht_fact_sum),
+					obt_mont(obj_spd.mont_ttc_fact_sum),
+					obt_mont(obj_spd.mont_raf),
 					'TTC' if pd.id_doss.est_ttc_doss == True else 'HT',
 					dt_fr(pd.id_prest.dt_notif_prest) or '-',
 					dt_fr(pd.id_prest.dt_fin_prest) or '-',
@@ -953,7 +1108,11 @@ class FiltrerPrestations(forms.Form) :
 
 				tfoot = '''
 				<tr>
-					<td colspan="5">Total</td>
+					<td colspan="6">Total</td>
+					<td>{}</td>
+					<td>{}</td>
+					<td>{}</td>
+					<td>{}</td>
 					<td>{}</td>
 					<td>{}</td>
 					<td colspan="5">{}</td>
@@ -962,6 +1121,10 @@ class FiltrerPrestations(forms.Form) :
 					obt_mont(sum([pd.mont_prest_doss for pd in _qs_prest])),
 					sum([spd.nb_aven for spd in _qs_spd]),
 					obt_mont(sum([spd.mont_aven_sum for spd in _qs_spd])),
+					obt_mont(sum([spd.mont_tot_prest_doss for spd in _qs_spd])),
+					obt_mont(sum([spd.mont_ht_fact_sum for spd in _qs_spd])),
+					obt_mont(sum([spd.mont_ttc_fact_sum for spd in _qs_spd])),
+					obt_mont(sum([spd.mont_raf for spd in _qs_spd]))
 				)
 
 				# Suppression de variables
@@ -981,11 +1144,16 @@ class FiltrerPrestations(forms.Form) :
 							<th>N° du dossier</th>
 							<th>Intitulé du dossier</th>
 							<th>Intitulé de la prestation</th>
+							<th>Référence de la prestation</th>
 							<th>Nature de la prestation</th>
 							<th>Prestataire</th>
 							<th>Montant de la prestation (en €)</th>
 							<th>Nombre d'avenants</th>
 							<th>Somme des avenants (en €)</th>
+							<th>Montant total de la prestation (en €)</th>
+							<th>Somme HT des factures émises (en €)</th>
+							<th>Somme TTC des factures émises (en €)</th>
+							<th>Reste à facturer (en €)</th>
 							<th>Mode de taxe</th>
 							<th>Date de notification de la prestation</th>
 							<th>Date de fin de la prestation</th>
@@ -1123,10 +1291,5 @@ class FiltrerPrestations(forms.Form) :
 				</table>
 			</div>
 			'''.format(''.join(trs), tfoot)
-
-			# Empilement de la variable "historique"
-			for lg in BeautifulSoup(output).find('thead').find_all('tr') :
-				_req.session['filtr_prest'].append([col.contents[0] for col in lg.find_all()])
-			for lg in lgs_csv : _req.session['filtr_prest'].append(lg)
 
 			return output
