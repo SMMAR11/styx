@@ -17,162 +17,83 @@ from django.db.models import Q
 
 class MSousAxe(forms.ModelForm) :
 
-    zl_axe = forms.ChoiceField(label = 'Axe')
-
     class Meta :
-        fields = '__all__'
-        model = TSousAxe
+        fields = '__all__'; model = TSousAxe
 
     def __init__(self, *args, **kwargs) :
-        super(MSousAxe, self).__init__(*args, **kwargs)
 
-        if self.instance.pk :
+        # Imports
+        from app.classes.FFModelChoiceField import Class as FFModelChoiceField
 
-            # Je pointe vers l'objet TAxe.
-            o_axe = self.instance.id_axe
+        super().__init__(*args, **kwargs)
 
-            # Je sélectionne par défaut la valeur de l'axe de l'enregistrement en cours.
-            arr_axes = [(o_axe.id_axe, o_axe)]
-            self.fields['zl_axe'].initial = o_axe
-
-        else :
-            arr_axes = [DEFAULT_OPTION]
-
-            for p in TProgramme.objects.all() :
-
-                # Je récupère les axes de l'objet TProgramme courant.
-                qs_axes_progr = TAxe.objects.filter(id_progr = p)
-
-                if len(qs_axes_progr) > 0 :
-
-                    # J'empile le tableau des axes de l'objet TProgramme courant.
-                    arr_axes_progr = []
-                    for ap in qs_axes_progr :
-                        arr_axes_progr.append((ap.id_axe, ap))
-
-                    # J'empile le tableau des axes.
-                    arr_axes.append(
-                        (p.int_progr, arr_axes_progr)
-                    )
-
-        # J'alimente la liste déroulante des axes.
-        self.fields['zl_axe'].choices = arr_axes
-
-    def clean(self) :
-
-        # Je récupère certaines données.
-        v_axe = self.cleaned_data.get('zl_axe')
-        v_num_ss_axe = self.cleaned_data.get('num_ss_axe')
-
-        if v_axe and len(TSousAxe.objects.filter(id_axe = v_axe, num_ss_axe = v_num_ss_axe)) > 0 :
-            raise forms.ValidationError('Le sous-axe existe déjà.')
-
-    def save(self, commit = True) :
-        o = super(MSousAxe, self).save(commit = False)
-        o.id_axe = TAxe.objects.get(id_axe = self.cleaned_data.get('zl_axe'))
-        if commit :
-            o.save()
-        return o
+        # Redéfinition du champ "Axe"
+        if not self.instance.pk :
+            field = self.fields['id_axe']
+            initial = field.initial; label = field.label; queryset = field.queryset; required = field.required
+            self.fields['id_axe'] = FFModelChoiceField(
+                initial = initial,
+                label = label,
+                obj_label = 'get_str_with_prg',
+                queryset = queryset,
+                required = required
+            )
 
 class MAction(forms.ModelForm) :
 
-    zl_ss_axe = forms.ChoiceField(label = 'Sous-axe')
-
     class Meta :
-        fields = '__all__'
-        model = TAction
+        fields = '__all__'; model = TAction
 
     def __init__(self, *args, **kwargs) :
-        super(MAction, self).__init__(*args, **kwargs)
 
-        if self.instance.pk :
+        # Imports
+        from app.classes.FFModelChoiceField import Class as FFModelChoiceField
 
-            # Je pointe vers l'objet TSousAxe.
-            o_ss_axe = self.instance.id_ss_axe
+        super().__init__(*args, **kwargs)
 
-            # Je sélectionne par défaut la valeur du sous-axe de l'enregistrement en cours.
-            arr_ss_axes = [(o_ss_axe.id_ss_axe, o_ss_axe)]
-            self.fields['zl_ss_axe'].initial = o_ss_axe
-
-        else :
-            arr_ss_axes = [DEFAULT_OPTION]
-
-            for a in TAxe.objects.all() :
-
-                # Je récupère les sous-axes de l'objet TAxe courant.
-                qs_ss_axes_axe = TSousAxe.objects.filter(id_axe = a)
-
-                if len(qs_ss_axes_axe) > 0 :
-
-                    # J'empile le tableau des sous-axes de l'objet TAxe courant.
-                    arr_ss_axes_axe = []
-                    for ssaa in qs_ss_axes_axe :
-                        arr_ss_axes_axe.append((ssaa.id_ss_axe, ssaa))
-
-                    # J'empile le tableau des sous-axes.
-                    arr_ss_axes.append(
-                        ('[{0}] {1}'.format(a.id_progr, a), arr_ss_axes_axe)
-                    )
-
-        # J'alimente la liste déroulante des sous-axes.
-        self.fields['zl_ss_axe'].choices = arr_ss_axes
-
-    def clean(self) :
-
-        # Je récupère certaines données.
-        v_ss_axe = self.cleaned_data.get('zl_ss_axe')
-        v_num_act = self.cleaned_data.get('num_act')
-
-        if v_ss_axe and len(TAction.objects.filter(id_ss_axe = v_ss_axe, num_act = v_num_act)) > 0 :
-            raise forms.ValidationError('L\'action existe déjà.')
-
-    def save(self, commit = True) :
-        o = super(MAction, self).save(commit = False)
-        o.id_ss_axe = TSousAxe.objects.get(id_ss_axe = self.cleaned_data.get('zl_ss_axe'))
-        if commit :
-            o.save()
-        return o
+        # Redéfinition du champ "Sous-axe"
+        if not self.instance.pk :
+            field = self.fields['id_ss_axe']
+            initial = field.initial; label = field.label; queryset = field.queryset; required = field.required
+            self.fields['id_ss_axe'] = FFModelChoiceField(
+                initial = initial,
+                label = label,
+                obj_label = 'get_str_with_prg',
+                queryset = queryset,
+                required = required
+            )
 
 class MUtilisateurCreate(forms.ModelForm) :
 
-    zl_org = forms.ChoiceField(label = 'Organisme')
     zs_pwd1 = forms.CharField(label = 'Mot de passe', max_length = 255, widget = forms.PasswordInput())
     zs_pwd2 = forms.CharField(label = 'Confirmation du mot de passe', max_length = 255, widget = forms.PasswordInput())
     cb_est_techn = forms.BooleanField(label = 'Est technicien', required = False)
 
     class Meta :
         fields = '__all__'
-        model = TUtilisateur 
+        model = TUtilisateur
 
     def __init__(self, *args, **kwargs) :
-        super(MUtilisateurCreate, self).__init__(*args, **kwargs)
-        self.fields['zl_org'].choices = [
-            DEFAULT_OPTION,
-            (
-                'Financeurs', (
-                    [(f.id_org_fin.id_org, f.id_org_fin) for f in TFinanceur.objects.all()]
-                )
-            ),
-            (
-                'Maîtres d\'ouvrages', (
-                    [(m.id_org_moa.id_org, m.id_org_moa) for m in TMoa.objects.all()]
-                )
-            ),
-            (
-                'Prestataires', (
-                    [(p.id_org_prest.id_org, p.id_org_prest) for p in TPrestataire.objects.all()]
-                )
-            ),
-            (
-                'Autres', (
-                    [(o.pk, o) for o in TOrganisme.objects.exclude(
-                        Q(pk__in = TFinanceur.objects.values_list('pk', flat = True)) |
-                        Q(pk__in = TMoa.objects.values_list('pk', flat = True)) |
-                        Q(pk__in = TPrestataire.objects.values_list('pk', flat = True))
-                    )]
-                )
-            )
-        ]
+
+        # Imports
+        from app.classes.FFModelChoiceField import Class as FFModelChoiceField
+
+        super().__init__(*args, **kwargs)
+
+        # Redéfinition du champ "Organisme"
+        field = self.fields['id_org']
+        initial = field.initial; label = field.label; queryset = field.queryset; required = field.required
+        self.fields['id_org'] = FFModelChoiceField(
+            initial = initial,
+            label = label,
+            obj_label = 'get_str_with_types',
+            queryset = queryset,
+            required = required
+        )
+
+        # Définition du paramètre "required" pour certains champs
+        self.fields['first_name'].required = True
+        self.fields['last_name'].required = True
 
     def clean_zs_pwd2(self) :
 
@@ -192,15 +113,12 @@ class MUtilisateurCreate(forms.ModelForm) :
         # Je créé l'instance TUtilisateur.
         o = super(MUtilisateurCreate, self).save(commit = False)
         o.set_password(self.cleaned_data.get('zs_pwd1'))
-        o.id_org = TOrganisme.objects.get(id_org = self.cleaned_data.get('zl_org'))
         o.save()
 
         # Je créé l'instance TTechnicien si l'utilisateur est un technicien.
         v_est_techn = self.cleaned_data.get('cb_est_techn')
         if v_est_techn == True :
-            TTechnicien.objects.create(
-                n_techn = self.cleaned_data.get('last_name'), pren_techn = self.cleaned_data.get('first_name')
-            )
+            TTechnicien.objects.create(n_techn = o.last_name, pren_techn = o.first_name)
             
         return o
 
@@ -216,49 +134,28 @@ class MUtilisateurUpdate(forms.ModelForm) :
         ''',
         label = 'Mot de passe'
     )
-    zl_org = forms.ChoiceField(label = 'Organisme')
 
     class Meta :
         fields = '__all__'
         model = TUtilisateur
 
     def __init__(self, *args, **kwargs) :
-        super(MUtilisateurUpdate, self).__init__(*args, **kwargs)
-        self.fields['zl_org'].choices = [
-            DEFAULT_OPTION,
-            (
-                'Financeurs', (
-                    [(f.id_org_fin.id_org, f.id_org_fin) for f in TFinanceur.objects.all()]
-                )
-            ),
-            (
-                'Maîtres d\'ouvrages', (
-                    [(m.id_org_moa.id_org, m.id_org_moa) for m in TMoa.objects.all()]
-                )
-            ),
-            (
-                'Prestataires', (
-                    [(p.id_org_prest.id_org, p.id_org_prest) for p in TPrestataire.objects.all()]
-                )
-            ),
-            (
-                'Autres', (
-                    [(o.pk, o) for o in TOrganisme.objects.exclude(
-                        Q(pk__in = TFinanceur.objects.values_list('pk', flat = True)) |
-                        Q(pk__in = TMoa.objects.values_list('pk', flat = True)) |
-                        Q(pk__in = TPrestataire.objects.values_list('pk', flat = True))
-                    )]
-                )
-            )
-        ]
-        self.fields['zl_org'].initial = self.instance.id_org.pk
+
+        # Imports
+        from app.classes.FFModelChoiceField import Class as FFModelChoiceField
+
+        super().__init__(*args, **kwargs)
+
+        # Redéfinition du champ "Organisme"
+        field = self.fields['id_org']
+        initial = field.initial; label = field.label; queryset = field.queryset; required = field.required
+        self.fields['id_org'] = FFModelChoiceField(
+            initial = initial,
+            label = label,
+            obj_label = 'get_str_with_types',
+            queryset = queryset,
+            required = required
+        )
 
     def clean_password(self) :
         return self.initial['password']
-
-    def save(self, commit = True) :
-        o = super(MUtilisateurUpdate, self).save(commit = False)
-        o.id_org = TOrganisme.objects.get(id_org = self.cleaned_data.get('zl_org'))
-        if commit :
-            o.save()
-        return o

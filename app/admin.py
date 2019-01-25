@@ -266,15 +266,9 @@ admin.site.register(TProgramme, AProgramme)
 
 class AAxe(admin.ModelAdmin) :
 
-	# Je mets en forme la première colonne du tableau.
-	def axe(self, _o) :
-		return '{0} - {1}'.format(_o.num_axe, _o.int_axe)
-	axe.allow_tags = True
-	axe.short_description = 'Axe'
-
 	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
-	list_display = ('axe', 'id_progr')
+	list_display = ('__str__', 'id_progr')
 	list_filter = ['id_progr']
 
 	# Je déclare les champs en lecture seule lors d'une mise à jour.
@@ -300,11 +294,6 @@ admin.site.register(TAxe, AAxe)
 class ASousAxe(admin.ModelAdmin) :
 
 	# Je mets en forme les colonnes du tableau.
-	def ss_axe(self, _o) :
-		return '{0}.{1} - {2}'.format(_o.id_axe.num_axe, _o.num_ss_axe, _o.int_ss_axe)
-	ss_axe.allow_tags = True
-	ss_axe.short_description = 'Sous-axe'
-
 	def int_progr(self, _o) :
 		return _o.id_axe.id_progr.int_progr
 	int_progr.allow_tags = True
@@ -312,13 +301,13 @@ class ASousAxe(admin.ModelAdmin) :
 
 	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
-	list_display = ('ss_axe', 'int_progr')
+	list_display = ('__str__', 'int_progr')
 	list_filter = ['id_axe__id_progr']
 
 	# Je déclare les champs en lecture seule lors d'une mise à jour.
 	def get_readonly_fields(self, _r, _o = None) :
 		if _o :
-			return self.readonly_fields + ('num_ss_axe',)
+			return self.readonly_fields + ('id_axe', 'num_ss_axe')
 		return self.readonly_fields
 
 	form = MSousAxe
@@ -327,18 +316,11 @@ class ASousAxe(admin.ModelAdmin) :
 	fieldsets = (
 		('Informations générales', {
 			'fields' : (
-				('zl_axe'),
+				('id_axe'),
 				('num_ss_axe'),
 				('int_ss_axe')
 			)
 		}),
-		('Autres', {
-			'fields' : (
-				('mont_ht_ss_axe'),
-				('mont_ttc_ss_axe'),
-				('ech_ss_axe')
-			)
-		})
 	)
 
 # Je peux désormais gérer les sous-axes.
@@ -347,11 +329,6 @@ admin.site.register(TSousAxe, ASousAxe)
 class AAction(admin.ModelAdmin) :
 
 	# Je mets en forme les colonnes du tableau.
-	def act(self, _o) :
-		return '{0}.{1}.{2} - {3}'.format(_o.id_ss_axe.id_axe.num_axe, _o.id_ss_axe.num_ss_axe, _o.num_act, _o.int_act)
-	act.allow_tags = True
-	act.short_description = 'Action'
-
 	def int_progr(self, _o) :
 		return _o.id_ss_axe.id_axe.id_progr.int_progr
 	int_progr.allow_tags = True
@@ -359,13 +336,13 @@ class AAction(admin.ModelAdmin) :
 
 	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
-	list_display = ('act', 'int_progr')
+	list_display = ('__str__', 'int_progr')
 	list_filter = ['id_ss_axe__id_axe__id_progr']
 
 	# Je déclare les champs en lecture seule lors d'une mise à jour.
 	def get_readonly_fields(self, _r, _o = None) :
 		if _o :
-			return self.readonly_fields + ('num_act',)
+			return self.readonly_fields + ('id_ss_axe', 'num_act')
 		return self.readonly_fields
 
 	form = MAction
@@ -374,18 +351,11 @@ class AAction(admin.ModelAdmin) :
 	fieldsets = (
 		('Informations générales', {
 			'fields' : (
-				('zl_ss_axe'),
+				('id_ss_axe'),
 				('num_act'),
 				('int_act')
 			)
 		}),
-		('Autres', {
-			'fields' : (
-				('mont_ht_act'),
-				('mont_ttc_act'),
-				('ech_act')
-			)
-		})
 	)
 
 # Je peux désormais gérer les actions.
@@ -471,42 +441,15 @@ class AMoa(admin.ModelAdmin) :
 	)
 
 	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('n_org'),
-				('tel_org'),
-				('port_org'),
-				('courr_org'),
-				('site_web_org')
-			)
-		}),
-		('Adresse', {
-			'fields' : (
-				('adr_org'),
-				('compl_adr_org'),
-				('cp_org'),
-				('num_comm'),
-				('cedex_org'),
-				('bp_org')
-			)
-		}),
-		('Options', {
-			'fields' : (
-				('dim_org_moa'),
-				('peu_doss'),
-				('en_act_doss'),
-				('peu_doss_pgre'),
-				('en_act_doss_pgre')
-			)
-		}),
-		('Autres', {
-			'fields' : (
-				('comm_org'),
-				('logo_org_moa')
-			)
-		})
-	)
+	fields = [
+		'n_org',
+		'dim_org_moa',
+		'peu_doss',
+		'en_act_doss',
+		'peu_doss_pgre',
+		'en_act_doss_pgre',
+		'logo_org_moa'
+	]
 
 # Je peux désormais gérer les maîtres d'ouvrages.
 admin.site.register(TMoa, AMoa)
@@ -548,7 +491,7 @@ class AUtilisateur(UserAdmin) :
 				('last_name'),
 				('first_name'),
 				('email'),
-				('zl_org'),
+				('id_org'),
 				('tel_util'),
 				('port_util')
 			)
@@ -574,7 +517,7 @@ class AUtilisateur(UserAdmin) :
 				('last_name'),
 				('first_name'),
 				('email'),
-				('zl_org')
+				('id_org')
 			)
 		}),
 		('Identifiants', {
@@ -687,34 +630,11 @@ class APrestataire(admin.ModelAdmin) :
 	list_display = ['n_org', 'siret_org_prest']
 
 	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('n_org'),
-				('siret_org_prest'),
-				('tel_org'),
-				('port_org'),
-				('courr_org'),
-				('site_web_org')
-			)
-		}),
-		('Adresse', {
-			'fields' : (
-				('adr_org'),
-				('compl_adr_org'),
-				('cp_org'),
-				('num_comm'),
-				('cedex_org'),
-				('bp_org')
-			)
-		}),
-		('Autres', {
-			'fields' : (
-				('num_dep'),
-				('comm_org'),
-			)
-		})
-	)
+	fields = [
+		'n_org',
+		'siret_org_prest',
+		'num_dep'
+	]
 
 # Je peux désormais gérer les prestataires.
 admin.site.register(TPrestataire, APrestataire)
@@ -726,32 +646,7 @@ class AFinanceur(admin.ModelAdmin) :
 	list_display = ['n_org']
 
 	# Je mets en forme le formulaire.
-	fieldsets = (
-		('Informations générales', {
-			'fields' : (
-				('n_org'),
-				('tel_org'),
-				('port_org'),
-				('courr_org'),
-				('site_web_org')
-			)
-		}),
-		('Adresse', {
-			'fields' : (
-				('adr_org'),
-				('compl_adr_org'),
-				('cp_org'),
-				('num_comm'),
-				('cedex_org'),
-				('bp_org')
-			)
-		}),
-		('Autres', {
-			'fields' : (
-				('comm_org'),
-			)
-		})
-	)
+	fields = ['n_org']
 
 # Je peux désormais gérer les financeurs.
 admin.site.register(TFinanceur, AFinanceur)

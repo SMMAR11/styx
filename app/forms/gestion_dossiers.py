@@ -69,7 +69,7 @@ class GererDossier(forms.ModelForm) :
 			'id_progr',
 			'id_techn',
 			'id_type_doss', 
-			'num_doss', 
+			'num_doss',
 			'type_decl'
 		]
 		fields = '__all__'
@@ -238,7 +238,7 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TMoa
 		from app.models import TPrestationsDossier
 		from app.models import TProgramme
-		from app.sql_views import VSuiviDossier
+		from app.models import VSuiviDossier
 		from django.db.models import Max
 		from django.db.models import Sum
 		from styx.settings import T_DONN_BDD_STR
@@ -385,7 +385,7 @@ class GererDossier(forms.ModelForm) :
 		try :
 			v_act = TAction.objects.get(pk = self.cleaned_data.get('zl_act')).num_act
 		except :
-			v_act = None
+			v_act = ''
 
 		o.num_act = v_act
 
@@ -393,7 +393,7 @@ class GererDossier(forms.ModelForm) :
 		try :
 			v_axe = TAxe.objects.get(pk = self.cleaned_data.get('zl_axe')).num_axe
 		except :
-			v_axe = None
+			v_axe = ''
 
 		o.num_axe = v_axe
 
@@ -401,7 +401,7 @@ class GererDossier(forms.ModelForm) :
 		try :
 			v_ss_axe = TSousAxe.objects.get(pk = self.cleaned_data.get('zl_ss_axe')).num_ss_axe
 		except :
-			v_ss_axe = None
+			v_ss_axe = ''
 
 		o.num_ss_axe = v_ss_axe
 
@@ -449,6 +449,13 @@ class ChoisirDossier(forms.ModelForm) :
 	zl_ann_delib_moa_doss = forms.ChoiceField(
 		label = 'Année de délibération au maître d\'ouvrage', required = False, widget = forms.Select()
 	)
+	rb_doss_sold = forms.ChoiceField(
+		choices = [(True, 'Oui'), (False, 'Non')],
+		initial = True,
+		label = 'Retrait des dossiers soldés ?',
+		required = False,
+		widget = forms.RadioSelect()
+	)
 
 	class Meta :
 
@@ -461,10 +468,10 @@ class ChoisirDossier(forms.ModelForm) :
 	def __init__(self, *args, **kwargs) :
 
 		# Imports
+		from app.models import TDossier
 		from app.models import TMoa
 		from app.models import TNatureDossier
 		from app.models import TProgramme
-		from datetime import date
 
 		# Je déclare le tableau des arguments.
 		k_org_moa = kwargs.pop('k_org_moa', None)
@@ -491,7 +498,7 @@ class ChoisirDossier(forms.ModelForm) :
 		self.fields['zl_nat_doss'].choices = t_nat_doss
 
 		# J'alimente la liste déroulante des années.
-		t_ann_delib_moa_doss = [(i, i) for i in range(1999, date.today().year + 1)]
+		t_ann_delib_moa_doss = TDossier.objects.get_years(mdl_column = 'dt_delib_moa_doss')
 		t_ann_delib_moa_doss.insert(0, DEFAULT_OPTION)
 		self.fields['zl_ann_delib_moa_doss'].choices = t_ann_delib_moa_doss
 
@@ -580,8 +587,8 @@ class GererFinancement(forms.ModelForm) :
 		# Imports
 		from app.functions import obt_mont
 		from app.models import TDossier
-		from app.sql_views import VFinancement
-		from app.sql_views import VSuiviDossier
+		from app.models import VFinancement
+		from app.models import VSuiviDossier
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererFinancement, self).clean()
@@ -617,7 +624,7 @@ class GererFinancement(forms.ModelForm) :
 			if v_org_fin :
 				qs_fin = VFinancement.objects.filter(id_org_fin = v_org_fin, id_doss = o_doss)
 				if i.pk :
-					qs_fin = qs_fin.exclude(pk = i.pk)
+					qs_fin = qs_fin.exclude(id_fin = i.pk)
 				if len(qs_fin) > 0 :
 					self.add_error('id_org_fin', 'Le financeur participe déjà au montage financier.')
 
@@ -660,7 +667,7 @@ class GererFinancement(forms.ModelForm) :
 			# Je gère la contrainte suivante : le montant de la participation doit être supérieur ou égal à la somme
 			# des demandes de versements effectuées sur ce financement.
 			if i.pk :
-				o_fin = VFinancement.objects.get(pk = i.pk)
+				o_fin = VFinancement.objects.get(id_fin = i.pk)
 				if v_mont_part_fin and float(v_mont_part_fin) < o_fin.mont_ddv_sum :
 					self.add_error(
 						'mont_part_fin',
@@ -691,7 +698,7 @@ class GererFinancement(forms.ModelForm) :
 class GererPrestation(forms.ModelForm) :
 
 	# Imports
-	from app.validators import val_mont_pos
+	from app.classes.FFEuroField import Class as FFEuroField
 
 	rb_prest_exist = forms.ChoiceField(
 		choices = [(1, 'Oui'), (0, 'Non')],
@@ -707,9 +714,9 @@ class GererPrestation(forms.ModelForm) :
 		label = 'Numéro SIRET du prestataire',
 		widget = forms.TextInput(attrs = { 'autocomplete' : 'off', 'maxlength' : 14, 'typeahead' : 'on' })
 	)
-	zs_mont_prest = forms.FloatField(
+	zs_mont_prest = FFEuroField(
 		label = 'Montant [ht_ou_ttc] de la prestation', 
-        validators = [val_mont_pos],
+		min_value = 0.01,
         widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
     )
 
@@ -777,7 +784,7 @@ class GererPrestation(forms.ModelForm) :
 		from app.models import TAvenant
 		from app.models import TDossier
 		from app.models import TPrestataire
-		from app.sql_views import VSuiviDossier
+		from app.models import VSuiviDossier
 		from django.db.models import Min
 
 		# Je récupère certaines données du formulaire pré-valide.
@@ -905,8 +912,8 @@ class RedistribuerPrestation(forms.ModelForm) :
 
 		# Imports
 		from app.functions import obt_mont
-		from app.sql_views import VSuiviDossier
-		from app.sql_views import VSuiviPrestationsDossier
+		from app.models import VSuiviDossier
+		from app.models import VSuiviPrestationsDossier
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(RedistribuerPrestation, self).clean()
@@ -1066,7 +1073,7 @@ class GererFacture(forms.ModelForm) :
 		from app.models import TDossier
 		from app.models import TFacture
 		from app.models import TFacturesDemandeVersement
-		from app.sql_views import VSuiviPrestationsDossier
+		from app.models import VSuiviPrestationsDossier
 
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(GererFacture, self).clean()
@@ -1283,7 +1290,7 @@ class GererDemandeVersement(forms.ModelForm) :
 
 		# Je prépare les valeurs initiales des champs personalisés.
 		if i.pk :
-			self.fields['zl_fin'].initial = i.id_fin
+			self.fields['zl_fin'].initial = i.id_fin.pk
 
 		# Je gère l'état des champs suivants : numéro de bordereau et numéro de titre de recette.
 		ro = False
@@ -1342,7 +1349,7 @@ class GererDemandeVersement(forms.ModelForm) :
 		from app.functions import obt_mont
 		from app.models import TDemandeVersement
 		from app.models import TDossier
-		from app.sql_views import VFinancement
+		from app.models import VFinancement
 		from styx.settings import T_DONN_BDD_STR
 
 		# Je récupère certaines données du formulaire pré-valide.
@@ -1364,7 +1371,7 @@ class GererDemandeVersement(forms.ModelForm) :
 			self.add_error('za_num_doss', 'Le dossier {0} n\'existe pas.'.format(v_num_doss))
 
 		if v_fin :
-			o_suivi_fin = VFinancement.objects.get(pk = v_fin)
+			o_suivi_fin = VFinancement.objects.get(id_fin = v_fin)
 		else :
 			o_suivi_fin = None
 
@@ -1710,8 +1717,8 @@ class GererAvenant(forms.ModelForm) :
 		from app.functions import obt_mont
 		from app.models import TAvenant
 		from app.models import TPrestationsDossier
-		from app.sql_views import VSuiviDossier
-		from app.sql_views import VSuiviPrestationsDossier
+		from app.models import VSuiviDossier
+		from app.models import VSuiviPrestationsDossier
 		from django.db.models import Max
 
 		# Je récupère certaines données du formulaire pré-valide.
@@ -1886,3 +1893,79 @@ class AjouterPrestataire(forms.ModelForm) :
 
 		super(AjouterPrestataire, self).__init__(*args, **kwargs)
 		init_mess_err(self)
+
+class GererFicheVie(forms.ModelForm) :
+
+	# Champs
+	za_num_doss = forms.CharField(
+		label = 'Numéro du dossier', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
+	)
+
+	class Meta :
+
+		# Imports
+		from app.models import TFicheVie
+
+		fields = ['comm_fdv', 'd_fdv', 'lib_fdv']
+		model = TFicheVie
+		widgets = { 'd_fdv' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }) }
+
+	# Méthodes publiques
+
+	def get_form(self, rq) :
+
+		'''Mise en forme du formulaire'''
+
+		# Imports
+		from app.functions import init_f
+		from django.template.context_processors import csrf
+
+		form = init_f(self) # Initialisation des contrôles
+
+		# Définition du conteni du formulaire
+		content = '''
+		{}
+		<div class="row">
+			<div class="col-sm-6">{}</div>
+			<div class="col-sm-6">{}</div>
+		</div>
+		{}
+		<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		'''.format(
+			form['za_num_doss'],
+			form['lib_fdv'],
+			form['d_fdv'],
+			form['comm_fdv']
+		)
+
+		return '''
+		<form action="{}" name="f_gerfdv" method="post" onsubmit="soum_f(event)">
+			<input name="csrfmiddlewaretoken" type="hidden" value="{}">
+			{}
+		</form>
+		'''.format(
+			'' if self.instance.pk else '?action=ajouter-fdv',
+			csrf(rq)['csrf_token'],
+			'''
+			<fieldset class="my-fieldset">
+				<legend>Modifier un événement</legend>
+				<div>{}</div>
+			</fieldset>
+			'''.format(content) if self.instance.pk else content
+		)
+
+	# Méthodes système
+
+	def __init__(self, *args, **kwargs) :
+		self.k_doss = kwargs.pop('k_doss') # Définition des arguments
+		super().__init__(*args, **kwargs)
+		init_mess_err(self) # Définition des messages d'erreurs personnalisés
+
+		# Définition de la valeur initiale du champ "za_num_doss"
+		self.fields['za_num_doss'].initial = self.k_doss.num_doss
+
+	def save(self, commit = True) :
+		fdv = super().save(commit = False)
+		fdv.id_doss = self.k_doss # Définition du dossier
+		if commit : fdv.save()
+		return fdv

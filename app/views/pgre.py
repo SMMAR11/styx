@@ -710,7 +710,7 @@ def cons_act_pgre(request, _a) :
 			econ_tot += p.obj_real_contr_doss_pgre
 
 		# Je stocke le jeu de données des photos de l'action PGRE.
-		qs_ph_pgre = TPhotoPgre.objects.filter(id_doss_pgre = o_act_pgre).order_by('-dt_pv_ph_pgre')
+		qs_ph_pgre = TPhotoPgre.objects.filter(id_doss_pgre = o_act_pgre)
 
 		# J'initialise le tableau des photos de l'action PGRE.
 		t_ph_pgre = [{

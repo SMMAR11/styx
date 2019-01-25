@@ -9,6 +9,8 @@ from django import forms
 
 class GererActionPgre(forms.ModelForm) :
 
+	# Imports
+	from app.classes.FFEuroField import Class as FFEuroField
 	from app.models import TDossierSsAction
 
 	cbsm_atel_pgre = forms.MultipleChoiceField(
@@ -29,8 +31,8 @@ class GererActionPgre(forms.ModelForm) :
 	)
 	zl_nat_doss = forms.ChoiceField(label = 'Nature de l\'action PGRE', widget = forms.Select())
 
-	mont_doss_pgre = forms.FloatField(
-		label = 'Montant dossier PGRE',
+	mont_doss_pgre = FFEuroField(
+		label = 'Montant de l\'action PGRE',
 		required = True
 	)
 
@@ -683,23 +685,20 @@ class FiltrerActionsPgre(forms.ModelForm) :
 			<table>
 				<thead>
 					<tr>
-						<th rowspan="2">N° de l'action PGRE</th>
-						<th rowspan="2">Intitulé de l'action PGRE</th>
-						<th rowspan="2">Instance de concertation</th>
-						<th rowspan="2">Atelier(s) concerné(s)</th>
-						<th rowspan="2">Dossier de correspondance</th>
-						<th rowspan="2">Maître(s) d'ouvrage(s)</th>
-						<th rowspan="2">Priorité</th>
-						<th rowspan="2">Objectifs d'économie de la ressource en eau (en m<sup>3</sup>)</th>
-						<th rowspan="2">Année prévisionnelle du début de l'action PGRE</th>
-						<th colspan="2">Dates de l'action PGRE</th>
-						<th rowspan="2">Nature de l'action PGRE</th>
-						<th rowspan="2">État d'avancement</th>
-						<th rowspan="2"></th>
-					</tr>
-					<tr>
-						<th>Début</th>
-						<th>Fin</th>
+						<th>N° de l'action PGRE</th>
+						<th>Intitulé de l'action PGRE</th>
+						<th>Instance de concertation</th>
+						<th>Atelier(s) concerné(s)</th>
+						<th>Dossier de correspondance</th>
+						<th>Maître(s) d'ouvrage(s)</th>
+						<th>Priorité</th>
+						<th>Objectifs d'économie de la ressource en eau (en m<sup>3</sup>)</th>
+						<th>Année prévisionnelle du début de l'action PGRE</th>
+						<th>Date de début de l'action PGRE</th>
+						<th>Date de fin de l'action PGRE</th>
+						<th>Nature de l'action PGRE</th>
+						<th>État d'avancement</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>{}</tbody>
@@ -709,6 +708,8 @@ class FiltrerActionsPgre(forms.ModelForm) :
 
 class GererSsActionPgre(forms.ModelForm):
 
+	# Imports
+	from app.classes.FFEuroField import Class as FFEuroField
 	from app.models import TNatureDossier
 	from app.models import TAvancementPgre
 
@@ -735,7 +736,7 @@ class GererSsActionPgre(forms.ModelForm):
         widget=forms.TextInput(
             attrs={ 'input-group-addon' : 'date' }))
 
-	mont_ss_action_pgre = forms.FloatField(label = "Montant", required = True)
+	mont_ss_action_pgre = FFEuroField(label = "Montant", required = True)
 
 	obj_econ_ress_ss_action_pgre = forms.FloatField(
 		label = "Objectif d'économie de ressource", required = True)

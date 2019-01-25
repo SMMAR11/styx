@@ -13,6 +13,7 @@
 		<div class="main-title">Dossier {{ d }}</div>
 		<ul class="my-nav-tabs nav nav-justified nav-tabs" id="tab_doss">
 			<li><a href="#ong_doss" data-toggle="tab">Caractéristiques</a></li>
+			<li><a href="#ong_fdv" data-toggle="tab">Fiche de vie</a></li>
 			<li><a href="#ong_fin" data-toggle="tab">Plan de financement</a></li>
 			{% if d.id_av.int_av != AV_EP %}
 			<li><a href="#ong_prest" data-toggle="tab">Prestations</a></li>
@@ -29,6 +30,20 @@
 					<div class="col-sm-9">
 						{{ t_attrs_doss.num_doss }}
 						{{ t_attrs_doss.int_doss }}
+						<div class="title-1">Porteurs du projet</div>
+						<div class="row">
+							<div class="col-sm-6">{{ t_attrs_doss.id_org_moa }}</div>
+							<div class="col-sm-6">{{ t_attrs_doss.id_techn }}</div>
+						</div>
+						<div class="title-1">Définition du projet</div>
+						<div class="row">
+							<div class="col-sm-6">{{ t_attrs_doss.id_progr }}</div>
+							<div class="col-sm-6">{{ t_attrs_doss.num_axe_compl }}</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-6">{{ t_attrs_doss.id_nat_doss }}</div>
+							<div class="col-sm-6">{{ t_attrs_doss.id_type_doss }}</div>
+						</div>
 						<div class="attribute-wrapper">
 							<span class="attribute-label">Dossier(s) associé(s) et/ou contrepartie</span>
 							<div class="my-table" id="t_cons_doss_fam">
@@ -62,21 +77,8 @@
 								</table>
 							</div>
 						</div>
-						{{ t_attrs_doss.id_org_moa }}
-						<div class="row">
-							<div class="col-sm-6">{{ t_attrs_doss.id_progr }}</div>
-							<div class="col-sm-2 col-xs-4">{{ t_attrs_doss.num_axe }}</div>
-							<div class="col-sm-2 col-xs-4">{{ t_attrs_doss.num_ss_axe }}</div>
-							<div class="col-sm-2 col-xs-4">{{ t_attrs_doss.num_act }}</div>
-						</div>
-						<div class="row">
-							<div class="col-sm-6">{{ t_attrs_doss.id_nat_doss }}</div>
-							<div class="col-sm-6">{{ t_attrs_doss.id_type_doss }}</div>
-						</div>
-						<div class="row">
-							<div class="col-sm-6">{{ t_attrs_doss.id_techn }}</div>
-							<div class="col-sm-6">{{ t_attrs_doss.id_sage }}</div>
-						</div>
+						{{ t_attrs_doss.id_sage }}
+						<div class="title-1">Programmation</div>
 						<div class="row">
 							<div class="col-md-6">{{ t_attrs_doss.mont_doss }}</div>
 							<div class="col-md-6">{{ t_attrs_doss.mont_suppl_doss }}</div>
@@ -91,7 +93,9 @@
 							<div class="col-md-6">{{ t_attrs_doss.id_av_cp }}</div>
 							<div class="col-md-6">{{ t_attrs_doss.dt_av_cp_doss }}</div>
 						</div>
+						<div class="title-1">Autres</div>
 						{{ t_attrs_doss.chem_pj_doss }}
+						{{ t_attrs_doss.num_oper_budg_doss }}
 						{{ t_attrs_doss.comm_doss }}
 					</div>
 					<div class="col-sm-3">
@@ -103,6 +107,35 @@
 						{% endif %}
 						<a href="{% url 'impr_doss' d.pk %}" target="blank" class="icon-link print-icon">Imprimer le dossier</a>
 					</div>
+				</div>
+			</div>
+			<div id="ong_fdv" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_gerfdv" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter un événement</span>
+				</div>
+				<div class="my-table" id="t_cons_fdv">
+					<table>
+						<thead>
+							<tr>
+								<th>Événement</th>
+								<th>Date</th>
+								<th>Commentaire</th>
+								<th></th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for fdv in t_fdvs %}
+							<tr>
+								<td>{{ fdv.lib_fdv }}</td>
+								<td>{{ fdv.d_fdv }}</td>
+								<td>{{ fdv.comm_fdv }}</td>
+								<td><a href="{% url 'modif_fdv' fdv.pk %}" class="forbidden modify-icon pull-right" title="Mettre à jour l'événement"></a></td>
+								<td><span action="?action=supprimer-fdv&fdv={{ fdv.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_fdv');" title="Supprimer l'événement"></span></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
 				</div>
 			</div>
 			<div id="ong_fin" class="fade tab-pane">
@@ -204,6 +237,7 @@
 					</table>
 				</div>
 				<div class="b red-color text-center">Le reste à engager {{ ht_ou_ttc }} pour ce dossier est de {{ mont_rae }} €.</div>
+				<div class="b red-color text-center">Le taux d'engagement pour ce dossier est de {{ d.get_view_object.tx_engag_doss }} %.</div>
 			</div>
 			<div id="ong_fact" class="fade tab-pane">
 				<div class="right">
@@ -249,6 +283,7 @@
 						{% endif %}
 					</table>
 				</div>
+				<div class="b red-color text-center">Le taux de réalisation pour ce dossier est de {{ d.get_view_object.tx_real_doss }} %.</div>
 			</div>
 			<div id="ong_ddv" class="fade tab-pane">
 				<div class="right">

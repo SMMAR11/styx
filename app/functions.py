@@ -126,6 +126,7 @@ def filtr_doss(request, _d_excl = None) :
 	from app.models import TAxe
 	from app.models import TDossier
 	from app.models import TSousAxe
+	import ast
 
 	# Je soumets le formulaire.
 	f_chois_doss = ChoisirDossier(request.POST, prefix = 'ChoisirDossier')
@@ -153,6 +154,7 @@ def filtr_doss(request, _d_excl = None) :
 		v_act = cleaned_data.get('zl_act')
 		v_nat_doss = cleaned_data.get('zl_nat_doss')
 		v_ann_delib_moa_doss = cleaned_data.get('zl_ann_delib_moa_doss')
+		v_doss_sold = cleaned_data.get('rb_doss_sold')
 
 		# J'initialise les conditions de la requête.
 		t_sql = { 'and' : {}, 'or' : [] }
@@ -176,6 +178,11 @@ def filtr_doss(request, _d_excl = None) :
 			qs_doss = TDossier.objects.filter(**t_sql['and'])
 		if _d_excl :
 			qs_doss = qs_doss.exclude(pk = _d_excl)
+
+		# Retrait ou non des dossiers soldés
+		qs_doss = TDossier.objects.custom_filter(
+			remove_completed = ast.literal_eval(v_doss_sold), pk__in = qs_doss.values_list('pk', flat = True)
+		)
 
 	else :
 		qs_doss = []
@@ -287,6 +294,9 @@ def gen_t_ch_doss(request, _d_excl = None) :
 		qs_doss = TDossier.objects.all()
 	if _d_excl :
 		qs_doss = qs_doss.exclude(pk = _d_excl)
+	qs_doss = TDossier.objects.custom_filter(
+		remove_completed = True, pk__in = qs_doss.values_list('pk', flat = True)
+	) # Retrait des dossiers soldés
 
 	# J'empile le tableau des lignes du tableau HTML.
 	t_lg = []
@@ -326,6 +336,7 @@ def gen_t_ch_doss(request, _d_excl = None) :
 					<div class="col-xs-6">{6}</div>
 					<div class="col-xs-6">{7}</div>
 				</div>
+				{8}
 			</div>
 		</fieldset>
 	</form>
@@ -341,7 +352,7 @@ def gen_t_ch_doss(request, _d_excl = None) :
 					<th></th>
 				</tr>
 			</thead>
-			<tbody>{8}</tbody>
+			<tbody>{9}</tbody>
 		</table>
 	</div>
 	'''.format(
@@ -353,6 +364,7 @@ def gen_t_ch_doss(request, _d_excl = None) :
 		t_ch_doss['zl_act'],
 		t_ch_doss['zl_nat_doss'],
 		t_ch_doss['zl_ann_delib_moa_doss'],
+		t_ch_doss['rb_doss_sold'],
 		'\n'.join(t_lg)
 	)
 
@@ -368,45 +380,11 @@ _h : Dois-je déclencher une erreur 403 en cas de non-permission ?
 def ger_droits(_u, _d, _g = True, _h = True) :
 
 	# Imports
-	from app.models import TDroit
-	from app.models import TMoa
-	from app.models import TRegroupementsMoa
-	from app.models import TTypeProgramme
+	from app.models import TUtilisateur
 	from django.core.exceptions import PermissionDenied
 
-	t_coupl = []
-	for d in TDroit.objects.filter(id_util = _u).order_by('id') :
-
-		# J'initialise le tableau des maîtres d'ouvrages (identifiants).
-		if d.id_org_moa :
-			t_org_moa = [rm.id_org_moa_anc.pk for rm in TRegroupementsMoa.objects.filter(id_org_moa_fil = d.id_org_moa)]
-			t_org_moa.append(d.id_org_moa.pk)
-		else :
-			t_org_moa = [m.pk for m in TMoa.objects.all()]
-
-		# J'initialise le tableau des types de programmes (identifiants).
-		if d.id_type_progr :
-			t_type_progr = [d.id_type_progr.pk]
-		else :
-			t_type_progr = [tp.pk for tp in TTypeProgramme.objects.all()]
-
-		# Je définis si je dois vérifier le droit en écriture ou en lecture.
-		attr = d.en_lect
-		if _g == False :
-			attr = d.en_ecr
-
-		# Je prépare le tableau des couples valides.
-		for i in t_org_moa :
-			for j in t_type_progr :
-				coupl = (i, j)
-				if attr == True :
-					t_coupl.append(coupl)
-				else :
-					if coupl in t_coupl :
-						t_coupl.remove(coupl)
-
-	# Je retire les doublons.
-	t_coupl_uniq = set(t_coupl)
+	# Obtention des permissions
+	t_coupl_uniq = TUtilisateur.objects.get(pk = _u.pk).get_permissions(read_or_write = 'R' if _g else 'W')
 
 	# Je vérifie si l'utilisateur peut accéder à la vue.
 	trouve = False
@@ -1019,20 +997,22 @@ def init_pg_cons(_t, _pdf = False) :
 
 			else :
 
+				# Mise en forme du gabarit PDF de base
+				tpl = '''
+				<tr>
+					<th scope="row">{}</th>
+					<td>{}</td>
+				</tr>
+				'''
+
 				# J'initialise le contenu du conteneur.
-				contr = '''
-				<span class="pdf-attribute-label">{0}</span>
-				<span class="pdf-attribute-value">{1}</span>
-				'''.format(get_label, get_value)
+				contr = tpl.format(get_label, get_value)
 
 				# Je surcharge le contenu du conteneur dans le cas d'un fichier PDF.
 				if 'pdf' in v :
 					if v['pdf'] == True :
 						if get_value :
-							contr = '''
-							<span class="pdf-attribute-label">{label}</span>
-							<span class="pdf-attribute-value">{value}</span>
-							'''.format(label = get_label, value = get_value)
+							contr = tpl.format(get_label, get_value)
 						else :
 							contr = None
 					else :
@@ -1040,11 +1020,7 @@ def init_pg_cons(_t, _pdf = False) :
 
 				# J'initialise le gabarit.
 				if contr :
-					cont = '''
-					<div class="pdf-attribute-wrapper">
-						{0}
-					</div>
-					'''.format(contr)
+					cont = contr
 				else :
 					cont = ''
 
@@ -1100,26 +1076,20 @@ def obt_doss_regr(_m) :
 
 	# Imports
 	from app.models import TDossier
-	from app.models import TRegroupementsMoa
-	from django.db.models import Q
-	from functools import reduce
-	import operator
+	from app.models import TMoa
 
-	# J'initialise les conditions de la requête.
-	qs_regr_moa = TRegroupementsMoa.objects.filter(id_org_moa_fil = _m)
-	if len(qs_regr_moa) > 0 :
-		t_sql = [Q(**{ 'id_org_moa' : rm.id_org_moa_anc }) for rm in qs_regr_moa]
-		t_sql.append(Q(**{ 'id_org_moa' : _m }))
-	else :
-		t_sql = { 'id_org_moa' : _m }
+	# Obtention de l'identifiant du maître d'ouvrage
+	try :
+		pk = _m.pk
+	except :
+		pk = _m
 
-	# J'initialise la requête.
-	if len(t_sql) == 1 :
-		qs_doss = TDossier.objects.filter(**t_sql)
-	else :
-		qs_doss = TDossier.objects.filter(reduce(operator.or_, t_sql))
+	# Définition des dossiers
+	doss = TDossier.objects.none()
+	for moa in TMoa.objects.get_rmoas(moa = pk) :
+		doss |= TDossier.objects.filter(id_org_moa = moa.pk)
 
-	return qs_doss
+	return doss
 
 '''
 Cette fonction retourne un entier ou un nombre décimal sous forme de montant.
@@ -1127,44 +1097,14 @@ _v : Valeur dont on veux avoir le montant
 Retourne un entier ou un nombre décimal
 '''
 def obt_mont(_v) :
-
-	output = _v
-
-	if _v is not None :
-
-		# Je convertis l'entier ou le nombre décimal sous forme de montant.
-		output = '{:,.2f}'.format(_v)
-
-		# Je retire les virgules.
-		output = output.replace(',', ' ')
-
-		# Je retire les zéros non-significatifs si besoin.
-		if output.endswith('.00') :
-			output = output[:-3]
-
-	return output
+	return '{0:,.2f}'.format(_v).replace(',', ' ') if _v is not None else _v
 
 '''
 Cette fonction retourne un entier ou un nombre décimal sous forme de pourcentage.
 _v : Valeur dont on veux avoir le pourcentage
 Retourne un entier ou un nombre décimal
 '''
-def obt_pourc(_v) :
-
-	output = _v
-
-	if _v is not None :
-
-		# Je convertis l'entier ou le nombre décimal sous forme de pourcentage.
-		output = '{0:.2f}'.format(_v)
-
-		# Je retire les zéros non-significatifs si besoin.
-		if output.endswith('.00') :
-			output = output[:-3]
-		if '.' in output and output.endswith('0') :
-			output = output[:-1]
-
-	return output
+def obt_pourc(_v) : return _v
 
 '''
 Cette procédure permet de mettre à jour un fichier log.

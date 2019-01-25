@@ -13,16 +13,12 @@
 		<legend>Modifier un dossier</legend>
 		<div>
 			{{ f_modif_doss.za_num_doss }}
+			<div class="title-1">Porteurs du projet</div>
 			<div class="row">
-				<div class="col-sm-6">{{ f_modif_doss.za_doss_ass }}</div>
-				<div class="align-icon-link-xs col-sm-3 col-xs-6 text-center">
-					<span class="icon-link modify-icon" data-target="#fm_ch_doss" data-toggle="modal">Modifier</span>
-				</div>
-				<div class="align-icon-link-xs col-sm-3 col-xs-6 text-center">
-					<span class="delete-icon icon-link" id="bt_suppr_doss_ass">Supprimer</span>
-				</div>
+				<div class="col-md-6">{{ f_modif_doss.zl_org_moa }}</div>
+				<div class="col-md-6">{{ f_modif_doss.zl_techn }}</div>
 			</div>
-			{{ f_modif_doss.zl_org_moa }}
+			<div class="title-1">Définition du projet</div>
 			<div class="row">
 				<div class="col-md-6">{{ f_modif_doss.zl_progr }}</div>
 				<div class="col-md-2">{{ f_modif_doss.zl_axe }}</div>
@@ -38,9 +34,15 @@
 				<div class="col-md-6">{{ f_modif_doss.lib_2_doss }}</div>
 			</div>
 			<div class="row">
-				<div class="col-md-6">{{ f_modif_doss.zl_techn }}</div>
-				<div class="col-md-6">{{ f_modif_doss.id_sage }}</div>
+				<div class="col-sm-6">{{ f_modif_doss.za_doss_ass }}</div>
+				<div class="align-icon-link-xs col-sm-3 col-xs-6 text-center">
+					<span class="icon-link modify-icon" data-target="#fm_ch_doss" data-toggle="modal">Modifier</span>
+				</div>
+				<div class="align-icon-link-xs col-sm-3 col-xs-6 text-center">
+					<span class="delete-icon icon-link" id="bt_suppr_doss_ass">Supprimer</span>
+				</div>
 			</div>
+			<div class="title-1">Programmation</div>
 			{% if t_fin_length > 0 or t_prest_doss_length > 0 %}
 			<div class="row">
 				<div class="col-md-6">{{ f_modif_doss.mont_doss }}</div>
@@ -62,7 +64,9 @@
 				<div class="col-md-6">{{ f_modif_doss.id_av_cp }}</div>
 				<div class="col-md-6">{{ f_modif_doss.dt_av_cp_doss }}</div>
 			</div>
+			<div class="title-1">Autres</div>
 			{{ f_modif_doss.chem_pj_doss }}
+			{{ f_modif_doss.num_oper_budg_doss }}
 			{{ f_modif_doss.comm_doss }}
 			<button class="center-block green-btn my-btn" type="submit">Valider</button>
 		</div>

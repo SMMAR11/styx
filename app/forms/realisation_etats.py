@@ -9,10 +9,10 @@ from django import forms
 class FiltrerDossiers(forms.ModelForm) :
 
 	# Imports
+	from app.classes.FFEuroField import Class as FFEuroField
 	from app.models import TAvisCp
 	from app.models import TFinanceur
 	from app.models import TPrestataire
-	from app.validators import val_mont_pos
 
 	# Champs
 	cbsm_org_moa = forms.MultipleChoiceField(
@@ -59,16 +59,14 @@ class FiltrerDossiers(forms.ModelForm) :
 		required = False,
 		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'au' })
 	)
-	zs_mont_doss_min = forms.FloatField(
+	zs_mont_doss_min = FFEuroField(
 		label = '',
 		required = False,
-		validators = [val_mont_pos],
 		widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro', 'placeholder' : '0 par défaut' })
 	)
-	zs_mont_doss_max = forms.FloatField(
+	zs_mont_doss_max = FFEuroField(
 		label = '',
 		required = False,
-		validators = [val_mont_pos],
 		widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro', 'placeholder' : 'infini par défaut' })
 	)
 	zl_mode_taxe_doss = forms.ChoiceField(
@@ -282,9 +280,9 @@ class FiltrerDossiers(forms.ModelForm) :
 		from app.models import TProgramme
 		from app.models import TRegroupementsMoa
 		from app.models import TTypeDossier
-		from app.sql_views import VDemandeVersement
-		from app.sql_views import VFinancement
-		from app.sql_views import VSuiviDossier
+		from app.models import VDemandeVersement
+		from app.models import VFinancement
+		from app.models import VSuiviDossier
 		from bs4 import BeautifulSoup
 		from django.conf import settings
 		from django.core.urlresolvers import reverse
@@ -412,16 +410,13 @@ class FiltrerDossiers(forms.ModelForm) :
 				obj_sd = VSuiviDossier.objects.get(pk = d.pk)
 
 				# Préparation des données de la colonne "Financement"
-				fins = [obt_mont(obj_sd.mont_raf)]
+				fins = [obt_mont(VFinancement.objects.get(id_doss = d, id_org_fin = None).mont_part_fin)]
 				for f in TFinanceur.objects.all() :
-					if TFinancement.objects.filter(id_doss = d, id_org_fin = f).count() > 0 :
-						mont_part_fin = obt_mont(TFinancement.objects.get(id_doss = d, id_org_fin = f).mont_part_fin)
-					else :
-						mont_part_fin = 0
-					fins.append(mont_part_fin)
+					fin = VFinancement.objects.filter(id_doss = d, id_org_fin = f).first()
+					fins.append(obt_mont(fin.mont_part_fin if fin else 0))
 
 					# Suppression de variables
-					del f, mont_part_fin
+					del f
 
 				# Préparation des colonnes
 				tds = [
@@ -446,7 +441,11 @@ class FiltrerDossiers(forms.ModelForm) :
 					dt_fr(d.dt_av_cp_doss) or '-',
 					obt_mont(obj_sd.mont_tot_prest_doss),
 					obt_mont(obj_sd.mont_fact_sum),
+					d.get_view_object().tx_engag_doss,
+					d.get_view_object().tx_real_doss,
 					*fins,
+					d.num_oper_budg_doss,
+					d.comm_doss,
 					'<a href="{0}" class="consult-icon pull-right" title="Consulter le dossier"></a>'.format(
 						reverse('cons_doss', args = [d.pk])
 					)
@@ -476,16 +475,13 @@ class FiltrerDossiers(forms.ModelForm) :
 					obj_sd = VSuiviDossier.objects.get(pk = d.pk)
 
 					# Préparation des données liées aux financements
-					sums_fins[0].append(obj_sd.mont_raf)
+					sums_fins[0].append(VFinancement.objects.get(id_doss = d, id_org_fin = None).mont_part_fin)
 					for index, f in enumerate(TFinanceur.objects.all()) :
-						if TFinancement.objects.filter(id_doss = d, id_org_fin = f).count() > 0 :
-							mont_part_fin = TFinancement.objects.get(id_doss = d, id_org_fin = f).mont_part_fin
-						else :
-							mont_part_fin = 0
-						sums_fins[index + 1].append(mont_part_fin)
+						fin = VFinancement.objects.filter(id_doss = d, id_org_fin = f).first()
+						sums_fins[index + 1].append(fin.mont_part_fin if fin else 0)
 
 						# Suppression de variables
-						del f, index, mont_part_fin
+						del f, index
 
 					# Suppression de variables
 					del d, obj_sd
@@ -493,7 +489,7 @@ class FiltrerDossiers(forms.ModelForm) :
 				# Mise en forme des balises <td/>
 				tds_fins = []
 				for index, elem in enumerate(sums_fins) :
-					td = '<td>{}</td>' if index + 1 != len(sums_fins) else '<td colspan="2">{}</td>'
+					td = '<td>{}</td>' if index + 1 != len(sums_fins) else '<td colspan="4">{}</td>'
 					tds_fins.append(td.format(obt_mont(sum(elem))))
 
 					# Suppression de variables
@@ -506,7 +502,7 @@ class FiltrerDossiers(forms.ModelForm) :
 					<td>{}</td>
 					<td colspan="7">{}</td>
 					<td>{}</td>
-					<td>{}</td>
+					<td colspan="3">{}</td>
 					{}
 				</tr>
 				'''.format(
@@ -532,40 +528,40 @@ class FiltrerDossiers(forms.ModelForm) :
 				<table>
 					<thead>
 						<tr>
-							<th rowspan="2">N° du dossier</th>
-							<th rowspan="2">Intitulé du dossier</th>
-							<th rowspan="2">Dossier associé et/ou contrepartie</th>
-							<th rowspan="2">Maître d'ouvrage</th>
-							<th rowspan="2">Programme</th>
-							<th rowspan="2">Axe</th>
-							<th rowspan="2">Nature du dossier</th>
-							<th rowspan="2">Type de dossier</th>
-							<th rowspan="2">Agent responsable</th>
-							<th rowspan="2">SAGE</th>
-							<th colspan="4">Montant du dossier</th>
-							<th rowspan="2">État d'avancement</th>
-							<th rowspan="2">Date de délibération au maître d'ouvrage</th>
-							<th rowspan="2">Année prévisionnelle du dossier</th>
-							<th rowspan="2">Avis du comité de programmation - CD GEMAPI</th>
-							<th rowspan="2">Date de l'avis du comité de programmation</th>
-							<th rowspan="2">Montant commandé (en €)</th>
-							<th rowspan="2">Montant payé (en €)</th>
-							<th colspan="{}">Financement</th>
-							<th rowspan="2"></th>
-						</tr>
-						<tr>
-							<th>Présenté au CD GEMAPI (en €)</th>
-							<th>Dépassement (en €)</th>
-							<th>Total (en €)</th>
-							<th>Mode de taxe</th>
+							<th>N° du dossier</th>
+							<th>Intitulé du dossier</th>
+							<th>Dossier associé et/ou contrepartie</th>
+							<th>Maître d'ouvrage</th>
+							<th>Programme</th>
+							<th>Axe</th>
+							<th>Nature du dossier</th>
+							<th>Type de dossier</th>
+							<th>Agent responsable</th>
+							<th>SAGE</th>
+							<th>Montant du dossier présenté au CD GEMAPI (en €)</th>
+							<th>Dépassement du dossier (en €)</th>
+							<th>Montant total du dossier (en €)</th>
+							<th>Type de montant du dossier</th>
+							<th>État d'avancement</th>
+							<th>Date de délibération au maître d'ouvrage</th>
+							<th>Année prévisionnelle du dossier</th>
+							<th>Avis du comité de programmation - CD GEMAPI</th>
+							<th>Date de l'avis du comité de programmation</th>
+							<th>Montant commandé (en €)</th>
+							<th>Montant payé (en €)</th>
+							<th>Taux d'engagement</th>
+							<th>Taux de réalisation</th>
 							{}
+							<th>Numéro d'opération budgétaire</th>
+							<th>Commentaire</th>
+							<th></th>
 						</tr>
 					</thead>
 					<tbody>{}</tbody>
 					<tfoot id="za_tfoot_select_doss">{}</tfoot>
 				</table>
 			</div>
-			'''.format(len(org_fins), ''.join(org_fins), ''.join(trs), tfoot)
+			'''.format(''.join(org_fins), ''.join(trs), tfoot)
 
 		else :
 
@@ -604,7 +600,12 @@ class FiltrerDossiers(forms.ModelForm) :
 			}
 
 			# Initialisation des balises <th/>
-			ths = [dict(self.fields['zl_gby'].choices)[val_gby], 'Nombre de dossiers']
+			ths = [
+				dict(self.fields['zl_gby'].choices)[val_gby],
+				'Nombre de dossiers',
+				'Nombre de dossiers HT',
+				'Nombre de dossiers TTC'
+			]
 
 			# Initialisation des lignes
 			rows = []
@@ -656,10 +657,10 @@ class FiltrerDossiers(forms.ModelForm) :
 
 				# Initialisation des paramètres montants
 				thsparams = {
-					'TOTAL' : 'Montant HT total (en €);Montant TTC total (en €)',
-					'PARTICIPATION' : 'Montant HT de participation (en €);Montant TTC de participation (en €)',
-					'COMMANDE' : 'Montant HT commandé (en €);Montant TTC commandé (en €)',
-					'FACTURE' : 'Montant HT facturé (en €);Montant TTC facturé (en €)',
+					'TOTAL' : 'Montant total (en €)',
+					'PARTICIPATION' : 'Montant de participation (en €)',
+					'COMMANDE' : 'Montant commandé (en €)',
+					'FACTURE' : 'Montant facturé (en €)',
 					'DDV' : 'Montant HT demandé (en €);Montant TTC demandé (en €)',
 					'VERSE' : 'Montant HT versé (en €);Montant TTC versé (en €)'
 				}
@@ -675,19 +676,23 @@ class FiltrerDossiers(forms.ModelForm) :
 				# Empilement des colonnes de la ligne courante (nombre de dossiers)
 				row.append(len(doss))
 
+				nb_doss = { 'HT' : 0, 'TTC' : 0 }
+				for dos in doss : nb_doss[VSuiviDossier.objects.get(pk = dos).type_mont_doss] += 1
+				row.append(nb_doss['HT'])
+				row.append(nb_doss['TTC'])
+
 				for i in lparams['numbers'] :
 
 					# Intégration des montants totaux
 					if i == 'TOTAL' :
 
 						# Calcul des montants totaux
-						mnts = { 'HT' : 0, 'TTC' : 0 }
+						mnt = 0
 						for sd in VSuiviDossier.objects.filter(pk__in = doss) :
-							mnts['HT' if not sd.est_ttc_doss else 'TTC'] += sd.mont_tot_doss
+							mnt += sd.mont_tot_doss
 
 						# Empilement des colonnes de la ligne courante
-						row.append(mnts['HT'])
-						row.append(mnts['TTC'])
+						row.append(mnt)
 
 					# Intégration des montants de participation
 					if i == 'PARTICIPATION' :
@@ -696,45 +701,35 @@ class FiltrerDossiers(forms.ModelForm) :
 						fin = row[1]
 
 						# Calcul des montants de participation
-						mnts = { 'HT' : 0, 'TTC' : 0 }
+						mnt = 0
 
-						# Hors autofinancement
-						if fin is not None :
-							for f in VFinancement.objects.filter(id_doss__in = doss, id_org_fin = fin) :
-								mnts['HT' if not f.id_doss.est_ttc_doss else 'TTC'] += f.mont_part_fin
-
-						# Autofinancement
-						else :
-							for sd in VSuiviDossier.objects.filter(pk__in = doss) :
-								mnts['HT' if not f.id_doss.est_ttc_doss else 'TTC'] += sd.mont_raf
+						for f in VFinancement.objects.filter(id_doss__in = doss, id_org_fin = fin) :
+							mnt += f.mont_part_fin
 
 						# Empilement des colonnes de la ligne courante
-						row.append(mnts['HT'])
-						row.append(mnts['TTC'])
+						row.append(mnt)
 
 					# Intégration des montants commandés
 					if i == 'COMMANDE' :
 
 						# Calcul des montants commandés
-						mnts = { 'HT' : 0, 'TTC' : 0 }
+						mnt = 0
 						for sd in VSuiviDossier.objects.filter(pk__in = doss) :
-							mnts['HT' if not sd.est_ttc_doss else 'TTC'] += sd.mont_tot_prest_doss
+							mnt += sd.mont_tot_prest_doss
 
 						# Empilement des colonnes de la ligne courante
-						row.append(mnts['HT'])
-						row.append(mnts['TTC'])
+						row.append(mnt)
 
 					# Intégration des montants facturés
 					if i == 'FACTURE' :
 
 						# Calcul des montants facturés
-						mnts = { 'HT' : 0, 'TTC' : 0 }
+						mnt = 0
 						for sd in VSuiviDossier.objects.filter(pk__in = doss) :
-							mnts['HT' if not sd.est_ttc_doss else 'TTC'] += sd.mont_fact_sum
+							mnt += sd.mont_fact_sum
 
 						# Empilement des colonnes de la ligne courante
-						row.append(mnts['HT'])
-						row.append(mnts['TTC'])
+						row.append(mnt)
 
 					# Intégration des montants demandés
 					if i == 'DDV' :
@@ -742,8 +737,8 @@ class FiltrerDossiers(forms.ModelForm) :
 						# Calcul des montants demandés
 						mnts = { 'HT' : 0, 'TTC' : 0 }
 						for ddv in VDemandeVersement.objects.filter(id_doss__in = doss) :
-							mnts['HT'] += ddv.mont_ht_ddv or 0
-							mnts['TTC'] += ddv.mont_ttc_ddv or 0
+							mnts['HT'] += ddv.get_instance().mont_ht_ddv or 0
+							mnts['TTC'] += ddv.get_instance().mont_ttc_ddv or 0
 
 						# Empilement des colonnes de la ligne courante
 						row.append(mnts['HT'])
@@ -762,8 +757,8 @@ class FiltrerDossiers(forms.ModelForm) :
 							ddvs = VDemandeVersement.objects.filter(id_doss__in = doss, id_org_fin = fin)
 
 						for ddv in ddvs :
-							mnts['HT'] += ddv.mont_ht_verse_ddv or 0
-							mnts['TTC'] += ddv.mont_ttc_verse_ddv or 0
+							mnts['HT'] += ddv.get_instance().mont_ht_verse_ddv or 0
+							mnts['TTC'] += ddv.get_instance().mont_ttc_verse_ddv or 0
 
 						# Empilement des colonnes de la ligne courante
 						row.append(mnts['HT'])
@@ -781,7 +776,7 @@ class FiltrerDossiers(forms.ModelForm) :
 			# Mise en forme de la balise <tfoot/>
 			if tfoot_cols :
 				tfoot = '<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(i) for i in (
-					['Total'] + [obt_mont(j) if ndx > 0 else j for ndx, j in enumerate(tfoot_cols)]
+					['Total'] + [obt_mont(j) if ndx > 2 else j for ndx, j in enumerate(tfoot_cols)]
 				)]))
 			else :
 				tfoot = ''
@@ -799,8 +794,8 @@ class FiltrerDossiers(forms.ModelForm) :
 			'''.format(
 				''.join(['<th>{}</th>'.format(th) for th in ths]),
 				''.join(['<tr>{}</tr>'.format(''.join([
-					'<td>{}</td>'.format(obt_mont(td) if ndx > 1 else td) for ndx, td in enumerate(tr)
-				])) for tr in rows]),
+					'<td>{}</td>'.format(obt_mont(td) if ndx > 3 else td) for ndx, td in enumerate(tr)
+				])) for tr in rows if tr[1] > 0]),
 				tfoot
 			)
 
@@ -809,11 +804,11 @@ class FiltrerDossiers(forms.ModelForm) :
 class FiltrerPrestations(forms.Form) :
 
 	# Imports
+	from app.classes.FFEuroField import Class as FFEuroField
 	from app.models import TDepartement
 	from app.models import TNaturePrestation
 	from app.models import TPrestataire
 	from app.models import TProgramme
-	from app.validators import val_mont_pos
 
 	# Champs
 	zl_org_prest = forms.ModelChoiceField(
@@ -854,16 +849,14 @@ class FiltrerPrestations(forms.Form) :
 	zl_nat_prest = forms.ModelChoiceField(
 		label = 'Nature de la prestation', queryset = TNaturePrestation.objects.all(), required = False
 	)
-	zs_mont_prest_min = forms.FloatField(
+	zs_mont_prest_min = FFEuroField(
 		label = '',
 		required = False,
-		validators = [val_mont_pos],
 		widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro', 'placeholder' : '0 par défaut' })
 	)
-	zs_mont_prest_max = forms.FloatField(
+	zs_mont_prest_max = FFEuroField(
 		label = '',
 		required = False,
-		validators = [val_mont_pos],
 		widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro', 'placeholder' : 'infini par défaut' })
 	)
 	zl_mode_taxe_prest = forms.ChoiceField(
@@ -986,7 +979,7 @@ class FiltrerPrestations(forms.Form) :
 		from app.models import TPrestataire
 		from app.models import TPrestationsDossier
 		from app.models import TRegroupementsMoa
-		from app.sql_views import VSuiviPrestationsDossier
+		from app.models import VSuiviPrestationsDossier
 		from bs4 import BeautifulSoup
 		from django.core.urlresolvers import reverse
 
@@ -1165,6 +1158,7 @@ class FiltrerPrestations(forms.Form) :
 				</table>
 			</div>
 			'''.format(''.join(trs), tfoot)
+
 		else :
 
 			# Réinitialisation de la variable "historique"
@@ -1221,8 +1215,9 @@ class FiltrerPrestations(forms.Form) :
 				]
 
 				# Empilement des lignes du fichier CSV et des balises <tr/>
-				lgs_csv.append(_tds)
-				trs.append('<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(td) for td in tds])))
+				if _tds[1] > 0 :
+					lgs_csv.append(_tds)
+					trs.append('<tr>{}</tr>'.format(''.join(['<td>{}</td>'.format(td) for td in tds])))
 
 				# Calcul du total lié aux pourcentages de contractualisation (100 normalement)
 				_sum += pourc_contr

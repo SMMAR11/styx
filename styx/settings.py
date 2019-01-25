@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 from decouple import config
 from decouple import Csv
+from django.conf.locale.fr import formats
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_pgviews',
     'leaflet'
 ]
 
@@ -119,13 +121,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'fr'
 
-TIME_ZONE = None
+TIME_ZONE = 'Europe/Paris'
 
 USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -145,6 +147,10 @@ LEAFLET_CONFIG = {
     'TILES': [],
     'RESET_VIEW': False
 }
+
+# Formats
+formats.DATE_FORMAT = 'd/m/Y'
+formats.DATETIME_FORMAT = 'd/m/Y H:i:s'
 
 # Je déclare mes options personnelles.
 T_DONN_BDD_STR = {

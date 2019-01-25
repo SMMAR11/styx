@@ -18,6 +18,7 @@
 					</div>
 					{{ f_ch_doss.zl_nat_doss }}
 					{{ f_ch_doss.zl_ann_delib_moa_doss }}
+					{{ f_ch_doss.rb_doss_sold }}
 				</div>
 			</fieldset>
 		</form>
@@ -31,6 +32,8 @@
 						<th>Intitulé du dossier</th>
 						<th>Maître d'ouvrage</th>
 						<th>Date de délibération au maître d'ouvrage</th>
+						<th>Taux d'engagement</th>
+						<th>Taux de réalisation</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -41,6 +44,8 @@
 						<td>{{ d.int_doss }}</td>
 						<td>{{ d.n_org }}</td>
 						<td>{{ d.dt_delib_moa_doss }}</td>
+						<td>{{ d.tx_engag_doss }}</td>
+						<td>{{ d.tx_real_doss }}</td>
 						<td>
 							<a href="{% url 'cons_doss' d.pk %}" class="consult-icon pull-right" title="Consulter le dossier"></a>
 						</td>

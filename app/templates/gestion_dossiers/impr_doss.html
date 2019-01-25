@@ -11,8 +11,31 @@
 	<body>
 		<div class="pdf-title-1">Fiche du dossier {{ d }}</div>
 		<div class="pdf-title-2">Caractéristiques</div>
-		{{ t_attrs_doss.num_doss }}
-		{{ t_attrs_doss.int_doss }}
+		<table class="pdf-table vertical-table">
+			<tbody>
+				{{ t_attrs_doss.num_doss }}
+				{{ t_attrs_doss.int_doss_pdf }}
+			</tbody>
+		</table>
+		<div class="br"></div>
+		<div class="pdf-title-3">Porteurs du projet</div>
+		<table class="pdf-table vertical-table">
+			<tbody>
+				{{ t_attrs_doss.id_org_moa }}
+				{{ t_attrs_doss.id_techn }}
+			</tbody>
+		</table>
+		<div class="br"></div>
+		<div class="pdf-title-3">Définition du projet</div>
+		<table class="pdf-table vertical-table">
+			<tbody>
+				{{ t_attrs_doss.id_progr }}
+				{{ t_attrs_doss.num_axe_compl }}
+				{{ t_attrs_doss.id_nat_doss }}
+				{{ t_attrs_doss.id_type_doss }}
+			</tbody>
+		</table>
+		<div class="br"></div>
 		<div class="pdf-attribute-wrapper">
 			<span class="pdf-attribute-label">Dossier(s) associé(s) et/ou contrepartie</span>
 			{% if t_doss_fam_length > 0 %}
@@ -44,37 +67,35 @@
 			<span class="pdf-attribute-value">Aucun</span>
 			{% endif %}
 		</div>
-		{{ t_attrs_doss.id_org_moa }}
-		<div class="pdf-lg">
-			<div class="pdf-col-6">{{ t_attrs_doss.id_progr }}</div>
-			<div class="pdf-col-2">{{ t_attrs_doss.num_axe }}</div>
-			<div class="pdf-col-2">{{ t_attrs_doss.num_ss_axe }}</div>
-			<div class="pdf-col-2">{{ t_attrs_doss.num_act }}</div>
-		</div>
-		<div class="pdf-lg">
-			<div class="pdf-col-6">{{ t_attrs_doss.id_nat_doss }}</div>
-			<div class="pdf-col-6">{{ t_attrs_doss.id_type_doss }}</div>
-		</div>
-		<div class="pdf-lg">
-			<div class="pdf-col-6">{{ t_attrs_doss.id_techn }}</div>
-			<div class="pdf-col-6">{{ t_attrs_doss.id_sage }}</div>
-		</div>
-		<div class="pdf-lg">
-			<div class="pdf-col-6">{{ t_attrs_doss.mont_doss }}</div>
-			<div class="pdf-col-6">{{ t_attrs_doss.mont_suppl_doss }}</div>
-		</div>
-		{{ t_attrs_doss.mont_tot_doss }}
-		<div class="pdf-lg">
-			<div class="pdf-col-6">{{ t_attrs_doss.id_av }}</div>
-			<div class="pdf-col-6">{{ t_attrs_doss.dt_delib_moa_doss }}</div>
-		</div>
-		{{ t_attrs_doss.annee_prev_doss }}
-		<div class="pdf-lg">
-			<div class="pdf-col-6">{{ t_attrs_doss.id_av_cp }}</div>
-			<div class="pdf-col-6">{{ t_attrs_doss.dt_av_cp_doss }}</div>
-		</div>
-		{{ t_attrs_doss.chem_pj_doss }}
-		{{ t_attrs_doss.comm_doss }}
+		<table class="pdf-table vertical-table">
+			<tbody>
+				{{ t_attrs_doss.id_sage }}
+			</tbody>
+		</table>
+		<div class="br"></div>
+		<div class="pdf-title-3">Programmation</div>
+		<table class="pdf-table vertical-table">
+			<tbody>
+				{{ t_attrs_doss.mont_doss }}
+				{{ t_attrs_doss.mont_suppl_doss }}
+				{{ t_attrs_doss.mont_tot_doss }}
+				{{ t_attrs_doss.id_av }}
+				{{ t_attrs_doss.dt_delib_moa_doss }}
+				{{ t_attrs_doss.annee_prev_doss }}
+				{{ t_attrs_doss.id_av_cp }}
+				{{ t_attrs_doss.dt_av_cp_doss }}
+			</tbody>
+		</table>
+		<div class="br"></div>
+		<div class="pdf-title-3">Autres</div>
+		<table class="pdf-table vertical-table">
+			<tbody>
+				{{ t_attrs_doss.chem_pj_doss }}
+				{{ t_attrs_doss.num_oper_budg_doss }}
+				{{ t_attrs_doss.comm_doss }}
+			</tbody>
+		</table>
+		<div class="br"></div>
 		<div class="pdf-title-2">Avancement du dossier</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -90,6 +111,26 @@
 					<th scope="row">Montant payé {{ ht_ou_ttc }}</th>
 					<td>{{ mont_fact_sum }} € soit {{ pourc_paye }} % du montant total du dossier</td>
 				</tr>
+			</tbody>
+		</table>
+		<div class="br"></div>
+		<div class="pdf-title-2">Fiche de vie</div>
+		<table class="pdf-table">
+			<thead>
+				<tr>
+					<th>Événement</th>
+					<th>Date</th>
+					<th>Commentaire</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for fdv in t_fdvs %}
+				<tr>
+					<td>{{ fdv.lib_fdv }}</td>
+					<td>{{ fdv.d_fdv }}</td>
+					<td>{{ fdv.comm_fdv }}</td>
+				</tr>
+				{% endfor %}
 			</tbody>
 		</table>
 		<div class="br"></div>
@@ -167,6 +208,7 @@
 			</tfoot>
 		</table>
 		<div class="pdf-table-remark">Le reste à engager {{ ht_ou_ttc }} pour ce dossier est de {{ mont_rae }} €.</div>
+		<div class="pdf-table-remark">Le taux d'engagement pour ce dossier est de {{ d.get_view_object.tx_engag_doss }} %.</div>
 		<div class="br"></div>
 		{% endif %}
 		<div class="pdf-title-2">Factures</div>
@@ -175,7 +217,8 @@
 			<thead>
 				<tr>
 					<th>Prestation</th>
-					<th>Montant {{ ht_ou_ttc }} (en €)</th>
+					<th>Montant HT (en €)</th>
+					<th>Montant TTC (en €)</th>
 					<th>N° de facture</th>
 					<th>Date de mandatement par le maître d'ouvrage</th>
 					<th>N° de mandat</th>
@@ -187,7 +230,8 @@
 				{% for f in t_fact %}
 				<tr>
 					<td>{{ f.id_prest }}</td>
-					<td>{{ f.mont_fact }}</td>
+					<td>{{ f.mont_ht_fact }}</td>
+					<td>{{ f.mont_ttc_fact }}</td>
 					<td>{{ f.num_fact }}</td>
 					<td>{{ f.dt_mand_moa_fact }}</td>
 					<td>{{ f.num_mandat_fact }}</td>
@@ -198,11 +242,13 @@
 			</tbody>
 			<tfoot>
 				<tr>
-					<td>Total {{ ht_ou_ttc }} payé (en €)</td>
-					<td colspan="6">{{ mont_fact_sum_str }}</td>
+					<td>Total payé (en €)</td>
+					<td>{{ mont_ht_fact_sum }}</td>
+					<td colspan="6">{{ mont_ttc_fact_sum }}</td>
 				</tr>
 			</tfoot>
 		</table>
+		<div class="pdf-table-remark">Le taux de réalisation pour ce dossier est de {{ d.get_view_object.tx_real_doss }} %.</div>
 		<div class="br"></div>
 		{% endif %}
 		<div class="pdf-title-2">Demandes de versements</div>

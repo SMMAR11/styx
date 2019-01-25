@@ -416,6 +416,7 @@ def suppr_doss(request, _d) :
 	from app.models import TDossier
 	from app.models import TDossierGeom
 	from app.models import TDossierPgre
+	from app.models import TFicheVie
 	from app.models import TFinancement
 	from app.models import TPhoto
 	from app.models import TPrestationsDossier
@@ -436,6 +437,7 @@ def suppr_doss(request, _d) :
 
 		# J'initialise un tableau de jeu de données.
 		t_qs = [
+			['Événement', TFicheVie.objects.filter(id_doss = o_doss)],
 			['Financement', TFinancement.objects.filter(id_doss = o_doss)],
 			['Prestation', TPrestationsDossier.objects.filter(id_doss = o_doss)],
 			['Arrêté', TArretesDossier.objects.filter(id_doss = o_doss)],
@@ -545,12 +547,17 @@ def ch_doss(request) :
 			qs_doss = obt_doss_regr(v_org_moa)
 		else :
 			qs_doss = TDossier.objects.all()
+		qs_doss = TDossier.objects.custom_filter(
+			remove_completed = True, pk__in = qs_doss.values_list('pk', flat = True)
+		) # Retrait des dossiers soldés
 		t_doss = [{
 			'pk' : d.pk,
 			'num_doss' : d,
 			'int_doss' : d.get_int_doss(),
 			'n_org' : d.id_org_moa,
-			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-'
+			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-',
+			'tx_engag_doss' : d.get_view_object().tx_engag_doss,
+			'tx_real_doss' : d.get_view_object().tx_real_doss
 		} for d in qs_doss]
 
 		# J'affiche le template.
@@ -582,6 +589,8 @@ def ch_doss(request) :
 					d.get_int_doss(),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
+					str(d.get_view_object().tx_engag_doss),
+					str(d.get_view_object().tx_real_doss),
 					'<a href="{0}" class="consult-icon pull-right" title="Consulter le dossier"></a>'.format(
 						reverse('cons_doss', args = [d.pk])
 					)
@@ -610,6 +619,7 @@ def cons_doss(request, _d) :
 	from app.forms.gestion_dossiers import GererDemandeVersement
 	from app.forms.gestion_dossiers import GererDossier_Reglementations
 	from app.forms.gestion_dossiers import GererFacture
+	from app.forms.gestion_dossiers import GererFicheVie
 	from app.forms.gestion_dossiers import GererFinancement
 	from app.forms.gestion_dossiers import GererPrestation
 	from app.forms.gestion_dossiers import GererPhoto
@@ -632,11 +642,11 @@ def cons_doss(request, _d) :
 	from app.models import TPrestation
 	from app.models import TPrestationsDossier
 	from app.models import TTypesGeomTypeDossier
-	from app.sql_views import VDemandeVersement
-	from app.sql_views import VFinancement
-	from app.sql_views import VPrestation
-	from app.sql_views import VSuiviDossier
-	from app.sql_views import VSuiviPrestationsDossier
+	from app.models import VDemandeVersement
+	from app.models import VFinancement
+	from app.models import VPrestation
+	from app.models import VSuiviDossier
+	from app.models import VSuiviPrestationsDossier
 	from django.contrib.gis import geos
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
@@ -669,137 +679,14 @@ def cons_doss(request, _d) :
 		# Je pointe vers l'objet VSuiviDossier.
 		o_suivi_doss = VSuiviDossier.objects.get(id_doss = o_doss.pk)
 
-		# Je prépare l'onglet "Caractéristiques".
-		t_attrs_doss = {
-			'annee_prev_doss' : { 'label' : 'Année prévisionnelle du dossier', 'value' : o_doss.annee_prev_doss },
-			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
-			'int_doss' : {
-				'label' : 'Intitulé du dossier',
-				'value' : '''
-				<div class="row">
-					<div class="col-md-6">
-						<span class="red-color small u">Nature du dossier :</span>
-						{0}
-					</div>
-					<div class="col-md-6">
-						<span class="red-color small u">Territoire ou caractéristique :</span>
-						{1}
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-6">
-						<span class="red-color small u">Type de dossier :</span>
-						{2}
-					</div>
-					<div class="col-md-6">
-						<span class="red-color small u">Territoire ou lieu-dit précis :</span>
-						{3}
-					</div>
-				</div>
-				'''.format(o_doss.id_nat_doss, o_doss.lib_1_doss, o_doss.id_type_doss, o_doss.lib_2_doss)
-			},
-			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
-			'id_progr' : { 'label' : 'Programme', 'value' : o_doss.id_progr },
-			'num_axe' : { 'label' : 'Axe', 'value' : str(o_doss.num_axe) if o_doss.num_axe is not None else '' },
-			'num_ss_axe' : {
-				'label' : 'Sous-axe', 'value' : str(o_doss.num_ss_axe) if o_doss.num_ss_axe is not None else ''
-			},
-			'num_act' : { 'label' : 'Action', 'value' : str(o_doss.num_act) if o_doss.num_act is not None else '' },
-			'id_nat_doss' : { 'label' : 'Nature du dossier', 'value' : o_doss.id_nat_doss },
-			'id_type_doss' : { 'label' : 'Type de dossier', 'value' : o_doss.id_type_doss },
-			'id_techn' : { 'label' : 'Agent responsable', 'value' : o_doss.id_techn },
-			'id_sage' : { 'label' : 'SAGE', 'value' : o_doss.id_sage },
-			'mont_doss' : {
-				'label' : 'Montant {0} du dossier présenté au CD GEMAPI (en €)'.format(ht_ou_ttc),
-				'value' : obt_mont(o_doss.mont_doss)
-			},
-			'mont_suppl_doss' : {
-				'label' : 'Dépassement {0} du dossier (en €)'.format(ht_ou_ttc),
-				'value' : obt_mont(o_doss.mont_suppl_doss)
-			},
-			'mont_tot_doss' : {
-				'label' : 'Montant {0} total du dossier (en €)'.format(ht_ou_ttc),
-				'value' : obt_mont(o_suivi_doss.mont_tot_doss)
-			},
-			'id_av' : { 'label' : 'État d\'avancement', 'value' : o_doss.id_av },
-			'dt_delib_moa_doss' : { 
-				'label' : 'Date de délibération au maître d\'ouvrage', 'value' : dt_fr(o_doss.dt_delib_moa_doss)
-			},
-			'id_av_cp' : { 'label' : 'Avis du comité de programmation - CD GEMAPI', 'value' : o_doss.id_av_cp },
-			'dt_av_cp_doss' : { 
-				'label' : 'Date de l\'avis du comité de programmation', 'value' : dt_fr(o_doss.dt_av_cp_doss)
-			},
-			'chem_pj_doss' : {
-				'label' : 'Consulter le fichier scanné du mémoire technique',
-				'value' : o_doss.chem_pj_doss,
-				'pdf' : True 
-			},
-			'comm_doss' : { 'label' : 'Commentaire', 'value' : o_doss.comm_doss }
-		}
-
-		# J'initialise le tableau des dossiers de la famille.
-		t_doss_fam = [{
-			'num_doss' : d,
-			'int_doss' : d.get_int_doss(),
-			'id_org_moa' : d.id_org_moa,
-			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-',
-			'pk' : d.pk
-		} for d in TDossier.objects.filter(id_fam = o_doss.id_fam).exclude(pk = o_doss.pk)]
-		
-		# J'initialise le tableau des financements du dossier.
-		t_fin = [{
-			'n_org' : f.id_org_fin.n_org,
-			'mont_elig_fin' : obt_mont(f.mont_elig_fin) or '-',
-			'pourc_elig_fin' : obt_pourc(f.pourc_elig_fin) or '-',
-			'mont_part_fin' : obt_mont(f.mont_part_fin),
-			'pourc_glob_fin' : obt_pourc(f.pourc_glob_fin),
-			'dt_deb_elig_fin' : dt_fr(f.dt_deb_elig_fin) or '-',
-			'dt_fin_elig_fin' : dt_fr(f.dt_fin_elig_fin) or '-',
-			'mont_rad' : obt_mont(f.mont_rad),
-			'pk' : f.pk
-		} for f in VFinancement.objects.filter(id_doss = o_doss)]
-
-		# Je complète le tableau des financements du dossier si besoin.
-		if o_suivi_doss.mont_raf > 0 :
-			t_fin.append({
-				'n_org' : 'Autofinancement - {0}'.format(o_doss.id_org_moa),
-				'mont_elig_fin' : '-',
-				'pourc_elig_fin' : '-',
-				'mont_part_fin' : obt_mont(o_suivi_doss.mont_raf),
-				'pourc_glob_fin' : obt_pourc(o_suivi_doss.mont_raf / o_suivi_doss.mont_doss * 100),
-				'dt_deb_elig_fin' : '-',
-				'dt_fin_elig_fin' : '-',
-				'mont_rad' : '-',
-			})
-
-		# Je trie le tableau des financements par financeurs.
-		t_fin = sorted(t_fin, key = lambda l : l['n_org'])
-
-		# J'initialise le tableau des prestations.
-		t_prest = []
-		t_prest_sum = [0, 0, 0, 0, 0]
-		for p in VSuiviPrestationsDossier.objects.filter(id_doss = o_doss) :
-			if ht_ou_ttc == 'TTC' :
-				mont_fact_sum = p.mont_ttc_fact_sum
-			else :
-				mont_fact_sum = p.mont_ht_fact_sum
-			t_prest.append({
-				'n_org' : p.id_prest.id_org_prest,
-				'mont_prest_doss' : obt_mont(p.mont_prest_doss),
-				'nb_aven' : p.nb_aven,
-				'mont_aven_sum' : obt_mont(p.mont_aven_sum),
-				'mont_fact_sum' :  obt_mont(mont_fact_sum),
-				'mont_raf' : obt_mont(p.mont_raf),
-				'pk' : p.pk
-			})
-			t_prest_sum[0] += p.mont_prest_doss
-			t_prest_sum[1] += p.nb_aven
-			t_prest_sum[2] += p.mont_aven_sum
-			t_prest_sum[3] += mont_fact_sum
-			t_prest_sum[4] += p.mont_raf
-		for i in range(0, len(t_prest_sum)) :
-			if i != 1 :
-				t_prest_sum[i] = obt_mont(t_prest_sum[i])
+		# Obtention des différents tableaux déployés dans chaque onglet
+		doss_fam = o_doss.get_doss_fam()
+		fdvs = o_doss.get_recap_fdvs()
+		fins = o_doss.get_recap_fins()
+		prss = o_doss.get_recap_prss()
+		facs = o_doss.get_recap_facs()
+		ddvs = o_doss.get_recap_ddvs()
+		arrs = o_doss.get_recap_arrs()
 
 		# Je stocke le jeu de données des prestations du maître d'ouvrage du dossier.
 		qs_prest_moa_doss = TPrestation.objects.filter(
@@ -848,59 +735,8 @@ def cons_doss(request, _d) :
 			)
 			t_prest_moa_doss.append(lg)
 
-		# J'initialise le tableau des factures.
-		t_fact = []
-		mont_fact_sum = 0
-		for f in TFacture.objects.filter(id_doss = o_doss) :
-			if ht_ou_ttc == 'TTC' :
-				mont_fact = f.mont_ttc_fact
-			else :
-				mont_fact = f.mont_ht_fact
-			t_fact.append({
-				'id_prest' : f.id_prest,
-				'num_fact' : f.num_fact,
-				'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact) or '-',
-				'mont_fact' : obt_mont(mont_fact),
-				'num_mandat_fact' : f.num_mandat_fact,
-				'num_bord_fact' : f.num_bord_fact,
-				'suivi_fact' : f.suivi_fact,
-				'pk' : f.pk
-			})
-			mont_fact_sum += mont_fact
-
-		# J'initialise le tableau des demandes de versements.
-		t_ddv = []
-		mont_ddv_sum = 0
-		for d in VDemandeVersement.objects.filter(id_doss = o_doss) :
-			if ht_ou_ttc == 'TTC' :
-				mont_ddv = d.mont_ttc_ddv
-				map_ddv = d.map_ttc_ddv
-			else :
-				mont_ddv = d.mont_ht_ddv
-				map_ddv = d.map_ht_ddv
-			t_ddv.append({
-				'id_org_fin' : d.id_org_fin,
-				'mont_ddv' : obt_mont(mont_ddv),
-				'dt_ddv' : dt_fr(d.dt_ddv),
-				'dt_vers_ddv' : dt_fr(d.dt_vers_ddv) or '-',
-				'map_ddv' : obt_mont(map_ddv) or '-',
-				'id_type_vers' : d.id_type_vers,
-				'pk' : d.pk
-			})
-			mont_ddv_sum += mont_ddv
-
-		# J'initialise le tableau des arrêtés du dossier.
-		t_arr = [{
-			'id_type_decl' : a.id_type_decl,
-			'id_type_av_arr' : a.id_type_av_arr,
-			'num_arr' : a.num_arr or '-',
-			'dt_sign_arr' : dt_fr(a.dt_sign_arr) or '-',
-			'dt_lim_encl_trav_arr' : dt_fr(a.dt_lim_encl_trav_arr) or '-',
-			'pk' : a.pk
-		} for a in TArretesDossier.objects.filter(id_doss = o_doss).order_by('id_type_decl')]
-
 		# Je stocke le jeu de données des photos du dossier.
-		qs_ph = TPhoto.objects.filter(id_doss = o_doss).order_by('-dt_pv_ph')
+		qs_ph = TPhoto.objects.filter(id_doss = o_doss)
 
 		# J'initialise le tableau des photos du dossier.
 		t_ph = [{
@@ -959,6 +795,7 @@ def cons_doss(request, _d) :
 		f_modif_doss_regl = GererDossier_Reglementations(prefix = 'GererDossier', instance = o_doss)
 		f_ajout_ph = GererPhoto(prefix = 'GererPhoto', k_doss = o_doss)
 		f_ajout_org_prest = AjouterPrestataire(prefix = 'AjouterPrestataire')
+		f_ajout_fdv = GererFicheVie(k_doss = o_doss)
 
 		# J'initialise le gabarit de chaque champ de chaque formulaire.
 		t_ajout_fin = init_f(f_ajout_fin)
@@ -1060,24 +897,24 @@ def cons_doss(request, _d) :
 				t_ajout_ddv['comm_ddv'],
 			),
 			'ajout_fact' : '''
-			<form action="{0}" enctype="multipart/form-data" name="f_ajout_fact" method="post" onsubmit="soum_f(event)">
-				<input name="csrfmiddlewaretoken" type="hidden" value="{1}">
-				{2}
-				{3}
-				{4}
-				{5}
+			<form action="{}" enctype="multipart/form-data" name="f_ajout_fact" method="post" onsubmit="soum_f(event)">
+				<input name="csrfmiddlewaretoken" type="hidden" value="{}">
+				{}
+				{}
+				{}
+				{}
 				<div class="row">
-					<div class="col-sm-6">{6}</div>
-					<div class="col-sm-6">{7}</div>
+					<div class="col-sm-6">{}</div>
+					<div class="col-sm-6">{}</div>
 				</div>
-				{8}
+				{}
 				<div class="row">
-					<div class="col-sm-6">{9}</div>
-					<div class="col-sm-6">{10}</div>
+					<div class="col-sm-6">{}</div>
+					<div class="col-sm-6">{}</div>
 				</div>
-				{11}
-				{12}
-				{13}
+				{}
+				{}
+				{}
 				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 			</form>
 			'''.format(
@@ -1086,12 +923,12 @@ def cons_doss(request, _d) :
 				t_ajout_fact['za_num_doss'],
 				t_ajout_fact['zl_prest'],
 				t_ajout_fact['num_fact'],
-				t_ajout_fact['dt_mand_moa_fact'],
+				t_ajout_fact['dt_rec_fact'],
 				t_ajout_fact['mont_ht_fact'],
 				t_ajout_fact['mont_ttc_fact'],
-				t_ajout_fact['dt_rec_fact'],
-				t_ajout_fact['num_mandat_fact'],
+				t_ajout_fact['dt_mand_moa_fact'],
 				t_ajout_fact['num_bord_fact'],
+				t_ajout_fact['num_mandat_fact'],
 				t_ajout_fact['zl_suivi_fact'],
 				t_ajout_fact['chem_pj_fact'],
 				t_ajout_fact['comm_fact']
@@ -1296,9 +1133,11 @@ def cons_doss(request, _d) :
 			init_fm('ajout_arr', 'Ajouter un arrêté', t_cont_fm['ajout_arr']),
 			init_fm('ajout_fin', 'Ajouter un organisme financier', t_cont_fm['ajout_fin']),
 			init_fm('ajout_ph', 'Ajouter une photo', t_cont_fm['ajout_ph']),
+			init_fm('gerfdv', 'Ajouter un événement', f_ajout_fdv.get_form(rq = request)),
 			init_fm('modif_carto', 'Modifier un dossier'),
 			init_fm('modif_doss_regl', 'Modifier un dossier'),
-			init_fm('suppr_doss', 'Supprimer un dossier')
+			init_fm('suppr_doss', 'Supprimer un dossier'),
+			init_fm('suppr_fdv', 'Supprimer un événement')
 		]
 
 		# Je complète le tableau de fenêtres modales dans le cas où le dossier n'est pas en projet.
@@ -1329,26 +1168,27 @@ def cons_doss(request, _d) :
 				'f_modif_doss_regl' : init_f(f_modif_doss_regl),
 				'forbidden' : ger_droits(request.user, o_doss, False, False),
 				'ht_ou_ttc' : ht_ou_ttc,
-				'mont_ddv_sum' : mont_ddv_sum,
-				'mont_ddv_sum_str' : obt_mont(mont_ddv_sum),
+				'mont_ddv_sum' : ddvs['mnt'],
+				'mont_ddv_sum_str' : obt_mont(ddvs['mnt']),
 				'mont_doss' : obt_mont(o_doss.mont_doss),
-				'mont_fact_sum' : mont_fact_sum,
-				'mont_fact_sum_str' : obt_mont(mont_fact_sum),
+				'mont_fact_sum' : facs['mnt'],
+				'mont_fact_sum_str' : obt_mont(facs['mnt']),
 				'mont_rae' : obt_mont(o_suivi_doss.mont_rae),
 				'mont_suppl_doss' : obt_mont(o_doss.mont_suppl_doss),
-				't_arr' : t_arr,
-				't_attrs_doss' : init_pg_cons(t_attrs_doss),
-				't_ddv' : t_ddv,
-				't_doss_fam' : t_doss_fam,
-				't_fact' : t_fact,
-				't_fin' : t_fin,
+				't_arr' : arrs,
+				't_attrs_doss' : init_pg_cons(o_doss.get_attrs()),
+				't_ddv' : ddvs['tbl'],
+				't_doss_fam' : doss_fam,
+				't_fact' : facs['tbl'],
+				't_fdvs' : fdvs,
+				't_fin' : fins,
 				't_fm' : t_fm,
 				't_geom_doss' : t_geom_doss,
 				't_ph' : t_ph,
 				't_ph_length' : len(t_ph),
-				't_prest' : t_prest,
-				't_prest_length' : len(t_prest),
-				't_prest_sum' : t_prest_sum,
+				't_prest' : prss['tbl'],
+				't_prest_length' : len(prss['tbl']),
+				't_prest_sum' : prss['mnts'],
 				't_types_geom_doss' : t_types_geom_doss,
 				'title' : 'Consulter un dossier'
 			}
@@ -1776,6 +1616,46 @@ def cons_doss(request, _d) :
 			if get_action == 'supprimer-dossier' :
 				output = HttpResponse(suppr(reverse('suppr_doss', args = [o_doss.pk])))
 
+			# Ajout d'un élément dans la fiche de vie
+			if get_action == 'ajouter-fdv' :
+				
+				# Soumission du formulaire
+				f_ajout_fdv = GererFicheVie(request.POST, k_doss = o_doss)
+
+				if f_ajout_fdv.is_valid() :
+
+					# Création d'une instance TFicheVie
+					fdv = f_ajout_fdv.save()
+
+					# Affichage d'un message de succès
+					output = HttpResponse(
+						json.dumps({ 'success' : {
+							'message' : 'La fiche de vie du dossier {} a été mise à jour avec succès.'.format(
+								fdv.id_doss
+							),
+							'redirect' : reverse('cons_doss', args = [fdv.id_doss.pk])
+						}}), 
+						content_type = 'application/json'
+					)
+
+					# Définition de l'onglet actif après rechargement de la page
+					request.session['tab_doss'] = '#ong_fdv'
+
+					# Remplissage du fichier log
+					rempl_fich_log([
+						request.user.pk, request.user, fdv.id_doss.pk, fdv.id_doss, 'C', 'Fiche de vie', fdv.pk
+					])
+
+				else :
+
+					# Affichage des erreurs
+					output = HttpResponse(json.dumps(f_ajout_fdv.errors), content_type = 'application/json')
+
+			# Suppression d'un élément composant la fiche de vie
+			if get_action == 'supprimer-fdv' :
+				if request.GET.get('fdv') :
+					output = HttpResponse(suppr(reverse('suppr_fdv', args = [request.GET['fdv']])))
+
 	return output
 
 '''
@@ -2038,7 +1918,7 @@ def cons_fin(request, _f) :
 	from app.functions import obt_pourc
 	from app.functions import suppr
 	from app.models import TFinancement
-	from app.sql_views import VFinancement
+	from app.models import VFinancement
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -2054,7 +1934,7 @@ def cons_fin(request, _f) :
 		# Je vérifie le droit de lecture.
 		ger_droits(request.user, o_fin.id_doss)
 
-		o_suivi_fin = VFinancement.objects.get(pk = o_fin.pk)
+		o_suivi_fin = VFinancement.objects.get(id_fin = o_fin.pk)
 
 		# Je définis si le montant du financement est en HT ou en TTC.
 		ht_ou_ttc = 'HT'
@@ -2246,8 +2126,8 @@ def modif_prest(request, _pd) :
 	from app.functions import obt_mont
 	from app.functions import rempl_fich_log
 	from app.models import TPrestationsDossier
-	from app.sql_views import VSuiviDossier
-	from app.sql_views import VSuiviPrestationsDossier
+	from app.models import VSuiviDossier
+	from app.models import VSuiviPrestationsDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -2526,8 +2406,8 @@ def cons_prest(request, _pd) :
 	from app.functions import suppr
 	from app.models import TAvenant
 	from app.models import TPrestationsDossier
-	from app.sql_views import VPrestation
-	from app.sql_views import VSuiviPrestationsDossier
+	from app.models import VPrestation
+	from app.models import VSuiviPrestationsDossier
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -2566,25 +2446,30 @@ def cons_prest(request, _pd) :
 
 		# Je prépare le volet de consultation de la prestation.
 		t_attrs_prest_doss = {
-			'id_org_prest' : { 'label': 'Prestataire', 'value' : o_suivi_prest.id_org_prest },
-			'int_prest' : { 'label': 'Intitulé de la prestation', 'value' : o_suivi_prest.int_prest },
-			'ref_prest' : { 'label': 'Référence de la prestation', 'value' : o_suivi_prest.ref_prest },
+			'id_org_prest' : { 'label': 'Prestataire', 'value' : o_suivi_prest.get_instance().id_org_prest },
+			'int_prest' : { 'label': 'Intitulé de la prestation', 'value' : o_suivi_prest.get_instance().int_prest },
+			'ref_prest' : { 'label': 'Référence de la prestation', 'value' : o_suivi_prest.get_instance().ref_prest },
 			'mont_prest' : {
 				'label': 'Montant {0} total de la prestation (en €)'.format(ht_ou_ttc), 
 				'value' : obt_mont(o_suivi_prest.mont_prest)
 			},
 			'dt_notif_prest' : { 
 				'label' : 'Date de notification de la prestation', 
-				'value' : dt_fr(o_suivi_prest.dt_notif_prest) or ''
+				'value' : dt_fr(o_suivi_prest.get_instance().dt_notif_prest) or ''
 			},
 			'dt_fin_prest' : {
-				'label' : 'Date de fin de la prestation', 'value' : dt_fr(o_suivi_prest.dt_fin_prest) or ''
+				'label' : 'Date de fin de la prestation',
+				'value' : dt_fr(o_suivi_prest.get_instance().dt_fin_prest) or ''
 			},
-			'id_nat_prest' : { 'label' : 'Nature de la prestation', 'value' : o_suivi_prest.id_nat_prest },
+			'id_nat_prest' : {
+				'label' : 'Nature de la prestation', 'value' : o_suivi_prest.get_instance().id_nat_prest
+			},
 			'chem_pj_prest' : {
-				'label' : 'Consulter le contrat de prestation', 'value' : o_suivi_prest.chem_pj_prest, 'pdf' : True
+				'label' : 'Consulter le contrat de prestation',
+				'value' : o_suivi_prest.get_instance().chem_pj_prest,
+				'pdf' : True
 			},
-			'comm_prest' : { 'label' : 'Commentaire', 'value' : o_suivi_prest.comm_prest or '' },
+			'comm_prest' : { 'label' : 'Commentaire', 'value' : o_suivi_prest.get_instance().comm_prest or '' },
 			'mont_prest_doss' : { 
 				'label' : 'Montant {0} de la prestation (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_prest_doss.mont_prest_doss)
@@ -2882,7 +2767,7 @@ def suppr_aven(request, _a) :
 	from app.functions import rempl_fich_log
 	from app.models import TAvenant
 	from app.models import TPrestationsDossier
-	from app.sql_views import VSuiviPrestationsDossier
+	from app.models import VSuiviPrestationsDossier
 	from django.core.urlresolvers import reverse
 	from django.db.models import F
 	from django.http import HttpResponse
@@ -2954,7 +2839,7 @@ def cons_aven(request, _a) :
 	from app.functions import suppr
 	from app.models import TAvenant
 	from app.models import TPrestationsDossier
-	from app.sql_views import VSuiviPrestationsDossier
+	from app.models import VSuiviPrestationsDossier
 	from django.http import HttpResponse
 	from django.core.urlresolvers import reverse
 	from django.shortcuts import get_object_or_404
@@ -3741,7 +3626,7 @@ def cons_ddv(request, _d) :
 	from app.functions import suppr
 	from app.models import TDemandeVersement
 	from app.models import TFacturesDemandeVersement
-	from app.sql_views import VDemandeVersement
+	from app.models import VDemandeVersement
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -4401,10 +4286,10 @@ def impr_doss(request, _d) :
 	from app.functions import obt_pourc
 	from app.models import TDossier
 	from app.models import TFacture
-	from app.sql_views import VDemandeVersement
-	from app.sql_views import VFinancement
-	from app.sql_views import VSuiviDossier
-	from app.sql_views import VSuiviPrestationsDossier
+	from app.models import VDemandeVersement
+	from app.models import VFinancement
+	from app.models import VSuiviDossier
+	from app.models import VSuiviPrestationsDossier
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -4427,149 +4312,13 @@ def impr_doss(request, _d) :
 		if o_doss.est_ttc_doss == True :
 			ht_ou_ttc = 'TTC'
 
-		# Je prépare le bloc "Caractéristiques".
-		t_attrs_doss = {
-			'annee_prev_doss' : {
-				'label' : 'Année prévisionnelle du dossier', 'value' : o_doss.annee_prev_doss or '-'
-			},
-			'num_doss' : { 'label' : 'Numéro du dossier', 'value' : o_doss },
-			'int_doss' : {
-				'label' : 'Intitulé du dossier',
-				'value' : o_doss.get_int_doss()
-			},
-			'id_org_moa' : { 'label' : 'Maître d\'ouvrage', 'value' : o_doss.id_org_moa },
-			'id_progr' : { 'label' : 'Programme', 'value' : o_doss.id_progr },
-			'num_axe' : { 'label' : 'Axe', 'value' : str(o_doss.num_axe) if o_doss.num_axe is not None else '' },
-			'num_ss_axe' : {
-				'label' : 'Sous-axe', 'value' : str(o_doss.num_ss_axe) if o_doss.num_ss_axe is not None else ''
-			},
-			'num_act' : { 'label' : 'Action', 'value' : str(o_doss.num_act) if o_doss.num_act is not None else '' },
-			'id_nat_doss' : { 'label' : 'Nature du dossier', 'value' : o_doss.id_nat_doss },
-			'id_type_doss' : { 'label' : 'Type de dossier', 'value' : o_doss.id_type_doss },
-			'id_techn' : { 'label' : 'Agent responsable', 'value' : o_doss.id_techn },
-			'id_sage' : { 'label' : 'SAGE', 'value' : o_doss.id_sage or '-' },
-			'mont_doss' : {
-				'label' : 'Montant {0} du dossier présenté au CD GEMAPI (en €)'.format(ht_ou_ttc),
-				'value' : obt_mont(o_doss.mont_doss)
-			},
-			'mont_suppl_doss' : {
-				'label' : 'Dépassement {0} du dossier (en €)'.format(ht_ou_ttc),
-				'value' : obt_mont(o_doss.mont_suppl_doss)
-			},
-			'mont_tot_doss' : {
-				'label' : 'Montant {0} total du dossier (en €)'.format(ht_ou_ttc),
-				'value' : obt_mont(o_suivi_doss.mont_tot_doss)
-			},
-			'id_av' : { 'label' : 'État d\'avancement', 'value' : o_doss.id_av },
-			'dt_delib_moa_doss' : { 
-				'label' : 'Date de délibération au maître d\'ouvrage', 'value' : dt_fr(o_doss.dt_delib_moa_doss) or '-'
-			},
-			'id_av_cp' : { 'label' : 'Avis du comité de programmation - CD GEMAPI', 'value' : o_doss.id_av_cp },
-			'dt_av_cp_doss' : { 
-				'label' : 'Date de l\'avis du comité de programmation', 'value' : dt_fr(o_doss.dt_av_cp_doss) or '-'
-			},
-			'chem_pj_doss' : {
-				'label' : 'Fichier scanné du mémoire technique',
-				'value' : o_doss.chem_pj_doss,
-				'pdf' : True 
-			},
-			'comm_doss' : { 'label' : 'Commentaire', 'value' : o_doss.comm_doss or '-' }
-		}
-		t_doss_fam = [{
-			'num_doss' : d,
-			'int_doss' : d.get_int_doss(),
-			'id_org_moa' : d.id_org_moa,
-			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-',
-			'pk' : d.pk
-		} for d in TDossier.objects.filter(id_fam = o_doss.id_fam).exclude(pk = o_doss.pk)]
-
-		# Je prépare le bloc "Plan de financement".
-		t_fin = [{
-			'n_org' : f.id_org_fin.n_org,
-			'mont_elig_fin' : obt_mont(f.mont_elig_fin) or '-',
-			'pourc_elig_fin' : obt_pourc(f.pourc_elig_fin) or '-',
-			'mont_part_fin' : obt_mont(f.mont_part_fin),
-			'pourc_glob_fin' : obt_pourc(f.pourc_glob_fin),
-			'dt_deb_elig_fin' : dt_fr(f.dt_deb_elig_fin) or '-',
-			'dt_fin_elig_fin' : dt_fr(f.dt_fin_elig_fin) or '-',
-			'mont_rad' : obt_mont(f.mont_rad),
-		} for f in VFinancement.objects.filter(id_doss = o_doss)]
-		if o_suivi_doss.mont_raf > 0 :
-			t_fin.append({
-				'n_org' : 'Autofinancement - {0}'.format(o_doss.id_org_moa),
-				'mont_elig_fin' : '-',
-				'pourc_elig_fin' : '-',
-				'mont_part_fin' : obt_mont(o_suivi_doss.mont_raf),
-				'pourc_glob_fin' : obt_pourc(o_suivi_doss.mont_raf / o_suivi_doss.mont_doss * 100),
-				'dt_deb_elig_fin' : '-',
-				'dt_fin_elig_fin' : '-',
-				'mont_rad' : '-',
-			})
-		t_fin = sorted(t_fin, key = lambda l : l['n_org'])
-
-		# Je prépare le bloc "Prestations".
-		t_prest = []
-		t_prest_sum = [0, 0, 0, 0, 0]
-		for p in VSuiviPrestationsDossier.objects.filter(id_doss = o_doss) :
-			if ht_ou_ttc == 'TTC' :
-				mont_fact_sum = p.mont_ttc_fact_sum
-			else :
-				mont_fact_sum = p.mont_ht_fact_sum
-			t_prest.append({
-				'n_org' : p.id_prest.id_org_prest,
-				'mont_prest_doss' : obt_mont(p.mont_prest_doss),
-				'nb_aven' : p.nb_aven,
-				'mont_aven_sum' : obt_mont(p.mont_aven_sum),
-				'mont_fact_sum' :  obt_mont(mont_fact_sum),
-				'mont_raf' : obt_mont(p.mont_raf),
-			})
-			t_prest_sum[0] += p.mont_prest_doss
-			t_prest_sum[1] += p.nb_aven
-			t_prest_sum[2] += p.mont_aven_sum
-			t_prest_sum[3] += mont_fact_sum
-			t_prest_sum[4] += p.mont_raf
-		for i in range(0, len(t_prest_sum)) :
-			if i != 1 :
-				t_prest_sum[i] = obt_mont(t_prest_sum[i])
-
-		# Je prépare le bloc "Factures".
-		t_fact = []
-		mont_fact_sum = 0
-		for f in TFacture.objects.filter(id_doss = o_doss) :
-			if ht_ou_ttc == 'TTC' :
-				mont_fact = f.mont_ttc_fact
-			else :
-				mont_fact = f.mont_ht_fact
-			t_fact.append({
-				'id_prest' : f.id_prest,
-				'num_fact' : f.num_fact,
-				'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact) or '-',
-				'mont_fact' : obt_mont(mont_fact),
-				'num_mandat_fact' : f.num_mandat_fact,
-				'num_bord_fact' : f.num_bord_fact,
-				'suivi_fact' : f.suivi_fact,
-			})
-			mont_fact_sum += mont_fact
-
-		# Je prépare le bloc "Demandes de versements".
-		t_ddv = []
-		mont_ddv_sum = 0
-		for d in VDemandeVersement.objects.filter(id_doss = o_doss) :
-			if ht_ou_ttc == 'TTC' :
-				mont_ddv = d.mont_ttc_ddv
-				map_ddv = d.map_ttc_ddv
-			else :
-				mont_ddv = d.mont_ht_ddv
-				map_ddv = d.map_ht_ddv
-			t_ddv.append({
-				'id_org_fin' : d.id_org_fin,
-				'mont_ddv' : obt_mont(mont_ddv),
-				'dt_ddv' : dt_fr(d.dt_ddv),
-				'dt_vers_ddv' : dt_fr(d.dt_vers_ddv) or '-',
-				'map_ddv' : obt_mont(map_ddv) or '-',
-				'id_type_vers' : d.id_type_vers
-			})
-			mont_ddv_sum += mont_ddv
+		# Obtention des différents tableaux déployés dans chaque onglet
+		doss_fam = o_doss.get_doss_fam()
+		fdvs = o_doss.get_recap_fdvs()
+		fins = o_doss.get_recap_fins()
+		prss = o_doss.get_recap_prss()
+		facs = o_doss.get_recap_facs()
+		ddvs = o_doss.get_recap_ddvs()
 
 		# J'affiche le template.
 		output = render(
@@ -4578,26 +4327,29 @@ def impr_doss(request, _d) :
 			{
 				'd' : o_doss,
 				'ht_ou_ttc' : ht_ou_ttc,
-				'mont_ddv_sum_str' : obt_mont(mont_ddv_sum),
+				'mont_ddv_sum_str' : obt_mont(ddvs['mnt']),
 				'mont_doss' : obt_mont(o_doss.mont_doss),
-				'mont_fact_sum' : obt_mont(o_suivi_doss.mont_fact_sum),
-				'mont_fact_sum_str' : obt_mont(mont_fact_sum),
+				'mont_fact_sum' : facs['mnt'],
+				'mont_ht_fact_sum' : facs['mnt_ht'],
+				'mont_ttc_fact_sum' : facs['mnt_ttc'],
+				'mont_fact_sum_str' : obt_mont(facs['mnt']),
 				'mont_tot_prest_doss' : obt_mont(o_suivi_doss.mont_tot_prest_doss),
 				'mont_rae' : obt_mont(o_suivi_doss.mont_rae),
 				'mont_suppl_doss' : obt_mont(o_doss.mont_suppl_doss),
-				'pourc_comm' : obt_pourc(o_suivi_doss.mont_tot_prest_doss / o_suivi_doss.mont_tot_doss * 100),
-				'pourc_paye' : obt_pourc(o_suivi_doss.mont_fact_sum / o_suivi_doss.mont_tot_doss * 100),
-				't_attrs_doss' : init_pg_cons(t_attrs_doss, True),
-				't_ddv' : t_ddv,
-				't_ddv_length' : len(t_ddv),
-				't_doss_fam' : t_doss_fam,
-				't_doss_fam_length' : len(t_doss_fam),
-				't_fact' : t_fact,
-				't_fact_length' : len(t_fact),
-				't_fin' : t_fin,
-				't_prest' : t_prest,
-				't_prest_length' : len(t_prest),
-				't_prest_sum' : t_prest_sum
+				'pourc_comm' : obt_pourc(o_suivi_doss.pourc_comm),
+				'pourc_paye' : obt_pourc(o_suivi_doss.pourc_paye),
+				't_attrs_doss' : init_pg_cons(o_doss.get_attrs(), True),
+				't_ddv' : ddvs['tbl'],
+				't_ddv_length' : len(ddvs['tbl']),
+				't_doss_fam' : doss_fam,
+				't_doss_fam_length' : len(doss_fam),
+				't_fact' : facs['tbl'],
+				't_fact_length' : len(facs['tbl']),
+				't_fdvs' : fdvs,
+				't_fin' : fins,
+				't_prest' : prss['tbl'],
+				't_prest_length' : len(prss['tbl']),
+				't_prest_sum' : prss['mnts']
 			}
 		)
 
@@ -4890,5 +4642,140 @@ def edit_lt_ddv(request, _d) :
 		output = HttpResponse(content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
 		output['Content-Disposition'] = 'attachment; filename={}.docx'.format(gen_cdc())
 		document.save(output)
+
+	return output
+
+'''
+Cette vue permet de traiter le formulaire de suppression d'un élément composant la fiche de vie d'un dossier.
+rq : Objet requête
+_fdv : Identifiant d'un événement
+'''
+@verif_acc
+@csrf_exempt
+def suppr_fdv(rq, _fdv) :
+
+	# Imports
+	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
+	from app.models import TFicheVie
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	import json
+
+	output = HttpResponse()
+
+	# Obtention d'une instance TFicheVie
+	fdv = get_object_or_404(TFicheVie, pk = _fdv)
+
+	if rq.method == 'POST' :
+
+		# Vérification du droit d'écriture
+		ger_droits(rq.user, fdv.id_doss, False)
+
+		# Pointage vers une instance TDossier
+		dos = fdv.id_doss
+
+		# Récupération de l'identifiant de l'événement afin de le renseigner dans le fichier log
+		id_fdv = fdv.pk
+
+		# Suppression d'un événement
+		fdv.delete()
+
+		# Affichage d'un message de succès
+		output = HttpResponse(
+			json.dumps({ 'success' : {
+				'message' : 'La fiche de vie du dossier {} a été mise à jour avec succès.'.format(dos),
+				'redirect' : reverse('cons_doss', args = [dos.pk])
+			}}), 
+			content_type = 'application/json'
+		)
+
+		# Définition de l'onglet actif après rechargement de la page
+		rq.session['tab_doss'] = '#ong_fdv'
+
+		# Remplissage du fichier log
+		rempl_fich_log([rq.user.pk, rq.user, dos.pk, dos, 'D', 'Fiche de vie', id_fdv])
+
+	return output
+
+'''
+Cette vue permet d'afficher la mise à jour d'un élément composant la fiche de vie
+rq : Objet requête
+_fdv : Identifiant d'un événement
+'''
+@verif_acc
+def modif_fdv(rq, _fdv) :
+
+	# Imports
+	from app.forms.gestion_dossiers import GererFicheVie
+	from app.functions import ger_droits
+	from app.functions import init_fm
+	from app.functions import rempl_fich_log
+	from app.models import TFicheVie
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	from django.shortcuts import render
+	import json
+	
+	output = HttpResponse()
+
+	# Obtention d'une instance TFicheVie
+	fdv = get_object_or_404(TFicheVie, pk = _fdv)
+
+	# Vérification du droit d'écriture
+	ger_droits(rq.user, fdv.id_doss, False)
+
+	if rq.method == 'GET' :
+
+		# J'instancie un objet "formulaire".
+		form = GererFicheVie(instance = fdv, k_doss = fdv.id_doss)
+
+		# Affichage du template
+		output = render(rq, './gestion_dossiers/modif_fdv.html', {
+			'fdv' : fdv,
+			'form' : form.get_form(rq = rq),
+			't_fm' : [init_fm('gerfdv', 'Mettre à jour un événement')],
+			'title' : 'Mettre à jour un événement'
+		})
+
+	else :
+
+		# Soumission du formulaire
+		form = GererFicheVie(rq.POST, instance = fdv, k_doss = fdv.id_doss)
+
+		if form.is_valid() :
+
+			# Mise à jour d'une instance TFicheVie
+			fdv = form.save()
+
+			# Affichage du message de succès
+			output = HttpResponse(
+				json.dumps({ 'success' : {
+					'message' : 'La fiche de vie du dossier {} a été mise à jour avec succès.'.format(fdv.id_doss),
+					'redirect' : reverse('cons_doss', args = [fdv.id_doss.pk])
+				}}), 
+				content_type = 'application/json'
+			)
+
+			# Définition de l'onglet actif après rechargement de la page
+			rq.session['tab_doss'] = '#ong_fdv'
+
+			# Remplissage du fichier log
+			rempl_fich_log([
+				rq.user.pk,
+				rq.user,
+				fdv.id_doss.pk,
+				fdv.id_doss,
+				'U',
+				'Fiche de vie',
+				fdv.pk
+			])
+
+		else :
+
+			# Affichage des erreurs
+			output = HttpResponse(json.dumps(form.errors), content_type = 'application/json')
 
 	return output

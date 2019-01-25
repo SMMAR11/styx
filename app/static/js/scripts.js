@@ -40,7 +40,7 @@ $(document).ready(function() {
 	new MyDataTable('cbsm_atel_pgre').set_datatable({ 'autofit' : [1], 'exports' : false, 'unsorting' : [1] });
 	new MyDataTable('cbsm_org_moa').set_datatable({ 'autofit' : [1], 'exports' : false, 'unsorting' : [1] });
 	new MyDataTable('ch_act_pgre').set_datatable({ 'autofit' : [6], 'unsorting' : [6] });
-	new MyDataTable('ch_doss').set_datatable({ 'autofit' : [4], 'paging' : true, 'unsorting' : [4] });
+	new MyDataTable('ch_doss').set_datatable({ 'autofit' : ['LAST:1'], 'paging' : true, 'unsorting' : ['LAST:1'] });
 	new MyDataTable('ch_prest').set_datatable({ 'autofit' : [5], 'unsorting' : [5] });
 	new MyDataTable('cons_arr').set_datatable({ 'autofit' : [5], 'unsorting' : [5] });
 	new MyDataTable('cons_aven').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
@@ -50,6 +50,9 @@ $(document).ready(function() {
 	new MyDataTable('cons_droit').set_datatable({ 'autofit' : [2, 3], 'unsorting' : ['LAST:99'] });
 	new MyDataTable('cons_fact').set_datatable({ 'autofit' : [7], 'unsorting' : [7] });
 	new MyDataTable('cons_fact_ddv').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
+	new MyDataTable('cons_fdv').set_datatable({
+		'autofit' : ['LAST:2'], 'unbordered' : ['LAST:2'], 'unsorting' : ['LAST:2']
+	});
 	new MyDataTable('cons_fin').set_datatable({ 'autofit' : [8], 'unsorting' : [8] });
 	new MyDataTable('cons_pdc').set_datatable({ 'autofit' : [2, 3], 'unbordered' : [2, 3], 'unsorting' : [2, 3] });
 	new MyDataTable('cons_ph').set_datatable({
@@ -356,17 +359,21 @@ $('#id_GererDossier-id_av, #id_GererDossier-id_av_cp').on('change', function(_e)
 			o_dt_delib_moa_doss.val('');
 			o_dt_delib_moa_doss.attr('readonly', true);
 
+			/*
 			$('#id_GererDossier-id_av_cp option').each(function() {
 				if ($(this).text() == AV_CP_EA) {
 					$('#id_GererDossier-id_av_cp').val($(this).val());
 				}
 			});
+			*/
+
 		}
 		else {
 			o_dt_delib_moa_doss.removeAttr('readonly');
 		}
 
-		if (v_int_av == AV_EP || $.inArray(v_int_av_cp, [AV_CP_EA, AV_CP_SO]) > -1) {
+		//if (v_int_av == AV_EP || $.inArray(v_int_av_cp, [AV_CP_EA, AV_CP_SO]) > -1) {
+		if ($.inArray(v_int_av_cp, [AV_CP_EA, AV_CP_SO]) > -1) {
 			o_dt_av_cp_doss.val('');
 			o_dt_av_cp_doss.attr('readonly', true);
 		}

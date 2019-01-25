@@ -246,6 +246,7 @@ fieldset.my-div-fieldset > div {
 }
 
 .attribute-wrapper .attribute-label,
+.attribute-wrapper-com .attribute-label,
 .field-wrapper .field-label {
 	color: #3770B1;
 }
@@ -594,13 +595,21 @@ form > fieldset.my-fieldset > div {
 	text-align: right;
 }
 
-.main-title {
-	background-color: #94C054;
+.main-title,
+.title-1 {
 	color: #FFF;
 	padding: 5px 15px;
 	text-align: center;
 	border: double 1px #FFF;
 	margin-bottom: 20px;
+}
+
+.main-title {
+	background-color: #94C054;
+}
+
+.title-1 {
+	background-color: #3770B1;
 }
 
 .align-icon-link-xs {

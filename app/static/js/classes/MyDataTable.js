@@ -86,12 +86,12 @@ class MyDataTable {
 
 		// Balise <thead/>
 
-		if ($(table).find('tr:has(th)').size() == 1) {
+		$(table).find('tr:has(th)').each(function() {
 
 			// Initialisation des colonnes
 			var cols = [];
 
-			$(table).find('tr:has(th)').find('th').each(function() {
+			$(table).find('th').each(function() {
 
 				// Empilement des colonnes
 				cols.push(get_text($(this)));
@@ -101,7 +101,7 @@ class MyDataTable {
 			// Empilement des lignes
 			rows.push(cols.join(cdel));
 
-		}
+		});
 
 		// Balise <tbody/>
 
