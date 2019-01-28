@@ -892,8 +892,8 @@ class TDossier(models.Model) :
                 'num_fact' : f.num_fact,
                 'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact) or '-',
                 'mont_fact' : obt_mont(mont_fact),
-                'mont_ht_fact' : obt_mont(f.mont_ht_fact),
-                'mont_ttc_fact' : obt_mont(f.mont_ttc_fact),
+                'mont_ht_fact' : obt_mont(f.mont_ht_fact) or '-',
+                'mont_ttc_fact' : obt_mont(f.mont_ttc_fact) or '-',
                 'num_mandat_fact' : f.num_mandat_fact,
                 'num_bord_fact' : f.num_bord_fact,
                 'suivi_fact' : f.suivi_fact,
@@ -906,8 +906,8 @@ class TDossier(models.Model) :
         return {
             'tbl' : facs,
             'mnt' : mont_fact_sum,
-            'mnt_ht' : obt_mont(sum([f.mont_ht_fact for f in qs])),
-            'mnt_ttc' : obt_mont(sum([f.mont_ttc_fact for f in qs]))
+            'mnt_ht' : obt_mont(sum([f.mont_ht_fact or 0 for f in qs])),
+            'mnt_ttc' : obt_mont(sum([f.mont_ttc_fact or 0 for f in qs]))
         }
 
     def get_recap_fdvs(self) :
