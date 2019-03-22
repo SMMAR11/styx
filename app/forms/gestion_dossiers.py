@@ -630,7 +630,7 @@ class GererFinancement(forms.ModelForm) :
 
 			# Je gère la contrainte suivante : le montant de l'assiette éligible de la subvention doit toujours être 
 			# inférieur ou égal au montant du dossier.
-			if v_mont_elig_fin and float(v_mont_elig_fin) > o_doss.mont_doss :
+			if v_mont_elig_fin and float(v_mont_elig_fin) > float(o_doss.mont_doss) :
 				self.add_error(
 					'mont_elig_fin',
 					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(o_doss.mont_doss))
@@ -650,7 +650,7 @@ class GererFinancement(forms.ModelForm) :
 
 			# Je gère la contrainte suivante : le montant de la participation doit être inférieur ou égal au reste à
 			# financer du dossier.
-			if v_mont_part_fin and float(v_mont_part_fin) > mont_part_fin_max :
+			if v_mont_part_fin and float(v_mont_part_fin) > float(mont_part_fin_max) :
 				self.add_error(
 					'mont_part_fin',
 					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_part_fin_max))
@@ -814,7 +814,7 @@ class GererPrestation(forms.ModelForm) :
 		# Je gère la contrainte suivante : le montant initial de la prestation ne doit pas être supérieur au reste à
 		# engager du dossier.
 		if o_doss and o_suivi_doss :
-			if v_mont_prest and float(v_mont_prest) > o_suivi_doss.mont_rae :
+			if v_mont_prest and float(v_mont_prest) > float(o_suivi_doss.mont_rae) :
 				self.add_error(
 					'zs_mont_prest', 
 					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(o_suivi_doss.mont_rae))
@@ -947,7 +947,7 @@ class RedistribuerPrestation(forms.ModelForm) :
 			mont_prest_doss_max = o_suivi_doss.mont_rae
 
 		# Je renvoie une erreur si le montant saisi n'est pas inclus dans l'intervalle de valeurs autorisées.
-		if v_mont_prest_doss and not mont_prest_doss_min <= float(v_mont_prest_doss) <= mont_prest_doss_max :
+		if v_mont_prest_doss and not float(mont_prest_doss_min) <= float(v_mont_prest_doss) <= float(mont_prest_doss_max) :
 
 			err_mess = '''
 			Veuillez saisir un montant compris entre {0} € et {1} €.
@@ -1120,7 +1120,7 @@ class GererFacture(forms.ModelForm) :
 			# Je gère la contrainte suivante : le montant de la facture ne doit pas être supérieur au reste à facturer
 			# de la prestation.
 			if valeur :
-				if float(valeur) > mont_raf_max :
+				if float(valeur) > float(mont_raf_max) :
 					self.add_error(
 						cle, 
 						'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_raf_max))
@@ -1392,7 +1392,7 @@ class GererDemandeVersement(forms.ModelForm) :
 				if 'ttc' in cle :
 					mont_rad += i.mont_ttc_ddv
 			if valeur :
-				if float(valeur) > mont_rad :
+				if float(valeur) > float(mont_rad) :
 					self.add_error(
 						cle, 
 						'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_rad))
