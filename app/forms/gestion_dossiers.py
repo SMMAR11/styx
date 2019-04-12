@@ -1386,7 +1386,7 @@ class GererDemandeVersement(forms.ModelForm) :
 			# Je gère la contrainte suivante : le montant de la demande de versement ne doit pas être supérieur au 
 			# reste à demander du financement.
 			mont_rad = o_suivi_fin.mont_rad
-			if i.pk and o_suivi_fin.pk == i.id_fin.pk :
+			if i.pk and o_suivi_fin.id_fin.pk == i.id_fin.pk :
 				if 'ht' in cle :
 					mont_rad += i.mont_ht_ddv
 				if 'ttc' in cle :
@@ -1402,7 +1402,7 @@ class GererDemandeVersement(forms.ModelForm) :
 
 			# Je récupère les demandes de versements soldées du financement.
 			qs_ddv = TDemandeVersement.objects.filter(
-				id_fin = o_suivi_fin.pk, 
+				id_fin = o_suivi_fin.id_fin.pk, 
 				id_type_vers__int_type_vers = T_DONN_BDD_STR['TVERS_SOLDE']
 			)
 
