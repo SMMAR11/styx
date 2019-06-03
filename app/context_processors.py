@@ -98,7 +98,11 @@ def set_alerts(request) :
 			# Je stocke les financements du couple courant avec exclusion si le dossier est soldé.
 			qs_fin = VFinancement.objects.filter(
 				id_doss__id_org_moa = t[0], id_doss__id_progr__id_type_progr = t[1]
-			).exclude(id_doss__id_av__int_av = T_DONN_BDD_STR['AV_SOLDE'])
+			).exclude(
+				id_doss__id_av__int_av = T_DONN_BDD_STR['AV_SOLDE']
+			).exclude(
+				# id_doss__id_av__id_av=5
+			)
 
 			# Pour chaque financement...
 			for f in qs_fin :
