@@ -60,15 +60,15 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TDossier
 
 		exclude = [
-			'comm_regl_doss', 
-			'dt_int_doss', 
-			'est_ttc_doss', 
+			'comm_regl_doss',
+			'dt_int_doss',
+			'est_ttc_doss',
 			'id_fam',
 			'id_nat_doss',
 			'id_org_moa',
 			'id_progr',
 			'id_techn',
-			'id_type_doss', 
+			'id_type_doss',
 			'num_doss',
 			'type_decl'
 		]
@@ -269,7 +269,7 @@ class GererDossier(forms.ModelForm) :
 			except :
 				self.add_error('za_doss_ass', 'Le dossier {0} n\'existe pas.'.format(v_doss_ass))
 
-			# Je renvoie une erreur si le numéro du dossier associé et le numéro du dossier de l'instance sont 
+			# Je renvoie une erreur si le numéro du dossier associé et le numéro du dossier de l'instance sont
 			# identiques.
 			if i.pk and i.num_doss == v_doss_ass :
 				self.add_error('za_doss_ass', 'Veuillez choisir un autre dossier associé.')
@@ -315,7 +315,7 @@ class GererDossier(forms.ModelForm) :
 
 		if i.pk :
 
-			# Je récupère trois valeurs : le montant de l'assiette éligible maximum, la somme des montants de la 
+			# Je récupère trois valeurs : le montant de l'assiette éligible maximum, la somme des montants de la
 			# participation et la somme des prestations.
 			qs_fin_aggr = TFinancement.objects.filter(id_doss = i).aggregate(
 				Max('mont_elig_fin'), Sum('mont_part_fin')
@@ -335,13 +335,13 @@ class GererDossier(forms.ModelForm) :
 							mont_min = t_mont_doss[2] - i.mont_doss
 							if float(v_mont_suppl_doss) < mont_min :
 								self.add_error(
-									'mont_suppl_doss', 
+									'mont_suppl_doss',
 									'Veuillez saisir un montant supérieur ou égal à {0} €.'.format(obt_mont(mont_min))
 								)
 					else :
 						if float(v_mont_doss) < t_mont_doss[2] :
 							self.add_error(
-								'mont_doss', 
+								'mont_doss',
 								'Veuillez saisir un montant supérieur ou égal à {0} €.'.format(obt_mont(t_mont_doss[2]))
 							)
 
@@ -450,9 +450,23 @@ class ChoisirDossier(forms.ModelForm) :
 		label = 'Année de délibération au maître d\'ouvrage', required = False, widget = forms.Select()
 	)
 	rb_doss_sold = forms.ChoiceField(
-		choices = [(True, 'Oui'), (False, 'Non')],
-		initial = True,
-		label = 'Retrait des dossiers soldés ?',
+		choices = [('solde', 'Oui'), ('non_solde', 'Non')],
+		initial = 'non_solde',
+		label = '- soldés ?',
+		required = False,
+		widget = forms.RadioSelect()
+	)
+	rb_doss_term = forms.ChoiceField(
+		choices = [('termine', 'Oui'), ('non_termine', 'Non')],
+		initial = 'non_termine',
+		label = '- terminés ?',
+		required = False,
+		widget = forms.RadioSelect()
+	)
+	rb_doss_aband = forms.ChoiceField(
+		choices = [('abandonne', 'Oui'), ('non_abandonne', 'Non')],
+		initial = 'non_abandonne',
+		label = '- abandonnés ?',
 		required = False,
 		widget = forms.RadioSelect()
 	)
@@ -628,7 +642,7 @@ class GererFinancement(forms.ModelForm) :
 				if len(qs_fin) > 0 :
 					self.add_error('id_org_fin', 'Le financeur participe déjà au montage financier.')
 
-			# Je gère la contrainte suivante : le montant de l'assiette éligible de la subvention doit toujours être 
+			# Je gère la contrainte suivante : le montant de l'assiette éligible de la subvention doit toujours être
 			# inférieur ou égal au montant du dossier.
 			if v_mont_elig_fin and float(v_mont_elig_fin) > float(o_doss.mont_doss) :
 				self.add_error(
@@ -656,7 +670,7 @@ class GererFinancement(forms.ModelForm) :
 					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_part_fin_max))
 				)
 
-			# Je gère la contrainte suivante : le couple date de début d'éligibilité/durée de la validité et/ou de la 
+			# Je gère la contrainte suivante : le couple date de début d'éligibilité/durée de la validité et/ou de la
 			# prorogation doit être conforme.
 			if not v_dt_deb_elig_fin :
 				if v_duree_valid_fin and v_duree_valid_fin > 0 :
@@ -715,7 +729,7 @@ class GererPrestation(forms.ModelForm) :
 		widget = forms.TextInput(attrs = { 'autocomplete' : 'off', 'maxlength' : 14, 'typeahead' : 'on' })
 	)
 	zs_mont_prest = FFEuroField(
-		label = 'Montant [ht_ou_ttc] de la prestation', 
+		label = 'Montant [ht_ou_ttc] de la prestation',
 		min_value = 0.01,
         widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
     )
@@ -816,7 +830,7 @@ class GererPrestation(forms.ModelForm) :
 		if o_doss and o_suivi_doss :
 			if v_mont_prest and float(v_mont_prest) > float(o_suivi_doss.mont_rae) :
 				self.add_error(
-					'zs_mont_prest', 
+					'zs_mont_prest',
 					'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(o_suivi_doss.mont_rae))
 				)
 
@@ -901,7 +915,7 @@ class RedistribuerPrestation(forms.ModelForm) :
 			kwargs.update(initial = {
 				'mont_prest_doss' : '{:0.2f}'.format(instance.mont_prest_doss)
 			})
-		
+
 		super(RedistribuerPrestation, self).__init__(*args, **kwargs)
 		init_mess_err(self, False)
 
@@ -982,8 +996,8 @@ class GererFacture(forms.ModelForm) :
 	zl_prest = forms.ChoiceField(label = 'Prestation', widget = forms.Select())
 	zl_suivi_fact = forms.ChoiceField(
 		choices = [DEFAULT_OPTION, ('Acompte', 'Acompte'), ('Solde', 'Solde')],
-		label = 'Suivi de la facturation', 
-		required = True, 
+		label = 'Suivi de la facturation',
+		required = True,
 		widget = forms.Select()
 	)
 
@@ -1122,7 +1136,7 @@ class GererFacture(forms.ModelForm) :
 			if valeur :
 				if float(valeur) > float(mont_raf_max) :
 					self.add_error(
-						cle, 
+						cle,
 						'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_raf_max))
 					)
 			else :
@@ -1130,7 +1144,7 @@ class GererFacture(forms.ModelForm) :
 
 			# Je récupère les factures soldées du couple prestation/dossier.
 			qs_fact = TFacture.objects.filter(
-				id_doss = o_suivi_prest_doss.id_doss, 
+				id_doss = o_suivi_prest_doss.id_doss,
 				id_prest = o_suivi_prest_doss.id_prest,
 				suivi_fact = 'Solde'
 			)
@@ -1160,7 +1174,7 @@ class GererFacture(forms.ModelForm) :
 				nb_fact_ddv = TFacturesDemandeVersement.objects.filter(id_fact = i.pk).count()
 				if valeur and nb_fact_ddv > 0 and float(valeur) != mont_fact :
 					self.add_error(
-						cle, 
+						cle,
 						'''
 						Vous ne pouvez pas modifier le montant {} de la facture car elle est reliée à une demande de
 						versement.
@@ -1383,7 +1397,7 @@ class GererDemandeVersement(forms.ModelForm) :
 				cle = 'mont_ttc_ddv'
 			valeur = cleaned_data.get(cle)
 
-			# Je gère la contrainte suivante : le montant de la demande de versement ne doit pas être supérieur au 
+			# Je gère la contrainte suivante : le montant de la demande de versement ne doit pas être supérieur au
 			# reste à demander du financement.
 			mont_rad = o_suivi_fin.mont_rad
 			if i.pk and o_suivi_fin.id_fin.pk == i.id_fin.pk :
@@ -1394,7 +1408,7 @@ class GererDemandeVersement(forms.ModelForm) :
 			if valeur :
 				if float(valeur) > float(mont_rad) :
 					self.add_error(
-						cle, 
+						cle,
 						'Veuillez saisir un montant inférieur ou égal à {0} €.'.format(obt_mont(mont_rad))
 					)
 			else :
@@ -1402,7 +1416,7 @@ class GererDemandeVersement(forms.ModelForm) :
 
 			# Je récupère les demandes de versements soldées du financement.
 			qs_ddv = TDemandeVersement.objects.filter(
-				id_fin = o_suivi_fin.id_fin.pk, 
+				id_fin = o_suivi_fin.id_fin.pk,
 				id_type_vers__int_type_vers = T_DONN_BDD_STR['TVERS_SOLDE']
 			)
 
@@ -1792,7 +1806,7 @@ class GererAvenant(forms.ModelForm) :
 						elif v_dt_aven_min and not v_dt_aven_max :
 							mess = '''
 							La date de fin de l'avenant doit être postérieure ou égale au {0}.
-							'''.format(dt_fr(v_dt_aven_min)) 
+							'''.format(dt_fr(v_dt_aven_min))
 						elif not v_dt_aven_min and v_dt_aven_max :
 							mess = '''
 							La date de fin de l'avenant doit être antérieure ou égale au {0}.

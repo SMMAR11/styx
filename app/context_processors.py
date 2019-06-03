@@ -108,7 +108,7 @@ def set_alerts(request) :
 					# Je vérifie l'alerte relative à la date de fin d'éligibilité d'un financement.
 					if f.dt_fin_elig_fin :
 
-						# Je vérifie dans un premier temps si le montant restant à demander est inférieur à un 
+						# Je vérifie dans un premier temps si le montant restant à demander est inférieur à un
 						# pourcentage par rapport au montant de participation.
 						if float(f.mont_rad) > float(f.mont_part_fin) * 0.1 :
 
@@ -156,7 +156,8 @@ def set_alerts(request) :
 							t_alert.append(alert)
 
 					# Je vérifie l'alerte relative à la date limite du premier acompte.
-					if f.id_fin.dt_lim_prem_ac_fin and len(TDemandeVersement.objects.filter(id_fin = f.id_fin)) == 0 :
+					# if f.id_fin.dt_lim_prem_ac_fin and len(TDemandeVersement.objects.filter(id_fin = f.id_fin)) == 0 :
+					if f.id_fin.dt_lim_prem_ac_fin and not TDemandeVersement.objects.filter(id_fin = f.id_fin).exists():
 
 						# Je vérifie si la date limite du premier acompte est proche.
 						diff = (f.id_fin.dt_lim_prem_ac_fin - today).days
@@ -165,7 +166,7 @@ def set_alerts(request) :
 								'etat_alert' : [1, t_pr_alert[1]],
 								'int_alert' : 'Premier acompte',
 								'descr_alert' : '''
-								Il reste {0} jour(s) avant la date limite du premier acompte. Attention, veuillez 
+								Il reste {0} jour(s) avant la date limite du premier acompte. Attention, veuillez
 								effectuer une demande de versement pour le financeur « {1} » du dossier {2}.
 								'''.format(diff, f.id_org_fin, f.id_doss),
 								'lien_alert' : reverse('cons_doss', args = [f.id_doss.pk])

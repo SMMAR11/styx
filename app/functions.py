@@ -155,6 +155,8 @@ def filtr_doss(request, _d_excl = None) :
 		v_nat_doss = cleaned_data.get('zl_nat_doss')
 		v_ann_delib_moa_doss = cleaned_data.get('zl_ann_delib_moa_doss')
 		v_doss_sold = cleaned_data.get('rb_doss_sold')
+		v_doss_term = cleaned_data.get('rb_doss_term')
+		v_doss_aband = cleaned_data.get('rb_doss_aband')
 
 		# J'initialise les conditions de la requête.
 		t_sql = { 'and' : {}, 'or' : [] }
@@ -176,13 +178,23 @@ def filtr_doss(request, _d_excl = None) :
 			qs_doss = obt_doss_regr(v_org_moa).filter(**t_sql['and'])
 		else :
 			qs_doss = TDossier.objects.filter(**t_sql['and'])
-		if _d_excl :
-			qs_doss = qs_doss.exclude(pk = _d_excl)
+		# if _d_excl :
+		# 	qs_doss = qs_doss.exclude(pk = _d_excl)
 
+		from django.db.models import Q
+		selected = Q()
 		# Retrait ou non des dossiers soldés
-		qs_doss = TDossier.objects.custom_filter(
-			remove_completed = ast.literal_eval(v_doss_sold), pk__in = qs_doss.values_list('pk', flat = True)
-		)
+		if v_doss_sold == 'solde':
+			selected.add(Q(id_av__int_av__icontains='Soldé'), Q.AND)
+		# Retrait ou non des dossiers terminé
+		if v_doss_term == 'termine':
+			selected.add(Q(id_av__int_av__icontains='Terminé'), Q.AND)
+		# Retrait ou non des dossiers abandonnés
+		if v_doss_aband == 'abandonne':
+			selected.add(Q(id_av__int_av__icontains='Abandonné'), Q.AND)
+
+		qs_doss = qs_doss.exclude(pk=_d_excl).filter(selected)
+
 
 	else :
 		qs_doss = []
