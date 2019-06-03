@@ -101,7 +101,7 @@ def set_alerts(request) :
 			).exclude(
 				id_doss__id_av__int_av = T_DONN_BDD_STR['AV_SOLDE']
 			).exclude(
-				# id_doss__id_av__id_av=5
+				id_doss__id_av__id_av=5
 			)
 
 			# Pour chaque financement...
