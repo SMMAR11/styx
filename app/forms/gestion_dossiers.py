@@ -1955,7 +1955,7 @@ class GererFicheVie(forms.ModelForm) :
 		)
 
 		return '''
-		<form action="{}" name="f_gerfdv" method="post" onsubmit="soum_f(event)">
+		<form action="{}" name="f_gerfdv" enctype="multipart/form-data" method="post" onsubmit="soum_f(event)">
 			<input name="csrfmiddlewaretoken" type="hidden" value="{}">
 			{}
 		</form>

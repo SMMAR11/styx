@@ -1911,7 +1911,7 @@ class TFicheVie(models.Model) :
     chem_pj_fdv = models.FileField(
         blank = True,
         upload_to = set_chem,
-        validators = [val_fich_pdf],
+        # validators = [val_fich_pdf],
         verbose_name = 'Insérer la pièce jointe. '
     )
     class Meta :

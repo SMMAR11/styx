@@ -666,7 +666,9 @@ def init_f(_form) :
 				set_name,
 				champ.label,
 				tab_input[len(tab_input) - 1],
-				bs.find_all('a')[0]['href'],
+				# TODO: tester regressions
+				# bs.find_all('a')[0]['href'],
+				bs.find_all('a')[0],
 				span
 			)
 

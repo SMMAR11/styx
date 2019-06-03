@@ -3,7 +3,19 @@
 
 # Imports
 from app.decorators import *
+from app.forms.gestion_dossiers import GererFicheVie
+from app.functions import ger_droits
+from app.functions import init_fm
+from app.functions import rempl_fich_log
+from app.models import TFicheVie
+
 from django.views.decorators.csrf import csrf_exempt
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.shortcuts import render
+
+import json
 
 '''
 Cette vue permet d'afficher le menu principal du module de gestion des dossiers.
@@ -77,7 +89,7 @@ def cr_doss(request) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/cr_doss.html',
 			{ 'f_cr_doss' : init_f(f_cr_doss), 't_fm' : t_fm, 'title' : 'Créer un dossier' }
 		)
@@ -177,7 +189,7 @@ def cr_doss(request) :
 					json.dumps({ 'success' : {
 						'message' : 'Le dossier {0} a été créé avec succès.'.format(o_nv_doss),
 						'redirect' : reverse('cons_doss', args = [o_nv_doss.id_doss])
-					}}), 
+					}}),
 					content_type = 'application/json'
 				)
 
@@ -227,7 +239,7 @@ def modif_doss(request, _d) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TDossier.
@@ -254,7 +266,7 @@ def modif_doss(request, _d) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/modif_doss.html',
 			{
 				'd' : o_doss,
@@ -265,7 +277,7 @@ def modif_doss(request, _d) :
 				'title' : 'Modifier un dossier'
 			}
 		)
-		
+
 	else :
 		if 'action' in request.GET :
 
@@ -303,7 +315,7 @@ def modif_doss(request, _d) :
 				TDossierGeom.objects.filter(id_doss = o_doss).delete()
 
 				if request.POST['edit-geom'] :
-					
+
 					# Je récupère les objets créés.
 					editgeom = request.POST['edit-geom'].split(';')
 
@@ -324,7 +336,7 @@ def modif_doss(request, _d) :
 					json.dumps({ 'success' : {
 						'message' : 'La géométrie du dossier {0} a été mise à jour avec succès.'.format(o_doss),
 						'redirect' : reverse('cons_doss', args = [o_doss.pk])
-					}}), 
+					}}),
 					content_type = 'application/json'
 				)
 
@@ -381,7 +393,7 @@ def modif_doss(request, _d) :
 					json.dumps({ 'success' : {
 						'message' : 'Le dossier {0} a été mis à jour avec succès.'.format(o_doss_modif),
 						'redirect' : reverse('cons_doss', args = [o_doss_modif.pk])
-					}}), 
+					}}),
 					content_type = 'application/json'
 				)
 
@@ -482,7 +494,7 @@ def suppr_doss(request, _d) :
 				json.dumps({ 'success' : {
 					'message' : 'Le dossier {0} a été supprimé avec succès.'.format(o_doss_suppr),
 					'redirect' : reverse('ch_doss')
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -562,7 +574,7 @@ def ch_doss(request) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/ch_doss.html',
 			{ 'f_ch_doss' : init_f(f_ch_doss), 't_doss' : t_doss, 'title' : 'Choisir un dossier' }
 		)
@@ -692,7 +704,7 @@ def cons_doss(request, _d) :
 		qs_prest_moa_doss = TPrestation.objects.filter(
 			tprestationsdossier__id_doss__id_org_moa = o_doss.id_org_moa
 		).exclude(tprestationsdossier__id_doss = o_doss).distinct()
-		
+
 		# J'initialise le tableau des prestations du maître d'ouvrage du dossier.
 		t_prest_moa_doss = []
 		for pmd in qs_prest_moa_doss :
@@ -710,7 +722,7 @@ def cons_doss(request, _d) :
 			dern_td = ''
 			if peut_ch == True :
 				dern_td = '''
-				<span action="?action=afficher-form-redistribution-prestation&prestation={0}" 
+				<span action="?action=afficher-form-redistribution-prestation&prestation={0}"
 				class="choose-icon pointer pull-right" title="Choisir la prestation"></span>
 				'''.format(pmd.pk)
 
@@ -724,10 +736,10 @@ def cons_doss(request, _d) :
 				<td>{5}</td>
 			</tr>
 			'''.format(
-				pmd.id_org_prest.n_org, 
-				pmd.int_prest, 
-				dt_fr(pmd.dt_notif_prest) or '-', 
-				obt_mont(VPrestation.objects.get(pk = pmd.pk).mont_prest), 
+				pmd.id_org_prest.n_org,
+				pmd.int_prest,
+				dt_fr(pmd.dt_notif_prest) or '-',
+				obt_mont(VPrestation.objects.get(pk = pmd.pk).mont_prest),
 				', '.join([(dp.id_doss.num_doss) for dp in TPrestationsDossier.objects.filter(id_prest = pmd).order_by(
 					'id_doss'
 				)]),
@@ -780,7 +792,7 @@ def cons_doss(request, _d) :
 			if g.geom_pct :
 				la_geom = geos.GEOSGeometry(g.geom_pct)
 			t_geom_doss.append(la_geom.geojson)
-			
+
 		# J'initialise les types de géométries autorisés.
 		qs_type_geom_doss = TTypesGeomTypeDossier.objects.filter(id_type_doss = o_doss.id_type_doss)
 		t_types_geom_doss = [tg.id_type_geom.int_type_geom for tg in qs_type_geom_doss]
@@ -1142,7 +1154,7 @@ def cons_doss(request, _d) :
 
 		# Je complète le tableau de fenêtres modales dans le cas où le dossier n'est pas en projet.
 		if o_doss.id_av.int_av != T_DONN_BDD_STR['AV_EP'] :
-			t_fm += [	
+			t_fm += [
 				init_fm('ajout_aven', 'Ajouter un avenant'),
 				init_fm('ajout_fact', 'Ajouter une facture', t_cont_fm['ajout_fact']),
 				init_fm('ajout_org_prest', 'Ajouter un prestataire', t_cont_fm['ajout_org_prest']),
@@ -1160,7 +1172,7 @@ def cons_doss(request, _d) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/cons_doss.html',
 			{
 				'AV_EP' : T_DONN_BDD_STR['AV_EP'],
@@ -1226,7 +1238,7 @@ def cons_doss(request, _d) :
 						'id_ppv_ph' : { 'label' : 'Période de prise de vue', 'value' : o_ph.id_ppv_ph },
 						'dt_pv_ph' : { 'label' : 'Date de prise de vue', 'value' : dt_fr(o_ph.dt_pv_ph) or '' }
 					}
-					
+
 					t_attrs_ph = init_pg_cons(t_attrs_ph)
 
 					output = HttpResponse(
@@ -1278,7 +1290,7 @@ def cons_doss(request, _d) :
 						json.dumps({ 'success' : {
 							'message' : 'Le dossier {0} a été mis à jour avec succès.'.format(o_doss_regl_modif),
 							'redirect' : reverse('cons_doss', args = [o_doss_regl_modif.pk])
-						}}), 
+						}}),
 						content_type = 'application/json'
 					)
 
@@ -1287,12 +1299,12 @@ def cons_doss(request, _d) :
 
 					# Je complète le fichier log.
 					rempl_fich_log([
-						request.user.pk, 
-						request.user, 
-						o_doss_regl_modif.pk, 
-						o_doss_regl_modif, 
-						'U', 
-						'Réglementation d\'un dossier', 
+						request.user.pk,
+						request.user,
+						o_doss_regl_modif.pk,
+						o_doss_regl_modif,
+						'U',
+						'Réglementation d\'un dossier',
 						o_doss_regl_modif.pk
 					])
 
@@ -1361,15 +1373,15 @@ def cons_doss(request, _d) :
 						dern_td = ''
 						if peut_ch == True :
 							dern_td = '''
-							<span action="?action=afficher-form-redistribution-prestation&prestation={0}" 
+							<span action="?action=afficher-form-redistribution-prestation&prestation={0}"
 							class="choose-icon pointer pull-right" title="Choisir la prestation"></span>
 							'''.format(pmd.pk)
 
 						t_prest_moa_doss_filtr.append([
-							pmd.id_org_prest.n_org, 
-							pmd.int_prest, 
-							dt_fr(pmd.dt_notif_prest), 
-							obt_mont(VPrestation.objects.get(pk = pmd.pk).mont_prest), 
+							pmd.id_org_prest.n_org,
+							pmd.int_prest,
+							dt_fr(pmd.dt_notif_prest),
+							obt_mont(VPrestation.objects.get(pk = pmd.pk).mont_prest),
 							', '.join([
 								(dp.id_doss.num_doss) for dp in TPrestationsDossier.objects.filter(
 									id_prest = pmd
@@ -1380,7 +1392,7 @@ def cons_doss(request, _d) :
 
 					# J'envoie le tableau des prestations filtrées.
 					output = HttpResponse(
-						json.dumps({ 
+						json.dumps({
 							'success' : { 'datatable' : t_prest_moa_doss_filtr }
 						}), content_type = 'application/json'
 					)
@@ -1571,14 +1583,14 @@ def cons_doss(request, _d) :
 					# J'empile le tableau des erreurs.
 					for k, v in f_red_prest.errors.items() :
 						t_err['RedistribuerPrestation-{0}'.format(k)] = v
-				
+
 				if len(t_err) > 0 :
 
 					# J'affiche les erreurs.
 					output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
 
 				else :
-					
+
 					# Je créé ou modifie chaque instance TPrestationsDossier.
 					for i in range(0, len(t_inst_prest_doss)) :
 						t_inst_prest_doss[i].save()
@@ -1591,7 +1603,7 @@ def cons_doss(request, _d) :
 							'''.format(o_prest, o_doss),
 							'modal' : 'ajout_prest',
 							'redirect' : reverse('cons_doss', args = [o_doss.pk])
-						}}), 
+						}}),
 						content_type = 'application/json'
 					)
 
@@ -1618,9 +1630,9 @@ def cons_doss(request, _d) :
 
 			# Ajout d'un élément dans la fiche de vie
 			if get_action == 'ajouter-fdv' :
-				
+
 				# Soumission du formulaire
-				f_ajout_fdv = GererFicheVie(request.POST, k_doss = o_doss)
+				f_ajout_fdv = GererFicheVie(request.POST, request.FILES, k_doss = o_doss)
 
 				if f_ajout_fdv.is_valid() :
 
@@ -1634,7 +1646,7 @@ def cons_doss(request, _d) :
 								fdv.id_doss
 							),
 							'redirect' : reverse('cons_doss', args = [fdv.id_doss.pk])
-						}}), 
+						}}),
 						content_type = 'application/json'
 					)
 
@@ -1702,7 +1714,7 @@ def ajout_fin(request) :
 					L\'organisme financeur « {0} » a été ajouté avec succès au plan de financement du dossier {1}.
 					'''.format(o_nv_fin.id_org_fin, o_nv_fin.id_doss),
 					'redirect' : reverse('cons_doss', args = [o_nv_fin.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -1745,7 +1757,7 @@ def modif_fin(request, _f) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TFinancement.
@@ -1766,7 +1778,7 @@ def modif_fin(request, _f) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/modif_fin.html',
 			{ 'f' : o_fin, 'f_modif_fin' : init_f(f_modif_fin), 't_fm' : t_fm, 'title' : 'Modifier un financement' }
 		)
@@ -1789,7 +1801,7 @@ def modif_fin(request, _f) :
 						o_fin_modif.id_doss
 					),
 					'redirect' : reverse('cons_fin', args = [o_fin_modif.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -1863,7 +1875,7 @@ def suppr_fin(request, _f) :
 					L'organisme financeur « {0} » a été supprimé avec succès au plan de financement du dossier {1}.
 					'''.format(o_fin_suppr.id_org_fin, o_fin_suppr.id_doss),
 					'redirect' : reverse('cons_doss', args = [o_fin_suppr.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -1873,11 +1885,11 @@ def suppr_fin(request, _f) :
 			# Je complète le fichier log.
 			rempl_fich_log([
 				request.user.pk,
-				request.user, 
-				o_fin_suppr.id_doss.pk, 
-				o_fin_suppr.id_doss, 
-				'D', 
-				'Financement', 
+				request.user,
+				o_fin_suppr.id_doss.pk,
+				o_fin_suppr.id_doss,
+				'D',
+				'Financement',
 				v_id_fin
 			])
 
@@ -1923,7 +1935,7 @@ def cons_fin(request, _f) :
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TFinancement.
@@ -1968,7 +1980,7 @@ def cons_fin(request, _f) :
 			'dt_fin_elig_fin' : {
 				'label' : 'Date de fin d\'éligibilité', 'value' : dt_fr(o_suivi_fin.dt_fin_elig_fin) or ''
 			},
-			'duree_valid_fin' : { 
+			'duree_valid_fin' : {
 				'label' : 'Durée de validité de l\'aide (en mois)', 'value' : o_fin.duree_valid_fin or 0
 			},
 			'duree_pror_fin' : {
@@ -1977,7 +1989,7 @@ def cons_fin(request, _f) :
 			'dt_lim_deb_oper_fin' : {
 				'label' : 'Date limite du début de l\'opération', 'value' : dt_fr(o_fin.dt_lim_deb_oper_fin) or ''
 			},
-			'a_inf_fin' : { 
+			'a_inf_fin' : {
 				'label' : 'Avez-vous informé le partenaire financier du début de l\'opération ?',
 				'value' : o_fin.a_inf_fin
 			},
@@ -2003,7 +2015,7 @@ def cons_fin(request, _f) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/cons_fin.html',
 			{
 				'f' : o_fin,
@@ -2080,7 +2092,7 @@ def ajout_prest(request) :
 					La prestation « {0} » a été ajoutée avec succès au dossier {1}.
 					'''.format(o_nvelle_prest, v_num_doss),
 					'redirect' : reverse('cons_doss', args = [o_nvelle_prest_doss.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -2090,11 +2102,11 @@ def ajout_prest(request) :
 			# Je complète le fichier log.
 			rempl_fich_log([
 				request.user.pk,
-				request.user, 
-				o_nvelle_prest_doss.id_doss.pk, 
-				o_nvelle_prest_doss.id_doss, 
-				'C', 
-				'Ajout d\'une prestation', 
+				request.user,
+				o_nvelle_prest_doss.id_doss.pk,
+				o_nvelle_prest_doss.id_doss,
+				'C',
+				'Ajout d\'une prestation',
 				o_nvelle_prest_doss.pk
 			])
 
@@ -2134,7 +2146,7 @@ def modif_prest(request, _pd) :
 	from django.shortcuts import render
 	from django.template.context_processors import csrf
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TFacture.
@@ -2186,7 +2198,7 @@ def modif_prest(request, _pd) :
 				obt_mont(o_suivi_doss.mont_rae)
 			)
 
-			# J'empile le tableau des lignes du tableau HTML des dossiers déjà reliés à la prestation que l'on 
+			# J'empile le tableau des lignes du tableau HTML des dossiers déjà reliés à la prestation que l'on
 			# veut modifier.
 			t_lg.append(lg)
 
@@ -2202,12 +2214,12 @@ def modif_prest(request, _pd) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/modif_prest.html',
 			{
 				'f_modif_prest' : init_f(f_modif_prest),
 				'ht_ou_ttc' : ht_ou_ttc,
-				'pd' : o_prest, 
+				'pd' : o_prest,
 				't_fm' : t_fm,
 				't_lg' : '\n'.join(t_lg),
 				'title' : 'Modifier une prestation'
@@ -2272,7 +2284,7 @@ def modif_prest(request, _pd) :
 				json.dumps({ 'success' : {
 					'message' : 'La prestation « {0} » a été mise à jour avec succès.'.format(o_prest.id_prest),
 					'redirect' : reverse('cons_prest', args = [o_prest.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -2355,7 +2367,7 @@ def suppr_prest(request, _pd) :
 						o_prest_doss_suppr.id_prest
 					),
 					'redirect' : reverse('cons_doss', args = [o_prest_doss_suppr.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -2364,12 +2376,12 @@ def suppr_prest(request, _pd) :
 
 			# Je complète le fichier log.
 			rempl_fich_log([
-				request.user.pk, 
-				request.user, 
-				o_prest_doss_suppr.id_doss.pk, 
-				o_prest_doss_suppr.id_doss, 
-				'D', 
-				'Prestation', 
+				request.user.pk,
+				request.user,
+				o_prest_doss_suppr.id_doss.pk,
+				o_prest_doss_suppr.id_doss,
+				'D',
+				'Prestation',
 				v_id_prest_doss
 			])
 
@@ -2413,7 +2425,7 @@ def cons_prest(request, _pd) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TPrestationsDossier.
@@ -2450,11 +2462,11 @@ def cons_prest(request, _pd) :
 			'int_prest' : { 'label': 'Intitulé de la prestation', 'value' : o_suivi_prest.get_instance().int_prest },
 			'ref_prest' : { 'label': 'Référence de la prestation', 'value' : o_suivi_prest.get_instance().ref_prest },
 			'mont_prest' : {
-				'label': 'Montant {0} total de la prestation (en €)'.format(ht_ou_ttc), 
+				'label': 'Montant {0} total de la prestation (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_suivi_prest.mont_prest)
 			},
-			'dt_notif_prest' : { 
-				'label' : 'Date de notification de la prestation', 
+			'dt_notif_prest' : {
+				'label' : 'Date de notification de la prestation',
 				'value' : dt_fr(o_suivi_prest.get_instance().dt_notif_prest) or ''
 			},
 			'dt_fin_prest' : {
@@ -2470,20 +2482,20 @@ def cons_prest(request, _pd) :
 				'pdf' : True
 			},
 			'comm_prest' : { 'label' : 'Commentaire', 'value' : o_suivi_prest.get_instance().comm_prest or '' },
-			'mont_prest_doss' : { 
+			'mont_prest_doss' : {
 				'label' : 'Montant {0} de la prestation (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_prest_doss.mont_prest_doss)
 			},
 			'nb_aven' : { 'label' : 'Nombre d\'avenants', 'value' : str(o_suivi_prest_doss.nb_aven) },
-			'mont_aven_sum' : { 
-				'label' : 'Somme {0} des avenants (en €)'.format(ht_ou_ttc), 
+			'mont_aven_sum' : {
+				'label' : 'Somme {0} des avenants (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_suivi_prest_doss.mont_aven_sum)
 			},
 			'mont_fact_sum' : {
 				'label' : 'Somme {0} des factures émises (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(v_mont_fact_sum)
 			},
-			'mont_raf' : { 
+			'mont_raf' : {
 				'label' : 'Reste à facturer {0} (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_suivi_prest_doss.mont_raf),
 				'help-text' : '''
@@ -2527,7 +2539,7 @@ def cons_prest(request, _pd) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/cons_prest.html',
 			{
 				'pd' : o_prest_doss,
@@ -2554,7 +2566,7 @@ def cons_prest(request, _pd) :
 				avert = ''
 				if len(TPrestationsDossier.objects.filter(id_prest = o_prest_doss.id_prest)) > 1 :
 					avert = '''
-					La suppression de la prestation n\'entraînera pas la suppression totale de celle-ci car elle est 
+					La suppression de la prestation n\'entraînera pas la suppression totale de celle-ci car elle est
 					reliée au minimum à un autre dossier.
 					'''
 
@@ -2621,7 +2633,7 @@ def ajout_aven(request, _r) :
 
 			if _r == 'cons_prest' :
 				url = reverse(
-					'cons_prest', 
+					'cons_prest',
 					args = [TPrestationsDossier.objects.get(
 						id_doss = o_nv_aven.id_doss, id_prest = o_nv_aven.id_prest
 					).pk]
@@ -2630,7 +2642,7 @@ def ajout_aven(request, _r) :
 				ong = '#ong_aven'
 			if _r == 'cons_doss' :
 				url = reverse(
-					'cons_doss', 
+					'cons_doss',
 					args = [o_nv_aven.id_doss.pk]
 				)
 				tab = 'tab_doss'
@@ -2643,7 +2655,7 @@ def ajout_aven(request, _r) :
 						o_nv_aven.id_prest, o_nv_aven.id_doss
 					),
 					'redirect' : url
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -2686,7 +2698,7 @@ def modif_aven(request, _a) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TAvenant.
@@ -2707,7 +2719,7 @@ def modif_aven(request, _a) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/modif_aven.html',
 			{ 'a' : o_aven, 'f_modif_aven' : init_f(f_modif_aven), 't_fm' : t_fm, 'title' : 'Modifier un avenant' }
 		)
@@ -2728,18 +2740,18 @@ def modif_aven(request, _a) :
 				json.dumps({ 'success' : {
 					'message' : 'L\'avenant a été mis à jour avec succès.',
 					'redirect' : reverse('cons_aven', args = [o_aven_modif.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
 			# Je complète le fichier log.
 			rempl_fich_log([
-				request.user.pk, 
-				request.user, 
-				o_aven_modif.id_doss.pk, 
-				o_aven_modif.id_doss, 
-				'U', 
-				'Avenant', 
+				request.user.pk,
+				request.user,
+				o_aven_modif.id_doss.pk,
+				o_aven_modif.id_doss,
+				'U',
+				'Avenant',
 				o_aven_modif.pk
 			])
 
@@ -2807,7 +2819,7 @@ def suppr_aven(request, _a) :
 			json.dumps({ 'success' : {
 				'message' : 'L\'avenant a été supprimé avec succès.',
 				'redirect' : reverse('cons_prest', args = [o_suivi_prest_doss.pk])
-			}}), 
+			}}),
 			content_type = 'application/json'
 		)
 
@@ -2844,7 +2856,7 @@ def cons_aven(request, _a) :
 	from django.core.urlresolvers import reverse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TAvenant.
@@ -2869,7 +2881,7 @@ def cons_aven(request, _a) :
 			'id_prest' : { 'label' : 'Prestation', 'value' : o_aven.id_prest },
 			'int_aven' : { 'label' : 'Intitulé de l\'avenant', 'value' : o_aven.int_aven },
 			'dt_aven' : { 'label' : 'Date de fin de l\'avenant', 'value' : dt_fr(o_aven.dt_aven) or '' },
-			'mont_aven' : { 
+			'mont_aven' : {
 				'label' : 'Montant {0} de l\'avenant (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_aven.mont_aven) or 0
 			},
@@ -2886,7 +2898,7 @@ def cons_aven(request, _a) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/cons_aven.html',
 			{
 				'a' : o_aven,
@@ -2917,7 +2929,7 @@ def cons_aven(request, _a) :
 				).mont_raf < o_aven.mont_aven :
 					avert = '''
 					Afin d'éviter une incohérence dans les chiffres, la suppression de l'avenant entraînera une
-					modification du montant {ht_ou_ttc} de la prestation « {prest} », causée par la facturation de 
+					modification du montant {ht_ou_ttc} de la prestation « {prest} », causée par la facturation de
 					celle-ci. Si vous supprimez cet avenant, alors le montant de celui-ci sera transféré vers la
 					prestation « {prest} ».
 					'''.format(ht_ou_ttc = ht_ou_ttc, prest = o_prest_doss.id_prest)
@@ -2964,7 +2976,7 @@ def ajout_fact(request) :
 			f_ajout_fact.fields['zl_prest'].choices = [(p.pk, p) for p in TPrestation.objects.filter(pk = post_prest)]
 
 		if f_ajout_fact.is_valid() :
-			
+
 			# Je créé la nouvelle instance TFacture.
 			o_nvelle_fact = f_ajout_fact.save(commit = False)
 			o_nvelle_fact.save()
@@ -2976,7 +2988,7 @@ def ajout_fact(request) :
 					La facture N°{0} a été ajoutée avec succès à la prestation « {1} » du dossier {2}.
 					'''.format(o_nvelle_fact.num_fact, o_nvelle_fact.id_prest, o_nvelle_fact.id_doss),
 					'redirect' : reverse('cons_doss', args = [o_nvelle_fact.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -2985,12 +2997,12 @@ def ajout_fact(request) :
 
 			# Je complète le fichier log.
 			rempl_fich_log([
-				request.user.pk, 
-				request.user, 
-				o_nvelle_fact.id_doss.pk, 
-				o_nvelle_fact.id_doss, 
-				'C', 
-				'Facture', 
+				request.user.pk,
+				request.user,
+				o_nvelle_fact.id_doss.pk,
+				o_nvelle_fact.id_doss,
+				'C',
+				'Facture',
 				o_nvelle_fact.pk
 			])
 
@@ -3025,7 +3037,7 @@ def modif_fact(request, _f) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TFacture.
@@ -3046,7 +3058,7 @@ def modif_fact(request, _f) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/modif_fact.html',
 			{ 'f' : o_fact, 'f_modif_fact' : init_f(f_modif_fact), 't_fm' : t_fm, 'title' : 'Modifier une facture' }
 		)
@@ -3067,18 +3079,18 @@ def modif_fact(request, _f) :
 				json.dumps({ 'success' : {
 					'message' : 'La facture N°{0} a été mise à jour avec succès.'.format(o_fact_modif.num_fact),
 					'redirect' : reverse('cons_fact', args = [o_fact_modif.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
 			# Je complète le fichier log.
 			rempl_fich_log([
-				request.user.pk, 
-				request.user, 
-				o_fact_modif.id_doss.pk, 
-				o_fact_modif.id_doss, 
-				'U', 
-				'Facture', 
+				request.user.pk,
+				request.user,
+				o_fact_modif.id_doss.pk,
+				o_fact_modif.id_doss,
+				'U',
+				'Facture',
 				o_fact_modif.pk
 			])
 
@@ -3139,7 +3151,7 @@ def suppr_fact(request, _f) :
 				json.dumps({ 'success' : {
 					'message' : 'La facture N°{0} a été supprimée avec succès.'.format(o_fact_suppr),
 					'redirect' : reverse('cons_doss', args = [o_fact_suppr.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -3149,11 +3161,11 @@ def suppr_fact(request, _f) :
 			# Je complète le fichier log.
 			rempl_fich_log([
 				request.user.pk,
-				request.user, 
-				o_fact_suppr.id_doss.pk, 
-				o_fact_suppr.id_doss, 
-				'D', 
-				'Facture', 
+				request.user,
+				o_fact_suppr.id_doss.pk,
+				o_fact_suppr.id_doss,
+				'D',
+				'Facture',
 				v_id_fact
 			])
 
@@ -3174,7 +3186,7 @@ def suppr_fact(request, _f) :
 			output = HttpResponse(json.dumps([mess_html]), content_type = 'application/json')
 
 	return output
-	
+
 '''
 Cette vue permet d'afficher la page de consultation d'une facture.
 request : Objet requête
@@ -3196,7 +3208,7 @@ def cons_fact(request, _f) :
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TFinancement.
@@ -3212,7 +3224,7 @@ def cons_fact(request, _f) :
 			'id_doss' : { 'label' : 'Numéro du dossier', 'value' : o_fact.id_doss },
 			'id_prest' : { 'label' : 'Prestation', 'value' : o_fact.id_prest },
 			'num_fact' : { 'label' : 'Numéro de facture', 'value' : o_fact.num_fact },
-			'dt_mand_moa_fact' : { 
+			'dt_mand_moa_fact' : {
 				'label' : 'Date de mandatement par le maître d\'ouvrage',
 				'value' : dt_fr(o_fact.dt_mand_moa_fact) or ''
 			},
@@ -3226,11 +3238,11 @@ def cons_fact(request, _f) :
 			'num_mandat_fact' : { 'label' : 'Numéro de mandat', 'value' : o_fact.num_mandat_fact },
 			'num_bord_fact' : { 'label' : 'Numéro de bordereau', 'value' : o_fact.num_bord_fact },
 			'suivi_fact' : { 'label' : 'Suivi de la facturation', 'value' : o_fact.suivi_fact },
-			'chem_pj_fact' : { 
-				'label' : 'Consulter le fichier scanné de la facture', 'value' : o_fact.chem_pj_fact, 'pdf' : True 
+			'chem_pj_fact' : {
+				'label' : 'Consulter le fichier scanné de la facture', 'value' : o_fact.chem_pj_fact, 'pdf' : True
 			},
 			'comm_fact' : { 'label' : 'Commentaire', 'value' : o_fact.comm_fact or '' },
-		} 
+		}
 
 		# Je déclare un tableau de fenêtres modales.
 		t_fm = [
@@ -3239,7 +3251,7 @@ def cons_fact(request, _f) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/cons_fact.html',
 			{
 				'f' : o_fact,
@@ -3354,7 +3366,7 @@ def ajout_ddv(request) :
 				v_fact = request.POST.getlist('GererDemandeVersement-cbsm_fact')
 				for i in range(0, len(v_fact)) :
 					TFacturesDemandeVersement.objects.create(
-						id_ddv = o_nvelle_ddv, 
+						id_ddv = o_nvelle_ddv,
 						id_fact = TFacture.objects.get(pk = v_fact[i])
 					)
 
@@ -3365,7 +3377,7 @@ def ajout_ddv(request) :
 						La demande de versement a été ajoutée avec succès au partenaire financier « {0} » du dossier {1}.
 						'''.format(o_nvelle_ddv.id_fin.id_org_fin, o_nvelle_ddv.id_fin.id_doss),
 						'redirect' : reverse('cons_doss', args = [o_nvelle_ddv.id_fin.id_doss.pk])
-					}}), 
+					}}),
 					content_type = 'application/json'
 				)
 
@@ -3374,12 +3386,12 @@ def ajout_ddv(request) :
 
 				# Je complète le fichier log.
 				rempl_fich_log([
-					request.user.pk, 
-					request.user, 
-					o_nvelle_ddv.id_fin.id_doss.pk, 
-					o_nvelle_ddv.id_fin.id_doss, 
-					'C', 
-					'Demande de versement', 
+					request.user.pk,
+					request.user,
+					o_nvelle_ddv.id_fin.id_doss.pk,
+					o_nvelle_ddv.id_fin.id_doss,
+					'C',
+					'Demande de versement',
 					o_nvelle_ddv.pk
 				])
 
@@ -3394,7 +3406,7 @@ def ajout_ddv(request) :
 	return output
 
 '''
-Cette vue permet d'afficher la page de modification d'une demande de versement ou de traiter le formulaire de mise à 
+Cette vue permet d'afficher la page de modification d'une demande de versement ou de traiter le formulaire de mise à
 jour d'une demande de versement.
 request : Objet requête
 _d : Identifiant d'une demande de versement
@@ -3418,7 +3430,7 @@ def modif_ddv(request, _d) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TDemandeVersement.
@@ -3444,7 +3456,7 @@ def modif_ddv(request, _d) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/modif_ddv.html',
 			{
 				'd' : o_ddv,
@@ -3508,7 +3520,7 @@ def modif_ddv(request, _d) :
 				v_fact = request.POST.getlist('GererDemandeVersement-cbsm_fact')
 				for i in range(0, len(v_fact)) :
 					TFacturesDemandeVersement.objects.create(
-						id_ddv = o_ddv_modif, 
+						id_ddv = o_ddv_modif,
 						id_fact = TFacture.objects.get(pk = v_fact[i])
 					)
 
@@ -3517,18 +3529,18 @@ def modif_ddv(request, _d) :
 					json.dumps({ 'success' : {
 						'message' : 'La demande de versement a été mise à jour avec succès.',
 						'redirect' : reverse('cons_ddv', args = [o_ddv_modif.pk])
-					}}), 
+					}}),
 					content_type = 'application/json'
 				)
 
 				# Je complète le fichier log.
 				rempl_fich_log([
-					request.user.pk, 
-					request.user, 
-					o_ddv_modif.id_fin.id_doss.pk, 
-					o_ddv_modif.id_fin.id_doss, 
-					'U', 
-					'Demande de versement', 
+					request.user.pk,
+					request.user,
+					o_ddv_modif.id_fin.id_doss.pk,
+					o_ddv_modif.id_fin.id_doss,
+					'U',
+					'Demande de versement',
 					o_ddv_modif.pk
 				])
 
@@ -3588,7 +3600,7 @@ def suppr_ddv(request, _d) :
 			json.dumps({ 'success' : {
 				'message' : 'La demande de versement a été supprimée avec succès.',
 				'redirect' : reverse('cons_doss', args = [o_ddv_suppr.id_fin.id_doss.pk])
-			}}), 
+			}}),
 			content_type = 'application/json'
 		)
 
@@ -3597,12 +3609,12 @@ def suppr_ddv(request, _d) :
 
 		# Je complète le fichier log.
 		rempl_fich_log([
-			request.user.pk, 
-			request.user, 
-			o_ddv_suppr.id_fin.id_doss.pk, 
-			o_ddv_suppr.id_fin.id_doss, 
-			'D', 
-			'Demande de versement', 
+			request.user.pk,
+			request.user,
+			o_ddv_suppr.id_fin.id_doss.pk,
+			o_ddv_suppr.id_fin.id_doss,
+			'D',
+			'Demande de versement',
 			v_id_ddv
 		])
 
@@ -3631,7 +3643,7 @@ def cons_ddv(request, _d) :
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TDemandeVersement.
@@ -3669,8 +3681,8 @@ def cons_ddv(request, _d) :
 			'map_ht_ddv' : { 'label' : 'Manque à percevoir HT (en €)', 'value' : obt_mont(o_suivi_ddv.map_ht_ddv) or '' },
 			'map_ttc_ddv' : { 'label' : 'Manque à percevoir TTC (en €)', 'value' : obt_mont(o_suivi_ddv.map_ttc_ddv) or '' },
 			'chem_pj_ddv' : {
-				'label' : 'Consulter le courrier scanné de la demande de versement', 
-				'value' : o_ddv.chem_pj_ddv, 
+				'label' : 'Consulter le courrier scanné de la demande de versement',
+				'value' : o_ddv.chem_pj_ddv,
 				'pdf' : True
 			},
 			'comm_ddv' : { 'label' : 'Commentaire', 'value' : o_ddv.comm_ddv or '' }
@@ -3704,7 +3716,7 @@ def cons_ddv(request, _d) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/cons_ddv.html',
 			{
 				'd' : o_ddv,
@@ -3770,7 +3782,7 @@ def ajout_arr(request) :
 						o_nv_arr.id_type_decl, o_nv_arr.id_doss
 					),
 					'redirect' : reverse('cons_doss', args = [o_nv_arr.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -3812,7 +3824,7 @@ def modif_arr(request, _a) :
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TArretesDossier
@@ -3833,7 +3845,7 @@ def modif_arr(request, _a) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/modif_arr.html',
 			{ 'a' : o_arr, 'f_modif_arr' : init_f(f_modif_arr), 't_fm' : t_fm, 'title' : 'Modifier un arrêté' }
 		)
@@ -3856,18 +3868,18 @@ def modif_arr(request, _a) :
 						o_arr_modif.id_type_decl, o_arr_modif.id_doss
 					),
 					'redirect' : reverse('cons_arr', args = [o_arr_modif.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
 			# Je complète le fichier log.
 			rempl_fich_log([
-				request.user.pk, 
-				request.user, 
-				o_arr_modif.id_doss.pk, 
-				o_arr_modif.id_doss, 
-				'U', 
-				'Arrêté', 
+				request.user.pk,
+				request.user,
+				o_arr_modif.id_doss.pk,
+				o_arr_modif.id_doss,
+				'U',
+				'Arrêté',
 				o_arr_modif.pk
 			])
 
@@ -3926,7 +3938,7 @@ def suppr_arr(request, _a) :
 					o_type_decl, o_doss
 				),
 				'redirect' : reverse('cons_doss', args = [o_doss.pk])
-			}}), 
+			}}),
 			content_type = 'application/json'
 		)
 
@@ -3958,7 +3970,7 @@ def cons_arr(request, _a) :
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
-	
+
 	output = HttpResponse()
 
 	# Je vérifie l'existence d'un objet TArretesDossier.
@@ -3976,11 +3988,11 @@ def cons_arr(request, _a) :
 			'id_type_av_arr' : { 'label' : 'Avancement', 'value' : o_arr.id_type_av_arr },
 			'num_arr' : { 'label' : 'Numéro de l\'arrêté', 'value' : o_arr.num_arr },
 			'dt_sign_arr' : { 'label' : 'Date de signature de l\'arrêté', 'value' : dt_fr(o_arr.dt_sign_arr) or '' },
-			'dt_lim_encl_trav_arr' : { 
+			'dt_lim_encl_trav_arr' : {
 				'label' : 'Date limite d\'enclenchement des travaux', 'value' : dt_fr(o_arr.dt_lim_encl_trav_arr) or ''
 			},
 			'chem_pj_arr' : {
-				'label' : 'Consulter le fichier scanné de l\'arrêté', 'value' : o_arr.chem_pj_arr, 'pdf' : True 
+				'label' : 'Consulter le fichier scanné de l\'arrêté', 'value' : o_arr.chem_pj_arr, 'pdf' : True
 			},
 			'comm_arr' : { 'label' : 'Commentaire', 'value' : o_arr.comm_arr or '' },
 		}
@@ -3992,13 +4004,13 @@ def cons_arr(request, _a) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/cons_arr.html',
 			{
 				'a' : o_arr,
 				'forbidden' : ger_droits(request.user, o_arr.id_doss, False, False),
-				't_attrs_arr' : init_pg_cons(t_attrs_arr), 
-				't_fm' : t_fm, 
+				't_attrs_arr' : init_pg_cons(t_attrs_arr),
+				't_fm' : t_fm,
 				'title' : 'Consulter un arrêté'
 			}
 		)
@@ -4055,7 +4067,7 @@ def ajout_ph(request) :
 				json.dumps({ 'success' : {
 					'message' : 'La photo a été ajoutée avec succès au dossier {0}.'.format(o_nvelle_ph.id_doss),
 					'redirect' : reverse('cons_doss', args = [o_nvelle_ph.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -4064,12 +4076,12 @@ def ajout_ph(request) :
 
 			# Je complète le fichier log.
 			rempl_fich_log([
-				request.user.pk, 
-				request.user, 
+				request.user.pk,
+				request.user,
 				o_nvelle_ph.id_doss.pk,
-				o_nvelle_ph.id_doss, 
-				'C', 
-				'Photo', 
+				o_nvelle_ph.id_doss,
+				'C',
+				'Photo',
 				o_nvelle_ph.pk
 			])
 
@@ -4125,7 +4137,7 @@ def modif_ph(request, _p) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/modif_ph.html',
 			{ 'f_modif_ph' : init_f(f_modif_ph), 'p' : o_ph, 't_fm' : t_fm, 'title' : 'Modifier une photo' }
 		)
@@ -4146,7 +4158,7 @@ def modif_ph(request, _p) :
 				json.dumps({ 'success' : {
 					'message' : 'La photo a été mise à jour avec succès.',
 					'redirect' : reverse('cons_doss', args = [o_ph.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -4210,7 +4222,7 @@ def suppr_ph(request, _p) :
 			json.dumps({ 'success' : {
 				'message' : 'La photo a été supprimée avec succès du dossier {0}.'.format(o_doss),
 				'redirect' : reverse('cons_doss', args = [o_doss.pk])
-			}}), 
+			}}),
 			content_type = 'application/json'
 		)
 
@@ -4253,7 +4265,7 @@ def ajout_org_prest(request) :
 				json.dumps({ 'success' : {
 					'message' : 'Le prestataire {0} a été créé avec succès.'.format(o_nv_org_prest),
 					'display' : ['#id_GererPrestation-zs_siret_org_prest', o_nv_org_prest.siret_org_prest]
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -4322,7 +4334,7 @@ def impr_doss(request, _d) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./gestion_dossiers/impr_doss.html',
 			{
 				'd' : o_doss,
@@ -4687,7 +4699,7 @@ def suppr_fdv(rq, _fdv) :
 			json.dumps({ 'success' : {
 				'message' : 'La fiche de vie du dossier {} a été mise à jour avec succès.'.format(dos),
 				'redirect' : reverse('cons_doss', args = [dos.pk])
-			}}), 
+			}}),
 			content_type = 'application/json'
 		)
 
@@ -4705,45 +4717,33 @@ rq : Objet requête
 _fdv : Identifiant d'un événement
 '''
 @verif_acc
-def modif_fdv(rq, _fdv) :
+def modif_fdv(request, pk) :
 
-	# Imports
-	from app.forms.gestion_dossiers import GererFicheVie
-	from app.functions import ger_droits
-	from app.functions import init_fm
-	from app.functions import rempl_fich_log
-	from app.models import TFicheVie
-	from django.core.urlresolvers import reverse
-	from django.http import HttpResponse
-	from django.shortcuts import get_object_or_404
-	from django.shortcuts import render
-	import json
-	
 	output = HttpResponse()
 
 	# Obtention d'une instance TFicheVie
-	fdv = get_object_or_404(TFicheVie, pk = _fdv)
+	fdv = get_object_or_404(TFicheVie, pk=pk)
 
 	# Vérification du droit d'écriture
-	ger_droits(rq.user, fdv.id_doss, False)
+	ger_droits(request.user, fdv.id_doss, False)
 
-	if rq.method == 'GET' :
+	if request.method == 'GET' :
 
 		# J'instancie un objet "formulaire".
 		form = GererFicheVie(instance = fdv, k_doss = fdv.id_doss)
 
 		# Affichage du template
-		output = render(rq, './gestion_dossiers/modif_fdv.html', {
+		output = render(request, './gestion_dossiers/modif_fdv.html', {
 			'fdv' : fdv,
-			'form' : form.get_form(rq = rq),
+			'form' : form.get_form(rq=request),
 			't_fm' : [init_fm('gerfdv', 'Mettre à jour un événement')],
-			'title' : 'Mettre à jour un événement'
+			'title' : 'Mettre à jour un événement',
 		})
 
 	else :
 
 		# Soumission du formulaire
-		form = GererFicheVie(rq.POST, instance = fdv, k_doss = fdv.id_doss)
+		form = GererFicheVie(request.POST, request.FILES, instance = fdv, k_doss = fdv.id_doss)
 
 		if form.is_valid() :
 
@@ -4755,17 +4755,17 @@ def modif_fdv(rq, _fdv) :
 				json.dumps({ 'success' : {
 					'message' : 'La fiche de vie du dossier {} a été mise à jour avec succès.'.format(fdv.id_doss),
 					'redirect' : reverse('cons_doss', args = [fdv.id_doss.pk])
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
 			# Définition de l'onglet actif après rechargement de la page
-			rq.session['tab_doss'] = '#ong_fdv'
+			request.session['tab_doss'] = '#ong_fdv'
 
 			# Remplissage du fichier log
 			rempl_fich_log([
-				rq.user.pk,
-				rq.user,
+				request.user.pk,
+				request.user,
 				fdv.id_doss.pk,
 				fdv.id_doss,
 				'U',
