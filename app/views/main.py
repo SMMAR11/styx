@@ -73,7 +73,7 @@ def index(request) :
 					output = HttpResponse(
 						json.dumps({ 'success' : {
 							'message' : 'Bienvenue sur STYX !', 'redirect' : reverse('index')
-						}}), 
+						}}),
 						content_type = 'application/json'
 					)
 
@@ -129,7 +129,7 @@ def modif_util(request) :
 	from django.http import HttpResponse
 	from django.shortcuts import render
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je pointe vers l'objet TUtilisateur relatif à l'utilisateur connecté.
@@ -147,7 +147,7 @@ def modif_util(request) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./main/modif_util.html',
 			{ 'f_modif_util' : init_f(f_modif_util), 't_fm' : t_fm, 'title' : 'Modifier mon compte' }
 		)
@@ -168,7 +168,7 @@ def modif_util(request) :
 				json.dumps({ 'success' : {
 					'message' : 'L\'utilisateur {0} a été mis à jour avec succès.'.format(o_util.username),
 					'redirect' : reverse('cons_util')
-				}}), 
+				}}),
 				content_type = 'application/json'
 			)
 
@@ -193,7 +193,7 @@ def cons_util(request) :
 	from django.http import HttpResponse
 	from django.shortcuts import render
 	import json
-	
+
 	output = HttpResponse()
 
 	# Je pointe vers l'objet TUtilisateur.
@@ -214,7 +214,7 @@ def cons_util(request) :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./main/cons_util.html',
 			{
 				'qs_droit' : TDroit.objects.filter(id_util = o_util).order_by('id'),
@@ -238,7 +238,7 @@ def h_403(request) :
 
 	# J'affiche le template.
 	output = render_to_response(
-		'./handlers/template.html', 
+		'./handlers/template.html',
 		RequestContext(request, { 'message' : 'L\'accès à cette page est interdit.', 'title' : 'Erreur 403' })
 	)
 	output.status_code = 403
@@ -257,8 +257,8 @@ def h_404(request) :
 
 	# J'affiche le template.
 	output = render_to_response(
-		'./handlers/template.html', 
-		RequestContext(request, { 
+		'./handlers/template.html',
+		RequestContext(request, {
 			'message' : 'La page que vous recherchez n\'existe pas ou a été déplacée.', 'title' : 'Erreur 404'
 		})
 	)
@@ -278,8 +278,8 @@ def h_500(request) :
 
 	# J'affiche le template.
 	output = render_to_response(
-		'./handlers/template.html', 
-		RequestContext(request, { 
+		'./handlers/template.html',
+		RequestContext(request, {
 			'message' : 'Erreur interne du serveur.', 'title' : 'Erreur 500'
 		})
 	)
@@ -338,14 +338,14 @@ def assist(request) :
 	# Imports
 	from django.http import HttpResponse
 	from django.shortcuts import render
-	
+
 	output = HttpResponse()
 
 	if request.method == 'GET' :
 
 		# J'affiche le template.
 		output = render(
-			request, 
+			request,
 			'./main/assist.html',
 			{ 'title' : 'Assistance' }
 		)
@@ -368,5 +368,4 @@ def alert(_req) :
 
 		# Affichage du template
 		output = render(_req, './main/alertes.html', { 'title' : 'Alertes' })
-
 	return output

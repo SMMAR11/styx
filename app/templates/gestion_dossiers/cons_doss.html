@@ -129,7 +129,7 @@
 							<tr>
 								<td>{{ fdv.lib_fdv }}</td>
 								<td>{{ fdv.d_fdv }}</td>
-								<td>{{ fdv.comm_fdv }}</td>
+								<td>{{ fdv.comm_fdv|linebreaks }}</td>
 								<td><a href="{% url 'modif_fdv' fdv.pk %}" class="forbidden modify-icon pull-right" title="Mettre à jour l'événement"></a></td>
 								<td><span action="?action=supprimer-fdv&fdv={{ fdv.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_fdv');" title="Supprimer l'événement"></span></td>
 							</tr>

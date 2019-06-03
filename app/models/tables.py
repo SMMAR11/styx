@@ -686,7 +686,7 @@ class TDossier(models.Model) :
     num_ss_axe = models.CharField(blank = True, max_length = 255)
     id_progr = models.ForeignKey(TProgramme, on_delete = models.CASCADE, verbose_name = 'Programme')
     id_av = models.ForeignKey(
-        TAvancement, 
+        TAvancement,
         on_delete = models.CASCADE,
         verbose_name = '''
         État d'avancement <span class="field-complement">(un dossier est en cours dès que le maître d'ouvrage a pris la
@@ -783,17 +783,17 @@ class TDossier(models.Model) :
                 'value' : obt_mont(self.get_view_object().mont_tot_doss)
             },
             'id_av' : { 'label' : 'État d\'avancement', 'value' : self.id_av },
-            'dt_delib_moa_doss' : { 
+            'dt_delib_moa_doss' : {
                 'label' : 'Date de délibération au maître d\'ouvrage', 'value' : dt_fr(self.dt_delib_moa_doss)
             },
             'id_av_cp' : { 'label' : 'Avis du comité de programmation - CD GEMAPI', 'value' : self.id_av_cp },
-            'dt_av_cp_doss' : { 
+            'dt_av_cp_doss' : {
                 'label' : 'Date de l\'avis du comité de programmation', 'value' : dt_fr(self.dt_av_cp_doss)
             },
             'chem_pj_doss' : {
                 'label' : 'Consulter le fichier scanné du mémoire technique',
                 'value' : self.chem_pj_doss,
-                'pdf' : True 
+                'pdf' : True
             },
             'comm_doss' : { 'label' : 'Commentaire', 'value' : self.comm_doss },
             'num_oper_budg_doss' : { 'label' : 'Numéro d\'opération budgétaire', 'value' : self.num_oper_budg_doss }
@@ -1223,7 +1223,7 @@ class TPrestation(models.Model) :
         return VPrestation.objects.get(pk = self.pk)
 
     # Méthodes système
-    
+
     def __str__(self) :
 
         # Imports
@@ -1713,7 +1713,7 @@ class TDossierPgre(models.Model) :
         verbose_name = verbose_name_plural = 'T_DOSSIER_PGRE'
 
     # Méthodes publiques
-    
+
     @property
     def mont_doss_pgre_ppt(self):
         if self.ss_action_pgre.exists():
@@ -1894,13 +1894,26 @@ class TFicheVie(models.Model) :
 
     '''Ensemble des éléments composant la fiche de vie d'un dossier'''
 
+    from app.validators import val_fich_pdf
+
+    def set_chem(_i, _fn):
+        # Imports
+        from app.functions import gen_cdc
+        new_fn = '{0}.{1}'.format(gen_cdc(), _fn.split('.')[-1])
+        return 'dossiers/fdv/{0}'.format(new_fn)
+
     # Colonnes
     id_fdv = models.AutoField(primary_key = True)
     d_fdv = models.DateField(verbose_name = 'Date')
     lib_fdv = models.CharField(max_length = 255, verbose_name = 'Événement')
     comm_fdv = models.TextField(blank = True, verbose_name = 'Commentaire')
     id_doss = models.ForeignKey(TDossier, db_column = 'id_doss', on_delete = models.CASCADE)
-
+    chem_pj_fdv = models.FileField(
+        blank = True,
+        upload_to = set_chem,
+        validators = [val_fich_pdf],
+        verbose_name = 'Insérer la pièce jointe. '
+    )
     class Meta :
         db_table = 't_fiche_vie'
         ordering = ['-d_fdv']

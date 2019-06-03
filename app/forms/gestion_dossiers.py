@@ -1944,12 +1944,14 @@ class GererFicheVie(forms.ModelForm) :
 			<div class="col-sm-6">{}</div>
 		</div>
 		{}
+		{}
 		<button class="center-block green-btn my-btn" type="submit">Valider</button>
 		'''.format(
 			form['za_num_doss'],
 			form['lib_fdv'],
 			form['d_fdv'],
-			form['comm_fdv']
+			form['comm_fdv'],
+			form['chem_pj_fdv']
 		)
 
 		return '''
