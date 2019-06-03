@@ -1920,7 +1920,7 @@ class GererFicheVie(forms.ModelForm) :
 		# Imports
 		from app.models import TFicheVie
 
-		fields = ['comm_fdv', 'd_fdv', 'lib_fdv']
+		fields = ['comm_fdv', 'd_fdv', 'lib_fdv', 'chem_pj_fdv']
 		model = TFicheVie
 		widgets = { 'd_fdv' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }) }
 
