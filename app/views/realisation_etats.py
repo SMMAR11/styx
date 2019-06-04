@@ -3,6 +3,15 @@
 
 # Imports
 from app.decorators import *
+from app.forms.realisation_etats import FiltrerDossiers
+from app.forms.realisation_etats import FiltrerPrestations
+from app.functions import alim_ld
+from app.functions import datatable_reset
+from app.functions import get_thumbnails_menu
+from django.http import HttpResponse
+from django.shortcuts import render
+from bs4 import BeautifulSoup
+import json
 
 '''
 Cette vue permet d'afficher le menu principal du module de réalisation d'états.
@@ -10,12 +19,6 @@ request : Objet requête
 '''
 @verif_acc
 def index(request) :
-
-	# Imports
-	from app.functions import get_thumbnails_menu
-	from django.http import HttpResponse
-	from django.shortcuts import render
-
 	output = HttpResponse()
 
 	if request.method == 'GET' :
@@ -29,30 +32,21 @@ def index(request) :
 
 '''
 Affichage du formulaire de réalisation d'un état "dossier" ou traitement d'une requête quelconque
-_req : Objet "requête"
+request : Objet "requête"
 _gby : Regroupement ou sélection de dossiers ?
 '''
 @verif_acc
-def filtr_doss(_req, _gby) :
-
-	# Imports
-	from app.forms.realisation_etats import FiltrerDossiers
-	from app.functions import alim_ld
-	from app.functions import datatable_reset
-	from bs4 import BeautifulSoup
-	from django.http import HttpResponse
-	from django.shortcuts import render
-	import json
+def filtr_doss(request, _gby) :
 
 	output = None
 
 	# Initialisation du préfixe de chaque formulaire
 	pref_filtr_doss = 'FiltrerDossiers'
 
-	if _req.method == 'GET' :
+	if request.method == 'GET' :
 
 		# Initialisation de la variable "historique"
-		_req.session['filtr_doss'] = []
+		request.session['filtr_doss'] = []
 
 		# Initialisation du formulaire et de ses attributs
 		form_filtr_doss = FiltrerDossiers(prefix = pref_filtr_doss, kw_gby = _gby)
@@ -64,35 +58,35 @@ def filtr_doss(_req, _gby) :
 			title = 'Réalisation d\'états en regroupant des dossiers'
 
 		# Affichage du template
-		output = render(_req, './realisation_etats/filtr_doss.html', {
-			'dtab_filtr_doss' : form_filtr_doss.get_datatable(_req),
-			'form_filtr_doss' : form_filtr_doss.get_form(_req),
+		output = render	(request, './realisation_etats/filtr_doss.html', {
+			'dtab_filtr_doss' : form_filtr_doss.get_datatable(request),
+			'form_filtr_doss' : form_filtr_doss.get_form(request),
 			'title' : title
 		})
 
 	else :
-		if 'action' in _req.GET and _req.GET['action'] == 'alimenter-listes' :
+		if 'action' in request.GET and request.GET['action'] == 'alimenter-listes' :
 
 			# Gestion d'affichage des listes déroulantes des axes, des sous-axes et des actions
-			output = HttpResponse(json.dumps(alim_ld(_req)), content_type = 'application/json')
+			output = HttpResponse(json.dumps(alim_ld(request)), content_type = 'application/json')
 
 		else :
 
 			# Soumission du formulaire
 			form_filtr_doss = FiltrerDossiers(
-				_req.POST,
+				request.POST,
 				prefix = pref_filtr_doss,
 				kw_gby = _gby,
-				kw_progr = _req.POST.get('FiltrerDossiers-id_progr'),
-				kw_axe = _req.POST.get('FiltrerDossiers-zl_axe'),
-				kw_ss_axe = _req.POST.get('FiltrerDossiers-zl_ss_axe')
+				kw_progr = request.POST.get('FiltrerDossiers-id_progr'),
+				kw_axe = request.POST.get('FiltrerDossiers-zl_axe'),
+				kw_ss_axe = request.POST.get('FiltrerDossiers-zl_ss_axe')
 			)
 
 			# Rafraîchissement de la datatable ou affichage des erreurs
 			if form_filtr_doss.is_valid() :
 
 				# Préparation des paramètres de la fonction datatable_reset
-				dtab = form_filtr_doss.get_datatable(_req)
+				dtab = form_filtr_doss.get_datatable(request)
 				bs = BeautifulSoup(dtab)
 				if _gby == True :
 					output = HttpResponse(json.dumps({ 'success' : {
@@ -103,9 +97,11 @@ def filtr_doss(_req, _gby) :
 						'elements' : [['#za_tfoot_select_doss', str(bs.find('tfoot', id = 'za_tfoot_select_doss'))]]
 					})
 			else :
+
 				output = HttpResponse(json.dumps({
 					'{0}-{1}'.format(pref_filtr_doss, cle) : val for cle, val in form_filtr_doss.errors.items()
 				}), content_type = 'application/json')
+
 
 	return output
 
@@ -116,15 +112,6 @@ _gby : Regroupement ou sélection de prestations ?
 '''
 @verif_acc
 def filtr_prest(_req, _gby) :
-
-	# Imports
-	from app.forms.realisation_etats import FiltrerPrestations
-	from app.functions import alim_ld
-	from app.functions import datatable_reset
-	from bs4 import BeautifulSoup
-	from django.http import HttpResponse
-	from django.shortcuts import render
-	import json
 
 	output = None
 

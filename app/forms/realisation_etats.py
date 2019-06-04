@@ -1,18 +1,24 @@
 #!/usr/bin/env python
 #-*- coding: utf-8
 
-# Imports
+from app.classes.FFEuroField import Class as FFEuroField
 from app.constants import *
+from app.functions import init_f
 from app.functions import init_mess_err
+from app.models import TAction
+from app.models import TAvancement
+from app.models import TAvisCp
+from app.models import TAxe
+from app.models import TFinanceur
+from app.models import TPrestataire
+from app.models import TDossier
+from app.models import TSousAxe
+from app.models import TMoa
+from django.template.context_processors import csrf
 from django import forms
 
-class FiltrerDossiers(forms.ModelForm) :
 
-	# Imports
-	from app.classes.FFEuroField import Class as FFEuroField
-	from app.models import TAvisCp
-	from app.models import TFinanceur
-	from app.models import TPrestataire
+class FiltrerDossiers(forms.ModelForm) :
 
 	# Champs
 	cbsm_org_moa = forms.MultipleChoiceField(
@@ -107,28 +113,23 @@ class FiltrerDossiers(forms.ModelForm) :
 		label = 'Regrouper les dossiers par'
 	)
 
+	id_av = forms.ModelMultipleChoiceField(
+		label="État d'avancement",
+		queryset=TAvancement.objects.all(),
+		widget=forms.CheckboxSelectMultiple(attrs={'style':'vertical-align'})
+	)
+
 	class Meta :
-
-		# Import
-		from app.models import TDossier
-
+		model = TDossier
 		fields = [
-			'id_av',
 			'id_nat_doss',
 			'id_progr',
 			'id_sage',
 			'id_techn',
 			'id_type_doss',
 		]
-		model = TDossier
 
-	def __init__(self, *args, **kwargs) :
-
-		# Imports
-		from app.models import TAction
-		from app.models import TAxe
-		from app.models import TMoa
-		from app.models import TSousAxe
+	def __init__(self, *args, **kwargs):
 
 		# Initialisation des arguments
 		self.kw_gby = kwargs.pop('kw_gby')
@@ -137,7 +138,6 @@ class FiltrerDossiers(forms.ModelForm) :
 		kw_ss_axe = kwargs.pop('kw_ss_axe', None)
 
 		super(FiltrerDossiers, self).__init__(*args, **kwargs)
-
 		# Passage des champs requis à l'état non-requis
 		unrequired = ['id_av', 'id_nat_doss', 'id_progr', 'id_sage', 'id_techn', 'id_type_doss']
 		if self.kw_gby == False : unrequired.append('zl_gby')
@@ -149,6 +149,11 @@ class FiltrerDossiers(forms.ModelForm) :
 		self.fields['cbsm_org_moa'].choices = [[m.pk, '|'.join([str(m), '__zcc__'])] for m in TMoa.objects.filter(
 			peu_doss = True, en_act_doss = True
 		)]
+
+		# self.fields['id_av'].choices = [
+		# 	[m.pk, '|'.join([str(m), '__zcc__'])] for m in TAvancement.objects.all(
+		# )]
+
 		if kw_progr :
 			self.fields['zl_axe'].choices = [(a.pk, a) for a in TAxe.objects.filter(id_progr = kw_progr)]
 			if kw_axe :
@@ -157,7 +162,6 @@ class FiltrerDossiers(forms.ModelForm) :
 					self.fields['zl_act'].choices = [(a.pk, a) for a in TAction.objects.filter(id_ss_axe = kw_ss_axe)]
 
 	def clean(self) :
-
 		# Je récupère certaines données du formulaire pré-valide.
 		cleaned_data = super(FiltrerDossiers, self).clean()
 		v_dt_deb_delib_moa_doss = cleaned_data.get('zd_dt_deb_delib_moa_doss')
@@ -178,10 +182,6 @@ class FiltrerDossiers(forms.ModelForm) :
 			self.add_error('zd_dt_deb_av_cp_doss', ERROR_MESSAGES['required'])
 
 	def get_form(self, _req) :
-
-		# Imports
-		from app.functions import init_f
-		from django.template.context_processors import csrf
 
 		form = init_f(self)
 
@@ -351,6 +351,8 @@ class FiltrerDossiers(forms.ModelForm) :
 			for m in val_org_moa :
 				ids += [rm.id_org_moa_anc.pk for rm in TRegroupementsMoa.objects.filter(id_org_moa_fil = m)]
 			ands['id_org_moa__in'] = ids
+		if val_av :
+			ands['id_av__in'] = val_av
 		if val_progr : ands['id_progr'] = val_progr
 		if val_axe : ands['num_axe'] = val_axe.split('_')[-1]
 		if val_ss_axe : ands['num_ss_axe'] = val_ss_axe.split('_')[-1]
@@ -358,8 +360,6 @@ class FiltrerDossiers(forms.ModelForm) :
 		if val_nat_doss : ands['id_nat_doss'] = val_nat_doss
 		if val_type_doss : ands['id_type_doss'] = val_type_doss
 		if val_techn : ands['id_techn'] = val_techn
-		if val_av :
-			ands['id_av__in'] = [val_av] + [a.pk for a in TAvancement.objects.filter(id_av_pere = val_av)]
 		if val_dt_deb_delib_moa_doss : ands['dt_delib_moa_doss__gte'] = val_dt_deb_delib_moa_doss
 		if val_dt_fin_delib_moa_doss : ands['dt_delib_moa_doss__lte'] = val_dt_fin_delib_moa_doss
 		if val_av_cp : ands['id_av_cp'] = val_av_cp
@@ -842,8 +842,8 @@ class FiltrerPrestations(forms.Form) :
 		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'Du' })
 	)
 	zd_dt_fin_notif_prest = forms.DateField(
-		label = '', 
-		required = False, 
+		label = '',
+		required = False,
 		widget = forms.TextInput(attrs = { 'input-group-addon' : 'date', 'placeholder' : 'au' })
 	)
 	zl_nat_prest = forms.ModelChoiceField(
@@ -991,7 +991,7 @@ class FiltrerPrestations(forms.Form) :
 			val_axe = self.fields['zl_axe'].initial
 			val_ss_axe = self.fields['zl_ss_axe'].initial
 			val_act = self.fields['zl_act'].initial
-			val_dt_deb_notif_prest = self.fields['zd_dt_deb_notif_prest'].initial 
+			val_dt_deb_notif_prest = self.fields['zd_dt_deb_notif_prest'].initial
 			val_dt_fin_notif_prest = self.fields['zd_dt_fin_notif_prest'].initial
 			val_nat_prest = self.fields['zl_nat_prest'].initial
 			val_mont_prest_min = self.fields['zs_mont_prest_min'].initial
