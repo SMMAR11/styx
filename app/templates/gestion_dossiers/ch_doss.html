@@ -39,6 +39,7 @@
 						<th>Date de délibération au maître d'ouvrage</th>
 						<th>Taux d'engagement</th>
 						<th>Taux de réalisation</th>
+						<th>Montant dossier</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -51,6 +52,7 @@
 						<td>{{ d.dt_delib_moa_doss }}</td>
 						<td>{{ d.tx_engag_doss }}</td>
 						<td>{{ d.tx_real_doss }}</td>
+						<td>{{ d.montant_dossier }}</td>
 						<td>
 							<a href="{% url 'cons_doss' d.pk %}" class="consult-icon pull-right" title="Consulter le dossier"></a>
 						</td>

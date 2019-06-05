@@ -569,7 +569,8 @@ def ch_doss(request) :
 			'n_org' : d.id_org_moa,
 			'dt_delib_moa_doss' : dt_fr(d.dt_delib_moa_doss) or '-',
 			'tx_engag_doss' : d.get_view_object().tx_engag_doss,
-			'tx_real_doss' : d.get_view_object().tx_real_doss
+			'tx_real_doss' : d.get_view_object().tx_real_doss,
+			'montant_dossier' : d.mont_doss,
 		} for d in qs_doss]
 
 		# J'affiche le template.
@@ -603,6 +604,7 @@ def ch_doss(request) :
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					str(d.get_view_object().tx_engag_doss),
 					str(d.get_view_object().tx_real_doss),
+					str(d.mont_doss),
 					'<a href="{0}" class="consult-icon pull-right" title="Consulter le dossier"></a>'.format(
 						reverse('cons_doss', args = [d.pk])
 					)
