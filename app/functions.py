@@ -184,16 +184,16 @@ def filtr_doss(request, _d_excl = None) :
 		from django.db.models import Q
 		selected = Q()
 		# Retrait ou non des dossiers soldés
-		if v_doss_sold == 'solde':
+		if v_doss_sold == 'non_solde':
 			selected.add(Q(id_av__int_av__icontains='Soldé'), Q.OR)
 		# Retrait ou non des dossiers terminé
-		if v_doss_term == 'termine':
+		if v_doss_term == 'non_termine':
 			selected.add(Q(id_av__int_av__icontains='Terminé'), Q.OR)
 		# Retrait ou non des dossiers abandonnés
-		if v_doss_aband == 'abandonne':
+		if v_doss_aband == 'non_abandonne':
 			selected.add(Q(id_av__int_av__icontains='Abandonné'), Q.OR)
 
-		qs_doss = qs_doss.exclude(pk=_d_excl).filter(selected)
+		qs_doss = qs_doss.exclude(pk=_d_excl).exclude(selected)
 
 
 	else :
