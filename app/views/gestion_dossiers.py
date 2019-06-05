@@ -559,9 +559,12 @@ def ch_doss(request) :
 			qs_doss = obt_doss_regr(v_org_moa)
 		else :
 			qs_doss = TDossier.objects.all()
-		qs_doss = TDossier.objects.custom_filter(
-			remove_completed = True, pk__in = qs_doss.values_list('pk', flat = True)
-		) # Retrait des dossiers soldés
+
+		# 6880
+		# qs_doss = TDossier.objects.custom_filter(
+		# 	remove_completed = True, pk__in = qs_doss.values_list('pk', flat = True)
+		# ) # Retrait des dossiers soldés
+
 		t_doss = [{
 			'pk' : d.pk,
 			'num_doss' : d,
