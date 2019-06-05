@@ -451,21 +451,21 @@ class ChoisirDossier(forms.ModelForm) :
 	)
 	rb_doss_sold = forms.ChoiceField(
 		choices = [('solde', 'Oui'), ('non_solde', 'Non')],
-		initial = 'solde',
+		initial = 'non_solde',
 		label = '- soldés ?',
 		required = False,
 		widget = forms.RadioSelect()
 	)
 	rb_doss_term = forms.ChoiceField(
 		choices = [('termine', 'Oui'), ('non_termine', 'Non')],
-		initial = 'termine',
+		initial = 'non_termine',
 		label = '- terminés ?',
 		required = False,
 		widget = forms.RadioSelect()
 	)
 	rb_doss_aband = forms.ChoiceField(
 		choices = [('abandonne', 'Oui'), ('non_abandonne', 'Non')],
-		initial = 'abandonne',
+		initial = 'non_abandonne',
 		label = '- abandonnés ?',
 		required = False,
 		widget = forms.RadioSelect()
