@@ -48,6 +48,10 @@ $(document).ready(function () {
 		// IF CSV, don't do event.preventDefault() or return false
 		// We actually need this to be a typical hyperlink
 	});
+
+	$("#id_AvancementProgramme-id_progr").trigger('change');
+	$("#id_AvancementProgramme-zl_axe").trigger('change');
+
 });
 
 </script>
@@ -62,10 +66,10 @@ $(document).ready(function () {
 				<div class="field-wrapper" id="fw_AvancementProgramme-id_progr">
 					<span class="field-label">Programme</span>
 					<span class="field-control">
-						<select id="id_AvancementProgramme-id_progr" name="AvancementProgramme-id_progr" onchange="filterAxe()">
-							<option value="all" selected="selected">---------</option>
+						<select id="id_AvancementProgramme-id_progr" name="AvancementProgramme-id_progr" onchange="ShowRelated('id_AvancementProgramme-id_progr', 'fw_AvancementProgramme-zl_axe', 'id_AvancementProgramme-zl_axe', 'id_progr')">
+								<option value="all" {% if not id_progr %}selected="selected"{% endif %}>---------</option>
 							{% for programme in programmes %}
-								<option value="{{ programme.id_progr }}">{{ programme.int_progr }}</option>
+								<option value="{{ programme.id_progr }}" {% if id_progr|add:0 == programme.id_progr %}selected="selected"{% endif %}>{{ programme.int_progr }}</option>
 							{% endfor %}
 						</select>
 					</span>
@@ -95,13 +99,28 @@ $(document).ready(function () {
 						</div>
 						<span class="field-error"></span>
 					</div>
-					<div class="field-wrapper hide" id="fw_AvancementProgramme-zl_axe" style="display: block;">
+					<div class="field-wrapper" id="fw_AvancementProgramme-zl_axe" style="display: block;">
 						<span class="field-label">Axe</span>
 						<span class="field-control">
-							<select id="id_AvancementProgramme-zl_axe" name="AvancementProgramme-zl_axe">
-								<option value="all" id_progr="all" selected="selected">---------</option>
+							<select id="id_AvancementProgramme-zl_axe" name="AvancementProgramme-zl_axe"
+								onchange="ShowRelated('id_AvancementProgramme-zl_axe', 'fw_AvancementProgramme-zl_ss_axe', 'id_AvancementProgramme-zl_ss_axe', 'id_axe')">
+								<option value="all" id_progr="all"{% if not sel_axe %}selected="selected"{% endif %}>---------</option>
 								{% for axe in axes %}
-								<option value="{{ axe.num_axe }}" id_progr="{{ axe.id_progr }}" intit="{{ axe.int_axe }}">{{ axe.num_axe }} - {{ axe.int_axe }}</option>
+									<option value="{{ axe.id_axe }}" id_progr="{{ axe.id_progr }}" intit="{{ axe.int_axe }}" {% if sel_axe.id_axe == axe.id_axe %}selected="selected"{% endif %}>{{ axe.num_axe }} - {{ axe.int_axe }}</option>
+								{% endfor %}
+								</option>
+							</select>
+						</span>
+						<span class="field-error"></span>
+					</div><br>
+					<div {% if sel_ss_axe %}class="field-wrapper"{% else %}class="field-wrapper hide"{% endif %}
+						id="fw_AvancementProgramme-zl_ss_axe" style="display: block;">
+						<span class="field-label">Sous-Axe</span>
+						<span class="field-control">
+							<select id="id_AvancementProgramme-zl_ss_axe" name="AvancementProgramme-zl_ss_axe">
+								<option value="all" id_axe="all" {% if not sel_ss_axe %}selected="selected"{% endif %}>---------</option>
+								{% for ssaxe in sous_axes %}
+									<option value="{{ ssaxe.id_ss_axe }}" id_axe="{{ ssaxe.id_axe }}" intit="{{ ssaxe.int_ss_axe }}" {% if sel_ss_axe.id_ss_axe == ssaxe.id_ss_axe %}selected="selected"{% endif %}>{{ ssaxe.num_ss_axe }} - {{ ssaxe.int_ss_axe }}</option>
 								{% endfor %}
 								</option>
 							</select>

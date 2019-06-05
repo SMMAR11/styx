@@ -583,30 +583,25 @@ function zfill(_v, _s) {
 }
 
 /**
- * Cette fonction permet d'afficher uniquement les axes correspondant au programme selectionné.
+ * Cette fonction permet d'afficher uniquement les sous-axes correspondant à l'axe selectionné.
  *
  */
-function filterAxe() {
+function ShowRelated(id_parent, wrapper_child, id_child, attrs_parent) {
 
-	var programme = document.getElementById("id_AvancementProgramme-id_progr").value,
-	wrapperAxe = document.getElementById("fw_AvancementProgramme-zl_axe");
-
-	if (programme == "all") {
-
-		wrapperAxe.setAttribute("class", "hide");
-
+	var val_parent = document.getElementById(id_parent).value,
+	wrapper = document.getElementById(wrapper_child);
+	if (val_parent == "all") {
+		wrapper.setAttribute("class", "hide");
 	} else {
-
-		wrapperAxe.setAttribute("class", "show");;
-		var options = document.getElementById("id_AvancementProgramme-zl_axe").children;
+		wrapper.setAttribute("class", "show");
+		var options = document.getElementById(id_child).children;
 
 		for (var i = 0; i < options.length; i++){
-
-			if (options[i].getAttribute("id_progr") == "all" ||options[i].getAttribute("id_progr") == programme) {
+      var val_related = options[i].getAttribute(attrs_parent);
+			if (val_related == "all" || val_related == val_parent) {
 				options[i].style.display = "block";
 			} else {
 				options[i].style.display = "none";
-
 			}
 		}
 	}

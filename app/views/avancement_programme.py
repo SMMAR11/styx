@@ -1,5 +1,6 @@
 # from app.functions import gen_cdc
 from app.models import TAxe
+from app.models import TSousAxe
 from app.models import TMoa
 from app.models import TProgramme
 from collections import OrderedDict
@@ -24,9 +25,6 @@ class AvancementProgrammeView(View):
     """
 
     template_name = 'realisation_etats/avancement_programme.html'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def list_fetch_all(self, cursor):
         columns = [col[0] for col in cursor.description]
@@ -71,8 +69,12 @@ class AvancementProgrammeView(View):
         context['org_moas'] = moa_choices
 
         axes = set(row.get('numero_axe') for row in dataset)
-        axe_choices = TAxe.objects.filter(num_axe__in=axes).values('num_axe', 'int_axe', 'id_progr')
+        axe_choices = TAxe.objects.filter(num_axe__in=axes).values('id_axe', 'num_axe', 'int_axe', 'id_progr')
         context['axes'] = axe_choices
+
+        sous_axes = set(row.get('numero_sous_axe') for row in dataset)
+        sous_axe_choices = TSousAxe.objects.filter(num_ss_axe__in=sous_axes).values('id_ss_axe', 'num_ss_axe', 'int_ss_axe', 'id_axe')
+        context['sous_axes'] = sous_axe_choices
         return context
 
     def get(self, request, *args, **kwargs):
@@ -90,6 +92,9 @@ class AvancementProgrammeView(View):
         context['v_progs_detailles_complet_keys'] = dataset[0].keys()
         context['v_progs_detailles_complet'] = dataset
 
+        for key in ["id_progr", "sel_axe", "sel_ss_axe", "org_moa"]:
+            context[key] = None
+
         return render(request, self.template_name, context=context)
 
     def post(self, request, *args, **kwargs):
@@ -101,22 +106,40 @@ class AvancementProgrammeView(View):
         context['v_progs_detailles_complet_keys'] = dataset[0].keys()
 
         id_progr = request.POST.get('AvancementProgramme-id_progr')
-        num_axe = request.POST.get('AvancementProgramme-zl_axe')
+        id_axe = request.POST.get('AvancementProgramme-zl_axe')
+        id_ss_axe = request.POST.get('AvancementProgramme-zl_ss_axe')
         org_moa = request.POST.getlist('AvancementProgramme-cbsm_org_moa')
+
+        axe = None
+        if id_axe and id_axe != 'all':
+            axe = TAxe.objects.get(id_axe=id_axe)
+
+        ss_axe = None
+        if id_ss_axe and id_ss_axe != 'all':
+            ss_axe = TSousAxe.objects.get(id_ss_axe=id_ss_axe)
 
         if id_progr and id_progr != "all":
             dataset_prog = [row for row in dataset if row.get('id_progr_id') == int(id_progr)]
             context['v_progs_detailles_complet'] = dataset_prog
 
-            if num_axe and num_axe != "all":
-                dataset_axe = [row for row in dataset_prog if row.get('numero_axe') == int(num_axe)]
+            if id_axe and id_axe != "all":
+                dataset_axe = [row for row in dataset_prog if row.get('numero_axe') == int(axe.num_axe)]
                 context['v_progs_detailles_complet'] = dataset_axe
+
+                if id_ss_axe and id_ss_axe != "all":
+                    dataset_ss_axe = [row for row in dataset_axe if row.get('numero_sous_axe') == int(ss_axe.num_ss_axe)]
+                    context['v_progs_detailles_complet'] = dataset_ss_axe
 
         if org_moa:
             ds = context['v_progs_detailles_complet']
             dataset_moa = [row for row in ds if row.get('id_org_moa_id') in [int(id) for id in org_moa]]
             context['v_progs_detailles_complet'] = dataset_moa
 
-        # request.session['v_progs_detailles_complet'] = context['v_progs_detailles_complet']
+        # moche mais permet de recuperer les valeurs apres filtre
+        context["id_progr"] = id_progr
+        context["sel_axe"] = axe
+        context["sel_ss_axe"] = ss_axe
+
+        context["org_moa"] = org_moa
 
         return render(request, self.template_name, context=context)
