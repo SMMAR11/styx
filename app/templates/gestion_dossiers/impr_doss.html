@@ -10,7 +10,8 @@
 	</head>
 	<body>
 		<div class="pdf-title-1">Fiche du dossier {{ d }}</div>
-		<div class="pdf-title-2">Caractéristiques</div>
+		{% if features.caracteristiques %}
+		<div class="pdf-title-2">Caractéristiques {{ features.caracteristiques }}</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
 				{{ t_attrs_doss.num_doss }}
@@ -18,6 +19,8 @@
 			</tbody>
 		</table>
 		<div class="br"></div>
+		{% endif %}
+		{% if features.porteur %}
 		<div class="pdf-title-3">Porteurs du projet</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -26,6 +29,8 @@
 			</tbody>
 		</table>
 		<div class="br"></div>
+		{% endif %}
+		{% if features.definition %}
 		<div class="pdf-title-3">Définition du projet</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -67,12 +72,14 @@
 			<span class="pdf-attribute-value">Aucun</span>
 			{% endif %}
 		</div>
+		{% endif %}
 		<table class="pdf-table vertical-table">
 			<tbody>
 				{{ t_attrs_doss.id_sage }}
 			</tbody>
 		</table>
 		<div class="br"></div>
+		{% if features.prog %}
 		<div class="pdf-title-3">Programmation</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -87,6 +94,8 @@
 			</tbody>
 		</table>
 		<div class="br"></div>
+		{% endif %}
+		{% if features.autre %}
 		<div class="pdf-title-3">Autres</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -96,6 +105,8 @@
 			</tbody>
 		</table>
 		<div class="br"></div>
+		{% endif %}
+		{% if features.av_doss %}
 		<div class="pdf-title-2">Avancement du dossier</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -114,6 +125,8 @@
 			</tbody>
 		</table>
 		<div class="br"></div>
+		{% endif %}
+		{% if features.fiche_vie %}
 		<div class="pdf-title-2">Fiche de vie</div>
 		<table class="pdf-table">
 			<thead>
@@ -134,6 +147,8 @@
 			</tbody>
 		</table>
 		<div class="br"></div>
+		{% endif %}
+		{% if features.plan_fnc %}
 		<div class="pdf-title-2">Plan de financement</div>
 		<table class="pdf-table">
 			<thead>
@@ -173,6 +188,8 @@
 		<div class="pdf-table-remark">Attention, le maître d'ouvrage doit assumer en plus {{ mont_suppl_doss }} € {{ ht_ou_ttc }}.</div>
 		{% endif %}
 		<div class="br"></div>
+		{% endif %}
+		{% if features.prestation %}
 		<div class="pdf-title-2">Prestations</div>
 		{% if t_prest_length > 0 %}
 		<table class="pdf-table">
@@ -211,6 +228,8 @@
 		<div class="pdf-table-remark">Le taux d'engagement pour ce dossier est de {{ d.get_view_object.tx_engag_doss }} %.</div>
 		<div class="br"></div>
 		{% endif %}
+		{% endif %}
+		{% if features.facture %}
 		<div class="pdf-title-2">Factures</div>
 		{% if t_fact_length > 0 %}
 		<table class="pdf-table">
@@ -251,6 +270,8 @@
 		<div class="pdf-table-remark">Le taux de réalisation pour ce dossier est de {{ d.get_view_object.tx_real_doss }} %.</div>
 		<div class="br"></div>
 		{% endif %}
+		{% endif %}
+		{%if features.versement %}
 		<div class="pdf-title-2">Demandes de versements</div>
 		{% if t_ddv_length > 0 %}
 		<table class="pdf-table">
@@ -283,6 +304,7 @@
 				</tr>
 			</tfoot>
 		</table>
+		{% endif %}
 		{% endif %}
 		<script type="text/javascript">
 			window.onload = function() {

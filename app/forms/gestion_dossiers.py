@@ -1985,3 +1985,17 @@ class GererFicheVie(forms.ModelForm) :
 		fdv.id_doss = self.k_doss # Définition du dossier
 		if commit : fdv.save()
 		return fdv
+
+
+class PrintDoss(forms.Form):
+	caracteristiques = forms.BooleanField(label='Caractéristiques', initial=True, required=False)
+	porteur = forms.BooleanField(label='Porteur', initial=True, required=False)
+	definition = forms.BooleanField(label='Definition', initial=True, required=False)
+	prog = forms.BooleanField(label='Programmation', initial=True, required=False)
+	autre = forms.BooleanField(label='Autre', initial=True, required=False)
+	av_doss = forms.BooleanField(label='Avancement du dossier', initial=True, required=False)
+	fiche_vie = forms.BooleanField(label='Fiche de vie', initial=True, required=False)
+	plan_fnc = forms.BooleanField(label='Plan de financement', initial=True, required=False)
+	prestation = forms.BooleanField(label='Prestations', initial=True, required=False)
+	facture = forms.BooleanField(label='Facture', initial=True, required=False)
+	versement = forms.BooleanField(label='Demande de versement', initial=True, required=False)

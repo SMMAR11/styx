@@ -564,7 +564,7 @@ def ch_doss(request) :
 		# qs_doss = TDossier.objects.custom_filter(
 		# 	remove_completed = True, pk__in = qs_doss.values_list('pk', flat = True)
 		# ) # Retrait des dossiers soldés
-		# 6880: dans le cas ou on change d'avis...: 
+		# 6880: dans le cas ou on change d'avis...:
 		# ces filtres sont a mis en regard des valeurs initiales de ChoisirDossier
 		from django.db.models import Q
 		selected = Q()
@@ -651,6 +651,7 @@ def cons_doss(request, _d) :
 	from app.forms.gestion_dossiers import GererPrestation
 	from app.forms.gestion_dossiers import GererPhoto
 	from app.forms.gestion_dossiers import RedistribuerPrestation
+	from app.forms.gestion_dossiers import PrintDoss
 	from app.functions import dt_fr
 	from app.functions import gen_f_ajout_aven
 	from app.functions import ger_droits
@@ -1185,6 +1186,8 @@ def cons_doss(request, _d) :
 				init_fm('suppr_ph', 'Supprimer une photo')
 			]
 
+		print_dossier_form = PrintDoss()
+
 		# J'affiche le template.
 		output = render(
 			request,
@@ -1217,7 +1220,8 @@ def cons_doss(request, _d) :
 				't_prest_length' : len(prss['tbl']),
 				't_prest_sum' : prss['mnts'],
 				't_types_geom_doss' : t_types_geom_doss,
-				'title' : 'Consulter un dossier'
+				'title' : 'Consulter un dossier',
+				'prt_form' : print_dossier_form
 			}
 		)
 
@@ -4311,6 +4315,7 @@ def impr_doss(request, _d) :
 	from app.functions import init_pg_cons
 	from app.functions import obt_mont
 	from app.functions import obt_pourc
+	from app.forms.gestion_dossiers import PrintDoss
 	from app.models import TDossier
 	from app.models import TFacture
 	from app.models import VDemandeVersement
@@ -4326,58 +4331,72 @@ def impr_doss(request, _d) :
 	# Je vérifie l'existence d'un objet TDossier.
 	o_doss = get_object_or_404(TDossier, pk = _d)
 
-	if request.method == 'GET' :
+	# Je vérifie le droit de lecture.
+	ger_droits(request.user, o_doss)
 
-		# Je vérifie le droit de lecture.
-		ger_droits(request.user, o_doss)
+	# Je pointe vers l'objet VSuiviDossier.
+	o_suivi_doss = VSuiviDossier.objects.get(pk = o_doss.pk)
 
-		# Je pointe vers l'objet VSuiviDossier.
-		o_suivi_doss = VSuiviDossier.objects.get(pk = o_doss.pk)
+	# Je définis le mode de taxe du dossier.
+	ht_ou_ttc = o_doss.est_ttc_doss and 'TTC' or 'HT'
 
-		# Je définis le mode de taxe du dossier.
-		ht_ou_ttc = 'HT'
-		if o_doss.est_ttc_doss == True :
-			ht_ou_ttc = 'TTC'
+	# Obtention des différents tableaux déployés dans chaque onglet
+	doss_fam = o_doss.get_doss_fam()
+	fdvs = o_doss.get_recap_fdvs()
+	fins = o_doss.get_recap_fins()
+	prss = o_doss.get_recap_prss()
+	facs = o_doss.get_recap_facs()
+	ddvs = o_doss.get_recap_ddvs()
+	form = PrintDoss()
+	context = {
+		'd' : o_doss,
+		'ht_ou_ttc' : ht_ou_ttc,
+		'mont_ddv_sum_str' : obt_mont(ddvs['mnt']),
+		'mont_doss' : obt_mont(o_doss.mont_doss),
+		'mont_fact_sum' : facs['mnt'],
+		'mont_ht_fact_sum' : facs['mnt_ht'],
+		'mont_ttc_fact_sum' : facs['mnt_ttc'],
+		'mont_fact_sum_str' : obt_mont(facs['mnt']),
+		'mont_tot_prest_doss' : obt_mont(o_suivi_doss.mont_tot_prest_doss),
+		'mont_rae' : obt_mont(o_suivi_doss.mont_rae),
+		'mont_suppl_doss' : obt_mont(o_doss.mont_suppl_doss),
+		'pourc_comm' : obt_pourc(o_suivi_doss.pourc_comm),
+		'pourc_paye' : obt_pourc(o_suivi_doss.pourc_paye),
+		't_attrs_doss' : init_pg_cons(o_doss.get_attrs(), True),
+		't_ddv' : ddvs['tbl'],
+		't_ddv_length' : len(ddvs['tbl']),
+		't_doss_fam' : doss_fam,
+		't_doss_fam_length' : len(doss_fam),
+		't_fact' : facs['tbl'],
+		't_fact_length' : len(facs['tbl']),
+		't_fdvs' : fdvs,
+		't_fin' : fins,
+		't_prest' : prss['tbl'],
+		't_prest_length' : len(prss['tbl']),
+		't_prest_sum' : prss['mnts'],
+		'features': {ff:True for ff in form.fields}
+	}
 
-		# Obtention des différents tableaux déployés dans chaque onglet
-		doss_fam = o_doss.get_doss_fam()
-		fdvs = o_doss.get_recap_fdvs()
-		fins = o_doss.get_recap_fins()
-		prss = o_doss.get_recap_prss()
-		facs = o_doss.get_recap_facs()
-		ddvs = o_doss.get_recap_ddvs()
+	# Dans le cas d'un simple GET on retourne l'ensemble des sections
+	if request.method == 'GET':
 
-		# J'affiche le template.
 		output = render(
 			request,
 			'./gestion_dossiers/impr_doss.html',
-			{
-				'd' : o_doss,
-				'ht_ou_ttc' : ht_ou_ttc,
-				'mont_ddv_sum_str' : obt_mont(ddvs['mnt']),
-				'mont_doss' : obt_mont(o_doss.mont_doss),
-				'mont_fact_sum' : facs['mnt'],
-				'mont_ht_fact_sum' : facs['mnt_ht'],
-				'mont_ttc_fact_sum' : facs['mnt_ttc'],
-				'mont_fact_sum_str' : obt_mont(facs['mnt']),
-				'mont_tot_prest_doss' : obt_mont(o_suivi_doss.mont_tot_prest_doss),
-				'mont_rae' : obt_mont(o_suivi_doss.mont_rae),
-				'mont_suppl_doss' : obt_mont(o_doss.mont_suppl_doss),
-				'pourc_comm' : obt_pourc(o_suivi_doss.pourc_comm),
-				'pourc_paye' : obt_pourc(o_suivi_doss.pourc_paye),
-				't_attrs_doss' : init_pg_cons(o_doss.get_attrs(), True),
-				't_ddv' : ddvs['tbl'],
-				't_ddv_length' : len(ddvs['tbl']),
-				't_doss_fam' : doss_fam,
-				't_doss_fam_length' : len(doss_fam),
-				't_fact' : facs['tbl'],
-				't_fact_length' : len(facs['tbl']),
-				't_fdvs' : fdvs,
-				't_fin' : fins,
-				't_prest' : prss['tbl'],
-				't_prest_length' : len(prss['tbl']),
-				't_prest_sum' : prss['mnts']
-			}
+			context=context
+		)
+
+	# Dans le cas d'un POST on va contextualiser le gabarit
+	if request.method == 'POST':
+		form = PrintDoss(request.POST)
+		if form.is_valid():
+			context.pop('features', None)
+			context['features'] = form.cleaned_data
+
+		output = render(
+			request,
+			'./gestion_dossiers/impr_doss.html',
+			context=context
 		)
 
 	return output
