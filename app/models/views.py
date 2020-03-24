@@ -284,6 +284,11 @@ class VSuiviPrestationsDossier(view.View) :
 	mont_tot_prest_doss = MFEuroField(verbose_name = 'Montant @ht_ttc@ total (avenants compris)')
 	nb_aven = models.IntegerField(verbose_name = 'Nombre d\'avenants')
 	nb_fact = models.IntegerField(verbose_name = 'Nombre de factures')
+	duree_w_os_sum = models.IntegerField(verbose_name = 'Durée travaillée (en nombre de jours travaillés)')
+	duree_w_rest_os_sum = models.IntegerField(
+		verbose_name = 'Durée restante à travailler (en nombre de jours travaillés)'
+	)
+	nbr_os = models.IntegerField(verbose_name = 'Nombre d\'OS')
 
 	# Requête
 	sql = '''
@@ -300,7 +305,10 @@ class VSuiviPrestationsDossier(view.View) :
 		))::NUMERIC(26, 2) AS mont_raf,
 		(P.mont_prest_doss + COALESCE(A.mont_aven_sum, 0))::NUMERIC(26, 2) AS mont_tot_prest_doss,
 		COALESCE(A.nb_aven, 0) AS nb_aven,
-		COALESCE(F.nb_fact, 0) AS nb_fact
+		COALESCE(F.nb_fact, 0) AS nb_fact,
+		COALESCE(OS.duree_w_os_sum, 0) AS duree_w_os_sum,
+		P.duree_prest_doss - COALESCE(OS.duree_w_os_sum, 0)AS duree_w_rest_os_sum,
+		COALESCE(OS.nbr_os, 0) AS nbr_os
 	FROM public.t_prestations_dossier AS P
 	INNER JOIN public.t_dossier AS D ON D.id_doss = P.id_doss_id
 	LEFT OUTER JOIN (
@@ -326,6 +334,17 @@ class VSuiviPrestationsDossier(view.View) :
 			F.id_doss_id,
 			F.id_prest_id
 	) AS F ON (F.id_doss_id = P.id_doss_id AND F.id_prest_id = P.id_prest_id)
+	LEFT OUTER JOIN (
+		SELECT
+			os.id_doss,
+			os.id_prest,
+			SUM(os.duree_w_os) AS duree_w_os_sum,
+			COUNT(*) AS nbr_os
+		FROM public.t_ordre_service AS os
+		GROUP BY
+			os.id_doss,
+			os.id_prest
+	) AS OS ON (OS.id_doss = P.id_doss_id AND OS.id_prest = P.id_prest_id)
 	'''
 
 	class Meta :

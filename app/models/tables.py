@@ -211,7 +211,7 @@ class TAxe(models.Model) :
 
     # Colonnes
     id_axe = models.CharField(max_length = 255, primary_key = True)
-    int_axe = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    int_axe = models.CharField(blank = True, max_length = 255, verbose_name = 'Intitulé')
     num_axe = models.CharField(max_length = 255, verbose_name = 'Numéro')
     id_progr = models.ForeignKey(TProgramme, on_delete = models.CASCADE, verbose_name = 'Programme')
 
@@ -240,7 +240,7 @@ class TSousAxe(models.Model) :
 
     # Colonnes
     id_ss_axe = models.CharField(max_length = 255, primary_key = True)
-    int_ss_axe = models.CharField(max_length = 255, verbose_name = 'Intitulé')
+    int_ss_axe = models.CharField(blank = True, max_length = 255, verbose_name = 'Intitulé')
     num_ss_axe = models.CharField(max_length = 255, verbose_name = 'Numéro')
     id_axe = models.ForeignKey(TAxe, on_delete = models.CASCADE, verbose_name = 'Axe')
 
@@ -270,7 +270,7 @@ class TAction(models.Model) :
 
     # Colonnes
     id_act = models.CharField(primary_key = True, max_length = 255)
-    int_act = models.CharField(blank = True, max_length = 255, null = True, verbose_name = 'Intitulé')
+    int_act = models.CharField(blank = True, max_length = 255, verbose_name = 'Intitulé')
     num_act = models.CharField(max_length = 255, verbose_name = 'Numéro')
     id_ss_axe = models.ForeignKey(TSousAxe, on_delete = models.CASCADE, verbose_name = 'Sous-axe')
 
@@ -889,6 +889,7 @@ class TDossier(models.Model) :
             # Empilement des factures
             facs.append({
                 'id_prest' : f.id_prest,
+                'id_nat_prest' : f.id_prest.id_nat_prest,
                 'num_fact' : f.num_fact,
                 'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact) or '-',
                 'mont_fact' : obt_mont(mont_fact),
@@ -941,6 +942,7 @@ class TDossier(models.Model) :
 
         # Imports
         from app.functions import obt_mont
+        from app.models.tables import TPrestationsDossier
         from app.models.views import VSuiviPrestationsDossier
 
         # Initialisation de variables
@@ -956,11 +958,16 @@ class TDossier(models.Model) :
             # Empilement des prestations
             prss.append({
                 'n_org' : p.id_prest.id_org_prest,
+                'int_prest' : p.id_prest.int_prest,
                 'mont_prest_doss' : obt_mont(p.mont_prest_doss),
+                'id_nat_prest' : p.id_prest.id_nat_prest,
                 'nb_aven' : p.nb_aven,
                 'mont_aven_sum' : obt_mont(p.mont_aven_sum),
                 'mont_fact_sum' :  obt_mont(mont_fact_sum),
                 'mont_raf' : obt_mont(p.mont_raf),
+                'duree_prest_doss' : TPrestationsDossier.objects.get(pk = p.pk).duree_prest_doss,
+                'duree_w_os_sum' : p.duree_w_os_sum,
+                'duree_w_rest_os_sum' : p.duree_w_rest_os_sum,
                 'pk' : p.pk
             })
 
@@ -1240,6 +1247,9 @@ class TPrestationsDossier(models.Model) :
 
     id_doss = models.ForeignKey(TDossier, on_delete = models.CASCADE)
     id_prest = models.ForeignKey(TPrestation, on_delete = models.CASCADE)
+    duree_prest_doss = models.PositiveIntegerField(
+        default = 0, verbose_name = 'Durée de la prestation (en nombre de jours ouvrés)'
+    )
     mont_prest_doss = MFEuroField(min_value = 0.01)
     seq_aven_prest_doss = models.PositiveIntegerField(default = 1)
 
@@ -1914,6 +1924,51 @@ class TFicheVie(models.Model) :
         # validators = [val_fich_pdf],
         verbose_name = 'Insérer la pièce jointe. '
     )
+
     class Meta :
         db_table = 't_fiche_vie'
         ordering = ['-d_fdv']
+
+class TTypeOrdreService(models.Model) :
+
+    '''Ensemble des types d'ordre de service'''
+
+    # Colonnes
+    id_type_os = models.AutoField(primary_key = True)
+    nom_type_os = models.CharField(max_length = 255, verbose_name = 'Nom')
+    ordre_type_os = models.PositiveIntegerField(default = 9999, verbose_name = 'Ordre (liste déroulante)')
+
+    class Meta :
+        db_table = 't_type_ordre_service'
+        ordering = ['ordre_type_os', 'nom_type_os']
+        verbose_name = verbose_name_plural = 'T_TYPE_ORDRE_SERVICE'
+
+    def __str__(self) : return self.nom_type_os
+
+class TOrdreService(models.Model) :
+
+    '''Ensemble des ordres de service composant une prestation d'un dossier'''
+
+    # Colonnes
+    id_os = models.AutoField(primary_key = True)
+    comm_os = models.TextField(blank = True, verbose_name = 'Commentaire')
+    d_emiss_os = models.DateField(verbose_name = 'Date d\'émission')
+    duree_w_os = models.PositiveIntegerField(
+        default = 0, verbose_name = 'Durée travaillée (en nombre de jours ouvrés)'
+    )
+    num_os = models.CharField(max_length = 255, verbose_name = 'Numéro de l\'ordre de service')
+    obj_os = models.CharField(max_length = 255, verbose_name = 'Objet')
+    id_doss = models.ForeignKey(TDossier, db_column = 'id_doss', on_delete = models.CASCADE)
+    id_prest = models.ForeignKey(
+        TPrestation, db_column = 'id_prest', on_delete = models.CASCADE, verbose_name = 'Prestation'
+    )
+    id_type_os = models.ForeignKey(
+        TTypeOrdreService,
+        db_column = 'id_type_os',
+        on_delete = models.CASCADE,
+        verbose_name = 'Type de l\'ordre de service'
+    )
+
+    class Meta :
+        db_table = 't_ordre_service'
+        ordering = ['d_emiss_os', 'id_type_os']

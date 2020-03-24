@@ -173,7 +173,7 @@ class GererDossier(forms.ModelForm) :
 				# Affichage de la liste déroulante
 				self.fields['zl_axe'].widget.attrs['class'] += ' show-field'
 
-				if i.num_axe is not None :
+				if i.num_axe :
 
 					# Obtention d'une instance TAxe
 					obj_axe = TAxe.objects.get(id_progr = i.id_progr, num_axe = i.num_axe)
@@ -193,7 +193,7 @@ class GererDossier(forms.ModelForm) :
 						# Affichage de la liste déroulante
 						self.fields['zl_ss_axe'].widget.attrs['class'] += ' show-field'
 
-						if i.num_ss_axe is not None :
+						if i.num_ss_axe :
 
 							# Obtention d'une instance TSousAxe
 							obj_ss_axe = TSousAxe.objects.get(id_axe = obj_axe, num_ss_axe = i.num_ss_axe)
@@ -214,9 +214,9 @@ class GererDossier(forms.ModelForm) :
 								self.fields['zl_act'].widget.attrs['class'] += ' show-field'
 
 								# Affichage de la valeur initiale
-								if i.num_ss_axe is not None :
-									self.fields['zl_act'].initial = \
-									TAction.objects.get(id_ss_axe = obj_ss_axe, num_act = i.num_act).pk
+								if i.num_act :
+									obj_act = TAction.objects.get(id_ss_axe = obj_ss_axe, num_act = i.num_act)
+									self.fields['zl_act'].initial = obj_act.pk
 
 			# Je vérifie si certains champs doivent bénéficier ou non de la lecture seule.
 			if i.id_av.int_av in [T_DONN_BDD_STR['AV_EP'], T_DONN_BDD_STR['AV_ABAND']] :
@@ -733,6 +733,9 @@ class GererPrestation(forms.ModelForm) :
 		min_value = 0.01,
         widget = forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
     )
+	zs_duree_prest = forms.IntegerField(
+		initial = 0, label = 'Durée de la prestation (en nombre de jours ouvrés)', min_value = 0
+	)
 
 	class Meta :
 
@@ -786,8 +789,10 @@ class GererPrestation(forms.ModelForm) :
 		lab_mont_prest = self.fields['zs_mont_prest'].label.replace('[ht_ou_ttc]', ht_ou_ttc)
 		self.fields['zs_mont_prest'].label = lab_mont_prest
 
-		# J'exclus le champ personnalisé lié au montant de la prestation lorsque je suis en phase de modification.
+		# J'exclus les champs personnalisés liés à la durée et au montant de la prestation lorsque je suis en phase
+		# de modification.
 		if i.pk :
+			del self.fields['zs_duree_prest']
 			del self.fields['zs_mont_prest']
 
 	def clean(self) :
@@ -899,7 +904,7 @@ class RedistribuerPrestation(forms.ModelForm) :
 		# Imports
 		from app.models import TPrestationsDossier
 
-		fields = ['mont_prest_doss']
+		fields = ['duree_prest_doss', 'mont_prest_doss']
 		model = TPrestationsDossier
 		widgets = {'mont_prest_doss' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })}
 
@@ -919,7 +924,8 @@ class RedistribuerPrestation(forms.ModelForm) :
 		super(RedistribuerPrestation, self).__init__(*args, **kwargs)
 		init_mess_err(self, False)
 
-		# Je supprime le label lié au montant du couple prestation/dossier.
+		# Je supprime le label lié à la durée et au montant du couple prestation/dossier.
+		self.fields['duree_prest_doss'].label = ''
 		self.fields['mont_prest_doss'].label = ''
 
 	def clean(self) :
@@ -1989,13 +1995,130 @@ class GererFicheVie(forms.ModelForm) :
 
 class PrintDoss(forms.Form):
 	caracteristiques = forms.BooleanField(label='Caractéristiques', initial=True, required=False)
-	porteur = forms.BooleanField(label='Porteur', initial=True, required=False)
-	definition = forms.BooleanField(label='Definition', initial=True, required=False)
-	prog = forms.BooleanField(label='Programmation', initial=True, required=False)
-	autre = forms.BooleanField(label='Autre', initial=True, required=False)
 	av_doss = forms.BooleanField(label='Avancement du dossier', initial=True, required=False)
 	fiche_vie = forms.BooleanField(label='Fiche de vie', initial=True, required=False)
 	plan_fnc = forms.BooleanField(label='Plan de financement', initial=True, required=False)
 	prestation = forms.BooleanField(label='Prestations', initial=True, required=False)
-	facture = forms.BooleanField(label='Facture', initial=True, required=False)
-	versement = forms.BooleanField(label='Demande de versement', initial=True, required=False)
+	facture = forms.BooleanField(label='Factures', initial=True, required=False)
+	versement = forms.BooleanField(label='Demandes de versements', initial=True, required=False)
+
+class GererOrdreService(forms.ModelForm) :
+
+	# Champs
+	za_num_doss = forms.CharField(
+		label = 'Numéro du dossier', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
+	)
+
+	class Meta :
+
+		# Imports
+		from app.models import TOrdreService
+
+		fields = ['comm_os', 'd_emiss_os', 'duree_w_os', 'obj_os', 'num_os', 'id_prest', 'id_type_os']
+		model = TOrdreService
+		widgets = { 'd_emiss_os' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }) }
+
+	# Méthodes privées
+
+	def __get_pd(self) :
+		from app.models import TPrestationsDossier
+		return self.k_pd or TPrestationsDossier.objects.get(
+			id_doss = self.instance.id_doss, id_prest = self.instance.id_prest
+		)
+
+	# Méthodes publiques
+
+	def get_form(self, rq, racc = False) :
+
+		'''Mise en forme du formulaire'''
+
+		# Imports
+		from app.functions import init_f
+		from django.core.urlresolvers import reverse
+		from django.template.context_processors import csrf
+
+		form = init_f(self) # Initialisation des contrôles
+
+		# Définition du conteni du formulaire
+		content = '''
+		<div class="row">
+			<div class="col-sm-6">{}</div>
+			<div class="col-sm-6">{}</div>
+		</div>
+		{}
+		<div class="row">
+			<div class="col-sm-6">{}</div>
+			<div class="col-sm-6">{}</div>
+		</div>
+		{}
+		{}
+		{}
+		<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		'''.format(
+			form['za_num_doss'],
+			form['id_prest'],
+			form['num_os'],
+			form['id_type_os'],
+			form['d_emiss_os'],
+			form['obj_os'],
+			form['duree_w_os'],
+			form['comm_os']
+		)
+
+		return '''
+		<form action="{}" name="f_geros" method="post" onsubmit="soum_f(event)">
+			<input name="csrfmiddlewaretoken" type="hidden" value="{}">
+			{}
+		</form>
+		'''.format(
+			reverse('modif_os', args = [self.instance.pk]) if self.instance.pk else reverse(
+				'ajout_os_racc' if racc else 'ajout_os', args = [self.__get_pd().pk]
+			),
+			csrf(rq)['csrf_token'],
+			'''
+			<fieldset class="my-fieldset">
+				<legend>Modifier un ordre de service</legend>
+				<div>{}</div>
+			</fieldset>
+			'''.format(content) if self.instance.pk else content
+		)
+
+	# Méthodes système
+
+	def __init__(self, *args, **kwargs) :
+		self.k_pd = kwargs.pop('k_pd', None) # Définition des arguments
+		super().__init__(*args, **kwargs)
+		init_mess_err(self) # Définition des messages d'erreurs personnalisés
+
+		# Définition de la valeur initiale du champ "za_num_doss"
+		self.fields['za_num_doss'].initial = self.__get_pd().id_doss.num_doss
+
+		# Redéfinition du champ "id_prest"
+		self.fields['id_prest'].empty_label = None
+		self.fields['id_prest'].queryset = self.fields['id_prest'].queryset.filter(pk = self.__get_pd().id_prest.pk)
+
+	def clean(self) :
+
+		# Initialisation des erreurs
+		errors = {}
+
+		# Récupération des données du formulaire
+		cleaned_data = super().clean()
+		val_duree_w_os = cleaned_data.get('duree_w_os')
+		val_id_type_os = cleaned_data.get('id_type_os')
+
+		if (val_duree_w_os) \
+		and (val_id_type_os) \
+		and (not val_id_type_os.nom_type_os.startswith(('Arrêt', 'Fin'))) :
+			errors['duree_w_os'] = '''
+			La valeur ne peut être strictement positive que pour un OS d'arrêt ou de fin de mission.
+			'''
+
+		# Ajout des erreurs
+		for key, val in errors.items() : self.add_error(key, val)
+
+	def save(self, commit = True) :
+		os = super().save(commit = False)
+		os.id_doss = self.__get_pd().id_doss # Définition du dossier
+		if commit : os.save()
+		return os

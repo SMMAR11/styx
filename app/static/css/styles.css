@@ -48,6 +48,7 @@ fieldset.my-div-fieldset > div {
 /* Boutons */
 .my-btn,
 .my-btn-sm {
+	background-color: #555;
 	border: none;
 	border-radius: 5px;
 	color: #FFF;
@@ -61,6 +62,7 @@ fieldset.my-div-fieldset > div {
 
 .my-btn-sm {
 	display: inline-block;
+	font-size: 12px;
 	line-height: 20px;
 	padding: 0 7.5px;
 }
@@ -69,6 +71,7 @@ fieldset.my-div-fieldset > div {
 .my-btn-sm:focus,
 .my-btn:hover,
 .my-btn-sm:hover {
+	background-color: #444;
 	color: #FFF;
 	text-decoration: none;
 }
@@ -724,6 +727,15 @@ ul.my-list-style > li:before {
 	-webkit-background-size: 15.5px;
 	background-repeat: no-repeat;
 	width: 16.5px;
+	height: 20px;
+}
+
+.add_os-icon {
+	background-image: url('../pics/icons/add_os.png');
+	background-size: 20px;
+	-webkit-background-size: 19px;
+	background-repeat: no-repeat;
+	width: 20px;
 	height: 20px;
 }
 

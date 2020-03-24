@@ -40,28 +40,48 @@ $(document).ready(function() {
 	new MyDataTable('cbsm_atel_pgre').set_datatable({ 'autofit' : [1], 'exports' : false, 'unsorting' : [1] });
 	new MyDataTable('cbsm_org_moa').set_datatable({ 'autofit' : [1], 'exports' : false, 'unsorting' : [1] });
 	new MyDataTable('ch_act_pgre').set_datatable({ 'autofit' : [6], 'unsorting' : [6] });
-	new MyDataTable('ch_doss').set_datatable({ 'autofit' : ['LAST:1'], 'paging' : true, 'unsorting' : ['LAST:1'] });
-	new MyDataTable('ch_prest').set_datatable({ 'autofit' : [5], 'unsorting' : [5] });
-	new MyDataTable('cons_arr').set_datatable({ 'autofit' : [5], 'unsorting' : [5] });
-	new MyDataTable('cons_aven').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
-	new MyDataTable('cons_ddv').set_datatable({ 'autofit' : [6], 'unsorting' : [6] });
-	new MyDataTable('cons_doss_fam').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
-	new MyDataTable('cons_doss_prest').set_datatable({ 'autofit' : [3], 'unsorting' : [3] });
-	new MyDataTable('cons_droit').set_datatable({ 'autofit' : [2, 3], 'unsorting' : ['LAST:99'] });
-	new MyDataTable('cons_fact').set_datatable({ 'autofit' : [7], 'unsorting' : [7] });
-	new MyDataTable('cons_fact_ddv').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
-	new MyDataTable('cons_fdv').set_datatable({
-		'autofit' : ['LAST:2'], 'unbordered' : ['LAST:2'], 'unsorting' : ['LAST:2']
+	new MyDataTable('ch_doss').set_datatable({
+		'autofit' : ['LAST:1'], 'date' : [3], 'paging' : true, 'unsorting' : ['LAST:1']
 	});
-	new MyDataTable('cons_fin').set_datatable({ 'autofit' : [8], 'unsorting' : [8] });
+	new MyDataTable('ch_prest').set_datatable({ 'autofit' : [5], 'unsorting' : [5] });
+	new MyDataTable('cons_arr').set_datatable({ 'autofit' : [5], 'date' : [3, 4], 'unsorting' : [5] });
+	new MyDataTable('cons_aven').set_datatable({
+		'autofit' : [4], 'date' : [2], 'number' : [0, 3], 'unsorting' : [4]
+	});
+	new MyDataTable('cons_ddv').set_datatable({
+		'autofit' : [6], 'date' : [2, 3], 'number' : [1, 4], 'unsorting' : [6]
+	});
+	new MyDataTable('cons_doss_fam').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
+	new MyDataTable('cons_doss_prest').set_datatable({ 'autofit' : [3], 'number' : [1, 2], 'unsorting' : [3] });
+	new MyDataTable('cons_droit').set_datatable({ 'autofit' : [2, 3], 'unsorting' : ['LAST:99'] });
+	new MyDataTable('cons_fact').set_datatable({
+		'autofit' : [7], 'date' : [4], 'number' : [2, 5, 6], 'unsorting' : [7]
+	});
+	new MyDataTable('cons_fact_ddv').set_datatable({
+		'autofit' : [4], 'date' : [3], 'number' : [1], 'unsorting' : [4]
+	});
+	new MyDataTable('cons_fdv').set_datatable({
+		'autofit' : ['LAST:2'], 'date' : [1], 'unbordered' : ['LAST:2'], 'unsorting' : ['LAST:2']
+	});
+	new MyDataTable('cons_fin').set_datatable({
+		'autofit' : [8], 'date' : [5, 6], 'number' : [1, 2, 3, 4, 7], 'unsorting' : [8]
+	});
+	new MyDataTable('cons_os').set_datatable({
+		'autofit' : ['LAST:2'], 'date' : [2], 'unbordered' : ['LAST:2'], 'number' : [4], 'unsorting' : ['LAST:2']
+	});
 	new MyDataTable('cons_pdc').set_datatable({ 'autofit' : [2, 3], 'unbordered' : [2, 3], 'unsorting' : [2, 3] });
 	new MyDataTable('cons_ph').set_datatable({
-		'autofit' : [0, 4, 5], 'unbordered' : [4, 5], 'unsorting' : [0, 4, 5]
+		'autofit' : [0, 4, 5], 'date' : [3], 'unbordered' : [4, 5], 'unsorting' : [0, 4, 5]
 	});
 	new MyDataTable('cons_ss_action').set_datatable({
 		'autofit' : [0, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'unbordered' : [9, 10], 'unsorting' : [9, 10]
 	});
-	new MyDataTable('cons_prest').set_datatable({ 'autofit' : [6, 7], 'unbordered' : [6, 7], 'unsorting' : [6, 7] });
+	new MyDataTable('cons_prest').set_datatable({
+		'autofit' : ['LAST:3'],
+		'number' : [3, 4, 5, 6, 7, 8, 9, 10],
+		'unbordered' : ['LAST:3'],
+		'unsorting' : ['LAST:3']
+	});
 	new MyDataTable('FiltrerDossiers-cbsm_org_moa').set_datatable({
 		'autofit' : [1], 'exports' : false, 'unsorting' : [1]
 	});
@@ -82,9 +102,16 @@ $(document).ready(function() {
 		'autofit' : [1], 'exports' : false, 'unsorting' : [1]
 	});
 	new MyDataTable('regr_doss').set_datatable();
-	new MyDataTable('regr_prest').set_datatable();
-	new MyDataTable('select_doss').set_datatable({ 'autofit' : ['LAST:1'], 'unsorting' : ['LAST:1'] });
-	new MyDataTable('select_prest').set_datatable({ 'autofit' : [11], 'unsorting' : [11] });
+	new MyDataTable('regr_prest').set_datatable({ 'number' : ['LAST:7'] });
+	new MyDataTable('select_doss').set_datatable({
+		'autofit' : ['LAST:1'],
+		'date' : [15, 18],
+		'number' : [10, 11, 12, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
+		'unsorting' : ['LAST:1']
+	});
+	new MyDataTable('select_prest').set_datatable({
+		'autofit' : ['LAST:1'], 'date' : [14, 15], 'number' : [6, 7, 8, 9, 10, 11, 12], 'unsorting' : ['LAST:1']
+	});
 	new MyDataTable('select_act_pgre').set_datatable({ 'autofit' : ['LAST:99'], 'unsorting' : ['LAST:99'] });
 
 });

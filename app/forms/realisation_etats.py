@@ -523,45 +523,48 @@ class FiltrerDossiers(forms.ModelForm) :
 			# Suppression de variables
 			del _qs_doss
 
-			return '''
-			<div class="my-table" id="t_select_doss">
-				<table>
-					<thead>
-						<tr>
-							<th>N° du dossier</th>
-							<th>Intitulé du dossier</th>
-							<th>Dossier associé et/ou contrepartie</th>
-							<th>Maître d'ouvrage</th>
-							<th>Programme</th>
-							<th>Axe</th>
-							<th>Nature du dossier</th>
-							<th>Type de dossier</th>
-							<th>Agent responsable</th>
-							<th>SAGE</th>
-							<th>Montant du dossier présenté au CD GEMAPI (en €)</th>
-							<th>Dépassement du dossier (en €)</th>
-							<th>Montant total du dossier (en €)</th>
-							<th>Type de montant du dossier</th>
-							<th>État d'avancement</th>
-							<th>Date de délibération au maître d'ouvrage</th>
-							<th>Année prévisionnelle du dossier</th>
-							<th>Avis du comité de programmation - CD GEMAPI</th>
-							<th>Date de l'avis du comité de programmation</th>
-							<th>Montant commandé (en €)</th>
-							<th>Montant payé (en €)</th>
-							<th>Taux d'engagement</th>
-							<th>Taux de réalisation</th>
-							{}
-							<th>Numéro d'opération budgétaire</th>
-							<th>Commentaire</th>
-							<th></th>
-						</tr>
-					</thead>
-					<tbody>{}</tbody>
-					<tfoot id="za_tfoot_select_doss">{}</tfoot>
-				</table>
-			</div>
-			'''.format(''.join(org_fins), ''.join(trs), tfoot)
+			return {
+				'table' : '''
+				<div class="my-table" id="t_select_doss">
+					<table>
+						<thead>
+							<tr>
+								<th>N° du dossier</th>
+								<th>Intitulé du dossier</th>
+								<th>Dossier associé et/ou contrepartie</th>
+								<th>Maître d'ouvrage</th>
+								<th>Programme</th>
+								<th>Axe</th>
+								<th>Nature du dossier</th>
+								<th>Type de dossier</th>
+								<th>Agent responsable</th>
+								<th>SAGE</th>
+								<th>Montant du dossier présenté au CD GEMAPI (en €)</th>
+								<th>Dépassement du dossier (en €)</th>
+								<th>Montant total du dossier (en €)</th>
+								<th>Type de montant du dossier</th>
+								<th>État d'avancement</th>
+								<th>Date de délibération au maître d'ouvrage</th>
+								<th>Année prévisionnelle du dossier</th>
+								<th>Avis du comité de programmation - CD GEMAPI</th>
+								<th>Date de l'avis du comité de programmation</th>
+								<th>Montant commandé (en €)</th>
+								<th>Montant payé (en €)</th>
+								<th>Taux d'engagement</th>
+								<th>Taux de réalisation</th>
+								{}
+								<th>Numéro d'opération budgétaire</th>
+								<th>Commentaire</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>{}</tbody>
+						<tfoot id="za_tfoot_select_doss">{}</tfoot>
+					</table>
+				</div>
+				'''.format(''.join(org_fins), ''.join(trs), tfoot),
+				'len_numbers' : 0
+			}
 
 		else :
 
@@ -606,6 +609,9 @@ class FiltrerDossiers(forms.ModelForm) :
 				'Nombre de dossiers HT',
 				'Nombre de dossiers TTC'
 			]
+
+			# Initialisation du nombre de colonnes de type "nombre"
+			len_numbers = len(ths) - 1
 
 			# Initialisation des lignes
 			rows = []
@@ -667,6 +673,9 @@ class FiltrerDossiers(forms.ModelForm) :
 
 				# Empilement des balises </th>
 				ths += [j for i in lparams['numbers'] for j in thsparams[i].split(';')]
+
+				# Réinitialisation du nombre de colonnes de type "nombre"
+				len_numbers += sum([len(thsparams[i].split(';')) for i in lparams['numbers']])
 
 			for row in rows :
 
@@ -799,7 +808,7 @@ class FiltrerDossiers(forms.ModelForm) :
 				tfoot
 			)
 
-			return output
+			return { 'table' : output, 'len_numbers' : len_numbers }
 
 class FiltrerPrestations(forms.Form) :
 

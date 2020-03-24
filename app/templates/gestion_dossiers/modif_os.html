@@ -1,0 +1,11 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_prest' pd.pk %}" class="icon-link previous-icon">Revenir à la prestation</a>
+	</div>
+</div>
+{{ form | safe }}
+{% endblock content %}

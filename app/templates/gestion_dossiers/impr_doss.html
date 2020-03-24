@@ -11,7 +11,7 @@
 	<body>
 		<div class="pdf-title-1">Fiche du dossier {{ d }}</div>
 		{% if features.caracteristiques %}
-		<div class="pdf-title-2">Caractéristiques {{ features.caracteristiques }}</div>
+		<div class="pdf-title-2">Caractéristiques</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
 				{{ t_attrs_doss.num_doss }}
@@ -19,8 +19,6 @@
 			</tbody>
 		</table>
 		<div class="br"></div>
-		{% endif %}
-		{% if features.porteur %}
 		<div class="pdf-title-3">Porteurs du projet</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -29,8 +27,6 @@
 			</tbody>
 		</table>
 		<div class="br"></div>
-		{% endif %}
-		{% if features.definition %}
 		<div class="pdf-title-3">Définition du projet</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -72,14 +68,12 @@
 			<span class="pdf-attribute-value">Aucun</span>
 			{% endif %}
 		</div>
-		{% endif %}
 		<table class="pdf-table vertical-table">
 			<tbody>
 				{{ t_attrs_doss.id_sage }}
 			</tbody>
 		</table>
 		<div class="br"></div>
-		{% if features.prog %}
 		<div class="pdf-title-3">Programmation</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -94,8 +88,6 @@
 			</tbody>
 		</table>
 		<div class="br"></div>
-		{% endif %}
-		{% if features.autre %}
 		<div class="pdf-title-3">Autres</div>
 		<table class="pdf-table vertical-table">
 			<tbody>
@@ -196,31 +188,42 @@
 			<thead>
 				<tr>
 					<th>Entreprise</th>
-					<th>Montant {{ ht_ou_ttc }} de la prestation (en €)</th>
-					<th>Nombre d'avenants</th>
-					<th>Somme {{ ht_ou_ttc }} des avenants (en €)</th>
-					<th>Somme {{ ht_ou_ttc }} des factures émises (en €)</th>
+					<th>Int presta</th>
+					<th>Nat presta</th>
+					<th>Mnt {{ ht_ou_ttc }} presta (en €)</th>
+					<th>Nbr avenants</th>
+					<th>∑ {{ ht_ou_ttc }} avenants (en €)</th>
+					<th>∑ {{ ht_ou_ttc }} factures émises (en €)</th>
 					<th>Reste à facturer {{ ht_ou_ttc }} (en €)</th>
+					<th>Durée presta (en j ouvrés)</th>
+					<th>Durée travaillée (en j ouvrés)</th>
+					<th>Durée restante à travailler (en j ouvrés)</th>
 				</tr>
 			</thead>
 			<tbody>
 				{% for p in t_prest %}
 				<tr>
 					<td>{{ p.n_org }}</td>
+					<td>{{ p.int_prest }}</td>
+					<td>{{ p.id_nat_prest }}</td>
 					<td>{{ p.mont_prest_doss }}</td>
 					<td>{{ p.nb_aven }}</td>
 					<td>{{ p.mont_aven_sum }}</td>
 					<td>{{ p.mont_fact_sum }}</td>
 					<td>{{ p.mont_raf }}</td>
+					<td>{{ p.duree_prest_doss }}</td>
+					<td>{{ p.duree_w_os_sum }}</td>
+					<td>{{ p.duree_w_rest_os_sum }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>
 			<tfoot>
 				<tr>
-					<td>Total {{ ht_ou_ttc }} (en €)</td>
+					<td colspan="3">Total {{ ht_ou_ttc }} (en €)</td>
 					{% for i in t_prest_sum %}
 					<td>{{ i }}</td>
 					{% endfor %}
+					<td colspan="3"></td>
 				</tr>
 			</tfoot>
 		</table>
@@ -236,6 +239,7 @@
 			<thead>
 				<tr>
 					<th>Prestation</th>
+					<th>Nature de la prestation</th>
 					<th>Montant HT (en €)</th>
 					<th>Montant TTC (en €)</th>
 					<th>N° de facture</th>
@@ -249,6 +253,7 @@
 				{% for f in t_fact %}
 				<tr>
 					<td>{{ f.id_prest }}</td>
+					<td>{{ f.id_nat_prest }}</td>
 					<td>{{ f.mont_ht_fact }}</td>
 					<td>{{ f.mont_ttc_fact }}</td>
 					<td>{{ f.num_fact }}</td>
@@ -261,7 +266,7 @@
 			</tbody>
 			<tfoot>
 				<tr>
-					<td>Total payé (en €)</td>
+					<td colspan="2">Total payé (en €)</td>
 					<td>{{ mont_ht_fact_sum }}</td>
 					<td colspan="6">{{ mont_ttc_fact_sum }}</td>
 				</tr>

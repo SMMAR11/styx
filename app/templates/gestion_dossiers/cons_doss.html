@@ -105,16 +105,8 @@
 						{% if forbidden == True %}
 						<div class="br"></div>
 						{% endif %}
-						<form action="{% url 'impr_doss' d.pk %}" method="post" name="print_doss" target="_blank">
-							{% csrf_token %}
-							<p>Sélection des onglets à imprimer: </p>
-							{% for field in prt_form %}
-							{{ field.label_tag }} {{ field }}</br>
-							{% endfor %}
-							<input type="hidden" name="action" value="print_doss"/>
-							<input class="green-btn my-btn" type="submit" name="confirm" value="Imprimer"/>
-							{# <a href="{% url 'impr_doss' d.pk %}" target="blank" class="icon-link print-icon">Imprimer le dossier GET</a> #}
-						</form>
+						<a href="{% url 'impr_doss' d.pk %}" target="blank" class="icon-link print-icon">Imprimer le dossier</a>
+						<button class="my-btn-sm" data-target="#fm_impr_doss" data-toggle="modal">Sélection des onglets</button>
 					</div>
 				</div>
 			</div>
@@ -207,11 +199,17 @@
 						<thead>
 							<tr>
 								<th>Entreprise</th>
-								<th>Montant {{ ht_ou_ttc }} de la prestation (en €)</th>
-								<th>Nombre d'avenants</th>
-								<th>Somme {{ ht_ou_ttc }} des avenants (en €)</th>
-								<th>Somme {{ ht_ou_ttc }} des factures émises (en €)</th>
+								<th>Int presta</th>
+								<th>Nat presta</th>
+								<th>Mnt {{ ht_ou_ttc }} presta (en €)</th>
+								<th>Nbr avenants</th>
+								<th>∑ {{ ht_ou_ttc }} avenants (en €)</th>
+								<th>∑ {{ ht_ou_ttc }} factures émises (en €)</th>
 								<th>Reste à facturer {{ ht_ou_ttc }} (en €)</th>
+								<th>Durée presta (en j ouvrés)</th>
+								<th>Durée travaillée (en j ouvrés)</th>
+								<th>Durée restante à travailler (en j ouvrés)</th>
+								<th></th>
 								<th></th>
 								<th></th>
 							</tr>
@@ -220,13 +218,21 @@
 							{% for p in t_prest %}
 							<tr>
 								<td>{{ p.n_org }}</td>
+								<td>{{ p.int_prest }}</td>
+								<td>{{ p.id_nat_prest }}</td>
 								<td>{{ p.mont_prest_doss }}</td>
 								<td>{{ p.nb_aven }}</td>
 								<td>{{ p.mont_aven_sum }}</td>
 								<td>{{ p.mont_fact_sum }}</td>
 								<td>{{ p.mont_raf }}</td>
+								<td>{{ p.duree_prest_doss }}</td>
+								<td>{{ p.duree_w_os_sum }}</td>
+								<td>{{ p.duree_w_rest_os_sum }}</td>
 								<td>
 									<span action="?action=afficher-form-avenant&prestation={{ p.pk }}" class="add_aven-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'ajout_aven');" title="Ajouter un avenant"></span>
+								</td>
+								<td>
+									<span action="?action=afficher-form-os&prestation={{ p.pk }}" class="add_os-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'geros');" title="Ajouter un ordre de service"></span>
 								</td>
 								<td><a href="{% url 'cons_prest' p.pk %}" class="consult-icon pull-right" title="Consulter la prestation"></a></td>
 							</tr>
@@ -235,11 +241,11 @@
 						{% if t_prest_length > 0 %}
 						<tfoot>
 							<tr>
-								<td>Total {{ ht_ou_ttc }} (en €)</td>
+								<td colspan="3">Total {{ ht_ou_ttc }} (en €)</td>
 								{% for i in t_prest_sum %}
 								<td>{{ i }}</td>
 								{% endfor %}
-								<td colspan="2"></td>
+								<td colspan="6"></td>
 							</tr>
 						</tfoot>
 						{% endif %}
@@ -257,6 +263,7 @@
 						<thead>
 							<tr>
 								<th>Prestation</th>
+								<th>Nature de la prestation</th>
 								<th>Montant {{ ht_ou_ttc }} (en €)</th>
 								<th>N° de facture</th>
 								<th>Date de mandatement par le maître d'ouvrage</th>
@@ -270,6 +277,7 @@
 							{% for f in t_fact %}
 							<tr>
 								<td>{{ f.id_prest }}</td>
+								<td>{{ f.id_nat_prest }}</td>
 								<td>{{ f.mont_fact }}</td>
 								<td>{{ f.num_fact }}</td>
 								<td>{{ f.dt_mand_moa_fact }}</td>
@@ -285,7 +293,7 @@
 						{% if mont_fact_sum > 0 %}
 						<tfoot>
 							<tr>
-								<td>Total {{ ht_ou_ttc }} payé (en €)</td>
+								<td colspan="2">Total {{ ht_ou_ttc }} payé (en €)</td>
 								<td colspan="7">{{ mont_fact_sum_str }}</td>
 							</tr>
 						</tfoot>

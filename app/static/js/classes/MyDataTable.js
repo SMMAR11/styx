@@ -203,7 +203,15 @@ class MyDataTable {
 	set_datatable(kwargs = {}) {
 
 		// Initialisation des arguments sous forme de dictionnaire
-		var k = { 'autofit' : [], 'exports' : true, 'paging' : false, 'unbordered' : [], 'unsorting' : [] };
+		var k = {
+			'autofit' : [],
+			'date' : [],
+			'exports' : true,
+			'number' : [],
+			'paging' : false,
+			'unbordered' : [],
+			'unsorting' : []
+		};
 		$.extend(k, kwargs);
 
 		// Calcul du nombre de colonnes
@@ -217,7 +225,7 @@ class MyDataTable {
 		});
 
 		// Initialisation des clés ayant pour valeur un tableau
-		var keys = ['autofit', 'unbordered', 'unsorting'];
+		var keys = ['autofit', 'date', 'number', 'unbordered', 'unsorting'];
 
 		// Réassignation des arguments si besoin pour chaque clé du dictionnaire "k"
 		keys.forEach(function(i) {
@@ -272,6 +280,8 @@ class MyDataTable {
 		var dtable = this.get_obj.DataTable({
 			'aoColumnDefs' : [
 				{ 'aTargets' : k['unsorting'], 'bSortable' : false },
+				{ 'type' : 'date-eu', 'targets' : k['date'] },
+				{ 'type' : 'formatted-num', 'targets': k['number'] },
 				{ className : 'autofit', 'targets' : k['autofit'] },
 				{ className : 'unbordered', 'targets' : k['unbordered'] }
 			],

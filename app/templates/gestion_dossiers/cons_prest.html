@@ -13,6 +13,7 @@
 		<ul class="my-nav-tabs nav nav-justified nav-tabs" id="tab_prest">
 			<li><a href="#ong_prest" data-toggle="tab">Caractéristiques</a></li>
 			<li><a href="#ong_aven" data-toggle="tab">Avenants</a></li>
+			<li><a href="#ong_os" data-toggle="tab">Ordres de service</a></li>
 		</ul>
 		<div class="tab-content">
 			<div id="ong_prest" class="fade tab-pane">
@@ -76,6 +77,11 @@
 								</div>
 								{{ t_attrs_prest_doss.mont_fact_sum }}
 								{{ t_attrs_prest_doss.mont_raf }}
+								{{ t_attrs_prest_doss.duree_prest_doss }}
+								<div class="row">
+									<div class="col-sm-6">{{ t_attrs_prest_doss.duree_w_os_sum }}</div>
+									<div class="col-sm-6">{{ t_attrs_prest_doss.duree_w_rest_os_sum }}</div>
+								</div>
 							</div>
 						</fieldset>
 					</div>
@@ -116,6 +122,48 @@
 						</tbody>
 					</table>
 				</div>
+			</div>
+			<div id="ong_os" class="fade tab-pane">
+				<div class="right">
+					<span data-target="#fm_geros" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter un ordre de service</span>
+				</div>
+				<div class="my-table" id="t_cons_os">
+					<table>
+						<thead>
+							<tr>
+								<th>N° de l'ordre de service</th>
+								<th>Type de l'ordre de service</th>
+								<th>Date d'émission</th>
+								<th>Objet</th>
+								<th>Durée travaillée (en nombre de jours ouvrés)</th>
+								<th>Commentaire</th>
+								<th></th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for os in t_os %}
+							<tr>
+								<td>{{ os.num_os }}</td>
+								<td>{{ os.id_type_os }}</td>
+								<td>{{ os.d_emiss_os }}</td>
+								<td>{{ os.obj_os }}</td>
+								<td>{{ os.duree_w_os }}</td>
+								<td>{{ os.comm_os }}</td>
+								<td><a href="{% url 'modif_os' os.pk %}" class="forbidden modify-icon pull-right" title="Mettre à jour l'ordre de service"></a></td>
+								<td><span action="?action=supprimer-os&os={{ os.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_os');" title="Supprimer l'ordre de service"></span></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+						<tfoot>
+							<tr>
+								<td colspan="4">Total</td>
+								<td colspan="4">{{ duree_w_os_sum }}</td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+				<div class="b red-color text-center">Le nombre de jours ouvrés restants à travailler est de {{ duree_w_rest_os_sum }}.</div>
 			</div>
 		</div>
 		<script type="text/javascript">

@@ -821,3 +821,12 @@ class AOrganisme(admin.ModelAdmin) :
 
 # Je peux désormais gérer les organismes (exclus de l'héritage).
 admin.site.register(TOrganisme, AOrganisme)
+
+class ATypeOrdreService(admin.ModelAdmin) :
+
+	# J'initialise les paramètres.
+	actions = [admin.actions.delete_selected]
+	fields = list_display = ['nom_type_os', 'ordre_type_os']
+
+# Je peux désormais gérer les types d'ordres de service
+admin.site.register(TTypeOrdreService, ATypeOrdreService)

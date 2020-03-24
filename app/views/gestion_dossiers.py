@@ -648,6 +648,7 @@ def cons_doss(request, _d) :
 	from app.forms.gestion_dossiers import GererFacture
 	from app.forms.gestion_dossiers import GererFicheVie
 	from app.forms.gestion_dossiers import GererFinancement
+	from app.forms.gestion_dossiers import GererOrdreService
 	from app.forms.gestion_dossiers import GererPrestation
 	from app.forms.gestion_dossiers import GererPhoto
 	from app.forms.gestion_dossiers import RedistribuerPrestation
@@ -1042,45 +1043,46 @@ def cons_doss(request, _d) :
 				t_ajout_org_prest['comm_org']
 			),
 			'ajout_prest' : '''
-			<form>{0}</form>
+			<form>{}</form>
 			<div id="za_nvelle_prest">
-				<form action="{1}" enctype="multipart/form-data" name="f_ajout_prest" method="post" onsubmit="soum_f(event)">
-					<input name="csrfmiddlewaretoken" type="hidden" value="{2}">
-					{3}
+				<form action="{}" enctype="multipart/form-data" name="f_ajout_prest" method="post" onsubmit="soum_f(event)">
+					<input name="csrfmiddlewaretoken" type="hidden" value="{}">
+					{}
 					<div class="row">
-						<div class="col-sm-6">{4}</div>
+						<div class="col-sm-6">{}</div>
 						<div class="col-sm-6" style="margin: 20px 0;">
 							<span class="add-company-icon icon-link" id="bt_ajout_org_prest">Ajouter un prestataire</span>
 						</div>
 					</div>
-					{5}
-					{6}
-					{7}
+					{}
+					{}
+					{}
+					{}
 					<div class="row">
-						<div class="col-sm-6">{8}</div>
-						<div class="col-sm-6">{9}</div>
+						<div class="col-sm-6">{}</div>
+						<div class="col-sm-6">{}</div>
 					</div>
-					{10}
-					{11}
-					{12}
+					{}
+					{}
+					{}
 					<button class="center-block green-btn my-btn" type="submit">Valider</button>
 				</form>
 			</div>
 			<div id="za_red_prest_etape_1" style="display: none;">
 				<form action="?action=filtrer-prestations" name="f_ch_prest" method="post">
-					<input name="csrfmiddlewaretoken" type="hidden" value="{13}">
+					<input name="csrfmiddlewaretoken" type="hidden" value="{}">
 					<fieldset class="my-fieldset" style="padding-bottom: 0;">
 						<legend>Rechercher par</legend>
 						<div>
-							{14}
-							{15}
-							{16}
+							{}
+							{}
+							{}
 						</div>
 					</fieldset>
 				</form>
 				<div class="br"></div>
 				<span class="my-label">
-					<span class="u">Étape 1 :</span> Choisir une prestation dont le montant total est en {17}
+					<span class="u">Étape 1 :</span> Choisir une prestation dont le montant total est en {}
 				</span>
 				<div class="my-table" id="t_ch_prest">
 					<table>
@@ -1094,7 +1096,7 @@ def cons_doss(request, _d) :
 								<th></th>
 							</tr>
 						</thead>
-						<tbody>{18}</tbody>
+						<tbody>{}</tbody>
 					</table>
 				</div>
 			</div>
@@ -1107,6 +1109,7 @@ def cons_doss(request, _d) :
 				t_ajout_prest['int_prest'],
 				t_ajout_prest['ref_prest'],
 				t_ajout_prest['zs_mont_prest'],
+				t_ajout_prest['zs_duree_prest'],
 				t_ajout_prest['dt_notif_prest'],
 				t_ajout_prest['dt_fin_prest'],
 				t_ajout_prest['id_nat_prest'],
@@ -1153,7 +1156,20 @@ def cons_doss(request, _d) :
 					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
 				</a>
 			</div>
-			'''.format('\n'.join(t_ph_diap['li']), '\n'.join(t_ph_diap['div']))
+			'''.format('\n'.join(t_ph_diap['li']), '\n'.join(t_ph_diap['div'])),
+			'impr_doss' : '''
+			<form action="{}" method="post" name="print_doss" target="_blank">
+				<input name="csrfmiddlewaretoken" type="hidden" value="{}">
+				{}
+				<div class="br"></div>
+				<input type="hidden" name="action" value="print_doss"/>
+				<input class="center-block green-btn my-btn" type="submit" name="confirm" value="Imprimer"/>
+			</form>
+			'''.format(
+				reverse('impr_doss', args = [o_doss.pk]),
+				csrf(request)['csrf_token'],
+				'<br>'.join(['{} {}'.format(f, f.label) for f in PrintDoss()])
+			)
 		}
 
 		# Je déclare un tableau de fenêtres modales.
@@ -1162,6 +1178,8 @@ def cons_doss(request, _d) :
 			init_fm('ajout_fin', 'Ajouter un organisme financier', t_cont_fm['ajout_fin']),
 			init_fm('ajout_ph', 'Ajouter une photo', t_cont_fm['ajout_ph']),
 			init_fm('gerfdv', 'Ajouter un événement', f_ajout_fdv.get_form(rq = request)),
+			init_fm('geros', 'Ajouter un ordre de service'),
+			init_fm('impr_doss', 'Imprimer un dossier - Sélection des onglets', t_cont_fm['impr_doss']),
 			init_fm('modif_carto', 'Modifier un dossier'),
 			init_fm('modif_doss_regl', 'Modifier un dossier'),
 			init_fm('suppr_doss', 'Supprimer un dossier'),
@@ -1185,8 +1203,6 @@ def cons_doss(request, _d) :
 				init_fm('lanc_diap', 'Lancer le diaporama', t_cont_fm['lanc_diap']),
 				init_fm('suppr_ph', 'Supprimer une photo')
 			]
-
-		print_dossier_form = PrintDoss()
 
 		# J'affiche le template.
 		output = render(
@@ -1220,8 +1236,7 @@ def cons_doss(request, _d) :
 				't_prest_length' : len(prss['tbl']),
 				't_prest_sum' : prss['mnts'],
 				't_types_geom_doss' : t_types_geom_doss,
-				'title' : 'Consulter un dossier',
-				'prt_form' : print_dossier_form
+				'title' : 'Consulter un dossier'
 			}
 		)
 
@@ -1344,6 +1359,14 @@ def cons_doss(request, _d) :
 
 					output = HttpResponse(gen_f_ajout_aven(request, o_prest_doss, reverse('ajout_aven_racc')))
 
+			# Je traite le cas où je dois afficher le formulaire d'ajout d'un ordre de service.
+			if get_action == 'afficher-form-os' :
+				if request.GET['prestation'] :
+					o_pd = get_object_or_404(TPrestationsDossier, pk = request.GET['prestation'])
+					output = HttpResponse(GererOrdreService(k_pd = o_pd, prefix = 'GererOrdreService').get_form(
+						racc = True, rq = request
+					))
+
 			# Je traite le cas où je dois filtrer les prestations.
 			if get_action == 'filtrer-prestations' :
 
@@ -1464,13 +1487,15 @@ def cons_doss(request, _d) :
 						<td>{2}</td>
 						<td>{3}</td>
 						<td>{4}</td>
+						<td>{5}</td>
 					</tr>
 					'''.format(
 						dp.id_doss.num_doss,
 						t_red_prest['mont_prest_doss'],
 						obt_mont(o_suivi_prest_doss.mont_aven_sum),
 						obt_mont(mont_fact_sum),
-						obt_mont(o_suivi_doss.mont_rae)
+						obt_mont(o_suivi_doss.mont_rae),
+						t_red_prest['duree_prest_doss']
 					)
 
 					# J'empile le tableau des lignes du tableau HTML des dossiers déjà reliés à la prestation que l'on
@@ -1493,11 +1518,13 @@ def cons_doss(request, _d) :
 					<td>0</td>
 					<td>0</td>
 					<td>{2}</td>
+					<td>{3}</td>
 				</tr>
 				'''.format(
 					o_doss.num_doss,
 					t_red_prest['mont_prest_doss'],
-					obt_mont(o_suivi_doss.mont_rae)
+					obt_mont(o_suivi_doss.mont_rae),
+					t_red_prest['duree_prest_doss']
 				)
 
 				# J'empile le tableau des lignes du tableau HTML de redistribution d'une prestation en ajoutant la
@@ -1528,6 +1555,7 @@ def cons_doss(request, _d) :
 												<th>Somme {2} des avenants (en €)</th>
 												<th>Somme {3} des factures émises (en €)</th>
 												<th>Reste à engager {4} pour le dossier (en €)</th>
+												<th>Durée de la prestation (en nombre de jours ouvrés)</th>
 											</tr>
 										</thead>
 										<tbody>{5}</tbody>
@@ -2091,6 +2119,7 @@ def ajout_prest(request) :
 			# Je récupère les données du formulaire valide.
 			cleaned_data = f_ajout_prest.cleaned_data
 			v_num_doss = cleaned_data.get('za_num_doss')
+			v_duree_prest = cleaned_data.get('zs_duree_prest')
 			v_mont_prest = cleaned_data.get('zs_mont_prest')
 
 			# Je créé la nouvelle instance TPrestation.
@@ -2101,6 +2130,7 @@ def ajout_prest(request) :
 			o_nvelle_prest_doss = TPrestationsDossier.objects.create(
 				id_doss = TDossier.objects.get(num_doss = v_num_doss),
 				id_prest = o_nvelle_prest,
+				duree_prest_doss = v_duree_prest,
 				mont_prest_doss = v_mont_prest
 			)
 
@@ -2208,13 +2238,15 @@ def modif_prest(request, _pd) :
 				<td>{2}</td>
 				<td>{3}</td>
 				<td>{4}</td>
+				<td>{5}</td>
 			</tr>
 			'''.format(
 				dp.id_doss.num_doss,
 				t_red_prest['mont_prest_doss'],
 				obt_mont(o_suivi_prest_doss.mont_aven_sum),
 				obt_mont(mont_fact_sum),
-				obt_mont(o_suivi_doss.mont_rae)
+				obt_mont(o_suivi_doss.mont_rae),
+				t_red_prest['duree_prest_doss']
 			)
 
 			# J'empile le tableau des lignes du tableau HTML des dossiers déjà reliés à la prestation que l'on
@@ -2428,6 +2460,7 @@ _p : Identifiant d'une prestation
 def cons_prest(request, _pd) :
 
 	# Imports
+	from app.forms.gestion_dossiers import GererOrdreService
 	from app.functions import dt_fr
 	from app.functions import gen_f_ajout_aven
 	from app.functions import ger_droits
@@ -2436,6 +2469,7 @@ def cons_prest(request, _pd) :
 	from app.functions import obt_mont
 	from app.functions import suppr
 	from app.models import TAvenant
+	from app.models import TOrdreService
 	from app.models import TPrestationsDossier
 	from app.models import VPrestation
 	from app.models import VSuiviPrestationsDossier
@@ -2501,6 +2535,18 @@ def cons_prest(request, _pd) :
 				'pdf' : True
 			},
 			'comm_prest' : { 'label' : 'Commentaire', 'value' : o_suivi_prest.get_instance().comm_prest or '' },
+			'duree_prest_doss' : {
+				'label' : 'Durée de la prestation (en nombre de jours ouvrés)',
+				'value' : o_prest_doss.duree_prest_doss
+			},
+			'duree_w_os_sum' : {
+				'label' : 'Durée travaillée (en nombre de jours ouvrés)',
+				'value' : o_suivi_prest_doss.duree_w_os_sum
+			},
+			'duree_w_rest_os_sum' : {
+				'label' : 'Durée restante à travailler (en nombre de jours ouvrés)',
+				'value' : o_suivi_prest_doss.duree_w_rest_os_sum
+			},
 			'mont_prest_doss' : {
 				'label' : 'Montant {0} de la prestation (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_prest_doss.mont_prest_doss)
@@ -2545,6 +2591,17 @@ def cons_prest(request, _pd) :
 			TAvenant.objects.filter(id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest)
 		)]
 
+		# J'initialise le tableau des ordres de service du couple prestation/dossier.
+		t_os = [{
+			'pk' : os.pk,
+			'comm_os' : os.comm_os,
+			'd_emiss_os' : dt_fr(os.d_emiss_os),
+			'duree_w_os' : os.duree_w_os,
+			'num_os' : os.num_os,
+			'obj_os' : os.obj_os,
+			'id_type_os' : os.id_type_os
+		} for os in TOrdreService.objects.filter(id_doss = o_prest_doss.id_doss, id_prest = o_prest_doss.id_prest)]
+
 		# Je déclare un tableau qui stocke le contenu de certaines fenêtres modales.
 		t_cont_fm = {
 			'ajout_aven' : gen_f_ajout_aven(request, o_prest_doss, reverse('ajout_aven'))
@@ -2553,6 +2610,12 @@ def cons_prest(request, _pd) :
 		# Je déclare un tableau de fenêtres modales.
 		t_fm = [
 			init_fm('ajout_aven', 'Ajouter un avenant', t_cont_fm['ajout_aven']),
+			init_fm(
+				'geros',
+				'Ajouter un ordre de service',
+				GererOrdreService(k_pd = o_prest_doss, prefix = 'GererOrdreService').get_form(rq = request)
+			),
+			init_fm('suppr_os', 'Supprimer un ordre de service'),
 			init_fm('suppr_prest', 'Supprimer une prestation')
 		]
 
@@ -2562,12 +2625,15 @@ def cons_prest(request, _pd) :
 			'./gestion_dossiers/cons_prest.html',
 			{
 				'pd' : o_prest_doss,
+				'duree_w_os_sum' : o_suivi_prest_doss.duree_w_os_sum,
+				'duree_w_rest_os_sum' : o_suivi_prest_doss.duree_w_rest_os_sum,
 				'forbidden' : ger_droits(request.user, o_prest_doss.id_doss, False, False),
 				'ht_ou_ttc' : ht_ou_ttc,
 				't_attrs_prest_doss' : init_pg_cons(t_attrs_prest_doss),
 				't_aven' : t_aven,
 				't_doss' : t_doss,
 				't_fm' : t_fm,
+				't_os' : t_os,
 				'title' : 'Consulter une prestation'
 			}
 		)
@@ -2577,6 +2643,11 @@ def cons_prest(request, _pd) :
 
 	else :
 		if 'action' in request.GET :
+
+			# Suppression d'un ordre de service
+			if request.GET['action'] == 'supprimer-os' :
+				if request.GET.get('os') :
+					output = HttpResponse(suppr(reverse('suppr_os', args = [request.GET['os']])))
 
 			# Je traite le cas où je dois supprimer une prestation.
 			if request.GET['action'] == 'supprimer-prestation' :
@@ -4805,6 +4876,222 @@ def modif_fdv(request, pk) :
 				'U',
 				'Fiche de vie',
 				fdv.pk
+			])
+
+		else :
+
+			# Affichage des erreurs
+			output = HttpResponse(json.dumps(form.errors), content_type = 'application/json')
+
+	return output
+
+'''
+Cette vue permet de traiter le formulaire d'ajout d'un ordre de service.
+request : Objet requête
+pd_d = Identifiant d'une instance TPrestationsDossier
+p_redirect : Paramètres de redirection
+'''
+@verif_acc
+def ajout_os(request, pd_id, p_redirect) :
+
+	# Imports
+	from app.forms.gestion_dossiers import GererOrdreService
+	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
+	from app.models import TPrestationsDossier
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	import json
+
+	output = HttpResponse()
+
+	if request.method == 'POST' :
+
+		# Obtention d'une instance TPrestationsDossier
+		pd = get_object_or_404(TPrestationsDossier, pk = pd_id)
+
+		# Je vérifie le droit d'écriture.
+		ger_droits(request.user, pd.id_doss, False)
+
+		# Je soumets le formulaire.
+		form = GererOrdreService(request.POST, k_pd = pd, prefix = 'GererOrdreService')
+
+		if form.is_valid() :
+
+			# Création d'une instance TOrdreService
+			os = form.save()
+
+			# Définition des paramètres de redirection
+			if p_redirect == 'cons_prest' :
+				prms = { 'url' : reverse('cons_prest', args = [pd.pk]), 'tab' : 'tab_prest', 'ong' : '#ong_os' }
+			elif p_redirect == 'cons_doss' :
+				prms = { 'url' : reverse('cons_doss', args = [os.id_doss.pk]), 'tab' : 'tab_doss', 'ong' : '#ong_prest' }
+			else :
+				prms = {}
+
+			if prms :
+
+				# J'affiche le message de succès.
+				output = HttpResponse(
+					json.dumps({ 'success' : {
+						'message' : '''
+						L'ordre de service a été ajouté avec succès à la prestation « {} » du dossier {}.
+						'''.format(os.id_prest, os.id_doss),
+						'redirect' : prms['url']
+					}}),
+					content_type = 'application/json'
+				)
+
+				# Je renseigne l'onglet actif après rechargement de la page.
+				request.session[prms['tab']] = prms['ong']
+
+				# Je complète le fichier log.
+				rempl_fich_log([
+					request.user.pk, request.user, os.id_doss.pk, os.id_doss, 'C', 'Ordre de service', os.pk
+				])
+
+		else :
+
+			# J'affiche les erreurs.
+			t_err = {}
+			for k, v in form.errors.items() :
+				t_err['GererOrdreService-{0}'.format(k)] = v
+			output = HttpResponse(json.dumps(t_err), content_type = 'application/json')
+
+	return output
+
+'''
+Cette vue permet de traiter le formulaire de suppression d'un ordre de service.
+rq : Objet requête
+os_id : Identifiant d'un ordre de service
+'''
+@verif_acc
+@csrf_exempt
+def suppr_os(rq, os_id) :
+
+	# Imports
+	from app.functions import ger_droits
+	from app.functions import rempl_fich_log
+	from app.models import TOrdreService
+	from app.models import TPrestationsDossier
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	import json
+
+	output = HttpResponse()
+
+	# Obtention d'une instance TOrdreService
+	os = get_object_or_404(TOrdreService, pk = os_id)
+
+	if rq.method == 'POST' :
+
+		# Vérification du droit d'écriture
+		ger_droits(rq.user, os.id_doss, False)
+
+		# Pointage vers une instance TPrestationsDossier
+		pd = TPrestationsDossier.objects.get(id_doss = os.id_doss, id_prest = os.id_prest)
+
+		# Récupération de l'identifiant de l'ordre de service afin de le renseigner dans le fichier log
+		id_os = os.pk
+
+		# Suppression d'un ordre de service
+		os.delete()
+
+		# Affichage d'un message de succès
+		output = HttpResponse(
+			json.dumps({ 'success' : {
+				'message' : 'L\'ordre de service a été supprimé avec succès.',
+				'redirect' : reverse('cons_prest', args = [pd.pk])
+			}}),
+			content_type = 'application/json'
+		)
+
+		# Définition de l'onglet actif après rechargement de la page
+		rq.session['tab_prest'] = '#ong_os'
+
+		# Remplissage du fichier log
+		rempl_fich_log([rq.user.pk, rq.user, pd.id_doss.pk, pd.id_doss, 'D', 'Ordre de service', id_os])
+
+	return output
+
+'''
+Cette vue permet la mise à jour d'un ordre de service
+rq : Objet requête
+os_id : Identifiant d'un ordre de service
+'''
+@verif_acc
+def modif_os(request, os_id) :
+
+	# Imports
+	from app.forms.gestion_dossiers import GererOrdreService
+	from app.functions import ger_droits
+	from app.functions import init_fm
+	from app.functions import rempl_fich_log
+	from app.models import TOrdreService
+	from app.models import TPrestationsDossier
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	from django.shortcuts import render
+	import json
+
+	output = HttpResponse()
+
+	# Obtention d'une instance TOrdreService
+	os = get_object_or_404(TOrdreService, pk = os_id)
+
+	# Vérification du droit d'écriture
+	ger_droits(request.user, os.id_doss, False)
+
+	# Obtention d'une instance TPrestationsDossier
+	pd = TPrestationsDossier.objects.get(id_doss = os.id_doss, id_prest = os.id_prest)
+
+	if request.method == 'GET' :
+
+		# J'instancie un objet "formulaire".
+		form = GererOrdreService(instance = os)
+
+		# Affichage du template
+		output = render(request, './gestion_dossiers/modif_os.html', {
+			'form' : form.get_form(rq = request),
+			'pd' : pd,
+			't_fm' : [init_fm('geros', 'Modifier un ordre de service')],
+			'title' : 'Modifier un ordre de service',
+		})
+
+	else :
+
+		# Soumission du formulaire
+		form = GererOrdreService(request.POST, instance = os)
+
+		if form.is_valid() :
+
+			# Mise à jour d'une instance TOrdreService
+			os = form.save()
+
+			# Affichage du message de succès
+			output = HttpResponse(
+				json.dumps({ 'success' : {
+					'message' : 'L\'ordre de service a été mis à jour avec succès.',
+					'redirect' : reverse('cons_prest', args = [pd.pk])
+				}}),
+				content_type = 'application/json'
+			)
+
+			# Définition de l'onglet actif après rechargement de la page
+			request.session['tab_prest'] = '#ong_os'
+
+			# Remplissage du fichier log
+			rempl_fich_log([
+				request.user.pk,
+				request.user,
+				os.id_doss.pk,
+				os.id_doss,
+				'U',
+				'Ordre de service',
+				os.pk
 			])
 
 		else :

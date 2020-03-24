@@ -59,7 +59,7 @@ def filtr_doss(request, _gby) :
 
 		# Affichage du template
 		output = render	(request, './realisation_etats/filtr_doss.html', {
-			'dtab_filtr_doss' : form_filtr_doss.get_datatable(request),
+			'dtab_filtr_doss' : form_filtr_doss.get_datatable(request)['table'],
 			'form_filtr_doss' : form_filtr_doss.get_form(request),
 			'title' : title
 		})
@@ -87,13 +87,14 @@ def filtr_doss(request, _gby) :
 
 				# Préparation des paramètres de la fonction datatable_reset
 				dtab = form_filtr_doss.get_datatable(request)
-				bs = BeautifulSoup(dtab)
+				bs = BeautifulSoup(dtab['table'])
 				if _gby == True :
 					output = HttpResponse(json.dumps({ 'success' : {
-						'elements' : [['#t_regr_doss', dtab]], 'new_datatables' : [['regr_doss', {}]]
+						'elements' : [['#t_regr_doss', dtab['table']]],
+						'new_datatables' : [['regr_doss', { 'number' : ['LAST:' + str(dtab['len_numbers'])] }]]
 					}}), content_type = 'application/json')
 				else :
-					output = datatable_reset(dtab, {
+					output = datatable_reset(dtab['table'], {
 						'elements' : [['#za_tfoot_select_doss', str(bs.find('tfoot', id = 'za_tfoot_select_doss'))]]
 					})
 			else :

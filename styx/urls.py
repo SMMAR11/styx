@@ -56,6 +56,20 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/modifier-avenant/([0-9]+)/$', gestion_dossiers.modif_aven, name = 'modif_aven'),
     url(r'^modules/gestion-dossiers/supprimer-avenant/([0-9]+)/$', gestion_dossiers.suppr_aven, name = 'suppr_aven'),
     url(r'^modules/gestion-dossiers/consulter-avenant/([0-9]+)/$', gestion_dossiers.cons_aven, name = 'cons_aven'),
+    url(
+        r'^modules/gestion-dossiers/ajouter-ordre-service/([0-9]+)/$',
+        gestion_dossiers.ajout_os,
+        { 'p_redirect' : 'cons_prest' },
+        name = 'ajout_os'
+    ),
+    url(
+        r'^modules/gestion-dossiers/ajouter-ordre-service-raccourci/([0-9]+)/$',
+        gestion_dossiers.ajout_os,
+        { 'p_redirect' : 'cons_doss' },
+        name = 'ajout_os_racc'
+    ),
+    url(r'^modules/gestion-dossiers/modifier-ordre-service/([0-9]+)/$', gestion_dossiers.modif_os, name = 'modif_os'),
+    url(r'^modules/gestion-dossiers/supprimer-ordre-service/([0-9]+)/$', gestion_dossiers.suppr_os, name = 'suppr_os'),
     url(r'^modules/gestion-dossiers/ajouter-facture/$', gestion_dossiers.ajout_fact, name = 'ajout_fact'),
     url(r'^modules/gestion-dossiers/modifier-facture/([0-9]+)/$', gestion_dossiers.modif_fact, name = 'modif_fact'),
     url(r'^modules/gestion-dossiers/supprimer-facture/([0-9]+)/$', gestion_dossiers.suppr_fact, name = 'suppr_fact'),
