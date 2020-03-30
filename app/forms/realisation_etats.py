@@ -1297,3 +1297,217 @@ class FiltrerPrestations(forms.Form) :
 			'''.format(''.join(trs), tfoot)
 
 			return output
+
+class AvancementProgramme(forms.Form) :
+
+	# Champs
+	zl_progr = forms.ChoiceField(choices = [DEFAULT_OPTION], label = 'Programme', required = False)
+	cbsm_org_moa = forms.MultipleChoiceField(
+		label = 'Maître(s) d\'ouvrage(s)|Nom|__zcc__', required = False, widget = forms.SelectMultiple()
+	)
+	zl_axe = forms.ChoiceField(
+		choices = [DEFAULT_OPTION],
+		label = 'Axe',
+		required = False,
+		widget = forms.Select(attrs = { 'class' : 'hide-field' })
+	)
+	zl_ss_axe = forms.ChoiceField(
+		choices = [DEFAULT_OPTION],
+		label = 'Sous-axe',
+		required = False,
+		widget = forms.Select(attrs = { 'class' : 'hide-field' })
+	)
+	zl_act = forms.ChoiceField(
+		choices = [DEFAULT_OPTION],
+		label = 'Action',
+		required = False,
+		widget = forms.Select(attrs = { 'class' : 'hide-field' })
+	)
+
+	# Méthodes système
+
+	def __init__(self, *args, **kwargs) :
+
+		# Imports
+		from app.models import TProgramme
+
+		# Initialisation des arguments
+		kw_prg = kwargs.pop('kw_prg', None)
+		kw_axe = kwargs.pop('kw_axe', None)
+		kw_ssa = kwargs.pop('kw_ssa', None)
+
+		super().__init__(*args, **kwargs)
+
+		init_mess_err(self)
+
+		# Définition des programmes valides
+		self.fields['zl_progr'].choices += [(prg.pk, prg) for prg in TProgramme.objects.filter(
+			pk__in = [i[0] for i in self.__execute_sql(code = 'prg')[1]]
+		)]
+		
+		# Définition des maîtres d'ouvrages valides
+		self.fields['cbsm_org_moa'].choices = [
+			[moa.pk, '|'.join([str(moa), '__zcc__'])] for moa in TMoa.objects.filter(
+				pk__in =  [i[0] for i in self.__execute_sql(code = 'moa')[1]]
+			)
+		]
+
+		# Définition des axes, sous-axes et actions valides
+		if kw_prg :
+			self.fields['zl_axe'].choices = [(axe.pk, axe) for axe in TAxe.objects.filter(id_progr = kw_prg)]
+			if kw_axe :
+				self.fields['zl_ss_axe'].choices = [(ssa.pk, ssa) for ssa in TSousAxe.objects.filter(id_axe = kw_axe)]
+				if kw_ssa :
+					self.fields['zl_act'].choices = [
+						(act.pk, act) for act in TAction.objects.filter(id_ss_axe = kw_ssa)
+					]
+
+	# Méthodes privées
+
+	def __execute_sql(self, code = None) :
+
+		'''Exécution de la requête SQL'''
+
+		# Imports
+		from django.db import connection
+
+		# Renvoi du couple entêtes/lignes sous forme de tableau ou d'un tableau vierge
+		with connection.cursor() as c :
+			try :
+				c.execute(self.__get_sql(code = code))
+				return [c.description, c.fetchall()]
+			except :
+				return []
+
+	def __get_act(self) :
+		'''Action'''
+		return '.'.join(self.cleaned_data.get('zl_act').split('_')[1:]) if self.data else None
+
+	def __get_axe(self) :
+		'''Axe'''
+		return '.'.join(self.cleaned_data.get('zl_axe').split('_')[1:]) if self.data else None
+
+	def __get_moa(self) :
+		'''Maître d'ouvrage'''
+		return self.cleaned_data.get('cbsm_org_moa') if self.data else None
+
+	def __get_prg(self) :
+		'''Programme'''
+		return self.cleaned_data.get('zl_progr') if self.data else None
+
+	def __get_ssa(self) :
+		'''Sous-axe'''
+		return '.'.join(self.cleaned_data.get('zl_ss_axe').split('_')[1:]) if self.data else None
+
+	def __get_sql(self, code) :
+
+		'''Obtention de la requête SQL'''
+
+		# Si code requête programme, alors...
+		if code == 'prg' :
+			sql = 'SELECT DISTINCT "Programme - ID" FROM "hors_public"."v_suivi_prg";'
+		# Si code requête maître d'ouvrage, alors...
+		elif code == 'moa' :
+			sql = '''
+			SELECT DISTINCT UNNEST(STRING_TO_ARRAY("Programme - Maître d'ouvrage - ID", ';'))
+			FROM "hors_public"."v_suivi_prg";
+			'''
+		# Sinon...
+		else :
+
+			# Définition de la requête non-filtrée
+			sql = 'SELECT * FROM "hors_public"."v_suivi_prg"'
+
+			# Initialisation des filtres
+			filters = []
+
+			# Récupération des valeurs du formulaire
+			prg = self.__get_prg()
+			moa = self.__get_moa()
+			axe = self.__get_axe()
+			ssa = self.__get_ssa()
+			act = self.__get_act()
+
+			# Définition des filtres
+			if prg :
+				filters.append('"Programme - ID" = ' + str(prg))
+			if moa :
+				moa_filters = [
+					str(i) \
+					+ ' = ANY(STRING_TO_ARRAY("Programme - Maître d\'ouvrage - ID", \';\')::INTEGER[])' for i in moa
+				] # Définition des filtres dédiés au champ des maîtres d'ouvrages
+				filters.append('(' + ' OR '.join(moa_filters) + ')')
+			if axe :
+				filters.append('"Programme - Axe - Numéro" = \'' + str(axe) + '\'')
+			if ssa :
+				filters.append('"Programme - Sous-axe - Numéro" = \'' + str(ssa) + '\'')
+			if act :
+				filters.append('"Programme - Action - Numéro" = \'' + str(act) + '\'')
+
+			# Intégration des filtres à la requête
+			if filters :
+				sql += ' WHERE ' + ' AND '.join(filters)
+
+			# Intégration du point-virgule final
+			sql += ';'
+
+		return sql
+
+	# Méthodes publiques
+
+	def get_form(self, rq) :
+
+		'''Obtention du formulaire'''
+
+		# Initialisation des contrôles du formulaire
+		form = init_f(self)
+
+		return '''
+		<form action="" method="post" name="f_avanc_prg" onsubmit="soum_f(event);">
+			<input name="csrfmiddlewaretoken" type="hidden" value="{}">
+			<fieldset class="my-fieldset">
+				<legend>Rechercher par</legend>
+				<div>
+					{}
+					{}
+					{}
+					{}
+					{}
+					<div class="buttons-group">
+						<button class="green-btn my-btn" type="reset">Réinitialiser</button>
+						<button class="green-btn my-btn" type="submit">Valider</button>
+					</div>
+				</div>
+			</fieldset>
+		</form>
+		'''.format(
+			csrf(rq)['csrf_token'],
+			form['zl_progr'],
+			form['cbsm_org_moa'],
+			form['zl_axe'],
+			form['zl_ss_axe'],
+			form['zl_act']
+		)
+
+	def get_datatable(self, *args, **kwargs) :
+
+		'''Obtention d'une table de données'''
+
+		# Exécution de la requête SQL
+		sql = self.__execute_sql()
+
+		return '''
+		<div class="my-table" id="t_avanc_prg">
+			<table>
+				<thead>
+					<tr>{}</tr>
+				</thead>
+				<tbody>{}</tbody>
+			</table>
+		</div>
+		'''.format(
+			''.join(['<th>{}</th>'.format(i[0]) for i in sql[0]]),
+			''.join(['<tr>{}</tr>'.format(
+				''.join('<td>{}</td>'.format(col if col is not None else '') for col in row)
+			) for row in sql[1]])
+		)

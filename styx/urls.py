@@ -125,9 +125,14 @@ urlpatterns = [
         name = 'regroup_prest'
     ),
     url(
-        r'^modules/realisation-etats/avancement-programme/$',
+        r'^modules/realisation-etats/avancement-programme-v1/$',
         AvancementProgrammeView.as_view(),
         name = 'avancement_programme'
+    ),
+    url(
+        r'^modules/realisation-etats/avancement-programme-v2/$',
+        realisation_etats.avancement_programme,
+        name = 'avancement_programme_v2'
     ),
     url(r'^modules/pgre/$', pgre.index, name = 'pgre'),
     url(r'^modules/pgre/creer-action-pgre/$', pgre.cr_act_pgre, name = 'cr_act_pgre'),

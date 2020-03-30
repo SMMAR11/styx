@@ -480,10 +480,15 @@ def get_menu() :
 					'item_href' : reverse('regroup_prest')
 				},
 				{
-					'item_name' : "État d'avancement d'un programme",
+					'item_name' : "État d'avancement d'un programme (V1)",
 					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
 					'item_href' : reverse('avancement_programme')
 				},
+				{
+					'item_name' : "État d'avancement d'un programme (V2)",
+					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
+					'item_href' : reverse('avancement_programme_v2')
+				}
 			],
 			'mod_rank' : 3
 		},

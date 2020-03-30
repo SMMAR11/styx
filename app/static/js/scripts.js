@@ -112,6 +112,7 @@ $(document).ready(function() {
 	new MyDataTable('select_prest').set_datatable({
 		'autofit' : ['LAST:1'], 'date' : [14, 15], 'number' : [6, 7, 8, 9, 10, 11, 12], 'unsorting' : ['LAST:1']
 	});
+	new MyDataTable('avanc_prg').set_datatable({ 'number' : [0, 9, 10, 11, 13, 14, 15, 16, 17, 18] });
 	new MyDataTable('select_act_pgre').set_datatable({ 'autofit' : ['LAST:99'], 'unsorting' : ['LAST:99'] });
 
 });
@@ -931,6 +932,22 @@ $('#id_FiltrerPrestations-zl_progr, #id_FiltrerPrestations-zl_axe, #id_FiltrerPr
 				'id_FiltrerPrestations-zl_act'
 			]
 		);
+	}
+);
+
+/**
+ * Ce script permet de gérer l'affichage et les données des listes déroulantes des axes, des sous-axes et des actions
+ * du formulaire d'avancement d'un programme.
+ * _e : Objet DOM
+ */
+$('#id_AvancementProgramme-zl_progr, #id_AvancementProgramme-zl_axe, #id_AvancementProgramme-zl_ss_axe').on(
+	'change', function(e) {
+		alim_ld(e, [
+			'id_AvancementProgramme-zl_progr',
+			['id_AvancementProgramme-zl_axe'],
+			'id_AvancementProgramme-zl_ss_axe',
+			'id_AvancementProgramme-zl_act'
+		]);
 	}
 );
 
