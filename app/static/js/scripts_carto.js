@@ -32,15 +32,15 @@ window.addEventListener('map:init', function(e) {
     map = detail.map;
 
     // Ajout des fonds Géoportail
-    L.geoportalLayer.WMS({
-        layer: "SCAN25TOPO_PYR-JPEG_WLD_WM",
+    L.geoportalLayer.WMTS({
+        layer: "ORTHOIMAGERY.ORTHOPHOTOS",
     },{
         minZoom : 8,
         maxZoom : 16
     }).addTo(map);
 
-    L.geoportalLayer.WMS({
-        layer: "ORTHOIMAGERY.ORTHOPHOTOS.BDORTHO",
+    L.geoportalLayer.WMTS({
+        layer: "GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2",
     },{
         minZoom : 17,
         maxZoom : 20
