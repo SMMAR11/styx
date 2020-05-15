@@ -5,14 +5,15 @@
 from django.conf import settings
 
 '''
-Cette fonction permet d'obtenir les différentes constantes paramétrées via la base de données.
+Cette fonction permet d'obtenir les différentes constantes paramétrées dans le fichier settings.py.
 request : Objet "requête"
 Retourne un tableau associatif
 '''
-def get_bdd_settings(request) :
+def get_settings(request) :
 	return {
 		'consts_str' : [(cle, val) for cle, val in settings.T_DONN_BDD_STR.items()],
-		'consts_int' : [(cle, val) for cle, val in settings.T_DONN_BDD_INT.items()]
+		'consts_int' : [(cle, val) for cle, val in settings.T_DONN_BDD_INT.items()],
+		'IGN_KEY' : settings.IGN_KEY
 	}
 
 '''

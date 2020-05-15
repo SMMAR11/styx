@@ -71,7 +71,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
-                'app.context_processors.get_bdd_settings',
+                'app.context_processors.get_settings',
                 'app.context_processors.set_alerts',
                 'app.context_processors.set_menus'
             ],
@@ -178,3 +178,6 @@ EMAIL_BACKEND = config('EMAIL_BACKEND')
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'mail_dumps')
 
 CONSTRAINT_DDTM = config('CONSTRAINT_DDTM', cast = bool)
+
+# Clé IGN
+IGN_KEY = config('IGN_KEY')
