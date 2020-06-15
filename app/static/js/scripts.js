@@ -55,7 +55,7 @@ $(document).ready(function() {
 	new MyDataTable('cons_doss_prest').set_datatable({ 'autofit' : [3], 'number' : [1, 2], 'unsorting' : [3] });
 	new MyDataTable('cons_droit').set_datatable({ 'autofit' : [2, 3], 'unsorting' : ['LAST:99'] });
 	new MyDataTable('cons_fact').set_datatable({
-		'autofit' : [7], 'date' : [4], 'number' : [2, 5, 6], 'unsorting' : [7]
+		'autofit' : ['LAST:1'], 'date' : [5], 'number' : [2, 3], 'unsorting' : ['LAST:1']
 	});
 	new MyDataTable('cons_fact_ddv').set_datatable({
 		'autofit' : [4], 'date' : [3], 'number' : [1], 'unsorting' : [4]

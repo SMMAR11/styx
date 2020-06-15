@@ -295,8 +295,9 @@
 						{% if mont_fact_sum > 0 %}
 						<tfoot>
 							<tr>
-								<td colspan="2">Total {{ ht_ou_ttc }} payé (en €)</td>
-								<td colspan="7">{{ mont_fact_sum_str }}</td>
+								<td colspan="2">Total payé (en €)</td>
+								<td>{{ mont_ht_fact_sum }}</td>
+								<td colspan="7">{{ mont_ttc_fact_sum }}</td>
 							</tr>
 						</tfoot>
 						{% endif %}
