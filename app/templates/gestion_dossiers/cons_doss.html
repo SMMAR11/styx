@@ -264,7 +264,8 @@
 							<tr>
 								<th>Prestation</th>
 								<th>Nature de la prestation</th>
-								<th>Montant {{ ht_ou_ttc }} (en €)</th>
+								<th>Montant HT (en €)</th>
+								<th>Montant TTC (en €)</th>
 								<th>N° de facture</th>
 								<th>Date de mandatement par le maître d'ouvrage</th>
 								<th>N° de mandat</th>
@@ -278,7 +279,8 @@
 							<tr>
 								<td>{{ f.id_prest }}</td>
 								<td>{{ f.id_nat_prest }}</td>
-								<td>{{ f.mont_fact }}</td>
+								<td>{{ f.mont_ht_fact }}</td>
+								<td>{{ f.mont_ttc_fact }}</td>
 								<td>{{ f.num_fact }}</td>
 								<td>{{ f.dt_mand_moa_fact }}</td>
 								<td>{{ f.num_mandat_fact }}</td>
