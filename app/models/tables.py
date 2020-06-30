@@ -1952,7 +1952,7 @@ class TOrdreService(models.Model) :
     # Colonnes
     id_os = models.AutoField(primary_key = True)
     comm_os = models.TextField(blank = True, verbose_name = 'Commentaire')
-    d_emiss_os = models.DateField(verbose_name = 'Date d\'émission')
+    d_emiss_os = models.DateField(verbose_name = 'Date d\'effet')
     duree_w_os = models.PositiveIntegerField(
         default = 0, verbose_name = 'Durée travaillée (en nombre de jours ouvrés)'
     )
