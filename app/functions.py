@@ -429,8 +429,8 @@ def get_menu() :
 		'port_cart' : {
 			'mod_name' : 'Portail cartographique',
 			'mod_img' : 'pics/thumbnails/portail_cartographique/main.jpg',
-			'mod_href' : 'http://carto.smmar.fr/styx',
-			'mod_href_blank' : 'target',
+			'mod_href' : '#',
+			'mod_href_blank' : '',
 			'mod_items' : [],
 			'mod_rank' : 1
 		},
