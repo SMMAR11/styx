@@ -360,12 +360,20 @@ _req : Objet requête
 def alert(_req) :
 
 	# Import
+	from app.context_processors import set_alerts
 	from django.shortcuts import render
 
 	output = None
 
 	if _req.method == 'GET' :
 
+		alerts = set_alerts(_req)
+
 		# Affichage du template
-		output = render(_req, './main/alertes.html', { 'title' : 'Alertes' })
+		output = render(
+			_req,
+			'./main/alertes.html',
+			{ 'alerts_list': alerts['alerts_list'], 'title' : 'Alertes' }
+		)
+
 	return output
