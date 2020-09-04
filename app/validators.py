@@ -31,7 +31,7 @@ def val_fich_img(_v) :
 	if verif_ext_fich(_v, ('.bmp', '.gif', '.jpg', '.jpeg', '.png')) == True :
 		raise ValidationError('Veuillez choisir un fichier au format BMP, GIF, JPG, JPEG ou PNG.')
 
-	t = 3
+	t = 5
 	if _v.size > t * 1048576 :
 		raise ValidationError(
 			'Veuillez choisir un fichier dont la taille est inférieure ou égale à {0} Mo.'.format(t)

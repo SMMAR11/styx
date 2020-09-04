@@ -1043,7 +1043,7 @@ class TPhoto(models.Model) :
     chem_ph = models.FileField(
         upload_to = set_chem_ph_upload_to,
         validators = [val_fich_img],
-        verbose_name = 'Insérer une photo <span class="field-complement">(taille limitée à 3 Mo)</span>'
+        verbose_name = 'Insérer une photo <span class="field-complement">(taille limitée à 5 Mo)</span>'
     )
     descr_ph = models.CharField(blank = True, max_length = 255, verbose_name = 'Description')
     dt_pv_ph = models.DateField(
@@ -1835,7 +1835,7 @@ class TPhotoPgre(models.Model) :
     chem_ph_pgre = models.FileField(
         upload_to = set_chem_ph_pgre_upload_to,
         validators = [val_fich_img],
-        verbose_name = 'Insérer une photo <span class="field-complement">(taille limitée à 3 Mo)</span>'
+        verbose_name = 'Insérer une photo <span class="field-complement">(taille limitée à 5 Mo)</span>'
     )
     descr_ph_pgre = models.CharField(blank = True, max_length = 255, verbose_name = 'Description')
     dt_pv_ph_pgre = models.DateField(
