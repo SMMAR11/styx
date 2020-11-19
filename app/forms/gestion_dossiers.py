@@ -1859,7 +1859,10 @@ class GererAvenant(forms.ModelForm) :
 			# Définition du message d'erreur
 			tab_bornes_mont_aven = [mont_aven_min, mont_rae]
 			if erreur == True :
-				if tab_bornes_mont_aven[0] and tab_bornes_mont_aven :
+				mess = '''
+				Le montant de l'avenant est obligatoirement de {0} €.
+				'''.format(obt_mont(tab_bornes_mont_aven[0]))
+				if tab_bornes_mont_aven[0] and tab_bornes_mont_aven[1] :
 					if tab_bornes_mont_aven[0] == tab_bornes_mont_aven[1] :
 						mess = '''
 						Le montant de l'avenant est obligatoirement de {0} €.
