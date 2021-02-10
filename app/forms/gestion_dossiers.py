@@ -53,6 +53,24 @@ class GererDossier(forms.ModelForm) :
 		required = False,
 		widget = forms.RadioSelect()
 	)
+	est_autofin_doss = forms.ChoiceField(
+		choices=[(True, 'Oui'), (False, 'Non')],
+		initial=False,
+		label='Le dossier est-il en autofinancement ?',
+		required=False,
+		widget=forms.RadioSelect()
+	)
+	est_pec_ds_bilan_doss = forms.ChoiceField(
+		choices=[(True, 'Oui'), (False, 'Non')],
+		initial=False,
+        label='''
+        Le dossier doit-il être pris en compte dans les bilans de
+        programmation ? <span class="field-complement">(si et seulement
+        si non-accordé en comité de programmation - CD GEMAPI)</span>
+        ''',
+		required=False,
+		widget=forms.RadioSelect()
+    )
 
 	class Meta :
 
@@ -75,8 +93,8 @@ class GererDossier(forms.ModelForm) :
 		fields = '__all__'
 		model = TDossier
 		widgets = {
-			'dt_av_cp_doss' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
 			'dt_delib_moa_doss' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_depot_doss' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
 			'mont_doss' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' }),
 			'mont_suppl_doss' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
 		}
@@ -91,6 +109,7 @@ class GererDossier(forms.ModelForm) :
 		from app.models import TProgramme
 		from app.models import TSousAxe
 		from app.models import TTechnicien
+		from app.models import VSuiviDossier
 		from styx.settings import T_DONN_BDD_STR
 
 		# Je déclare le tableau des arguments.
@@ -110,7 +129,6 @@ class GererDossier(forms.ModelForm) :
 		self.fields['zl_ss_axe'].label += REQUIRED
 		self.fields['zl_act'].label += REQUIRED
 		self.fields['dt_delib_moa_doss'].label += MAY_BE_REQUIRED
-		self.fields['dt_av_cp_doss'].label += MAY_BE_REQUIRED
 
 		# J'alimente la liste déroulante des maîtres d'ouvrages.
 		t_org_moa = [(m.pk, m) for m in TMoa.objects.filter(peu_doss = True, en_act_doss = True)]
@@ -131,10 +149,6 @@ class GererDossier(forms.ModelForm) :
 		t_techn = [(t.pk, t) for t in TTechnicien.objects.filter(en_act = True)]
 		t_techn.insert(0, DEFAULT_OPTION)
 		self.fields['zl_techn'].choices = t_techn
-
-		# Je passe en lecture seule le champ relatif à la date de l'avis du comité de programmation car "En attente"
-		# est l'avis du comité de programmation sélectionné par défaut.
-		self.fields['dt_av_cp_doss'].widget.attrs['readonly'] = True
 
 		i = self.instance
 
@@ -218,12 +232,13 @@ class GererDossier(forms.ModelForm) :
 									obj_act = TAction.objects.get(id_ss_axe = obj_ss_axe, num_act = i.num_act)
 									self.fields['zl_act'].initial = obj_act.pk
 
+			# Récupération d'une instance VSuiviDossier
+			voDds = VSuiviDossier.objects.get(pk=i.pk)
+
 			# Je vérifie si certains champs doivent bénéficier ou non de la lecture seule.
 			if i.id_av.int_av in [T_DONN_BDD_STR['AV_EP'], T_DONN_BDD_STR['AV_ABAND']] :
 				self.fields['dt_delib_moa_doss'].widget.attrs['readonly'] = True
-			if i.id_av_cp.int_av_cp in [T_DONN_BDD_STR['AV_CP_ACC'], T_DONN_BDD_STR['AV_CP_REF']] :
-				self.fields['dt_av_cp_doss'].widget.attrs['readonly'] = False
-			if i.id_av_cp.int_av_cp == T_DONN_BDD_STR['AV_CP_ACC'] :
+			if voDds.id_av_cp.int_av_cp == T_DONN_BDD_STR['AV_CP_ACC'] :
 				self.fields['mont_doss'].widget.attrs['readonly'] = True
 			else :
 				self.fields['mont_suppl_doss'].widget.attrs['readonly'] = True
@@ -256,8 +271,6 @@ class GererDossier(forms.ModelForm) :
 		v_mont_suppl_doss = cleaned_data.get('mont_suppl_doss')
 		v_av = cleaned_data.get('id_av')
 		v_dt_delib_moa_doss = cleaned_data.get('dt_delib_moa_doss')
-		v_av_cp = cleaned_data.get('id_av_cp')
-		v_av_cp_doss = cleaned_data.get('dt_av_cp_doss')
 
 		i = self.instance
 
@@ -279,11 +292,6 @@ class GererDossier(forms.ModelForm) :
 		if v_av :
 			if v_av.int_av not in [T_DONN_BDD_STR['AV_EP'], T_DONN_BDD_STR['AV_ABAND']] and not v_dt_delib_moa_doss :
 				self.add_error('dt_delib_moa_doss', ERROR_MESSAGES['required'])
-
-		# Je rends obligatoire la date de l'avis du comité de programmation si celui-ci est en attente ou sans objet.
-		if v_av_cp :
-			if not v_av_cp.int_av_cp in [T_DONN_BDD_STR['AV_CP_EA'], T_DONN_BDD_STR['AV_CP_SO']] and not v_av_cp_doss :
-				self.add_error('dt_av_cp_doss', ERROR_MESSAGES['required'])
 
 		# Je rends obligatoire l'axe, le sous-axe, l'action et le type de dossier sous certaines conditions.
 		if v_progr :
@@ -315,6 +323,9 @@ class GererDossier(forms.ModelForm) :
 
 		if i.pk :
 
+			# Récupération d'une instance VSuiviDossier
+			voDds = VSuiviDossier.objects.get(pk=i.pk)
+
 			# Je récupère trois valeurs : le montant de l'assiette éligible maximum, la somme des montants de la
 			# participation et la somme des prestations.
 			qs_fin_aggr = TFinancement.objects.filter(id_doss = i).aggregate(
@@ -322,15 +333,15 @@ class GererDossier(forms.ModelForm) :
 			)
 			mont_elig_fin_max = qs_fin_aggr['mont_elig_fin__max'] or 0
 			mont_part_fin_sum = qs_fin_aggr['mont_part_fin__sum'] or 0
-			mont_tot_prest_doss = VSuiviDossier.objects.get(pk = i.pk).mont_tot_prest_doss
+			mont_tot_prest_doss = voDds.mont_tot_prest_doss
 
 			# Je trie les deux valeurs dans l'ordre afin de récupérer le montant minimum du dossier.
 			t_mont_doss = sorted([mont_elig_fin_max, mont_part_fin_sum, mont_tot_prest_doss])
 
 			# Je gère la contrainte suivante : les montants du dossier dépendent des éléments comptables de celui-ci.
 			if v_mont_doss is not None and v_mont_suppl_doss is not None :
-				if v_av_cp :
-					if v_av_cp.int_av_cp == T_DONN_BDD_STR['AV_CP_ACC'] :
+				if voDds.id_av_cp :
+					if voDds.id_av_cp.int_av_cp == T_DONN_BDD_STR['AV_CP_ACC'] :
 						if t_mont_doss[2] > i.mont_doss :
 							mont_min = t_mont_doss[2] - i.mont_doss
 							if float(v_mont_suppl_doss) < mont_min :
@@ -353,7 +364,7 @@ class GererDossier(forms.ModelForm) :
 
 			# Je renvoie une erreur si le montant de dépassement d'un dossier dont l'avis du comité de programmation
 			# est différent de "Accordé" est strictement positif.
-			if v_av_cp and v_av_cp.int_av_cp != T_DONN_BDD_STR['AV_CP_ACC'] :
+			if voDds.id_av_cp and voDds.id_av_cp.int_av_cp != T_DONN_BDD_STR['AV_CP_ACC'] :
 				if v_mont_suppl_doss and float(v_mont_suppl_doss) > 0 :
 					self.add_error('mont_suppl_doss', ERROR_MESSAGES['invalid'])
 			else :
@@ -425,6 +436,7 @@ class GererDossier(forms.ModelForm) :
 
 class ChoisirDossier(forms.ModelForm) :
 
+	zs_num_doss = forms.CharField(label='N° du dossier', required=False)
 	zl_org_moa = forms.ChoiceField(label = 'Maître d\'ouvrage', required = False, widget = forms.Select())
 	zl_progr = forms.ChoiceField(label = 'Programme', required = False, widget = forms.Select())
 	zl_axe = forms.ChoiceField(
@@ -532,6 +544,7 @@ class GererFinancement(forms.ModelForm) :
 		model = TFinancement
 		widgets = {
 			'dt_deb_elig_fin' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_decision_aide_fin' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
 			'dt_lim_deb_oper_fin' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
 			'dt_lim_prem_ac_fin' : forms.DateInput(attrs = { 'input-group-addon' : 'date' }),
 			'mont_elig_fin' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' }),
@@ -1017,6 +1030,7 @@ class GererFacture(forms.ModelForm) :
 		model = TFacture
 		widgets = {
 			'dt_mand_moa_fact' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
+			'dt_emiss_fact' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
 			'dt_rec_fact' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }),
 			'mont_ht_fact' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' }),
 			'mont_ttc_fact' : forms.NumberInput(attrs = { 'input-group-addon' : 'euro' })
@@ -1035,11 +1049,12 @@ class GererFacture(forms.ModelForm) :
 
 		# Mise en forme de certaines données
 		if instance :
-			kwargs.update(initial = {
-				'dt_mand_moa_fact' : dt_fr(instance.dt_mand_moa_fact) if instance.dt_mand_moa_fact else None,
-				'dt_rec_fact' : dt_fr(instance.dt_rec_fact) if instance.dt_rec_fact else None,
-				'mont_ht_fact' : '{:0.2f}'.format(instance.mont_ht_fact) if instance.mont_ht_fact else None,
-				'mont_ttc_fact' : '{:0.2f}'.format(instance.mont_ttc_fact) if instance.mont_ttc_fact else None,
+			kwargs.update(initial={
+				'dt_emiss_fact': dt_fr(instance.dt_emiss_fact) if instance.dt_emiss_fact else None,
+				'dt_mand_moa_fact': dt_fr(instance.dt_mand_moa_fact) if instance.dt_mand_moa_fact else None,
+				'dt_rec_fact': dt_fr(instance.dt_rec_fact) if instance.dt_rec_fact else None,
+				'mont_ht_fact': '{:0.2f}'.format(instance.mont_ht_fact) if instance.mont_ht_fact else None,
+				'mont_ttc_fact': '{:0.2f}'.format(instance.mont_ttc_fact) if instance.mont_ttc_fact else None,
 			})
 
 		super(GererFacture, self).__init__(*args, **kwargs)
@@ -2011,13 +2026,18 @@ class GererOrdreService(forms.ModelForm) :
 	za_num_doss = forms.CharField(
 		label = 'Numéro du dossier', required = False, widget = forms.TextInput(attrs = { 'readonly' : True })
 	)
+	za_num_os = forms.CharField(
+		label='Numéro de l\'ordre de service',
+		required=False,
+		widget=forms.TextInput(attrs={'readonly': True})
+	)
 
 	class Meta :
 
 		# Imports
 		from app.models import TOrdreService
 
-		fields = ['comm_os', 'd_emiss_os', 'duree_w_os', 'obj_os', 'num_os', 'id_prest', 'id_type_os']
+		fields = ['comm_os', 'd_emiss_os', 'duree_w_os', 'obj_os', 'id_prest', 'id_type_os']
 		model = TOrdreService
 		widgets = { 'd_emiss_os' : forms.TextInput(attrs = { 'input-group-addon' : 'date' }) }
 
@@ -2042,7 +2062,7 @@ class GererOrdreService(forms.ModelForm) :
 
 		form = init_f(self) # Initialisation des contrôles
 
-		# Définition du conteni du formulaire
+		# Définition du contenu du formulaire
 		content = '''
 		<div class="row">
 			<div class="col-sm-6">{}</div>
@@ -2060,7 +2080,7 @@ class GererOrdreService(forms.ModelForm) :
 		'''.format(
 			form['za_num_doss'],
 			form['id_prest'],
-			form['num_os'],
+			form['za_num_os'] if self.instance.pk else '',
 			form['id_type_os'],
 			form['d_emiss_os'],
 			form['obj_os'],
@@ -2096,6 +2116,10 @@ class GererOrdreService(forms.ModelForm) :
 		# Définition de la valeur initiale du champ "za_num_doss"
 		self.fields['za_num_doss'].initial = self.__get_pd().id_doss.num_doss
 
+		# Définition de la valeur initiale du champ "za_num_os"
+		if self.instance.pk:
+			self.fields['za_num_os'].initial = self.instance.num_os
+
 		# Redéfinition du champ "id_prest"
 		self.fields['id_prest'].empty_label = None
 		self.fields['id_prest'].queryset = self.fields['id_prest'].queryset.filter(pk = self.__get_pd().id_prest.pk)
@@ -2120,8 +2144,161 @@ class GererOrdreService(forms.ModelForm) :
 		# Ajout des erreurs
 		for key, val in errors.items() : self.add_error(key, val)
 
-	def save(self, commit = True) :
-		os = super().save(commit = False)
-		os.id_doss = self.__get_pd().id_doss # Définition du dossier
-		if commit : os.save()
+	def save(self, commit=True):
+
+		# Imports
+		from app.models import TPrestationsDossier
+
+		# Définition du type de requête (INSERT ou UPDATE)
+		if self.instance.pk:
+			is_create_mode = False
+		else:
+			is_create_mode = True
+
+		# Pré-enregistrement d'un objet TOrdreService
+		os = super().save(commit=False)
+
+		# Définition du dossier
+		os.id_doss = self.__get_pd().id_doss
+
+		# Si type de requête INSERT, alors...
+		if is_create_mode:
+
+			# Définition du numéro de l'OS
+			os.num_os = self.__get_pd().seq_os_prest_doss
+
+			# Mise à jour du séquentiel OS
+			self.__get_pd().seq_os_prest_doss += 1
+			self.__get_pd().save()
+
+		# Enregistrement d'un objet TOrdreService
+		if commit:
+			os.save()
+
 		return os
+
+class GererDdsCdg(forms.ModelForm) :
+
+	class Meta :
+
+		# Imports
+		from app.models import TDdsCdg
+
+		fields = ['cdg_id']
+		model = TDdsCdg
+
+	# Méthodes publiques
+
+	def get_form(self, rq) :
+
+		'''Mise en forme du formulaire'''
+
+		# Imports
+		from app.functions import init_f
+		from django.core.urlresolvers import reverse
+		from django.template.context_processors import csrf
+
+		# Initialisation des contrôles
+		form = init_f(self)
+
+		return '''
+		<form action="{}" name="f_ajout_ddscdg" method="post" onsubmit="soum_f(event)">
+			<input name="csrfmiddlewaretoken" type="hidden" value="{}">
+			{}
+			<button class="center-block green-btn my-btn" type="submit">Valider</button>
+		</form>
+		'''.format(
+			reverse('ajout_ddscdg', args=[self.dds.pk]),
+			csrf(rq)['csrf_token'],
+			form['cdg_id']
+		)
+
+	# Méthodes Django
+
+	def __init__(self, *args, **kwargs) :
+
+		# Imports
+		from app.functions import dt_fr
+		from app.models import TCDGemapiCdg
+		from app.models import TDdsCdg
+		from datetime import date
+
+		# Initialisation des arguments
+		self.dds = kwargs.pop('kwarg_dds')
+
+		super().__init__(*args, **kwargs)
+
+		# Définition des messages d'erreurs personnalisés
+		init_mess_err(self)
+
+		# Récupération du champ "cdg_id"
+		cdg_id = self.fields['cdg_id']
+
+		# Récupération du CD GEMAPI le plus proche de la date du jour
+		oCdg = TCDGemapiCdg.objects \
+			.filter(cdg_date__gte=date.today()) \
+			.exclude(pk__in=TDdsCdg.objects \
+				.filter(dds_id=self.dds.pk) \
+				.values_list('cdg_id', flat=True)
+			) \
+			.order_by('cdg_date') \
+			.first()
+
+		# Initialisation des arguments du champ surchargé "cdg_id"
+		cdg_id_kwargs = {
+			'initial': oCdg.pk if oCdg else None,
+			'label': cdg_id.label,
+			'required': cdg_id.required
+		}
+
+		# Initialisation du tableau des options possibles pour le champ
+		# surchargé "cdg_id"
+		cdg_id_choices = []
+		# Pour chaque année...
+		for date in TCDGemapiCdg.objects.dates(
+			'cdg_date', 'year', order='DESC'
+		):
+			# Récupération des dates dont le dossier peut être présenté
+			qsCdgs = TCDGemapiCdg.objects \
+				.filter(cdg_date__year=date.year) \
+				.exclude(pk__in=TDdsCdg.objects \
+					.filter(dds_id=self.dds.pk) \
+					.values_list('cdg_id', flat=True)
+				) \
+				.order_by('cdg_date')
+			# Si une date au minimum est repérée, alors...
+			if qsCdgs.exists():
+				# Initialisation des dates relatives à l'année
+				cdgs = []
+				# Pour chaque date...
+				for iCdg in qsCdgs:
+					# Empilement des dates relatives à l'année
+					cdg = [iCdg.pk, dt_fr(iCdg.cdg_date)]
+					cdgs.append(cdg)
+				# Empilement du tableau des options possibles pour le
+				# champ surchargé "cdg_id"
+				cdg_id_choices.append([date.year, cdgs])
+		# Insertion d'une option nulle
+		cdg_id_choices.insert(0, [u'', '---------'])
+		# Empilement des arguments du champ surchargé "cdg_id"
+		cdg_id_kwargs['choices'] = cdg_id_choices
+
+		# Redéfinition du champ "cdg_id"
+		self.fields['cdg_id'] = forms.ChoiceField(**cdg_id_kwargs)
+
+	def clean_cdg_id(self):
+
+		# Imports
+		from app.models import TCDGemapiCdg
+
+		# Récupération de la valeur du champ surchargé "cdg_id"
+		cdg_id = self.cleaned_data['cdg_id'] or None
+
+		return TCDGemapiCdg.objects.filter(pk=cdg_id).first()
+
+	def save(self, commit=True) :
+		ddscdg = super().save(commit=False)
+		ddscdg.dds_id = self.dds # Définition du dossier
+		if commit:
+			ddscdg.save()
+		return ddscdg

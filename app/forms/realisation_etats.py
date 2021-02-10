@@ -362,9 +362,14 @@ class FiltrerDossiers(forms.ModelForm) :
 		if val_techn : ands['id_techn'] = val_techn
 		if val_dt_deb_delib_moa_doss : ands['dt_delib_moa_doss__gte'] = val_dt_deb_delib_moa_doss
 		if val_dt_fin_delib_moa_doss : ands['dt_delib_moa_doss__lte'] = val_dt_fin_delib_moa_doss
+
+		'''
 		if val_av_cp : ands['id_av_cp'] = val_av_cp
 		if val_dt_deb_av_cp_doss : ands['dt_av_cp_doss__gte'] = val_dt_deb_av_cp_doss
 		if val_dt_fin_av_cp_doss : ands['dt_av_cp_doss__lte'] = val_dt_fin_av_cp_doss
+		'''
+
+
 		if val_mont_doss_min : ands['mont_doss__gte'] = val_mont_doss_min
 		if val_mont_doss_max : ands['mont_doss__lte'] = val_mont_doss_max
 		if val_mode_taxe_doss : ands['est_ttc_doss'] = { 0 : False, 1 : True }[int(val_mode_taxe_doss)]
@@ -437,8 +442,8 @@ class FiltrerDossiers(forms.ModelForm) :
 					d.id_av,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					d.annee_prev_doss or '-',
-					d.id_av_cp,
-					dt_fr(d.dt_av_cp_doss) or '-',
+					obj_sd.id_av_cp,
+					dt_fr(obj_sd.dt_av_cp_doss) or '-',
 					obt_mont(obj_sd.mont_tot_prest_doss),
 					obt_mont(obj_sd.mont_fact_sum),
 					d.get_view_object().tx_engag_doss,

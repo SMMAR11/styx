@@ -506,9 +506,10 @@ class AUtilisateur(UserAdmin) :
 			'fields' : (
 				('is_active'),
 				('is_staff'),
-				('is_superuser')
+				('is_superuser'),
+				('groups')
 			)
-		}),
+		})
 	)
 
 	add_fieldsets = (
@@ -531,7 +532,12 @@ class AUtilisateur(UserAdmin) :
 			'fields' : (
 				('cb_est_techn'),
 			)
-		})
+		}),
+		('Permissions', {
+			'fields' : (
+				('groups'),
+			)
+		}),
 	)
 
 # Je peux désormais gérer les utilisateurs.
@@ -539,7 +545,7 @@ admin.site.register(TUtilisateur, AUtilisateur)
 
 # Je retire les fonctionnalités de base.
 admin.site.unregister(User)
-admin.site.unregister(Group)
+#admin.site.unregister(Group)
 
 class ASage(admin.ModelAdmin) :
 
@@ -646,7 +652,7 @@ class AFinanceur(admin.ModelAdmin) :
 	list_display = ['n_org']
 
 	# Je mets en forme le formulaire.
-	fields = ['n_org']
+	fields = ['n_org', 'init_acpfinddscdg']
 
 # Je peux désormais gérer les financeurs.
 admin.site.register(TFinanceur, AFinanceur)
@@ -830,3 +836,132 @@ class ATypeOrdreService(admin.ModelAdmin) :
 
 # Je peux désormais gérer les types d'ordres de service
 admin.site.register(TTypeOrdreService, ATypeOrdreService)
+
+# ---------------------------------------------------------------------
+# PROGRAMMATION
+# ---------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
+# Administration du modèle TCDGemapiCdg
+# ---------------------------------------------------------------------
+
+# Administration du modèle TDdsCdg
+class DdsCdgInline(admin.TabularInline):
+
+	# Options
+	extra = 0
+	fields = ('dds_id',)
+	model = TCDGemapiCdg.dds.through
+	verbose_name = 'Dossier'
+	verbose_name_plural = 'Dossiers'
+
+# Administration du modèle TCDGemapiCdg
+class CDGemapiCdg(admin.ModelAdmin):
+
+	# Options
+	actions = (admin.actions.delete_selected,)
+	fields = ('cdg_date', 'cdg_com')
+	inlines = (DdsCdgInline,)
+	list_display = ('__str__',)
+	list_filter = ('cdg_date',)
+
+admin.site.register(TCDGemapiCdg, CDGemapiCdg)
+
+# ---------------------------------------------------------------------
+# Administration du modèle TDdsCdg
+# ---------------------------------------------------------------------
+
+# Administration du modèle TAcpFinDdsCdg
+class AcpFinDdsCdgInline(admin.TabularInline):
+
+	# Options
+	extra = 0
+	fields = ('fin_id', 'acp_id', 'acpfinddscdg_com')
+	model = TAcpFinDdsCdg
+	verbose_name = 'Avis d\'un partenaire'
+	verbose_name_plural = 'Avis des partenaires'
+
+# Administration du modèle TDdsCdg
+class DdsCdg(admin.ModelAdmin):
+
+	# Imports
+	from app.forms.admin import UpdateDdsCdgAdmin
+
+	# Options
+	actions = (admin.actions.delete_selected,)
+	fields = ('dds_id', 'cdg_id', 'ddscdg_pdf_valide', 'acp_id')
+	form = UpdateDdsCdgAdmin
+	inlines = (AcpFinDdsCdgInline,)
+	list_display = ('dds_id', 'cdg_id', 'acp_id')
+	list_filter = ('cdg_id',)
+
+	# Méthodes Django
+
+	def get_readonly_fields(self, rq, obj=None):
+		if obj:
+			return self.readonly_fields + ('cdg_id', 'dds_id')
+		return self.readonly_fields
+
+	def has_add_permission(self, rq):
+		return False
+
+	def has_delete_permission(self, rq, obj=None):
+		return False
+
+admin.site.register(TDdsCdg, DdsCdg)
+
+# ---------------------------------------------------------------------
+# Administration du modèle FinDds
+# ---------------------------------------------------------------------
+
+# Administration du modèle TFinancement
+class FinInline(admin.TabularInline):
+
+	# Imports
+	from app.forms.admin import UpdateFinAdmin
+
+	# Options
+	extra = 0
+	fields = (
+		'id_org_fin',
+		'mont_elig_fin',
+		'pourc_elig_fin',
+		'mont_part_fin'
+	)
+	form = UpdateFinAdmin
+	model = TFinancement
+	ordering = ('id_org_fin',)
+	verbose_name = 'Financement'
+	verbose_name_plural = 'Plan de financement du dossier'
+
+# Administration du modèle FinDds
+class FinDdsAdmin(admin.ModelAdmin):
+
+	"""Administration du modèle FinDds"""
+
+	# Options
+	fields = ('num_doss', 'mont_doss')
+	inlines = (FinInline,)
+	list_display = (
+		'num_doss',
+		'id_nat_doss',
+		'id_type_doss',
+		'lib_1_doss',
+		'lib_2_doss'
+	)
+	search_fields = ('num_doss',)
+
+	# Méthodes Django
+
+	def get_readonly_fields(self, rq, obj=None):
+		if obj:
+			return self.readonly_fields + ('mont_doss', 'num_doss')
+		return self.readonly_fields
+
+	def has_add_permission(self, rq):
+		return False
+
+	def has_delete_permission(self, rq, obj=None):
+		return False
+
+admin.site.register(FinDds, FinDdsAdmin)

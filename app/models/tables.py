@@ -633,23 +633,15 @@ class TDossier(models.Model) :
         return 'dossiers/caracteristiques/{0}'.format(new_fn)
 
     def set_id_av_cp_default() :
-
-        # Imports
-        from app.models import TAvisCp
-        from styx.settings import T_DONN_BDD_STR
-
-        # Je vérifie l'existence d'un objet TAvisCp dont son intitulé est "En attente".
-        try :
-            v_av_cp = TAvisCp.objects.get(int_av_cp = T_DONN_BDD_STR['AV_CP_EA']).pk
-        except :
-            v_av_cp = None
-
-        return v_av_cp
+        """METHODE OBSOLETE"""
+        return None
 
     # Colonnes
     id_doss = models.AutoField(primary_key = True)
     annee_prev_doss = models.PositiveIntegerField(
-        blank = True, null = True, verbose_name = 'Année prévisionnelle du dossier'
+        blank = True,
+        null = True,
+        verbose_name = 'Année prévisionnelle d\'engagement du dossier'
     )
     chem_pj_doss = models.FileField(
         blank = True,
@@ -661,17 +653,19 @@ class TDossier(models.Model) :
     )
     comm_doss = models.TextField(blank = True, verbose_name = 'Commentaire')
     comm_regl_doss = models.TextField(blank = True, verbose_name = 'Commentaire')
-    dt_av_cp_doss = models.DateField(
-        blank = True,
-        null = True,
-        verbose_name = 'Date de l\'avis du comité de programmation <span class="field-complement">(JJ/MM/AAAA)</span>'
-    )
     dt_delib_moa_doss = models.DateField(
         blank = True,
         null = True,
         verbose_name = 'Date de délibération au maître d\'ouvrage <span class="field-complement">(JJ/MM/AAAA)</span>'
     )
+    dt_depot_doss = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Date de dépôt du dossier <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
     dt_int_doss = models.DateField(auto_now_add = True, verbose_name = 'Date de création')
+    est_autofin_doss = models.BooleanField(default=False)
+    est_pec_ds_bilan_doss = models.BooleanField(default=False)
     est_ttc_doss = models.BooleanField()
     lib_1_doss = models.CharField(max_length = 255, verbose_name = 'Caractéristique')
     lib_2_doss = models.CharField(max_length = 255, verbose_name = 'Territoire et lieu-dit')
@@ -679,11 +673,21 @@ class TDossier(models.Model) :
     mont_suppl_doss = MFEuroField(default = 0, verbose_name = 'Dépassement du dossier')
     num_act = models.CharField(blank = True, max_length = 255)
     num_axe = models.CharField(blank = True, max_length = 255)
-    num_doss = models.CharField(max_length = 255, unique = True)
+    num_doss = models.CharField(
+        max_length = 255,
+        unique = True,
+        verbose_name='Numéro du dossier'
+    )
     num_oper_budg_doss = models.CharField(
         blank = True, max_length = 255, verbose_name = 'Numéro d\'opération budgétaire'
     )
     num_ss_axe = models.CharField(blank = True, max_length = 255)
+    priorite_doss = models.CharField(
+        blank=True,
+        choices=[(i, i) for i in ['P1', 'P2', 'P3']],
+        max_length=2,
+        verbose_name='Priorité du dossier'
+    )
     id_progr = models.ForeignKey(TProgramme, on_delete = models.CASCADE, verbose_name = 'Programme')
     id_av = models.ForeignKey(
         TAvancement,
@@ -692,12 +696,6 @@ class TDossier(models.Model) :
         État d'avancement <span class="field-complement">(un dossier est en cours dès que le maître d'ouvrage a pris la
         délibération)</span>
         '''
-    )
-    id_av_cp = models.ForeignKey(
-        TAvisCp,
-        default = set_id_av_cp_default,
-        on_delete = models.CASCADE,
-        verbose_name = 'Avis du comité de programmation - CD GEMAPI'
     )
     id_doss_ass = models.ForeignKey('self', blank = True, null = True, on_delete = models.SET_NULL)
     id_fam = models.ForeignKey(TFamille, on_delete = models.DO_NOTHING)
@@ -732,7 +730,10 @@ class TDossier(models.Model) :
         from app.functions import dt_fr, obt_mont
         ht_ou_ttc = self.get_view_object().type_mont_doss
         return {
-            'annee_prev_doss' : { 'label' : 'Année prévisionnelle du dossier', 'value' : self.annee_prev_doss },
+            'annee_prev_doss': {
+                'label': 'Année prévisionnelle d\'engagement du dossier',
+                'value': self.annee_prev_doss
+            },
             'num_doss' : { 'label' : 'Numéro du dossier', 'value' : self },
             'int_doss' : {
                 'label' : 'Intitulé du dossier',
@@ -783,12 +784,20 @@ class TDossier(models.Model) :
                 'value' : obt_mont(self.get_view_object().mont_tot_doss)
             },
             'id_av' : { 'label' : 'État d\'avancement', 'value' : self.id_av },
+            'id_av_cp': {
+                'label': 'Etat de programmation du dossier',
+                'value' : self.get_view_object().id_av_cp
+            },
             'dt_delib_moa_doss' : {
                 'label' : 'Date de délibération au maître d\'ouvrage', 'value' : dt_fr(self.dt_delib_moa_doss)
             },
-            'id_av_cp' : { 'label' : 'Avis du comité de programmation - CD GEMAPI', 'value' : self.id_av_cp },
-            'dt_av_cp_doss' : {
-                'label' : 'Date de l\'avis du comité de programmation', 'value' : dt_fr(self.dt_av_cp_doss)
+            'dt_depot_doss': {
+                'label': 'Date de dépôt du dossier',
+                'value': dt_fr(self.dt_depot_doss)
+            },
+            'priorite_doss': {
+                'label': 'Priorité du dossier',
+                'value': self.priorite_doss
             },
             'chem_pj_doss' : {
                 'label' : 'Consulter le fichier scanné du mémoire technique',
@@ -872,6 +881,7 @@ class TDossier(models.Model) :
 
         # Imports
         from app.functions import dt_fr, obt_mont
+        from app.models import VFacture
 
         # Initialisation de variables
         facs = []; mont_fact_sum = 0
@@ -894,6 +904,7 @@ class TDossier(models.Model) :
                 'dt_mand_moa_fact' : dt_fr(f.dt_mand_moa_fact) or '-',
                 'mont_fact' : obt_mont(mont_fact),
                 'mont_ht_fact' : obt_mont(f.mont_ht_fact) or '-',
+                'mont_tva_fact': obt_mont(VFacture.objects.get(pk=f.pk).mont_tva_fact) or '-',
                 'mont_ttc_fact' : obt_mont(f.mont_ttc_fact) or '-',
                 'num_mandat_fact' : f.num_mandat_fact,
                 'num_bord_fact' : f.num_bord_fact,
@@ -908,6 +919,11 @@ class TDossier(models.Model) :
             'tbl' : facs,
             'mnt' : mont_fact_sum,
             'mnt_ht' : obt_mont(sum([f.mont_ht_fact or 0 for f in qs])),
+            'mnt_tva': obt_mont(sum([
+                (f.mont_tva_fact or 0) for f in VFacture.objects.filter(
+                    pk__in=qs.values_list('pk', flat=True)
+                )
+            ])),
             'mnt_ttc' : obt_mont(sum([f.mont_ttc_fact or 0 for f in qs]))
         }
 
@@ -966,6 +982,7 @@ class TDossier(models.Model) :
                 'mont_fact_sum' :  obt_mont(mont_fact_sum),
                 'mont_raf' : obt_mont(p.mont_raf),
                 'duree_prest_doss' : TPrestationsDossier.objects.get(pk = p.pk).duree_prest_doss,
+                'duree_aven_sum': p.duree_aven_sum,
                 'duree_w_os_sum' : p.duree_w_os_sum,
                 'duree_w_rest_os_sum' : p.duree_w_rest_os_sum,
                 'pk' : p.pk
@@ -1149,6 +1166,12 @@ class TFinanceur(TOrganisme) :
 
     # Colonnes
     id_org_fin = models.OneToOneField(TOrganisme)
+    init_acpfinddscdg = models.BooleanField(
+        default=False,
+        verbose_name='''
+        Doit-il faire l'objet par défaut d'une instance TAcpFinDdsCdg ?
+        '''
+    )
 
     class Meta :
         db_table = 't_financeur'
@@ -1252,9 +1275,11 @@ class TPrestationsDossier(models.Model) :
     )
     mont_prest_doss = MFEuroField(min_value = 0.01)
     seq_aven_prest_doss = models.PositiveIntegerField(default = 1)
+    seq_os_prest_doss = models.PositiveIntegerField(default=1)
 
     class Meta :
         db_table = 't_prestations_dossier'
+        ordering = ['id_doss']
         verbose_name = verbose_name_plural = 'T_PRESTATIONS_DOSSIER'
 
     # Extra-getters
@@ -1295,6 +1320,10 @@ class TAvenant(models.Model) :
         blank = True,
         null = True,
         verbose_name = 'Date de fin de l\'avenant <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
+    duree_aven = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Durée de l\'avenant (en nombre de jours ouvrés)'
     )
     int_aven = models.CharField(max_length = 255, verbose_name = 'Intitulé de l\'avenant')
     mont_aven = MFEuroField(blank = True, null = True, verbose_name = 'Montant [ht_ou_ttc] de l\'avenant')
@@ -1342,6 +1371,14 @@ class TFacture(models.Model) :
         blank = True,
         null = True,
         verbose_name = 'Date de mandatement par le maître d\'ouvrage <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
+    dt_emiss_fact = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='''
+        Date d'émission de la facture
+        <span class="field-complement">(JJ/MM/AAAA)</span>
+        '''
     )
     dt_rec_fact = models.DateField(
         blank = True,
@@ -1417,6 +1454,13 @@ class TFinancement(models.Model) :
         blank = True,
         null = True,
         verbose_name = 'Date de début d\'éligibilité <span class="field-complement">(JJ/MM/AAAA)</span>'
+    )
+    dt_decision_aide_fin = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='''
+        Date de la décision d'aide <span class="field-complement">(JJ/MM/AAAA)</span>
+        '''
     )
     dt_lim_deb_oper_fin = models.DateField(
         blank = True,
@@ -1956,7 +2000,7 @@ class TOrdreService(models.Model) :
     duree_w_os = models.PositiveIntegerField(
         default = 0, verbose_name = 'Durée travaillée (en nombre de jours ouvrés)'
     )
-    num_os = models.CharField(max_length = 255, verbose_name = 'Numéro de l\'ordre de service')
+    num_os = models.IntegerField(verbose_name = 'Numéro de l\'ordre de service')
     obj_os = models.CharField(max_length = 255, verbose_name = 'Objet')
     id_doss = models.ForeignKey(TDossier, db_column = 'id_doss', on_delete = models.CASCADE)
     id_prest = models.ForeignKey(
@@ -1972,3 +2016,200 @@ class TOrdreService(models.Model) :
     class Meta :
         db_table = 't_ordre_service'
         ordering = ['d_emiss_os', 'id_type_os']
+
+# ---------------------------------------------------------------------
+# PROGRAMMATION
+# ---------------------------------------------------------------------
+
+class TCDGemapiCdg(models.Model):
+
+    """Ensemble des CD GEMAPI"""
+
+    # Colonnes
+    cdg_id = models.AutoField(primary_key=True)
+    cdg_com = models.TextField(
+        blank=True, null=True, verbose_name='Commentaire'
+    )
+    cdg_date = models.DateField(unique=True, verbose_name='Date')
+
+    # Relations plusieurs-à-plusieurs
+    dds = models.ManyToManyField('TDossier', through='TDdsCdg')
+
+    class Meta:
+        db_table = 't_cdgemapi_cdg'
+        ordering = ['-cdg_date']
+        verbose_name = 'T_CDGEMAPI_CDG'
+        verbose_name_plural = 'T_CDGEMAPI_CDG'
+
+    def __str__(self):
+        from app.functions import dt_fr
+        return dt_fr(self.cdg_date)
+
+class TDdsCdg(models.Model):
+
+    """Ensemble des dossiers programmés à un CD GEMAPI"""
+
+    # Méthodes liées aux colonnes
+
+    def acp_id_default():
+
+        """Valeur par défaut du champ acp_id"""
+
+        # Imports
+        from app.models import TAvisCp
+        from styx.settings import T_DONN_BDD_STR
+
+        # Récupération d'une instance TAvisCp
+        acp = TAvisCp.objects.filter(
+            int_av_cp = T_DONN_BDD_STR['AV_CP_EA']
+        ).first()
+
+        if acp:
+            return acp.pk
+        return acp
+
+    # Colonnes
+    ddscdg_id = models.AutoField(primary_key=True)
+    cdg_id = models.ForeignKey(
+        'TCDGemapiCdg',
+        db_column='cdg_id',
+        on_delete=models.CASCADE,
+        verbose_name='Date du comité de programmation - CD GEMAPI'
+    )
+    dds_id = models.ForeignKey(
+        'TDossier',
+        db_column='dds_id',
+        on_delete=models.CASCADE,
+        verbose_name='Dossier'
+    )
+    ddscdg_pdf_valide = models.BooleanField(
+        default=True,
+        verbose_name='Le plan de financement prévisionnel est-il validé ?'
+    )
+    acp_id = models.ForeignKey(
+        'TAvisCp',
+        db_column='acp_id',
+        default=acp_id_default,
+        on_delete=models.CASCADE,
+        verbose_name='Avis du comité de programmation - CD GEMAPI'
+    )
+
+    class Meta:
+        db_table = 't_ddscdg'
+        ordering = ['-cdg_id', 'dds_id']
+        unique_together = ['cdg_id', 'dds_id']
+        verbose_name = 'T_DDSCDG'
+        verbose_name_plural = 'T_DDSCDG'
+
+    # Méthodes Django
+
+    def save(self, *args, **kwargs):
+
+        # Imports
+        from app.models import TAcpFinDdsCdg
+        from app.models import TFinanceur
+
+        # Requête INSERT ou UPDATE ?
+        if self.pk:
+            is_create_mode = False
+        else:
+            is_create_mode = True
+
+        # Enregistrement d'un objet
+        super().save(*args, **kwargs)
+
+        # Si requête INSERT, alors pré-création du formulaire de
+        # recensement des avis des différents financeurs sur le dossier
+        if is_create_mode:
+            for fin in TFinanceur.objects.filter(init_acpfinddscdg=True):
+                TAcpFinDdsCdg.objects.create(ddscdg_id=self, fin_id=fin)
+
+    # Méthodes publiques
+
+    def get_attrs(self) :
+
+        '''Attributs'''
+
+        # Imports
+        from app.functions import dt_fr
+        from django.template.defaultfilters import yesno
+
+        return {
+            'ddscdg_pdf_valide': {
+                'label': '''
+                Le plan de financement prévisionnel est-il validé ?
+                ''',
+                'value': yesno(self.ddscdg_pdf_valide).capitalize()
+            },
+            'acp_id': {'label': 'Avis', 'value': self.acp_id},
+            'cdg_date': {
+                'label': 'Date de l\'avis',
+                'value': dt_fr(self.cdg_id.cdg_date)
+            }
+        }
+
+class TAcpFinDdsCdg(models.Model):
+
+    """
+    Ensemble des avis des financeurs sur un dossier programmé à un CD
+    GEMAPI
+    """
+
+    # Méthodes liées aux colonnes
+
+    def acp_id_default():
+
+        """Valeur par défaut du champ acp_id"""
+
+        # Imports
+        from app.models import TAvisCp
+        from styx.settings import T_DONN_BDD_STR
+
+        # Récupération d'une instance TAvisCp
+        acp = TAvisCp.objects.filter(
+            int_av_cp = T_DONN_BDD_STR['AV_CP_EA']
+        ).first()
+
+        if acp:
+            return acp.pk
+        return acp
+
+    # Colonnes
+    acpfinddscdg_id = models.AutoField(primary_key=True)
+    acp_id = models.ForeignKey(
+        'TAvisCp',
+        db_column='acp_id',
+        default=acp_id_default,
+        on_delete=models.CASCADE,
+        verbose_name='Avis'
+    )
+    ddscdg_id = models.ForeignKey(
+        'TDdsCdg',
+        db_column='ddscdg_id',
+        on_delete=models.CASCADE
+    )
+    fin_id = models.ForeignKey(
+        'TFinanceur',
+        db_column='fin_id',
+        on_delete=models.CASCADE,
+        verbose_name='Financeur'
+    )
+    acpfinddscdg_com = models.TextField(
+        blank=True, verbose_name='Commentaire'
+    )
+
+    class Meta:
+        db_table = 't_acpfinddscdg'
+        ordering = ('fin_id',)
+        unique_together = ('ddscdg_id', 'fin_id')
+        verbose_name = 'T_ACPFINDDSCDG'
+        verbose_name_plural = 'T_ACPFINDDSCDG'
+
+class FinDds(TDossier):
+
+    """Ensemble des financements d'un dossier (modèle mandataire)"""
+
+    class Meta:
+        proxy = True
+        verbose_name = 'FINDDS'
+        verbose_name_plural = 'FINDDS'

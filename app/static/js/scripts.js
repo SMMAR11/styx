@@ -41,12 +41,12 @@ $(document).ready(function() {
 	new MyDataTable('cbsm_org_moa').set_datatable({ 'autofit' : [1], 'exports' : false, 'unsorting' : [1] });
 	new MyDataTable('ch_act_pgre').set_datatable({ 'autofit' : [6], 'unsorting' : [6] });
 	new MyDataTable('ch_doss').set_datatable({
-		'autofit' : ['LAST:1'], 'date' : [3], 'paging' : true, 'unsorting' : ['LAST:1']
+		'autofit' : ['FIRST:1'], 'date' : [3], 'paging' : true, 'unsorting' : ['FIRST:1']
 	});
 	new MyDataTable('ch_prest').set_datatable({ 'autofit' : [5], 'unsorting' : [5] });
 	new MyDataTable('cons_arr').set_datatable({ 'autofit' : [5], 'date' : [3, 4], 'unsorting' : [5] });
 	new MyDataTable('cons_aven').set_datatable({
-		'autofit' : [4], 'date' : [2], 'number' : [0, 3], 'unsorting' : [4]
+		'autofit' : [5], 'date' : [2], 'number' : [0, 3, 4], 'unsorting' : [5]
 	});
 	new MyDataTable('cons_ddv').set_datatable({
 		'autofit' : [6], 'date' : [2, 3], 'number' : [1, 4], 'unsorting' : [6]
@@ -55,7 +55,7 @@ $(document).ready(function() {
 	new MyDataTable('cons_doss_prest').set_datatable({ 'autofit' : [3], 'number' : [1, 2], 'unsorting' : [3] });
 	new MyDataTable('cons_droit').set_datatable({ 'autofit' : [2, 3], 'unsorting' : ['LAST:99'] });
 	new MyDataTable('cons_fact').set_datatable({
-		'autofit' : ['LAST:1'], 'date' : [5], 'number' : [2, 3], 'unsorting' : ['LAST:1']
+		'autofit' : ['LAST:1'], 'date' : [6], 'number' : [2, 3, 4], 'unsorting' : ['LAST:1']
 	});
 	new MyDataTable('cons_fact_ddv').set_datatable({
 		'autofit' : [4], 'date' : [3], 'number' : [1], 'unsorting' : [4]
@@ -78,7 +78,7 @@ $(document).ready(function() {
 	});
 	new MyDataTable('cons_prest').set_datatable({
 		'autofit' : ['LAST:3'],
-		'number' : [3, 4, 5, 6, 7, 8, 9, 10],
+		'number' : [3, 4, 5, 6, 7, 8, 9, 10, 11],
 		'unbordered' : ['LAST:3'],
 		'unsorting' : ['LAST:3']
 	});
@@ -114,6 +114,16 @@ $(document).ready(function() {
 	});
 	new MyDataTable('avanc_prg').set_datatable({ 'number' : [0, 9, 10, 11, 13, 14, 15, 16, 17, 18] });
 	new MyDataTable('select_act_pgre').set_datatable({ 'autofit' : ['LAST:99'], 'unsorting' : ['LAST:99'] });
+
+	new MyDataTable('cons_ddscdg').set_datatable(
+		{ 'autofit' : ['LAST:2'], 'date' : ['FIRST:1'], 'unbordered' : ['LAST:2'], 'unsorting' : ['LAST:2'] }
+	);
+
+	new MyDataTable('EtatAvancementProgramme').set_datatable();
+	new MyDataTable('EtatDossiers').set_datatable();
+	new MyDataTable('EtatPrestations').set_datatable();
+	new MyDataTable('EtatSubventions').set_datatable();
+	new MyDataTable('EtatCDGemapi').set_datatable();
 
 });
 
@@ -262,7 +272,7 @@ $(document).on('click', '#t_ch_doss .choose-icon', function() {
 	$(this).addClass('chosen-icon');
 
 	// Je stocke le numéro du dossier sélectionné.
-	var v_num_doss = $(this).parent().parent().find($('td:first-child')).text();
+	var v_num_doss = $(this).parent().parent().find($('td:nth-child(2)')).text();
 
 	// Je transmets le numéro du dossier sélectionné au formulaire principal.
 	$('#id_GererDossier-za_doss_ass').val(v_num_doss);
@@ -372,42 +382,23 @@ $('#id_GererDossier-zl_progr, #id_GererDossier-zl_axe, #id_GererDossier-zl_ss_ax
  * Ce script gère l'état des contrôles "date" des formulaires de gestion des caractéristiques d'un dossier.
  * _e : Objet DOM
  */
-$('#id_GererDossier-id_av, #id_GererDossier-id_av_cp').on('change', function(_e) {
+$('#id_GererDossier-id_av').on('change', function(_e) {
 	if (isNaN($(this).val()) == false) {
 
 		// Je récupère les intitulés.
 		var v_int_av = $('#id_GererDossier-id_av option:selected').text();
-		var v_int_av_cp = $('#id_GererDossier-id_av_cp option:selected').text();
 
 		// Je pointe vers les objets "date".
 		var o_dt_delib_moa_doss = $('#id_GererDossier-dt_delib_moa_doss');
-		var o_dt_av_cp_doss = $('#id_GererDossier-dt_av_cp_doss');
 
 		if (v_int_av == AV_EP || v_int_av == AV_ABAND) {
 			o_dt_delib_moa_doss.val('');
 			o_dt_delib_moa_doss.attr('readonly', true);
-
-			/*
-			$('#id_GererDossier-id_av_cp option').each(function() {
-				if ($(this).text() == AV_CP_EA) {
-					$('#id_GererDossier-id_av_cp').val($(this).val());
-				}
-			});
-			*/
-
 		}
 		else {
 			o_dt_delib_moa_doss.removeAttr('readonly');
 		}
 
-		//if (v_int_av == AV_EP || $.inArray(v_int_av_cp, [AV_CP_EA, AV_CP_SO]) > -1) {
-		if ($.inArray(v_int_av_cp, [AV_CP_EA, AV_CP_SO]) > -1) {
-			o_dt_av_cp_doss.val('');
-			o_dt_av_cp_doss.attr('readonly', true);
-		}
-		else {
-			o_dt_av_cp_doss.removeAttr('readonly');
-		}
 	}
 });
 
@@ -1022,5 +1013,90 @@ $(document).on(
 		if (cpt == cpt_ttc) {
 			$('#id_GererDemandeVersement-mont_ttc_ddv').val(mont_ddv);
 		}
+	}
+);
+
+///////////////////////////////////////////////////////////////////////
+// REALISATION D'ETATS
+///////////////////////////////////////////////////////////////////////
+
+// Gestion d'affichage des listes déroulantes des axes, sous-axes et
+// actions de l'état des subventions
+$('#id_EtatSubventions-zl_id_progr, #id_EtatSubventions-zl_axe, #id_EtatSubventions-zl_ss_axe').on(
+	'change', function(_e) {
+		alim_ld(
+			_e,
+			[
+				'id_EtatSubventions-zl_id_progr',
+				['id_EtatSubventions-zl_axe'],
+				'id_EtatSubventions-zl_ss_axe',
+				'id_EtatSubventions-zl_act'
+			]
+		);
+	}
+);
+
+// Gestion d'affichage des listes déroulantes des axes, sous-axes et
+// actions de l'état des prestations
+$('#id_EtatPrestations-zl_id_progr, #id_EtatPrestations-zl_axe, #id_EtatPrestations-zl_ss_axe').on(
+	'change', function(_e) {
+		alim_ld(
+			_e,
+			[
+				'id_EtatPrestations-zl_id_progr',
+				['id_EtatPrestations-zl_axe'],
+				'id_EtatPrestations-zl_ss_axe',
+				'id_EtatPrestations-zl_act'
+			]
+		);
+	}
+);
+
+// Gestion d'affichage des listes déroulantes des axes, sous-axes et
+// actions du bilan d'un programme d'actions
+$('#id_EtatAvancementProgramme-zl_id_progr, #id_EtatAvancementProgramme-zl_axe, #id_EtatAvancementProgramme-zl_ss_axe').on(
+	'change', function(_e) {
+		alim_ld(
+			_e,
+			[
+				'id_EtatAvancementProgramme-zl_id_progr',
+				['id_EtatAvancementProgramme-zl_axe'],
+				'id_EtatAvancementProgramme-zl_ss_axe',
+				'id_EtatAvancementProgramme-zl_act'
+			]
+		);
+	}
+);
+
+// Gestion d'affichage des listes déroulantes des axes, sous-axes et
+// actions du bilan de décisions prises à l'occasion d'un comité de
+// programmation - CD GEMAPI
+$('#id_EtatCDGemapi-zl_id_progr, #id_EtatCDGemapi-zl_axe, #id_EtatCDGemapi-zl_ss_axe').on(
+	'change', function(_e) {
+		alim_ld(
+			_e,
+			[
+				'id_EtatCDGemapi-zl_id_progr',
+				['id_EtatCDGemapi-zl_axe'],
+				'id_EtatCDGemapi-zl_ss_axe',
+				'id_EtatCDGemapi-zl_act'
+			]
+		);
+	}
+);
+
+// Gestion d'affichage des listes déroulantes des axes, sous-axes et
+// actions de la vue générale des dossiers
+$('#id_EtatDossiers-zl_id_progr, #id_EtatDossiers-zl_axe, #id_EtatDossiers-zl_ss_axe').on(
+	'change', function(_e) {
+		alim_ld(
+			_e,
+			[
+				'id_EtatDossiers-zl_id_progr',
+				['id_EtatDossiers-zl_axe'],
+				'id_EtatDossiers-zl_ss_axe',
+				'id_EtatDossiers-zl_act'
+			]
+		);
 	}
 );

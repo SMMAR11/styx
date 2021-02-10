@@ -89,10 +89,37 @@
 							<div class="col-md-6">{{ t_attrs_doss.dt_delib_moa_doss }}</div>
 						</div>
 						{{ t_attrs_doss.annee_prev_doss }}
-						<div class="row">
-							<div class="col-md-6">{{ t_attrs_doss.id_av_cp }}</div>
-							<div class="col-md-6">{{ t_attrs_doss.dt_av_cp_doss }}</div>
+						{{ t_attrs_doss.dt_depot_doss }}
+						{{ t_attrs_doss.priorite_doss }}
+						<div class="attribute-wrapper">
+							<span class="attribute-label">Comité de programmation - CD GEMAPI</span>
+							<div class="right">
+								<span data-target="#fm_ajout_ddscdg" data-toggle="modal" class="add-icon forbidden icon-link">Présenter le dossier à un comité de programmation - CD GEMAPI</span>
+							</div>
+							<div class="my-table" id="t_cons_ddscdg">
+								<table>
+									<thead>
+										<tr>
+											<th>Date de l'avis</th>
+											<th>Avis</th>
+											<th></th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for dc in ddscdg %}
+										<tr>
+											<td>{{ dc.cdg_id.cdg_date }}</td>
+											<td>{{ dc.acp_id }}</td>
+											<td><span action="?action=consulter-ddscdg&ddscdg={{ dc.pk }}" class="consult-icon pointer pull-right" onclick="html_ds_fm(event, 'cons_ddscdg');" title="Consulter les détails du comité de programmation - CD GEMAPI"></span></td>
+											<td><span action="?action=supprimer-ddscdg&ddscdg={{ dc.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_ddscdg');" title="Dé-présenter le dossier du comité de programmation - CD GEMAPI"></span></td>
+										</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
 						</div>
+						{{ t_attrs_doss.id_av_cp }}
 						<div class="title-1">Autres</div>
 						{{ t_attrs_doss.chem_pj_doss }}
 						{{ t_attrs_doss.num_oper_budg_doss }}
@@ -207,6 +234,7 @@
 								<th>∑ {{ ht_ou_ttc }} factures émises (en €)</th>
 								<th>Reste à facturer {{ ht_ou_ttc }} (en €)</th>
 								<th>Durée presta (en j ouvrés)</th>
+								<th>Durée avenants (en j ouvrés)</th>
 								<th>Durée travaillée (en j ouvrés)</th>
 								<th>Durée restante à travailler (en j ouvrés)</th>
 								<th></th>
@@ -226,6 +254,7 @@
 								<td>{{ p.mont_fact_sum }}</td>
 								<td>{{ p.mont_raf }}</td>
 								<td>{{ p.duree_prest_doss }}</td>
+								<td>{{ p.duree_aven_sum }}</td>
 								<td>{{ p.duree_w_os_sum }}</td>
 								<td>{{ p.duree_w_rest_os_sum }}</td>
 								<td>
@@ -245,7 +274,7 @@
 								{% for i in t_prest_sum %}
 								<td>{{ i }}</td>
 								{% endfor %}
-								<td colspan="6"></td>
+								<td colspan="7"></td>
 							</tr>
 						</tfoot>
 						{% endif %}
@@ -265,6 +294,7 @@
 								<th>Prestation</th>
 								<th>Nature de la prestation</th>
 								<th>Montant HT (en €)</th>
+								<th>Montant TVA (en €)</th>
 								<th>Montant TTC (en €)</th>
 								<th>N° de facture</th>
 								<th>Date de mandatement par le maître d'ouvrage</th>
@@ -280,6 +310,7 @@
 								<td>{{ f.id_prest }}</td>
 								<td>{{ f.id_nat_prest }}</td>
 								<td>{{ f.mont_ht_fact }}</td>
+								<td>{{ f.mont_tva_fact }}</td>
 								<td>{{ f.mont_ttc_fact }}</td>
 								<td>{{ f.num_fact }}</td>
 								<td>{{ f.dt_mand_moa_fact }}</td>
@@ -297,6 +328,7 @@
 							<tr>
 								<td colspan="2">Total payé (en €)</td>
 								<td>{{ mont_ht_fact_sum }}</td>
+								<td>{{ mont_tva_fact_sum }}</td>
 								<td colspan="7">{{ mont_ttc_fact_sum }}</td>
 							</tr>
 						</tfoot>

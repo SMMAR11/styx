@@ -296,11 +296,11 @@ def modif_doss(request, _d) :
 
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
+					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>',
 					d.num_doss,
 					d.get_int_doss(),
 					d.id_org_moa.n_org,
-					dt_fr(d.dt_delib_moa_doss) or '-',
-					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>'
+					dt_fr(d.dt_delib_moa_doss) or '-'
 				) for d in filtr_doss(request, o_doss.pk)]
 
 				# J'envoie le tableau des dossiers filtrés.
@@ -611,16 +611,16 @@ def ch_doss(request) :
 
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
+					'<a href="{0}" class="consult-icon pull-right" title="Consulter le dossier"></a>'.format(
+						reverse('cons_doss', args = [d.pk])
+					),
 					d.num_doss,
 					d.get_int_doss(),
 					d.id_org_moa.n_org,
 					dt_fr(d.dt_delib_moa_doss) or '-',
 					str(d.get_view_object().tx_engag_doss),
 					str(d.get_view_object().tx_real_doss),
-					str(d.mont_doss),
-					'<a href="{0}" class="consult-icon pull-right" title="Consulter le dossier"></a>'.format(
-						reverse('cons_doss', args = [d.pk])
-					)
+					str(d.mont_doss)
 				) for d in filtr_doss(request)]
 
 				# J'envoie le tableau des dossiers filtrés.
@@ -644,6 +644,7 @@ def cons_doss(request, _d) :
 	from app.forms.gestion_dossiers import ChoisirPrestation
 	from app.forms.gestion_dossiers import GererArrete
 	from app.forms.gestion_dossiers import GererDemandeVersement
+	from app.forms.gestion_dossiers import GererDdsCdg
 	from app.forms.gestion_dossiers import GererDossier_Reglementations
 	from app.forms.gestion_dossiers import GererFacture
 	from app.forms.gestion_dossiers import GererFicheVie
@@ -664,6 +665,7 @@ def cons_doss(request, _d) :
 	from app.functions import rempl_fich_log
 	from app.functions import suppr
 	from app.models import TArretesDossier
+	from app.models import TDdsCdg
 	from app.models import TDossier
 	from app.models import TDossierGeom
 	from app.models import TFacture
@@ -872,6 +874,9 @@ def cons_doss(request, _d) :
 				t_ajout_arr['chem_pj_arr'],
 				t_ajout_arr['comm_arr']
 			),
+			'ajout_ddscdg': GererDdsCdg(
+				kwarg_dds=o_doss, prefix='GererDdsCdg'
+			).get_form(rq=request),
 			'ajout_ddv' : '''
 			<form action="{0}" enctype="multipart/form-data" name="f_ger_ddv" method="post" onsubmit="soum_f(event)">
 				<input name="csrfmiddlewaretoken" type="hidden" value="{1}">
@@ -931,7 +936,10 @@ def cons_doss(request, _d) :
 				{}
 				{}
 				{}
-				{}
+				<div class="row">
+					<div class="col-sm-6">{}</div>
+					<div class="col-sm-6">{}</div>
+				</div>
 				<div class="row">
 					<div class="col-sm-6">{}</div>
 					<div class="col-sm-6">{}</div>
@@ -952,6 +960,7 @@ def cons_doss(request, _d) :
 				t_ajout_fact['za_num_doss'],
 				t_ajout_fact['zl_prest'],
 				t_ajout_fact['num_fact'],
+				t_ajout_fact['dt_emiss_fact'],
 				t_ajout_fact['dt_rec_fact'],
 				t_ajout_fact['mont_ht_fact'],
 				t_ajout_fact['mont_ttc_fact'],
@@ -987,6 +996,7 @@ def cons_doss(request, _d) :
 				{15}
 				{16}
 				{17}
+				{18}
 				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 				<div class="form-remark">
 					<ul class="my-list-style">
@@ -1020,6 +1030,7 @@ def cons_doss(request, _d) :
 				t_ajout_fin['dt_lim_prem_ac_fin'],
 				t_ajout_fin['id_paiem_prem_ac'],
 				t_ajout_fin['pourc_real_fin'],
+				t_ajout_fin['dt_decision_aide_fin'],
 				t_ajout_fin['chem_pj_fin'],
 				t_ajout_fin['comm_fin']
 			),
@@ -1183,7 +1194,25 @@ def cons_doss(request, _d) :
 			init_fm('modif_carto', 'Modifier un dossier'),
 			init_fm('modif_doss_regl', 'Modifier un dossier'),
 			init_fm('suppr_doss', 'Supprimer un dossier'),
-			init_fm('suppr_fdv', 'Supprimer un événement')
+			init_fm('suppr_fdv', 'Supprimer un événement'),
+			init_fm(
+				'cons_ddscdg',
+				'Consulter les détails du comité de programmation - CD GEMAPI'
+			),
+			init_fm(
+				'ajout_ddscdg',
+				'''
+				Présenter un dossier à un comité de programmation - CD GEMAPI
+				''',
+				t_cont_fm['ajout_ddscdg']
+			),
+			init_fm(
+				'suppr_ddscdg',
+				'''
+				Dé-présenter un dossier d'un comité de programmation - CD
+				GEMAPI
+				'''
+			)
 		]
 
 		# Je complète le tableau de fenêtres modales dans le cas où le dossier n'est pas en projet.
@@ -1211,6 +1240,7 @@ def cons_doss(request, _d) :
 			{
 				'AV_EP' : T_DONN_BDD_STR['AV_EP'],
 				'd' : o_doss,
+				'ddscdg': TDdsCdg.objects.filter(dds_id=o_doss.pk),
 				'f_modif_doss_regl' : init_f(f_modif_doss_regl),
 				'forbidden' : ger_droits(request.user, o_doss, False, False),
 				'ht_ou_ttc' : ht_ou_ttc,
@@ -1219,6 +1249,7 @@ def cons_doss(request, _d) :
 				'mont_doss' : obt_mont(o_doss.mont_doss),
 				'mont_fact_sum' : facs['mnt'],
 				'mont_ht_fact_sum' : facs['mnt_ht'],
+				'mont_tva_fact_sum': facs['mnt_tva'],
 				'mont_ttc_fact_sum' : facs['mnt_ttc'],
 				'mont_rae' : obt_mont(o_suivi_doss.mont_rae),
 				'mont_suppl_doss' : obt_mont(o_doss.mont_suppl_doss),
@@ -1716,6 +1747,65 @@ def cons_doss(request, _d) :
 				if request.GET.get('fdv') :
 					output = HttpResponse(suppr(reverse('suppr_fdv', args = [request.GET['fdv']])))
 
+			# Consultation des détails d'un comité de programmation -
+			# CD GEMAPI
+			if get_action == 'consulter-ddscdg':
+
+				# Récupération de l'instance TDdsCdg
+				oDdsCdg = TDdsCdg.objects.get(pk=request.GET.get('ddscdg'))
+
+				# Récupération des attributs HTML de l'instance
+				attrs = init_pg_cons(oDdsCdg.get_attrs())
+
+				# Définition du contenu HTML en lien avec les avis des
+				# partenaires
+				trs = []
+				for afdc in oDdsCdg.tacpfinddscdg_set.all():
+					tds = ''.join([
+						'<td>{}</td>'.format(i) for i in [
+							afdc.fin_id, afdc.acp_id, afdc.acpfinddscdg_com
+						]
+					])
+					trs.append('<tr>' + tds + '</tr>')
+
+				# Définition de la réponse HTTP
+				httpresponse = '''
+				<div class="row">
+					<div class="col-md-6">{}</div>
+					<div class="col-md-6">{}</div>
+				</div>
+				{}
+				<div class="attribute-wrapper">
+					<span class="attribute-label">Avis des partenaires</span>
+					<div class="my-table" id="t_cons_acpfinddscdg">
+						<table>
+							<thead>
+								<tr>
+									<th>Financeur</th>
+									<th>Avis</th>
+									<th>Commentaire</th>
+								</tr>
+							</thead>
+							<tbody>{}</tbody>
+						</table>
+					</div>
+				</div>
+				'''.format(
+					attrs['cdg_date'],
+					attrs['acp_id'],
+					attrs['ddscdg_pdf_valide'],
+					''.join(trs)
+				)
+
+				output = HttpResponse(httpresponse)
+
+		# Dé-présentation d'un dossier d'un comité de programmation -
+		# CD GEMAPI
+		if get_action == 'supprimer-ddscdg':
+			output = HttpResponse(suppr(
+				reverse('suppr_ddscdg', args=[request.GET.get('ddscdg')])
+			))
+
 	return output
 
 '''
@@ -2024,6 +2114,10 @@ def cons_fin(request, _f) :
 			},
 			'dt_deb_elig_fin' : {
 				'label' : 'Date de début d\'éligibilité', 'value' : dt_fr(o_fin.dt_deb_elig_fin) or ''
+			},
+			'dt_decision_aide_fin': {
+				'label': 'Date de la décision d\'aide',
+				'value': dt_fr(o_fin.dt_decision_aide_fin) or ''
 			},
 			'dt_fin_elig_fin' : {
 				'label' : 'Date de fin d\'éligibilité', 'value' : dt_fr(o_suivi_fin.dt_fin_elig_fin) or ''
@@ -2540,13 +2634,21 @@ def cons_prest(request, _pd) :
 				'label' : 'Durée de la prestation (en nombre de jours ouvrés)',
 				'value' : o_prest_doss.duree_prest_doss
 			},
+			'duree_aven_sum': {
+				'label': 'Durée des avenants (en nombre de jours ouvrés)',
+				'value': o_suivi_prest_doss.duree_aven_sum
+			},
 			'duree_w_os_sum' : {
 				'label' : 'Durée travaillée (en nombre de jours ouvrés)',
 				'value' : o_suivi_prest_doss.duree_w_os_sum
 			},
 			'duree_w_rest_os_sum' : {
 				'label' : 'Durée restante à travailler (en nombre de jours ouvrés)',
-				'value' : o_suivi_prest_doss.duree_w_rest_os_sum
+				'value' : o_suivi_prest_doss.duree_w_rest_os_sum,
+				'help-text' : '''
+				= durée de la prestation + durée des avenants - durée
+				travaillée
+				'''
 			},
 			'mont_prest_doss' : {
 				'label' : 'Montant {0} de la prestation (en €)'.format(ht_ou_ttc),
@@ -2586,6 +2688,7 @@ def cons_prest(request, _pd) :
 			'num_aven' : index + 1,
 			'int_aven' : a.int_aven,
 			'dt_aven' : dt_fr(a.dt_aven) or '-',
+			'duree_aven': a.duree_aven,
 			'mont_aven' : obt_mont(a.mont_aven) or 0,
 			'pk' : a.pk
 		} for index, a in enumerate(
@@ -2972,6 +3075,10 @@ def cons_aven(request, _a) :
 			'id_prest' : { 'label' : 'Prestation', 'value' : o_aven.id_prest },
 			'int_aven' : { 'label' : 'Intitulé de l\'avenant', 'value' : o_aven.int_aven },
 			'dt_aven' : { 'label' : 'Date de fin de l\'avenant', 'value' : dt_fr(o_aven.dt_aven) or '' },
+			'duree_aven': {
+				'label': 'Durée de l\'avenant (en nombre de jours ouvrés)',
+				'value': o_aven.duree_aven
+			},
 			'mont_aven' : {
 				'label' : 'Montant {0} de l\'avenant (en €)'.format(ht_ou_ttc),
 				'value' : obt_mont(o_aven.mont_aven) or 0
@@ -3295,6 +3402,7 @@ def cons_fact(request, _f) :
 	from app.functions import obt_mont
 	from app.functions import suppr
 	from app.models import TFacture
+	from app.models import VFacture
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -3322,8 +3430,16 @@ def cons_fact(request, _f) :
 			'mont_ht_fact' : {
 				'label' : 'Montant HT de la facture (en €)', 'value' : obt_mont(o_fact.mont_ht_fact) or ''
 			},
+			'mont_tva_fact': {
+				'label': 'Montant TVA de la facture (en €)',
+				'value': obt_mont(VFacture.objects.get(pk=o_fact.pk).mont_tva_fact) or ''
+			},
 			'mont_ttc_fact' : {
 				'label' : 'Montant TTC de la facture (en €)', 'value' : obt_mont(o_fact.mont_ttc_fact) or ''
+			},
+			'dt_emiss_fact': {
+				'label': 'Date d\'émission de la facture',
+				'value': dt_fr(o_fact.dt_emiss_fact) or ''
 			},
 			'dt_rec_fact' : { 'label' : 'Date de réception de la facture', 'value' : dt_fr(o_fact.dt_rec_fact) or '' },
 			'num_mandat_fact' : { 'label' : 'Numéro de mandat', 'value' : o_fact.num_mandat_fact },
@@ -4388,6 +4504,7 @@ def impr_doss(request, _d) :
 	from app.functions import obt_mont
 	from app.functions import obt_pourc
 	from app.forms.gestion_dossiers import PrintDoss
+	from app.models import TDdsCdg
 	from app.models import TDossier
 	from app.models import TFacture
 	from app.models import VDemandeVersement
@@ -4422,11 +4539,13 @@ def impr_doss(request, _d) :
 	form = PrintDoss()
 	context = {
 		'd' : o_doss,
+		'ddscdg': TDdsCdg.objects.filter(dds_id=o_doss.pk),
 		'ht_ou_ttc' : ht_ou_ttc,
 		'mont_ddv_sum_str' : obt_mont(ddvs['mnt']),
 		'mont_doss' : obt_mont(o_doss.mont_doss),
 		'mont_fact_sum' : facs['mnt'],
 		'mont_ht_fact_sum' : facs['mnt_ht'],
+		'mont_tva_fact_sum' : facs['mnt_tva'],
 		'mont_ttc_fact_sum' : facs['mnt_ttc'],
 		'mont_fact_sum_str' : obt_mont(facs['mnt']),
 		'mont_tot_prest_doss' : obt_mont(o_suivi_doss.mont_tot_prest_doss),
@@ -4650,35 +4769,37 @@ def edit_lt_ddv(request, _d) :
 		if obj_ddv.id_type_vers.int_type_vers != T_DONN_BDD_STR['TVERS_AF'] :
 
 			# Déclaration du tableau des factures
-			table = document.add_table(rows = 1, cols = 7, style = 'TableGrid')
+			table = document.add_table(rows = 1, cols = 8, style = 'TableGrid')
 
 			# Préparation de l'en-tête du tableau des factures
 			header_cells = table.rows[0].cells
-			paragraph1 = header_cells[0].paragraphs[0]
+			paragraph0 = header_cells[0].paragraphs[0]
+			run0 = paragraph0.add_run('Date d\'émission de la facture')
+			paragraph1 = header_cells[1].paragraphs[0]
 			run1 = paragraph1.add_run('Prestataire')
-			paragraph2 = header_cells[1].paragraphs[0]
+			paragraph2 = header_cells[2].paragraphs[0]
 			run2 = paragraph2.add_run('Objet')
-			paragraph3 = header_cells[2].paragraphs[0]
+			paragraph3 = header_cells[3].paragraphs[0]
 			run3 = paragraph3.add_run('Date de mandatement par le maître d\'ouvrage')
-			paragraph4 = header_cells[3].paragraphs[0]
+			paragraph4 = header_cells[4].paragraphs[0]
 			run4 = paragraph4.add_run('N° de bordereau')
-			paragraph5 = header_cells[4].paragraphs[0]
+			paragraph5 = header_cells[5].paragraphs[0]
 			run5 = paragraph5.add_run('N° de mandat')
-			paragraph6 = header_cells[5].paragraphs[0]
+			paragraph6 = header_cells[6].paragraphs[0]
 			run6 = paragraph6.add_run('Montant HT (en €)')
-			paragraph7 = header_cells[6].paragraphs[0]
+			paragraph7 = header_cells[7].paragraphs[0]
 			run7 = paragraph7.add_run('Montant TTC (en €)')
 
 			# Mise en forme de l'en-tête du tableau des factures
-			for r in [run1, run2, run3, run4, run5, run6, run7] :
+			for r in [run0, run1, run2, run3, run4, run5, run6, run7] :
 				r.font.size = Pt(8)
 				r.bold = True
-			for p in [paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
+			for p in [paragraph0, paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
 				p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 			# Nettoyage de certaines variables (précaution)
-			del paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
-			del run1, run2, run3, run4, run5, run6, run7
+			del paragraph0, paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
+			del run0, run1, run2, run3, run4, run5, run6, run7
 
 			# Remplissage du tableau des factures
 			for fddv in qs_fact_ddv :
@@ -4688,37 +4809,39 @@ def edit_lt_ddv(request, _d) :
 
 				# Préparation d'une ligne du tableau des factures
 				row_cells = table.add_row().cells
-				paragraph1 = row_cells[0].paragraphs[0]
+				paragraph0 = row_cells[0].paragraphs[0]
+				run0 = paragraph0.add_run(dt_fr(obj_fact.dt_emiss_fact) or '-')
+				paragraph1 = row_cells[1].paragraphs[0]
 				run1 = paragraph1.add_run(str(obj_fact.id_prest.id_org_prest))
-				paragraph2 = row_cells[1].paragraphs[0]
+				paragraph2 = row_cells[2].paragraphs[0]
 				run2 = paragraph2.add_run(obj_fact.id_prest.int_prest)
-				paragraph3 = row_cells[2].paragraphs[0]
+				paragraph3 = row_cells[3].paragraphs[0]
 				run3 = paragraph3.add_run(dt_fr(obj_fact.dt_mand_moa_fact) or '-')
-				paragraph4 = row_cells[3].paragraphs[0]
+				paragraph4 = row_cells[4].paragraphs[0]
 				run4 = paragraph4.add_run(obj_fact.num_bord_fact)
-				paragraph5 = row_cells[4].paragraphs[0]
+				paragraph5 = row_cells[5].paragraphs[0]
 				run5 = paragraph5.add_run(obj_fact.num_mandat_fact)
-				paragraph6 = row_cells[5].paragraphs[0]
+				paragraph6 = row_cells[6].paragraphs[0]
 				run6 = paragraph6.add_run(obt_mont(obj_fact.mont_ht_fact) or '-')
-				paragraph7 = row_cells[6].paragraphs[0]
+				paragraph7 = row_cells[7].paragraphs[0]
 				run7 = paragraph7.add_run(obt_mont(obj_fact.mont_ttc_fact) or '-')
 
 				# Mise en forme d'une ligne du tableau des factures
-				for p in [paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
+				for p in [paragraph0, paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7] :
 					p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 				# Nettoyage de certaines variables (précaution)
-				del paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
-				del run1, run2, run3, run4, run5, run6, run7
+				del paragraph0, paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, paragraph7
+				del run0, run1, run2, run3, run4, run5, run6, run7
 
 			# Préparation de la ligne "Total"
 			footer_cells = table.add_row().cells
 			paragraph1 = footer_cells[0].paragraphs[0]
 			run1 = paragraph1.add_run('Total (en €)')
 			run1.font.size = Pt(8)
-			paragraph2 = footer_cells[5].paragraphs[0]
+			paragraph2 = footer_cells[6].paragraphs[0]
 			run2 = paragraph2.add_run(obt_mont(mont_ht_fact_sum))
-			paragraph3 = footer_cells[6].paragraphs[0]
+			paragraph3 = footer_cells[7].paragraphs[0]
 			run3 = paragraph3.add_run(obt_mont(mont_ttc_fact_sum))
 
 			# Mise en forme de la ligne "Total"
@@ -5099,5 +5222,116 @@ def modif_os(request, os_id) :
 
 			# Affichage des erreurs
 			output = HttpResponse(json.dumps(form.errors), content_type = 'application/json')
+
+	return output
+
+'''
+Cette vue permet de traiter le formulaire de dé-présentation d'un
+dossier d'un comité de programmation - CD GEMAPI
+rq : Objet requête
+ddscdg_id : Identifiant
+'''
+@verif_acc
+@csrf_exempt
+def suppr_ddscdg(rq, ddscdg_id):
+
+	# Imports
+	from app.functions import dt_fr
+	from app.functions import ger_droits
+	from app.models import TDdsCdg
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	import json
+
+	output = HttpResponse()
+
+	# Obtention d'une instance TDdsCdg
+	oDdsCdg = get_object_or_404(TDdsCdg, pk=ddscdg_id)
+
+	if rq.method == 'POST' :
+
+		# Vérification du droit d'écriture
+		ger_droits(rq.user, oDdsCdg.dds_id, False)
+
+		# Récupération du couple CD GEMAPI/dossier
+		oCdg = oDdsCdg.cdg_id
+		oDds = oDdsCdg.dds_id
+
+		# Suppression
+		oDdsCdg.delete()
+
+		# Affichage d'un message de succès
+		output = HttpResponse(
+			json.dumps({ 'success' : {
+				'message' : '''
+				Le dossier {} ne sera pas présenté à l'occasion du comité de
+				programmation - CD GEMAPI en date du {}.
+				'''.format(oDds, dt_fr(oCdg.cdg_date)),
+				'redirect' : reverse('cons_doss', args = [oDds.pk])
+			}}),
+			content_type = 'application/json'
+		)
+
+		# Définition de l'onglet actif après rechargement de la page
+		rq.session['tab_doss'] = '#ong_doss'
+
+	return output
+
+'''
+Cette vue permet de traiter le formulaire de présentation d'un dossier
+à un comité de programmation - CD GEMAPI
+rq: Objet requête
+dds: Instance TDossier
+'''
+@verif_acc
+def ajout_ddscdg(rq, dds) :
+
+	# Imports
+	from app.forms.gestion_dossiers import GererDdsCdg
+	from app.functions import dt_fr
+	from app.functions import ger_droits
+	from app.models import TDossier
+	from django.core.urlresolvers import reverse
+	from django.http import HttpResponse
+	from django.shortcuts import get_object_or_404
+	import json
+
+	output = HttpResponse()
+
+	if rq.method == 'POST' :
+
+		# Obtention d'une instance TDossier
+		oDds = get_object_or_404(TDossier, pk=dds)
+
+		# Je vérifie le droit d'écriture.
+		ger_droits(rq.user, oDds, False)
+
+		# Je soumets le formulaire.
+		form = GererDdsCdg(rq.POST, kwarg_dds=oDds, prefix='GererDdsCdg')
+
+		if form.is_valid() :
+
+			# Création d'une instance TDdsCdg
+			ddscdg = form.save()
+
+			# J'affiche le message de succès.
+			output = HttpResponse(json.dumps({'success': {
+				'message' : '''
+				Le dossier {} sera présenté avec succès au comité de
+				programmation - CD GEMAPI en date du {}.
+				'''.format(ddscdg.dds_id, dt_fr(ddscdg.cdg_id.cdg_date)),
+				'redirect': reverse('cons_doss', args=[ddscdg.dds_id.pk])
+			}}), content_type = 'application/json')
+
+			# Je renseigne l'onglet actif après rechargement de la page.
+			rq.session['tab_doss'] = '#ong_doss'
+
+		else :
+
+			# J'affiche les erreurs.
+			output = HttpResponse(json.dumps({
+				'GererDdsCdg-{}'.format(k): v for k, v in form.errors.items()
+			}), content_type='application/json')
 
 	return output

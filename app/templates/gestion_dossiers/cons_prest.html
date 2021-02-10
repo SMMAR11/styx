@@ -77,7 +77,10 @@
 								</div>
 								{{ t_attrs_prest_doss.mont_fact_sum }}
 								{{ t_attrs_prest_doss.mont_raf }}
-								{{ t_attrs_prest_doss.duree_prest_doss }}
+								<div class="row">
+									<div class="col-sm-6">{{ t_attrs_prest_doss.duree_prest_doss }}</div>
+									<div class="col-sm-6">{{ t_attrs_prest_doss.duree_aven_sum }}</div>
+								</div>
 								<div class="row">
 									<div class="col-sm-6">{{ t_attrs_prest_doss.duree_w_os_sum }}</div>
 									<div class="col-sm-6">{{ t_attrs_prest_doss.duree_w_rest_os_sum }}</div>
@@ -103,6 +106,7 @@
 								<th>N° de l'avenant</th>
 								<th>Intitulé</th>
 								<th>Date de fin</th>
+								<th>Durée (en nombre de jours ouvrés)</th>
 								<th>Montant {{ ht_ou_ttc }} (en €)</th>
 								<th></th>
 							</tr>
@@ -113,6 +117,7 @@
 								<td>{{ a.num_aven }}</td>
 								<td>{{ a.int_aven }}</td>
 								<td>{{ a.dt_aven }}</td>
+								<td>{{ a.duree_aven }}</td>
 								<td>{{ a.mont_aven }}</td>
 								<td>
 									<a href="{% url 'cons_aven' a.pk %}" class="consult-icon pull-right" title="Consulter l'avenant"></a>

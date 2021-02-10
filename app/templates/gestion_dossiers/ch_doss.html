@@ -6,9 +6,10 @@
 	<div class="br-md-after col-md-4">
 		<form action="?action=filtrer-dossiers" method="post" name="f_ch_doss">
 			{% csrf_token %}
-			<fieldset class="my-fieldset" style="padding-bottom: 0;">
+			<fieldset class="my-fieldset">
 				<legend>Choisir un dossier</legend>
 				<div>
+					{{ f_ch_doss.zs_num_doss }}
 					{{ f_ch_doss.zl_org_moa }}
 					{{ f_ch_doss.zl_progr }}
 					<div class="row">
@@ -25,6 +26,7 @@
 						{{ f_ch_doss.rb_doss_aband }}
 				</div>
 				</div>
+				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 			</fieldset>
 		</form>
 	</div>
@@ -33,6 +35,7 @@
 			<table>
 				<thead>
 					<tr>
+						<th></th>
 						<th>N° du dossier</th>
 						<th>Intitulé du dossier</th>
 						<th>Maître d'ouvrage</th>
@@ -40,12 +43,14 @@
 						<th>Taux d'engagement</th>
 						<th>Taux de réalisation</th>
 						<th>Montant dossier</th>
-						<th></th>
 					</tr>
 				</thead>
 				<tbody>
 					{% for d in t_doss %}
 					<tr>
+						<td>
+							<a href="{% url 'cons_doss' d.pk %}" class="consult-icon pull-right" title="Consulter le dossier"></a>
+						</td>
 						<td class="b">{{ d.num_doss }}</td>
 						<td>{{ d.int_doss }}</td>
 						<td>{{ d.n_org }}</td>
@@ -53,9 +58,6 @@
 						<td>{{ d.tx_engag_doss }}</td>
 						<td>{{ d.tx_real_doss }}</td>
 						<td>{{ d.montant_dossier }}</td>
-						<td>
-							<a href="{% url 'cons_doss' d.pk %}" class="consult-icon pull-right" title="Consulter le dossier"></a>
-						</td>
 					</tr>
 					{% endfor %}
 				</tbody>

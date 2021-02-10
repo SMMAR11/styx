@@ -5,6 +5,8 @@
 from app.constants import *
 from app.models import TAction
 from app.models import TAxe
+from app.models import TDdsCdg
+from app.models import TFinancement
 from app.models import TFinanceur
 from app.models import TMoa
 from app.models import TOrganisme
@@ -42,7 +44,7 @@ class MSousAxe(forms.ModelForm) :
 class MAction(forms.ModelForm) :
 
     class Meta :
-        fields = '__all__'; model = TAction
+        fields = '__all__'; model = TFinancement
 
     def __init__(self, *args, **kwargs) :
 
@@ -159,3 +161,132 @@ class MUtilisateurUpdate(forms.ModelForm) :
 
     def clean_password(self) :
         return self.initial['password']
+
+# ---------------------------------------------------------------------
+# PROGRAMMATION
+# ---------------------------------------------------------------------
+
+class UpdateDdsCdgAdmin(forms.ModelForm):
+
+    class Meta:
+        fields = '__all__'
+        model = TDdsCdg
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['ddscdg_pdf_valide'].help_text = '''
+        Le plan de financement peut être modifié en utilisant <a
+        class="related-widget-wrapper-link change-related"
+        href="../../../findds/{}/change/?_popup=1" id="change_findds"
+        >ce formulaire</a>.
+        '''.format(self.instance.dds_id.pk)
+
+class UpdateFinAdmin(forms.ModelForm):
+
+    class Meta:
+        fields = '__all__'
+        model = TFinancement
+
+    def clean(self):
+
+        # Imports
+        from app.functions import obt_mont
+        from app.models import TDossier
+        from app.models import VFinancement
+        from app.models import VSuiviDossier
+
+        # Récupération des données du formulaire
+        cleaned_data = super().clean()
+        fin_mont_elig = cleaned_data.get('mont_elig_fin')
+        fin_mont_part = cleaned_data.get('mont_part_fin')
+        fin_pourc_elig = cleaned_data.get('pourc_elig_fin')
+        dds_id = cleaned_data.get('id_doss')
+        ofn_id = cleaned_data.get('id_org_fin')
+
+        # Récupération d'instances TDossier et VSuiviDossier
+        toDds = TDossier.objects.get(pk=dds_id.pk)
+        voDds = VSuiviDossier.objects.get(pk=toDds.pk)
+
+        # Si un financeur est sélectionné, alors...
+        if ofn_id:
+
+            # ---------------------------------------------------------
+            # Gestion du cas où le financeur serait présent plusieurs
+            # fois dans le plan de financement du dossier
+            # ---------------------------------------------------------
+
+            # Récupération du plan de financement du dossier
+            qsFin = VFinancement.objects.filter(
+                id_doss=voDds.pk, id_org_fin=ofn_id.pk
+            )
+
+            # Si instance TFinancement, alors non-prise en compte de celle-ci
+            # dans le plan de financement du dossier
+            if self.instance.pk:
+                qsFin = qsFin.exclude(id_fin=self.instance.pk)
+
+            # Erreur si le financeur participe déjà au plan de financement
+            if qsFin.exists():
+                self.add_error(
+                    'id_org_fin',
+                    'Le financeur participe déjà au montage financier.'
+                )
+
+            # ---------------------------------------------------------
+            # Gestion du renseignement des champs mont_elig_fin et
+            # pourc_elig_fin
+            # ---------------------------------------------------------
+
+            # Erreur si les deux champs ne sont pas renseignés
+            # simultanément
+            if (fin_mont_elig) and (fin_pourc_elig is None):
+                self.add_error('pourc_elig_fin', ERROR_MESSAGES['required'])
+            if (fin_mont_elig is None) and (fin_pourc_elig):
+                self.add_error('mont_elig_fin', ERROR_MESSAGES['required'])
+
+            # Erreur si le montant de l'assiette éligible de la
+            # subvention est supérieur au montant du dossier
+            if (fin_mont_elig) \
+            and (float(fin_mont_elig) > float(toDds.mont_doss)):
+                self.add_error(
+                    'mont_elig_fin',
+                    '''
+                    Veuillez saisir un montant inférieur ou égal à {} €.
+                    '''.format(obt_mont(toDds.mont_doss))
+                )
+
+            # ---------------------------------------------------------
+            # Gestion du montant de la participation
+            # ---------------------------------------------------------
+
+            # Récupération du reste à financer du dossier
+            fin_mont_part_max = voDds.mont_raf
+            if self.instance.pk:
+                fin_mont_part_max += self.instance.mont_part_fin
+
+            # Erreur si le montant de la participation est supérieur au
+            # reste à financer du dossier
+            if (fin_mont_part) \
+            and (float(fin_mont_part) > float(fin_mont_part_max)):
+                self.add_error(
+                    'mont_part_fin',
+                    '''
+                    Veuillez saisir un montant inférieur ou égal à {} €.
+                    '''.format(obt_mont(fin_mont_part_max))
+                )
+
+            # Si instance TFinancement, alors...
+            if self.instance.pk:
+                # Récupération d'une instance VFinancement
+                oFin = VFinancement.objects.get(id_fin=self.instance.pk)
+                # Erreur si le montant de la participation est
+                # inférieur à la somme des demandes de versements
+                # effectuées sur ce financement
+                if (fin_mont_part) \
+                and (float(fin_mont_part) < oFin.mont_ddv_sum):
+                    self.add_error(
+                        'mont_part_fin',
+                        '''
+                        Veuillez saisir un montant supérieur ou égal à {} €.
+                        '''.format(obt_mont(oFin.mont_ddv_sum))
+                    )

@@ -42,10 +42,10 @@
 				<div class="col-md-6">{{ f_cr_doss.dt_delib_moa_doss }}</div>
 			</div>
 			{{ f_cr_doss.annee_prev_doss }}
-			<div class="row">
-				<div class="col-md-6">{{ f_cr_doss.id_av_cp }}</div>
-				<div class="col-md-6">{{ f_cr_doss.dt_av_cp_doss }}</div>
-			</div>
+			{{ f_cr_doss.dt_depot_doss }}
+			{{ f_cr_doss.priorite_doss }}
+			{{ f_cr_doss.est_autofin_doss }}
+			{{ f_cr_doss.est_pec_ds_bilan_doss }}
 			<div class="title-1">Autres</div>
 			{{ f_cr_doss.chem_pj_doss }}
 			{{ f_cr_doss.num_oper_budg_doss }}
@@ -55,7 +55,6 @@
 		<div class="form-remark">
 			<ul class="my-list-style">
 				<li>La date de délibération au maître d'ouvrage doit être renseignée lorsque l'état d'avancement choisi est différent de « En projet » ou de « Abandonné ».</li>
-				<li>La date de l'avis du comité de programmation doit être renseignée lorsque l'avis du comité de programmation est différent de « En attente » ou de « Sans objet ».</li>
 			</ul>
 		</div>
 	</fieldset>

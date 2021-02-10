@@ -212,6 +212,16 @@ function html_ds_fm(_e, _s)
 
 			// J'affiche la fenêtre modale.
 			$('#fm_' + _s).modal();
+
+			// Initialisation d'une nouvelle datatable dans la fenêtre
+			// modale des détails d'un comité de programmation - CD
+			// GEMAPI
+			if (_s == 'cons_ddscdg') {
+				new MyDataTable('cons_acpfinddscdg').set_datatable(
+					{'exports': false}
+				);
+			}
+
 		},
 		error : function(xhr) {
 			alert('Erreur ' + xhr.status);

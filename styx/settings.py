@@ -160,7 +160,6 @@ T_DONN_BDD_STR = {
     'AV_CP_ACC' : 'Accordé',
     'AV_CP_EA' : 'En attente',
     'AV_CP_REF' : 'Refusé',
-    'AV_CP_SO' : 'Sans objet',
     'PPA_PRT' : 'Pourcentage de réalisation des travaux',
     'TVERS_ACOMPT' : 'Acompte',
     'TVERS_AF' : 'Avance forfaitaire',

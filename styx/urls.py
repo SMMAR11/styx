@@ -4,6 +4,11 @@ from app.views import main
 from app.views import pgre
 from app.views import realisation_etats
 from app.views.avancement_programme import AvancementProgrammeView
+from app.views.real_etats.EtatAvancementProgramme import EtatAvancementProgramme
+from app.views.real_etats.EtatCDGemapi import EtatCDGemapi
+from app.views.real_etats.EtatDossiers import EtatDossiers
+from app.views.real_etats.EtatPrestations import EtatPrestations
+from app.views.real_etats.EtatSubventions import EtatSubventions
 from django.conf import settings
 from django.conf.urls import handler403
 from django.conf.urls import handler404
@@ -22,6 +27,7 @@ urlpatterns = [
     url(r'^assistance.html$', main.assist, name = 'assist'),
     url(r'^autocompleter.html$', main.autocompl, name = 'autocompl'),
     url(r'^alertes.html$', main.alert, name = 'alert'),
+    # Module Gestion des dossiers
     url(r'^modules/gestion-dossiers/$', gestion_dossiers.index, name = 'gest_doss'),
     url(r'^modules/gestion-dossiers/creer-dossier/$', gestion_dossiers.cr_doss, name = 'cr_doss'),
     url(r'^modules/gestion-dossiers/modifier-dossier/([0-9]+)/$', gestion_dossiers.modif_doss, name = 'modif_doss'),
@@ -29,6 +35,16 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/choisir-dossier/$', gestion_dossiers.ch_doss, name = 'ch_doss'),
     url(r'^modules/gestion-dossiers/consulter-dossier/([0-9]+)/$', gestion_dossiers.cons_doss, name = 'cons_doss'),
     url(r'^modules/gestion-dossiers/imprimer-dossier/([0-9]+)/$', gestion_dossiers.impr_doss, name = 'impr_doss'),
+    url(
+        r'^modules/gestion-dossiers/presenter-dossier-cd-gemapi/([0-9]+)/$',
+        gestion_dossiers.ajout_ddscdg,
+        name = 'ajout_ddscdg'
+    ),
+    url(
+        r'^modules/gestion-dossiers/de-presenter-dossier-cd-gemapi/([0-9]+)/$',
+        gestion_dossiers.suppr_ddscdg,
+        name = 'suppr_ddscdg'
+    ),
     url(r'^modules/gestion-dossiers/modifier-fiche-de-vie/([0-9]+)/$', gestion_dossiers.modif_fdv, name = 'modif_fdv'),
     url(r'^modules/gestion-dossiers/supprimer-fiche-de-vie/([0-9]+)/$', gestion_dossiers.suppr_fdv, name = 'suppr_fdv'),
     url(r'^modules/gestion-dossiers/ajouter-financement/$', gestion_dossiers.ajout_fin, name = 'ajout_fin'),
@@ -99,41 +115,36 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/modifier-photo/([0-9]+)/$', gestion_dossiers.modif_ph, name = 'modif_ph'),
     url(r'^modules/gestion-dossiers/supprimer-photo/([0-9]+)/$', gestion_dossiers.suppr_ph, name = 'suppr_ph'),
     url(r'^modules/gestion-dossiers/ajouter-prestataire/$', gestion_dossiers.ajout_org_prest, name = 'ajout_org_prest'),
+
+    # Module Réalisation d'états
     url(r'^modules/realisation-etats/$', realisation_etats.index, name = 'real_etats'),
     url(
-        r'^modules/realisation-etats/selectionner-dossiers/$',
-        realisation_etats.filtr_doss,
-        { '_gby' : False },
-        name = 'select_doss'
+        r'^modules/realisation-etats/vue-generale-dossiers/$',
+        EtatDossiers.as_view(),
+        name='EtatDossiers'
     ),
     url(
-        r'^modules/realisation-etats/regrouper-dossiers/$',
-        realisation_etats.filtr_doss,
-        { '_gby' : True },
-        name = 'regroup_doss'
+        r'^modules/realisation-etats/bilan-programme-actions/$',
+        EtatAvancementProgramme.as_view(),
+        name='EtatAvancementProgramme'
     ),
     url(
-        r'^modules/realisation-etats/selectionner-prestations/$',
-        realisation_etats.filtr_prest,
-        { '_gby' : False },
-        name = 'select_prest'
+        r'^modules/realisation-etats/etat-subventions/$',
+        EtatSubventions.as_view(),
+        name='EtatSubventions'
     ),
     url(
-        r'^modules/realisation-etats/regrouper-prestations/$',
-        realisation_etats.filtr_prest,
-        { '_gby' : True },
-        name = 'regroup_prest'
+        r'^modules/realisation-etats/etat-prestations/$',
+        EtatPrestations.as_view(),
+        name='EtatPrestations'
     ),
     url(
-        r'^modules/realisation-etats/avancement-programme-v1/$',
-        AvancementProgrammeView.as_view(),
-        name = 'avancement_programme'
+        r'^modules/realisation-etats/decisions-cd-gemapi/$',
+        EtatCDGemapi.as_view(),
+        name='EtatCDGemapi'
     ),
-    url(
-        r'^modules/realisation-etats/avancement-programme-v2/$',
-        realisation_etats.avancement_programme,
-        name = 'avancement_programme_v2'
-    ),
+
+    # Module PGRE
     url(r'^modules/pgre/$', pgre.index, name = 'pgre'),
     url(r'^modules/pgre/creer-action-pgre/$', pgre.cr_act_pgre, name = 'cr_act_pgre'),
     url(r'^modules/pgre/modifier-action-pgre/([0-9]+)/$', pgre.modif_act_pgre, name = 'modif_act_pgre'),

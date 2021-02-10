@@ -147,6 +147,7 @@ def filtr_doss(request, _d_excl = None) :
 
 		# Je récupère les données du formulaire valide.
 		cleaned_data = f_chois_doss.cleaned_data
+		v_num_doss = cleaned_data.get('zs_num_doss')
 		v_org_moa = cleaned_data.get('zl_org_moa')
 		v_progr = cleaned_data.get('zl_progr')
 		v_axe = cleaned_data.get('zl_axe')
@@ -160,40 +161,43 @@ def filtr_doss(request, _d_excl = None) :
 
 		# J'initialise les conditions de la requête.
 		t_sql = { 'and' : {}, 'or' : [] }
-		if v_progr :
-			t_sql['and']['id_progr'] = v_progr
-			if v_axe :
-				t_sql['and']['num_axe'] = v_axe.split('_')[-1]
-				if v_ss_axe :
-					t_sql['and']['num_ss_axe'] = v_ss_axe.split('_')[-1]
-					if v_act :
-						t_sql['and']['num_act'] = v_act.split('_')[-1]
-		if v_nat_doss :
-			t_sql['and']['id_nat_doss'] = v_nat_doss
-		if v_ann_delib_moa_doss :
-			t_sql['and']['dt_delib_moa_doss__year'] = v_ann_delib_moa_doss
+		if v_num_doss:
+			qs_doss = TDossier.objects.filter(num_doss=v_num_doss)
+		else:
+			if v_progr :
+				t_sql['and']['id_progr'] = v_progr
+				if v_axe :
+					t_sql['and']['num_axe'] = v_axe.split('_')[-1]
+					if v_ss_axe :
+						t_sql['and']['num_ss_axe'] = v_ss_axe.split('_')[-1]
+						if v_act :
+							t_sql['and']['num_act'] = v_act.split('_')[-1]
+			if v_nat_doss :
+				t_sql['and']['id_nat_doss'] = v_nat_doss
+			if v_ann_delib_moa_doss :
+				t_sql['and']['dt_delib_moa_doss__year'] = v_ann_delib_moa_doss
 
-		# J'initialise la requête.
-		if v_org_moa :
-			qs_doss = obt_doss_regr(v_org_moa).filter(**t_sql['and'])
-		else :
-			qs_doss = TDossier.objects.filter(**t_sql['and'])
-		# if _d_excl :
-		# 	qs_doss = qs_doss.exclude(pk = _d_excl)
+			# J'initialise la requête.
+			if v_org_moa :
+				qs_doss = obt_doss_regr(v_org_moa).filter(**t_sql['and'])
+			else :
+				qs_doss = TDossier.objects.filter(**t_sql['and'])
+			# if _d_excl :
+			# 	qs_doss = qs_doss.exclude(pk = _d_excl)
 
-		from django.db.models import Q
-		selected = Q()
-		# Retrait ou non des dossiers soldés
-		if v_doss_sold == 'non_solde':
-			selected.add(Q(id_av__int_av__icontains='Soldé'), Q.OR)
-		# Retrait ou non des dossiers terminé
-		if v_doss_term == 'non_termine':
-			selected.add(Q(id_av__int_av__icontains='Terminé'), Q.OR)
-		# Retrait ou non des dossiers abandonnés
-		if v_doss_aband == 'non_abandonne':
-			selected.add(Q(id_av__int_av__icontains='Abandonné'), Q.OR)
+			from django.db.models import Q
+			selected = Q()
+			# Retrait ou non des dossiers soldés
+			if v_doss_sold == 'non_solde':
+				selected.add(Q(id_av__int_av__icontains='Soldé'), Q.OR)
+			# Retrait ou non des dossiers terminé
+			if v_doss_term == 'non_termine':
+				selected.add(Q(id_av__int_av__icontains='Terminé'), Q.OR)
+			# Retrait ou non des dossiers abandonnés
+			if v_doss_aband == 'non_abandonne':
+				selected.add(Q(id_av__int_av__icontains='Abandonné'), Q.OR)
 
-		qs_doss = qs_doss.exclude(pk=_d_excl).exclude(selected)
+			qs_doss = qs_doss.exclude(pk=_d_excl).exclude(selected)
 
 
 	else :
@@ -251,6 +255,7 @@ def gen_f_ajout_aven(request, _pd, _u) :
 		{6}
 		{7}
 		{8}
+		{9}
 		<button class="center-block green-btn my-btn" type="submit">Valider</button>
 	</form>
 	'''.format(
@@ -260,6 +265,7 @@ def gen_f_ajout_aven(request, _pd, _u) :
 		t['zl_prest'],
 		t['int_aven'],
 		t['dt_aven'],
+		t['duree_aven'],
 		t['mont_aven'],
 		t['chem_pj_aven'],
 		t['comm_aven']
@@ -315,11 +321,11 @@ def gen_t_ch_doss(request, _d_excl = None) :
 	for d in qs_doss :
 		lg = '''
 		<tr>
+			<td><span class="choose-icon pointer pull-right" title="Choisir le dossier"></span></td>
 			<td class="b">{0}</td>
 			<td>{1}</td>
 			<td>{2}</td>
 			<td>{3}</td>
-			<td><span class="choose-icon pointer pull-right" title="Choisir le dossier"></span></td>
 		</tr>
 		'''.format(
 			d,
@@ -357,11 +363,11 @@ def gen_t_ch_doss(request, _d_excl = None) :
 		<table>
 			<thead>
 				<tr>
+					<th></th>
 					<th>N° du dossier</th>
 					<th>Intitulé du dossier</th>
 					<th>Maître d'ouvrage</th>
 					<th>Date de délibération au maître d'ouvrage</th>
-					<th></th>
 				</tr>
 			</thead>
 			<tbody>{9}</tbody>
@@ -453,44 +459,33 @@ def get_menu() :
 			],
 			'mod_rank' : 2
 		},
-		'real_etats' : {
-			'mod_name' : 'Réalisation d\'états',
-			'mod_img' : 'pics/thumbnails/realisation_etats/main.png',
-			'mod_href' : reverse('real_etats'),
-			'mod_href_blank' : '',
-			'mod_items' : [
-				{
-					'item_name' : 'En sélectionnant des dossiers',
-					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
-					'item_href' : reverse('select_doss')
-				},
-				{
-					'item_name' : 'En regroupant des dossiers',
-					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
-					'item_href' : reverse('regroup_doss')
-				},
-				{
-					'item_name' : 'En sélectionnant des prestations',
-					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
-					'item_href' : reverse('select_prest')
-				},
-				{
-					'item_name' : 'En regroupant des prestations',
-					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
-					'item_href' : reverse('regroup_prest')
-				},
-				{
-					'item_name' : "État d'avancement d'un programme (V1)",
-					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
-					'item_href' : reverse('avancement_programme')
-				},
-				{
-					'item_name' : "État d'avancement d'un programme (V2)",
-					'item_img' : 'pics/thumbnails/realisation_etats/main.png',
-					'item_href' : reverse('avancement_programme_v2')
-				}
-			],
-			'mod_rank' : 3
+		'real_etats': {
+			'mod_name': 'Réalisation d\'états',
+			'mod_img': 'pics/thumbnails/realisation_etats/main.png',
+			'mod_href': reverse('real_etats'),
+			'mod_href_blank': '',
+			'mod_items': [{
+				'item_name': 'Vue générale des dossiers',
+				'item_img': 'pics/thumbnails/realisation_etats/main.png',
+				'item_href': reverse('EtatDossiers')
+			}, {
+				'item_name': 'Bilan d\'un programme d\'actions',
+				'item_img': 'pics/thumbnails/realisation_etats/main.png',
+				'item_href': reverse('EtatAvancementProgramme')
+			}, {
+				'item_name': 'Etat des subventions',
+				'item_img': 'pics/thumbnails/realisation_etats/main.png',
+				'item_href': reverse('EtatSubventions')
+			}, {
+				'item_name': 'Etat des prestations',
+				'item_img': 'pics/thumbnails/realisation_etats/main.png',
+				'item_href': reverse('EtatPrestations')
+			}, {
+				'item_name': 'Décisions du comité de programmation - CD GEMAPI',
+				'item_img': 'pics/thumbnails/realisation_etats/main.png',
+				'item_href': reverse('EtatCDGemapi')
+			}],
+			'mod_rank': 3
 		},
 		'pgre' : {
 			'mod_name' : 'PGRE',

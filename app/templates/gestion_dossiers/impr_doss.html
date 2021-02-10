@@ -83,8 +83,35 @@
 				{{ t_attrs_doss.id_av }}
 				{{ t_attrs_doss.dt_delib_moa_doss }}
 				{{ t_attrs_doss.annee_prev_doss }}
+			</tbody>
+		</table>
+		<div class="br"></div>
+		<div class="pdf-attribute-wrapper">
+			<span class="pdf-attribute-label">Comité de programmation - CD GEMAPI</span>
+			{% if ddscdg.count > 0 %}
+			<table class="pdf-table">
+				<thead>
+					<tr>
+						<th>Date de l'avis</th>
+						<th>Avis</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for dc in ddscdg %}
+					<tr>
+						<td>{{ dc.cdg_id.cdg_date }}</td>
+						<td>{{ dc.acp_id }}</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			{% else %}
+			<span class="pdf-attribute-value">Aucun</span>
+			{% endif %}
+		</div>
+		<table class="pdf-table vertical-table">
+			<tbody>
 				{{ t_attrs_doss.id_av_cp }}
-				{{ t_attrs_doss.dt_av_cp_doss }}
 			</tbody>
 		</table>
 		<div class="br"></div>
@@ -196,6 +223,7 @@
 					<th>∑ {{ ht_ou_ttc }} factures émises (en €)</th>
 					<th>Reste à facturer {{ ht_ou_ttc }} (en €)</th>
 					<th>Durée presta (en j ouvrés)</th>
+					<th>Durée avenants (en j ouvrés)</th>
 					<th>Durée travaillée (en j ouvrés)</th>
 					<th>Durée restante à travailler (en j ouvrés)</th>
 				</tr>
@@ -212,6 +240,7 @@
 					<td>{{ p.mont_fact_sum }}</td>
 					<td>{{ p.mont_raf }}</td>
 					<td>{{ p.duree_prest_doss }}</td>
+					<td>{{ p.duree_aven_sum }}</td>
 					<td>{{ p.duree_w_os_sum }}</td>
 					<td>{{ p.duree_w_rest_os_sum }}</td>
 				</tr>
@@ -223,7 +252,7 @@
 					{% for i in t_prest_sum %}
 					<td>{{ i }}</td>
 					{% endfor %}
-					<td colspan="3"></td>
+					<td colspan="4"></td>
 				</tr>
 			</tfoot>
 		</table>
@@ -241,6 +270,7 @@
 					<th>Prestation</th>
 					<th>Nature de la prestation</th>
 					<th>Montant HT (en €)</th>
+					<th>Montant TVA (en €)</th>
 					<th>Montant TTC (en €)</th>
 					<th>N° de facture</th>
 					<th>Date de mandatement par le maître d'ouvrage</th>
@@ -255,6 +285,7 @@
 					<td>{{ f.id_prest }}</td>
 					<td>{{ f.id_nat_prest }}</td>
 					<td>{{ f.mont_ht_fact }}</td>
+					<td>{{ f.mont_tva_fact }}</td>
 					<td>{{ f.mont_ttc_fact }}</td>
 					<td>{{ f.num_fact }}</td>
 					<td>{{ f.dt_mand_moa_fact }}</td>
@@ -268,6 +299,7 @@
 				<tr>
 					<td colspan="2">Total payé (en €)</td>
 					<td>{{ mont_ht_fact_sum }}</td>
+					<td>{{ mont_tva_fact_sum }}</td>
 					<td colspan="6">{{ mont_ttc_fact_sum }}</td>
 				</tr>
 			</tfoot>
