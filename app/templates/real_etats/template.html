@@ -3,6 +3,9 @@
 <div class="main-title">{{ title }}</div>
 <div class="row">
 	<div class="br-md-after col-md-3">{{ form | safe }}</div>
-	<div class="col-md-9">{{ datatable | safe }}</div>
+	<div class="col-md-9">
+		{{ datatable | safe }}
+		{{ alert_msg | safe }}
+	</div>
 </div>
 {% endblock content %}

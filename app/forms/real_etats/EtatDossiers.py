@@ -202,6 +202,7 @@ class EtatDossiers(forms.Form):
 		from app.models import TRegroupementsMoa
 		from app.models import VFinancement
 		from app.models import VSuiviDossier
+		from django.core.urlresolvers import reverse
 
 		# Initialisation des données
 		data = []
@@ -308,6 +309,14 @@ class EtatDossiers(forms.Form):
 
 			# Définition des données de la ligne Programmation
 			_data = {
+				'_link': '''
+				<a
+					href="{}"
+					class="consult-icon pull-right"
+					target="_blank"
+					title="Consulter le dossier"
+				></a>
+				'''.format(reverse('cons_doss', args=[oDds.pk])),
 				'id_progr': oDds.id_progr,
 				'num_doss': oDds.num_doss,
 				'int_doss': voDds.int_doss,
@@ -385,6 +394,7 @@ class EtatDossiers(forms.Form):
 
 			# Définition des valeurs de la ligne Programmation
 			_tds = [
+				element['_link'],
 				element['id_progr'],
 				element['num_doss'],
 				element['int_doss'],
@@ -404,7 +414,7 @@ class EtatDossiers(forms.Form):
 				element['annee_prev_doss'] or '',
 				element['priorite_doss'],
 				element['id_av'],
-				dt_fr(element['dt_delib_moa_doss']),
+				dt_fr(element['dt_delib_moa_doss']) or '',
 				dt_fr(element['dt_av_cp_doss']) or '',
 				element['id_av_cp'],
 				obt_mont(element['mont_tot_prest_doss']),
@@ -437,7 +447,7 @@ class EtatDossiers(forms.Form):
 		# Mise en forme de la balise </tfoot>
 		tfoot = '''
 		<tr>
-			<td colspan="12">Total</td>
+			<td colspan="13">Total</td>
 			<td>{}</td>
 			<td>{}</td>
 			<td colspan="8">{}</td>
@@ -473,6 +483,7 @@ class EtatDossiers(forms.Form):
 			<table>
 				<thead>
 					<tr>
+						<th rowspan="2"></th>
 						<th colspan="26">Programmation</th>
 						<th colspan="{}">Financement prévisionnel (= plan de financement)</th>
 					</tr>

@@ -652,7 +652,7 @@ class AFinanceur(admin.ModelAdmin) :
 	list_display = ['n_org']
 
 	# Je mets en forme le formulaire.
-	fields = ['n_org', 'init_acpfinddscdg']
+	fields = ['n_org']
 
 # Je peux désormais gérer les financeurs.
 admin.site.register(TFinanceur, AFinanceur)
@@ -889,10 +889,16 @@ class DdsCdg(admin.ModelAdmin):
 
 	# Options
 	actions = (admin.actions.delete_selected,)
-	fields = ('dds_id', 'cdg_id', 'ddscdg_pdf_valide', 'acp_id')
+	fields = ('dds_id', 'int_doss', 'cdg_id', 'acp_id')
 	form = UpdateDdsCdgAdmin
 	inlines = (AcpFinDdsCdgInline,)
-	list_display = ('dds_id', 'cdg_id', 'acp_id')
+	list_display = (
+		'dds_id',
+		'int_doss',
+		'cdg_id',
+		'acp_id',
+		'ddscdg_pdf_modifie'
+	)
 	list_filter = ('cdg_id',)
 
 	# Méthodes Django
@@ -907,6 +913,27 @@ class DdsCdg(admin.ModelAdmin):
 
 	def has_delete_permission(self, rq, obj=None):
 		return False
+
+	def render_change_form(self, rq, cntxt, *args, **kwargs):
+		self.change_form_template = 'admin/app/change_form_ddscdg.html'
+		extra = {
+			'fins': '''
+	        Le plan de financement peut être modifié en utilisant <a
+	        class="related-widget-wrapper-link change-related"
+	        href="../../../findds/{}/change/?_popup=1&ddscdg={}" id="change_findds"
+	        >ce formulaire</a>.
+	        '''.format(cntxt['original'].dds_id.pk, cntxt['original'].pk)
+		}
+		cntxt.update(extra)
+		return super().render_change_form(rq, cntxt, *args, **kwargs)
+
+	# Méthodes colonnes
+
+	def int_doss(self, obj):
+		from app.models import VSuiviDossier
+		return VSuiviDossier.objects.get(pk=obj.dds_id.pk).int_doss
+	int_doss.allow_tags = True
+	int_doss.short_description = 'Intitulé du dossier'
 
 admin.site.register(TDdsCdg, DdsCdg)
 
@@ -963,5 +990,13 @@ class FinDdsAdmin(admin.ModelAdmin):
 
 	def has_delete_permission(self, rq, obj=None):
 		return False
+
+	def save_model(self, rq, obj, form, change):
+		ddscdg = rq.GET.get('ddscdg')
+		if ddscdg:
+			oDdsCdg = TDdsCdg.objects.get(pk=ddscdg)
+			oDdsCdg.ddscdg_pdf_modifie = True
+			oDdsCdg.save()
+		return super().save_model(rq, obj, form, change)
 
 admin.site.register(FinDds, FinDdsAdmin)

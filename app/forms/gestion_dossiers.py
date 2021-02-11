@@ -2255,12 +2255,15 @@ class GererDdsCdg(forms.ModelForm) :
 		# surchargé "cdg_id"
 		cdg_id_choices = []
 		# Pour chaque année...
-		for date in TCDGemapiCdg.objects.dates(
-			'cdg_date', 'year', order='DESC'
-		):
+		for date in TCDGemapiCdg.objects \
+			.filter(cdg_date__gte=date.today()) \
+			.dates('cdg_date', 'year', order='DESC'):
 			# Récupération des dates dont le dossier peut être présenté
 			qsCdgs = TCDGemapiCdg.objects \
-				.filter(cdg_date__year=date.year) \
+				.filter(
+					cdg_date__gte=date.today(),
+					cdg_date__year=date.year
+				) \
 				.exclude(pk__in=TDdsCdg.objects \
 					.filter(dds_id=self.dds.pk) \
 					.values_list('cdg_id', flat=True)

@@ -152,6 +152,7 @@ class EtatSubventions(forms.Form):
 		from app.models import TRegroupementsMoa
 		from app.models import VFinancement
 		from app.models import VSuiviDossier
+		from django.core.urlresolvers import reverse
 
 		# Initialisation des données
 		data = []
@@ -231,6 +232,14 @@ class EtatSubventions(forms.Form):
 
 			# Empilement des données
 			data.append({
+				'_link': '''
+				<a
+					href="{}"
+					class="consult-icon pull-right"
+					target="_blank"
+					title="Consulter le financement"
+				></a>
+				'''.format(reverse('cons_fin', args=[oFin.pk])),
 				'num_doss': oFin.id_doss.num_doss,
 				'int_doss': voDds.int_doss,
 				'id_org_moa': oFin.id_doss.id_org_moa,
@@ -280,6 +289,7 @@ class EtatSubventions(forms.Form):
 		# Mise en forme de la balise </tbody>
 		tbody = ''.join(['<tr>{}</tr>'.format(
 			''.join(['<td>{}</td>'.format(key) for key in [
+				element['_link'],
 				element['num_doss'],
 				element['int_doss'],
 				element['id_org_moa'],
@@ -316,7 +326,7 @@ class EtatSubventions(forms.Form):
 		# Mise en forme de la balise </tfoot>
 		tfoot = '''
 		<tr>
-			<td colspan="10">Total</td>
+			<td colspan="11">Total</td>
 			<td colspan="6">{}</td>
 			<td>{}</td>
 			<td colspan="2">{}</td>
@@ -358,6 +368,7 @@ class EtatSubventions(forms.Form):
 			<table>
 				<thead>
 					<tr>
+						<th rowspan="2"></th>
 						<th colspan="18">Programmation</th>
 						<th colspan="12">Contribution financière</th>
 					</tr>

@@ -120,10 +120,18 @@ $(document).ready(function() {
 	);
 
 	new MyDataTable('EtatAvancementProgramme').set_datatable();
-	new MyDataTable('EtatDossiers').set_datatable();
-	new MyDataTable('EtatPrestations').set_datatable();
-	new MyDataTable('EtatSubventions').set_datatable();
-	new MyDataTable('EtatCDGemapi').set_datatable();
+	new MyDataTable('EtatDossiers').set_datatable({
+		'autofit' : ['FIRST:1'], 'unsorting' : ['FIRST:1']
+	});
+	new MyDataTable('EtatPrestations').set_datatable({
+		'autofit' : ['FIRST:1'], 'unsorting' : ['FIRST:1']
+	});
+	new MyDataTable('EtatSubventions').set_datatable({
+		'autofit' : ['FIRST:1'], 'unsorting' : ['FIRST:1']
+	});
+	new MyDataTable('EtatCDGemapi').set_datatable({
+		'autofit' : ['FIRST:1'], 'unsorting' : ['FIRST:1']
+	});
 
 });
 

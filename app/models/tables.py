@@ -1166,12 +1166,6 @@ class TFinanceur(TOrganisme) :
 
     # Colonnes
     id_org_fin = models.OneToOneField(TOrganisme)
-    init_acpfinddscdg = models.BooleanField(
-        default=False,
-        verbose_name='''
-        Doit-il faire l'objet par défaut d'une instance TAcpFinDdsCdg ?
-        '''
-    )
 
     class Meta :
         db_table = 't_financeur'
@@ -2038,8 +2032,8 @@ class TCDGemapiCdg(models.Model):
     class Meta:
         db_table = 't_cdgemapi_cdg'
         ordering = ['-cdg_date']
-        verbose_name = 'T_CDGEMAPI_CDG'
-        verbose_name_plural = 'T_CDGEMAPI_CDG'
+        verbose_name = 'CD GEMAPI'
+        verbose_name_plural = 'CD GEMAPI'
 
     def __str__(self):
         from app.functions import dt_fr
@@ -2082,9 +2076,9 @@ class TDdsCdg(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Dossier'
     )
-    ddscdg_pdf_valide = models.BooleanField(
-        default=True,
-        verbose_name='Le plan de financement prévisionnel est-il validé ?'
+    ddscdg_pdf_modifie = models.BooleanField(
+        default=False,
+        verbose_name='Le plan de financement a-t-il été modifié pendant le CD GEMAPI ?'
     )
     acp_id = models.ForeignKey(
         'TAvisCp',
@@ -2098,8 +2092,8 @@ class TDdsCdg(models.Model):
         db_table = 't_ddscdg'
         ordering = ['-cdg_id', 'dds_id']
         unique_together = ['cdg_id', 'dds_id']
-        verbose_name = 'T_DDSCDG'
-        verbose_name_plural = 'T_DDSCDG'
+        verbose_name = 'Dossier présente à un CD GEMAPI'
+        verbose_name_plural = 'Dossiers présentés à un CD GEMAPI'
 
     # Méthodes Django
 
@@ -2107,6 +2101,7 @@ class TDdsCdg(models.Model):
 
         # Imports
         from app.models import TAcpFinDdsCdg
+        from app.models import TFinancement
         from app.models import TFinanceur
 
         # Requête INSERT ou UPDATE ?
@@ -2121,7 +2116,11 @@ class TDdsCdg(models.Model):
         # Si requête INSERT, alors pré-création du formulaire de
         # recensement des avis des différents financeurs sur le dossier
         if is_create_mode:
-            for fin in TFinanceur.objects.filter(init_acpfinddscdg=True):
+            for fin in TFinanceur.objects.filter(
+                pk__in=TFinancement.objects.filter(
+                    id_doss=self.dds_id
+                ).values_list('id_org_fin', flat=True)
+            ):
                 TAcpFinDdsCdg.objects.create(ddscdg_id=self, fin_id=fin)
 
     # Méthodes publiques
@@ -2135,11 +2134,12 @@ class TDdsCdg(models.Model):
         from django.template.defaultfilters import yesno
 
         return {
-            'ddscdg_pdf_valide': {
+            'ddscdg_pdf_modifie': {
                 'label': '''
-                Le plan de financement prévisionnel est-il validé ?
+                Le plan de financement a-t-il été modifié pendant le CD
+                GEMAPI ?
                 ''',
-                'value': yesno(self.ddscdg_pdf_valide).capitalize()
+                'value': yesno(self.ddscdg_pdf_modifie).capitalize()
             },
             'acp_id': {'label': 'Avis', 'value': self.acp_id},
             'cdg_date': {
@@ -2211,5 +2211,5 @@ class FinDds(TDossier):
 
     class Meta:
         proxy = True
-        verbose_name = 'FINDDS'
-        verbose_name_plural = 'FINDDS'
+        verbose_name = 'Plan de financement'
+        verbose_name_plural = 'Plans de financement'

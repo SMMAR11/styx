@@ -168,6 +168,7 @@ class EtatPrestations(forms.Form):
 		from app.models import TOrdreService
 		from app.models import VSuiviDossier
 		from app.models import VSuiviPrestationsDossier
+		from django.core.urlresolvers import reverse
 
 		# Initialisation des données
 		data = []
@@ -255,6 +256,14 @@ class EtatPrestations(forms.Form):
 
 			# Empilement des données
 			data.append({
+				'_link': '''
+				<a
+					href="{}"
+					class="consult-icon pull-right"
+					target="_blank"
+					title="Consulter la prestation"
+				></a>
+				'''.format(reverse('cons_prest', args=[oPrsDds.pk])),
 				'id_progr': oPrsDds.id_doss.id_progr,
 				'num_doss': oPrsDds.id_doss.num_doss,
 				'int_doss': voDds.int_doss,
@@ -296,6 +305,7 @@ class EtatPrestations(forms.Form):
 		# Mise en forme de la balise </tbody>
 		tbody = ''.join(['<tr>{}</tr>'.format(
 			''.join(['<td>{}</td>'.format(key) for key in [
+				element['_link'],
 				element['id_progr'],
 				element['num_doss'],
 				element['int_doss'],
@@ -325,7 +335,7 @@ class EtatPrestations(forms.Form):
 		# Mise en forme de la balise </tfoot>
 		tfoot = '''
 		<tr>
-			<td colspan="10">Total</td>
+			<td colspan="11">Total</td>
 			<td>{}</td>
 			<td>{}</td>
 			<td>{}</td>
@@ -351,6 +361,7 @@ class EtatPrestations(forms.Form):
 			<table>
 				<thead>
 					<tr>
+						<th rowspan="2"></th>
 						<th colspan="7">Les dossiers</th>
 						<th colspan="3">Caractéristiques des prestations</th>
 						<th colspan="6">Gestion financière</th>

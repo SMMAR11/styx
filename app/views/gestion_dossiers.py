@@ -1793,7 +1793,7 @@ def cons_doss(request, _d) :
 				'''.format(
 					attrs['cdg_date'],
 					attrs['acp_id'],
-					attrs['ddscdg_pdf_valide'],
+					attrs['ddscdg_pdf_modifie'],
 					''.join(trs)
 				)
 

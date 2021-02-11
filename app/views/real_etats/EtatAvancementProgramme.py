@@ -23,6 +23,10 @@ class EtatAvancementProgramme(View):
 		form = self.form_class(kwarg_rq=rq, prefix='EtatAvancementProgramme')
 
 		return render(rq, self.template_name, {
+			'alert_msg': '''
+			<div class="b red-color text-center">Attention, ce tableau ne
+			prend que les données saisies dans l'application STYX.</div>
+			''',
 			'datatable': form.get_datatable(),
 			'form': form.get_form(),
 			'title': 'Bilan d\'un programme d\'actions'

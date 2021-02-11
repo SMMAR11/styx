@@ -168,18 +168,28 @@ class MUtilisateurUpdate(forms.ModelForm) :
 
 class UpdateDdsCdgAdmin(forms.ModelForm):
 
+    # Champs
+
+    int_doss = forms.CharField(
+        label='Intitulé du dossier',
+        required=False,
+        widget = forms.Textarea(attrs={'readonly': True})
+    )
+
     class Meta:
         fields = '__all__'
         model = TDdsCdg
 
-    def __init__(self, *args, **kwargs):
+    # Méthodes Django
+
+    def __init__(self, *args, **kwargs) :
+
+        # Imports
+        from app.models import VSuiviDossier
+
         super().__init__(*args, **kwargs)
-        self.fields['ddscdg_pdf_valide'].help_text = '''
-        Le plan de financement peut être modifié en utilisant <a
-        class="related-widget-wrapper-link change-related"
-        href="../../../findds/{}/change/?_popup=1" id="change_findds"
-        >ce formulaire</a>.
-        '''.format(self.instance.dds_id.pk)
+
+        self.fields['int_doss'].initial = VSuiviDossier.objects.get(pk=self.instance.dds_id.pk).int_doss
 
 class UpdateFinAdmin(forms.ModelForm):
 

@@ -99,7 +99,7 @@
 								</a>
 								<ul class="dropdown-menu">
 									<li><a href="{% url 'cons_util' %}">Consulter mon compte</a></li>
-									{% if user.is_staff == True and user.is_superuser == True %}
+									{% if user.is_staff == True %}
 									<li><a href="/admin/">Accéder au site d'administration de STYX 2.0</a></li>
 									{% endif %}
 									<li><a href="{% url 'deconnect' %}">Se déconnecter</a></li>
