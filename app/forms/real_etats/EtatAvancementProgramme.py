@@ -107,11 +107,18 @@ class EtatAvancementProgramme(forms.Form):
 		# Erreur si le filtre maître d'ouvrage est renseigné pour un
 		# programme dont le bilan ne peut être détaillé
 		if pro_id:
-			if (not pro_id.bilan_detaille_progr) and moa_id:
+			if (not pro_id.bilan_detaille_progr) and (moa_id):
 				self.add_error(
 					'zl_id_org_moa',
 					'Le filtre n\'est pas utilisable car le bilan du programme d\'actions {} ne peut être détaillé.'.format(pro_id)
 				)
+
+		# Erreur si le filtre maître d'ouvrage est renseigné alors qu'
+		# aucun programme n'est renseigné
+		if (not pro_id) and (moa_id):
+			self.add_error(
+				'zl_id_org_moa', 'Le filtre n\'est pas utilisable.'
+			)
 
 	# Méthodes privées
 
