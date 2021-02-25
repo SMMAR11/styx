@@ -194,6 +194,13 @@ class TProgramme(models.Model) :
     seq_progr = models.PositiveIntegerField(
         default = 1, help_text = 'Utilisé pour la création d\'un numéro de dossier', verbose_name = 'Séquentiel'
     )
+    bilan_detaille_progr = models.BooleanField(
+        default=False,
+        verbose_name='''
+        Le bilan du programme doit-il être détaillé au niveau du maître
+        d'ouvrage ?
+        '''
+    )
     id_type_progr = models.ForeignKey(TTypeProgramme, on_delete = models.CASCADE, verbose_name = 'Type de programme')
 
     class Meta :

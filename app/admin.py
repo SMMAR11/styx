@@ -250,7 +250,8 @@ class AProgramme(admin.ModelAdmin) :
 			'fields' : (
 				('int_progr'),
 				('id_type_progr'),
-				('en_act')
+				('en_act'),
+				('bilan_detaille_progr')
 			)
 		}),
 		('Options', {

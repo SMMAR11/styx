@@ -37,6 +37,12 @@ class EtatAvancementProgramme(forms.Form):
 		widget=forms.Select(attrs={'class': 'hide-field'})
 	)
 
+	zl_id_org_moa = forms.ModelChoiceField(
+		label='Maître d\'ouvrage',
+		queryset=None,
+		required=False
+	)
+
 	# Méthodes Django
 
 	def __init__(self, *args, **kwargs):
@@ -45,6 +51,7 @@ class EtatAvancementProgramme(forms.Form):
 		from app.functions import init_mess_err
 		from app.models import TAction
 		from app.models import TAxe
+		from app.models import TMoa
 		from app.models import TProgramme
 		from app.models import TSousAxe
 
@@ -86,6 +93,26 @@ class EtatAvancementProgramme(forms.Form):
 						)
 					]
 
+		self.fields['zl_id_org_moa'].queryset = TMoa.objects.filter(
+			peu_doss=True, en_act_doss=True
+		)
+
+	def clean(self):
+
+		# Récupération des données du formulaire
+		cleaned_data = super().clean()
+		pro_id = cleaned_data.get('zl_id_progr')
+		moa_id = cleaned_data.get('zl_id_org_moa')
+
+		# Erreur si le filtre maître d'ouvrage est renseigné pour un
+		# programme dont le bilan ne peut être détaillé
+		if pro_id:
+			if (not pro_id.bilan_detaille_progr) and moa_id:
+				self.add_error(
+					'zl_id_org_moa',
+					'Le filtre n\'est pas utilisable car le bilan du programme d\'actions {} ne peut être détaillé.'.format(pro_id)
+				)
+
 	# Méthodes privées
 
 	def __cleaned_data(self):
@@ -97,7 +124,8 @@ class EtatAvancementProgramme(forms.Form):
 			'zl_id_progr',
 			'zl_axe',
 			'zl_ss_axe',
-			'zl_act'
+			'zl_act',
+			'zl_id_org_moa'
 		]
 
 		if not self.data:
@@ -139,7 +167,7 @@ class EtatAvancementProgramme(forms.Form):
 			raise Exception('PB !')
 
 		# Définition des colonnes à ne pas afficher
-		undisplayed_ndxs = [0, 1, 2, 3]
+		undisplayed_ndxs = [0, 1, 2, 3, 4]
 
 		# Définition des labels
 		lbls = {
@@ -227,22 +255,22 @@ class EtatAvancementProgramme(forms.Form):
 			<td>{}</td>
 		</tr>
 		'''.format(
-			sum([element[11] for element in data[1]]),
 			sum([element[12] for element in data[1]]),
 			sum([element[13] for element in data[1]]),
-			sum([element[15] for element in data[1]]),
+			sum([element[14] for element in data[1]]),
 			sum([element[16] for element in data[1]]),
 			sum([element[17] for element in data[1]]),
 			sum([element[18] for element in data[1]]),
 			sum([element[19] for element in data[1]]),
-			round(mean([
-				element[20] for element in data[1]
-			]) if data[1] else 0, 3),
+			sum([element[20] for element in data[1]]),
 			round(mean([
 				element[21] for element in data[1]
 			]) if data[1] else 0, 3),
 			round(mean([
 				element[22] for element in data[1]
+			]) if data[1] else 0, 3),
+			round(mean([
+				element[23] for element in data[1]
 			]) if data[1] else 0, 3)
 		) if data[1] else ''
 
@@ -279,6 +307,7 @@ class EtatAvancementProgramme(forms.Form):
 					{}
 					{}
 					{}
+					{}
 					<button class="center-block green-btn my-btn" type="submit">Valider</button>
 				</div>
 			</fieldset>
@@ -288,7 +317,8 @@ class EtatAvancementProgramme(forms.Form):
 			form['zl_id_progr'],
 			form['zl_axe'],
 			form['zl_ss_axe'],
-			form['zl_act']
+			form['zl_act'],
+			form['zl_id_org_moa']
 		)
 
 	def __get_sql(self, code):
@@ -343,6 +373,13 @@ class EtatAvancementProgramme(forms.Form):
 				if act:
 					ands.append(
 						'"_actId" = \'' + str(act.split('_')[-1]) + '\''
+					)
+
+				# Filtre maître d'ouvrage
+				moa = cleaned_data['zl_id_org_moa']
+				if moa:
+					ands.append(
+						'"_moaId" = \'' + str(moa.pk) + '\''
 					)
 
 			# Application des filtres
