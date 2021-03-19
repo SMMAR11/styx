@@ -112,11 +112,11 @@ def cr_doss(request) :
 
 				# Je prépare le tableau des dossiers filtrés.
 				t_doss = [(
+					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>',
 					d.num_doss,
 					d.get_int_doss(),
 					d.id_org_moa.n_org,
-					dt_fr(d.dt_delib_moa_doss) or '-',
-					'<span class="choose-icon pointer pull-right" title="Choisir le dossier"></span>'
+					dt_fr(d.dt_delib_moa_doss) or '-'
 				) for d in filtr_doss(request)]
 
 				# J'envoie le tableau des dossiers filtrés.

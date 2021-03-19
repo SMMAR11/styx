@@ -1014,7 +1014,12 @@ class GererFacture(forms.ModelForm) :
 	)
 	zl_prest = forms.ChoiceField(label = 'Prestation', widget = forms.Select())
 	zl_suivi_fact = forms.ChoiceField(
-		choices = [DEFAULT_OPTION, ('Acompte', 'Acompte'), ('Solde', 'Solde')],
+		choices = [
+			DEFAULT_OPTION,
+			('Acompte', 'Acompte'),
+			('Avance', 'Avance'),
+			('Solde', 'Solde')
+		],
 		label = 'Suivi de la facturation',
 		required = True,
 		widget = forms.Select()
