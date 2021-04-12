@@ -97,29 +97,6 @@ class EtatAvancementProgramme(forms.Form):
 			peu_doss=True, en_act_doss=True
 		)
 
-	def clean(self):
-
-		# Récupération des données du formulaire
-		cleaned_data = super().clean()
-		pro_id = cleaned_data.get('zl_id_progr')
-		moa_id = cleaned_data.get('zl_id_org_moa')
-
-		# Erreur si le filtre maître d'ouvrage est renseigné pour un
-		# programme dont le bilan ne peut être détaillé
-		if pro_id:
-			if (not pro_id.bilan_detaille_progr) and (moa_id):
-				self.add_error(
-					'zl_id_org_moa',
-					'Le filtre n\'est pas utilisable car le bilan du programme d\'actions {} ne peut être détaillé.'.format(pro_id)
-				)
-
-		# Erreur si le filtre maître d'ouvrage est renseigné alors qu'
-		# aucun programme n'est renseigné
-		if (not pro_id) and (moa_id):
-			self.add_error(
-				'zl_id_org_moa', 'Le filtre n\'est pas utilisable.'
-			)
-
 	# Méthodes privées
 
 	def __cleaned_data(self):
@@ -185,6 +162,7 @@ class EtatAvancementProgramme(forms.Form):
 			'LIB-AXE': 'Libellé (axe)',
 			'LIB-ACTION': 'Libellé (action)',
 			'MOA': 'Maître d\'ouvrage',
+			'PRO-NBRE-DDS': 'Programme - Nombre de dossiers',
 			'STYX-NBRE-DDS': 'STYX - Nombre de dossiers créés',
 			'STYX-NBRE-DDS-PRO': '''
 			STYX - Nombre de dossiers programmés au CD GEMAPI
@@ -251,6 +229,7 @@ class EtatAvancementProgramme(forms.Form):
 			<td colspan="7">Total</td>
 			<td>{}</td>
 			<td>{}</td>
+			<td>{}</td>
 			<td colspan="2">{}</td>
 			<td>{}</td>
 			<td>{}</td>
@@ -262,22 +241,23 @@ class EtatAvancementProgramme(forms.Form):
 			<td>{}</td>
 		</tr>
 		'''.format(
-			sum([element[12] for element in data[1]]),
+			sum([element[12] or 0 for element in data[1]]),
 			sum([element[13] for element in data[1]]),
 			sum([element[14] for element in data[1]]),
-			sum([element[16] for element in data[1]]),
+			sum([element[15] or 0 for element in data[1]]),
 			sum([element[17] for element in data[1]]),
 			sum([element[18] for element in data[1]]),
 			sum([element[19] for element in data[1]]),
 			sum([element[20] for element in data[1]]),
-			round(mean([
-				element[21] for element in data[1]
-			]) if data[1] else 0, 3),
+			sum([element[21] for element in data[1]]),
 			round(mean([
 				element[22] for element in data[1]
 			]) if data[1] else 0, 3),
 			round(mean([
 				element[23] for element in data[1]
+			]) if data[1] else 0, 3),
+			round(mean([
+				element[24] for element in data[1]
 			]) if data[1] else 0, 3)
 		) if data[1] else ''
 
