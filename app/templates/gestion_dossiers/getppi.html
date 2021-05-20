@@ -1,0 +1,56 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-12 right">
+		<a href="{% url 'cons_doss' iPpi.dds_id.pk %}" class="icon-link previous-icon">Revenir au dossier</a>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		<div class="main-title">Plan Pluriannuel d'Investissement {{ iPpi.ppi_an }} - {{ iPpi.dds_id }}</div>
+		<div class="row">
+			{% if forbidden == True %}
+			<div class="col-sm-9">
+			{% else %}
+			<div class="col-sm-12">
+			{% endif %}
+				{{ iPpi_attrs.dds_id__num_doss }}
+				<div class="row">
+					<div class="col-md-6">{{ iPpi_attrs.dds_id__vsuividossier__mont_ttc_tot_doss }}</div>
+					<div class="col-md-6">{{ iPpi_attrs.dds_id__vsuividossier__mont_part_fin_sum }}</div>
+				</div>
+				{{ iPpi_attrs.ppi_an }}
+				<div class="title-1">Réalisé au 31/12 de l'année précédente du PPI hors RAR</div>
+				<div class="row">
+					<div class="col-md-6">{{ iPpi_attrs.ppi_real_an_pcdt_dps_ttc }}</div>
+					<div class="col-md-6">{{ iPpi_attrs.ppi_real_an_pcdt_vsm_previ }}</div>
+				</div>
+				<div class="title-1">Budget de l'année du PPI (RAR + nouvelles propositions)</div>
+				<div class="row">
+					<div class="col-md-6">{{ iPpi_attrs.ppi_budget_an_dps_ttc }}</div>
+					<div class="col-md-6">{{ iPpi_attrs.ppi_budget_an_vsm_previ }}</div>
+				</div>
+				<div class="title-1">Prospective annuelle</div>
+				<div class="title-1">Bilan</div>
+				<div class="row">
+					<div class="col-md-6">{{ iPpi_attrs.vppi__ppi_dps_ttc_sum }}</div>
+					<div class="col-md-6">{{ iPpi_attrs.vppi__ppi_vsm_previ_sum }}</div>
+				</div>
+				<div class="row">
+					<div class="col-md-6">{{ iPpi_attrs.vppi__pap_dps_eli_fctva_sum }}</div>
+					<div class="col-md-6">{{ iPpi_attrs.vppi__ppi_tx_eli_fctva_moyen }}</div>
+				</div>
+				<div class="title-1">Autres</div>
+				{{ iPpi_attrs.ppi_ntr_dps }}
+			</div>
+			<div class="col-sm-3 forbidden">
+				<a href="{% url 'updppi' iPpi.pk %}" class="icon-link modify-icon">Mettre à jour le PPI</a>
+				<br/>
+				<span class="delete-icon icon-link" data-target="#fm_delppi" data-toggle="modal">Supprimer le PPI</span>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}

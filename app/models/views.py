@@ -214,107 +214,130 @@ class VSuiviDossier(view.View) :
 		on_delete=models.DO_NOTHING,
         verbose_name='Avis du comité de programmation - CD GEMAPI'
     )
+	coef_tva_doss = models.FloatField()
+	mont_ht_tot_doss = MFEuroField()
+	mont_ttc_tot_doss = MFEuroField()
+	mont_tva_tot_doss = MFEuroField()
 
 	# Requête
 	sql = '''
+	WITH D AS (
+		SELECT
+			D.*,
+			CASE
+				WHEN D.type_mont_doss = 'HT' THEN D.mont_tot_doss
+				ELSE D.mont_tot_doss / D.coef_tva_doss
+			END::NUMERIC(26, 2) AS mont_ht_tot_doss,
+			CASE
+				WHEN D.type_mont_doss = 'HT' THEN D.mont_tot_doss * D.coef_tva_doss
+				ELSE D.mont_tot_doss
+			END::NUMERIC(26, 2) AS mont_ttc_tot_doss
+		FROM (
+			SELECT
+				D.id_doss,
+				CDG.dt_av_cp_doss,
+				D.est_ttc_doss,
+				FORMAT('%s - %s - %s - %s', N.int_nat_doss, T.int_type_doss, D.lib_1_doss, D.lib_2_doss) AS int_doss,
+				COALESCE(A.mont_aven_sum, 0)::NUMERIC(26, 2) AS mont_aven_sum,
+				D.mont_doss,
+				COALESCE(
+					CASE WHEN D.est_ttc_doss = false THEN F2.mont_ht_fact_sum ELSE F2.mont_ttc_fact_sum END, 0
+				)::NUMERIC(26, 2) AS mont_fact_sum,
+				COALESCE(F.mont_part_fin_sum, 0)::NUMERIC(26, 2) AS mont_part_fin_sum,
+				COALESCE(P.mont_prest_doss_sum, 0)::NUMERIC(26, 2) AS mont_prest_doss_sum,
+				(
+					(D.mont_doss + D.mont_suppl_doss) - (COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0))
+				)::NUMERIC(26, 2) AS mont_rae,
+				(D.mont_doss - COALESCE(F.mont_part_fin_sum, 0))::NUMERIC(26, 2) AS mont_raf,
+				D.mont_suppl_doss,
+				(D.mont_doss + D.mont_suppl_doss)::NUMERIC(26, 2) AS mont_tot_doss,
+				(COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0))::NUMERIC(26, 2) AS mont_tot_prest_doss,
+				CONCAT_WS('.', NULLIF(D.num_axe, ''), NULLIF(D.num_ss_axe, ''), NULLIF(D.num_act, '')) AS num_axe_compl,
+				(((
+					COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0)
+				) / (D.mont_doss + D.mont_suppl_doss)) * 100)::NUMERIC(6, 3) AS pourc_comm,
+				((COALESCE(
+					CASE WHEN D.est_ttc_doss = false THEN F2.mont_ht_fact_sum ELSE F2.mont_ttc_fact_sum END, 0
+				) / (D.mont_doss + D.mont_suppl_doss)) * 100)::NUMERIC(6, 3) AS pourc_paye,
+				(
+					((COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0)) / D.mont_doss) * 100
+				)::NUMERIC(6, 3) AS tx_engag_doss,
+				((COALESCE(
+					CASE WHEN D.est_ttc_doss = false THEN F2.mont_ht_fact_sum ELSE F2.mont_ttc_fact_sum END, 0
+				) / D.mont_doss) * 100)::NUMERIC(6, 3) AS tx_real_doss,
+				CASE WHEN D.est_ttc_doss = false THEN 'HT' ELSE 'TTC' END AS type_mont_doss,
+				CASE
+					WHEN AVN.int_av = 'Abandonné' THEN (
+						SELECT id_av_cp
+						FROM public.t_avis_cp
+						WHERE int_av_cp = 'Dossier abandonné'
+					)
+					WHEN D.est_autofin_doss = true THEN (
+						SELECT id_av_cp
+						FROM public.t_avis_cp
+						WHERE int_av_cp = 'Dossier en autofinancement'
+					)
+					WHEN CDG.id_av_cp IS NULL THEN (
+						SELECT id_av_cp
+						FROM public.t_avis_cp
+						WHERE int_av_cp = 'En attente'
+					)
+					ELSE CDG.id_av_cp
+				END AS id_av_cp,
+				(D.tx_tva_doss / 100 + 1)::FLOAT AS coef_tva_doss
+			FROM public.t_dossier AS D
+			INNER JOIN public.t_nature_dossier AS N ON N.id_nat_doss = D.id_nat_doss_id
+			INNER JOIN public.t_type_dossier AS T ON T.id_type_doss = D.id_type_doss_id
+			INNER JOIN public.t_avancement AS AVN ON AVN.id_av = D.id_av_id
+			LEFT OUTER JOIN (
+				SELECT
+					F.id_doss_id AS dos_id_tmp,
+					SUM(F.mont_part_fin) AS mont_part_fin_sum
+				FROM public.t_financement AS F
+				GROUP BY F.id_doss_id
+			) AS F ON F.dos_id_tmp = D.id_doss
+			LEFT OUTER JOIN (
+				SELECT
+					P.id_doss_id AS dos_id_tmp,
+					SUM(P.mont_prest_doss) AS mont_prest_doss_sum
+				FROM public.t_prestations_dossier AS P
+				GROUP BY P.id_doss_id
+			) AS P ON P.dos_id_tmp = D.id_doss
+			LEFT OUTER JOIN (
+				SELECT
+					A.id_doss_id AS dos_id_tmp,
+					SUM(A.mont_aven) AS mont_aven_sum
+				FROM public.t_avenant AS A
+				GROUP BY A.id_doss_id
+			) AS A ON A.dos_id_tmp = D.id_doss
+			LEFT OUTER JOIN (
+				SELECT
+					F.id_doss_id AS dos_id_tmp,
+					SUM(F.mont_ht_fact) AS mont_ht_fact_sum,
+					SUM(F.mont_ttc_fact) AS mont_ttc_fact_sum
+				FROM public.t_facture AS F
+				GROUP BY F.id_doss_id
+			) AS F2 ON F2.dos_id_tmp = D.id_doss
+			LEFT OUTER JOIN (
+				SELECT
+					ddscdg.dds_id,
+					ddscdg.acp_id AS id_av_cp,
+					cdg.cdg_date AS dt_av_cp_doss
+				FROM public.t_ddscdg AS ddscdg
+				INNER JOIN public.t_cdgemapi_cdg AS cdg ON cdg.cdg_id = ddscdg.cdg_id
+				WHERE cdg.cdg_date = (
+					SELECT MAX(cdg2.cdg_date)
+					FROM public.t_ddscdg AS ddscdg2
+					INNER JOIN public.t_cdgemapi_cdg AS cdg2 ON cdg2.cdg_id = ddscdg2.cdg_id
+					WHERE ddscdg2.dds_id = ddscdg.dds_id
+				)
+			) AS CDG ON CDG.dds_id = D.id_doss
+		) AS D
+	)
 	SELECT
-		D.id_doss,
-		CDG.dt_av_cp_doss,
-		D.est_ttc_doss,
-		FORMAT('%s - %s - %s - %s', N.int_nat_doss, T.int_type_doss, D.lib_1_doss, D.lib_2_doss) AS int_doss,
-		COALESCE(A.mont_aven_sum, 0)::NUMERIC(26, 2) AS mont_aven_sum,
-		D.mont_doss,
-		COALESCE(
-			CASE WHEN D.est_ttc_doss = false THEN F2.mont_ht_fact_sum ELSE F2.mont_ttc_fact_sum END, 0
-		)::NUMERIC(26, 2) AS mont_fact_sum,
-		COALESCE(F.mont_part_fin_sum, 0)::NUMERIC(26, 2) AS mont_part_fin_sum,
-		COALESCE(P.mont_prest_doss_sum, 0)::NUMERIC(26, 2) AS mont_prest_doss_sum,
-		(
-			(D.mont_doss + D.mont_suppl_doss) - (COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0))
-		)::NUMERIC(26, 2) AS mont_rae,
-		(D.mont_doss - COALESCE(F.mont_part_fin_sum, 0))::NUMERIC(26, 2) AS mont_raf,
-		D.mont_suppl_doss,
-		(D.mont_doss + D.mont_suppl_doss)::NUMERIC(26, 2) AS mont_tot_doss,
-		(COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0))::NUMERIC(26, 2) AS mont_tot_prest_doss,
-		CONCAT_WS('.', NULLIF(D.num_axe, ''), NULLIF(D.num_ss_axe, ''), NULLIF(D.num_act, '')) AS num_axe_compl,
-		(((
-			COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0)
-		) / (D.mont_doss + D.mont_suppl_doss)) * 100)::NUMERIC(6, 3) AS pourc_comm,
-		((COALESCE(
-			CASE WHEN D.est_ttc_doss = false THEN F2.mont_ht_fact_sum ELSE F2.mont_ttc_fact_sum END, 0
-		) / (D.mont_doss + D.mont_suppl_doss)) * 100)::NUMERIC(6, 3) AS pourc_paye,
-		(
-			((COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0)) / D.mont_doss) * 100
-		)::NUMERIC(6, 3) AS tx_engag_doss,
-		((COALESCE(
-			CASE WHEN D.est_ttc_doss = false THEN F2.mont_ht_fact_sum ELSE F2.mont_ttc_fact_sum END, 0
-		) / D.mont_doss) * 100)::NUMERIC(6, 3) AS tx_real_doss,
-		CASE WHEN D.est_ttc_doss = false THEN 'HT' ELSE 'TTC' END AS type_mont_doss,
-		CASE
-			WHEN AVN.int_av = 'Abandonné' THEN (
-				SELECT id_av_cp
-				FROM public.t_avis_cp
-				WHERE int_av_cp = 'Dossier abandonné'
-			)
-			WHEN D.est_autofin_doss = true THEN (
-				SELECT id_av_cp
-				FROM public.t_avis_cp
-				WHERE int_av_cp = 'Dossier en autofinancement'
-			)
-			WHEN CDG.id_av_cp IS NULL THEN (
-				SELECT id_av_cp
-				FROM public.t_avis_cp
-				WHERE int_av_cp = 'En attente'
-			)
-			ELSE CDG.id_av_cp
-		END AS id_av_cp
-	FROM public.t_dossier AS D
-	INNER JOIN public.t_nature_dossier AS N ON N.id_nat_doss = D.id_nat_doss_id
-	INNER JOIN public.t_type_dossier AS T ON T.id_type_doss = D.id_type_doss_id
-	INNER JOIN public.t_avancement AS AVN ON AVN.id_av = D.id_av_id
-	LEFT OUTER JOIN (
-		SELECT
-			F.id_doss_id AS dos_id_tmp,
-			SUM(F.mont_part_fin) AS mont_part_fin_sum
-		FROM public.t_financement AS F
-		GROUP BY F.id_doss_id
-	) AS F ON F.dos_id_tmp = D.id_doss
-	LEFT OUTER JOIN (
-		SELECT
-			P.id_doss_id AS dos_id_tmp,
-			SUM(P.mont_prest_doss) AS mont_prest_doss_sum
-		FROM public.t_prestations_dossier AS P
-		GROUP BY P.id_doss_id
-	) AS P ON P.dos_id_tmp = D.id_doss
-	LEFT OUTER JOIN (
-		SELECT
-			A.id_doss_id AS dos_id_tmp,
-			SUM(A.mont_aven) AS mont_aven_sum
-		FROM public.t_avenant AS A
-		GROUP BY A.id_doss_id
-	) AS A ON A.dos_id_tmp = D.id_doss
-	LEFT OUTER JOIN (
-		SELECT
-			F.id_doss_id AS dos_id_tmp,
-			SUM(F.mont_ht_fact) AS mont_ht_fact_sum,
-			SUM(F.mont_ttc_fact) AS mont_ttc_fact_sum
-		FROM public.t_facture AS F
-		GROUP BY F.id_doss_id
-	) AS F2 ON F2.dos_id_tmp = D.id_doss
-	LEFT OUTER JOIN (
-		SELECT
-			ddscdg.dds_id,
-			ddscdg.acp_id AS id_av_cp,
-			cdg.cdg_date AS dt_av_cp_doss
-		FROM public.t_ddscdg AS ddscdg
-		INNER JOIN public.t_cdgemapi_cdg AS cdg ON cdg.cdg_id = ddscdg.cdg_id
-		WHERE cdg.cdg_date = (
-			SELECT MAX(cdg2.cdg_date)
-			FROM public.t_ddscdg AS ddscdg2
-			INNER JOIN public.t_cdgemapi_cdg AS cdg2 ON cdg2.cdg_id = ddscdg2.cdg_id
-			WHERE ddscdg2.dds_id = ddscdg.dds_id
-		)
-	) AS CDG ON CDG.dds_id = D.id_doss
+		D.*,
+		(D.mont_ttc_tot_doss - D.mont_ht_tot_doss)::NUMERIC(26, 2) AS mont_tva_tot_doss
+	FROM D
 	'''
 
 	class Meta :
@@ -456,4 +479,69 @@ class VFacture(view.View):
 
 	class Meta:
 		db_table = 'v_facture'
+		managed = False
+
+class VPpi(view.View):
+
+	"""
+    Ensemble des plans pluriannuels d'investissements (vue système)
+    """
+
+    # Imports
+	from app.classes.MFEuroField import Class as MFEuroField
+	from app.classes.MFPercentField import Class as MFPercentField
+
+    # Colonnes
+	ppi_id = models.OneToOneField(
+		'TPlanPluriannuelInvestissementPpi',
+		db_column='ppi_id',
+		on_delete=models.DO_NOTHING,
+		primary_key=True
+    )
+
+	pap_dps_eli_fctva_sum = MFEuroField(
+		verbose_name='Bilan des dépenses éligibles FCTVA (en €)'
+	)
+
+	ppi_dps_ttc_sum \
+		= MFEuroField(verbose_name='Bilan des dépenses TTC (en €)')
+
+	ppi_vsm_previ_sum = MFEuroField(verbose_name='Bilan des subventions (en €)')
+
+	ppi_tx_eli_fctva_moyen = MFPercentField(
+		blank=True,
+		null=True,
+		verbose_name='Taux d\'éligibilité FCTVA moyen (en %)'
+	)
+
+    # Requête
+	sql = '''
+    SELECT
+		ppi.*,
+		CASE
+			WHEN ppi.ppi_dps_ttc_sum > 0 THEN (ppi.pap_dps_eli_fctva_sum / ppi.ppi_dps_ttc_sum * 100)::NUMERIC(6, 3)
+			ELSE null
+		END AS ppi_tx_eli_fctva_moyen
+	FROM (
+		WITH pap AS (
+			SELECT
+				ppi_id,
+				sum(pap_dps_eli_fctva)::NUMERIC(26, 2) AS pap_dps_eli_fctva_sum,
+				sum(pap_dps_ttc_rp)::NUMERIC(26, 2) AS pap_dps_ttc_rp_sum,
+				sum(pap_vsm_previ_rp)::NUMERIC(26, 2) AS pap_vsm_previ_rp_sum
+			FROM public.t_prospective_annuelle_ppi_pap
+			GROUP BY ppi_id
+		)
+		SELECT
+			ppi.ppi_id,
+			coalesce(pap.pap_dps_eli_fctva_sum, 0)::NUMERIC(26, 2) AS pap_dps_eli_fctva_sum,
+			(ppi.ppi_real_an_pcdt_dps_ttc + coalesce(pap.pap_dps_ttc_rp_sum, 0))::NUMERIC(26, 2) AS ppi_dps_ttc_sum,
+			(ppi.ppi_real_an_pcdt_vsm_previ + coalesce(pap.pap_vsm_previ_rp_sum, 0))::NUMERIC(26, 2) AS ppi_vsm_previ_sum
+		FROM public.t_plan_pluriannuel_investissement_ppi AS ppi
+		LEFT OUTER JOIN pap ON pap.ppi_id = ppi.ppi_id
+	) AS ppi
+	'''
+
+	class Meta:
+		db_table = 'v_ppi'
 		managed = False
