@@ -115,6 +115,21 @@ urlpatterns = [
     url(r'^modules/gestion-dossiers/modifier-photo/([0-9]+)/$', gestion_dossiers.modif_ph, name = 'modif_ph'),
     url(r'^modules/gestion-dossiers/supprimer-photo/([0-9]+)/$', gestion_dossiers.suppr_ph, name = 'suppr_ph'),
     url(r'^modules/gestion-dossiers/ajouter-prestataire/$', gestion_dossiers.ajout_org_prest, name = 'ajout_org_prest'),
+    url(
+        r'^modules/gestion-dossiers/ajouter-ppi/$',
+        gestion_dossiers.manppi,
+        name='insppi'
+    ),
+    url(
+        r'^modules/gestion-dossiers/mettre-a-jour-ppi/([0-9]+)/$',
+        gestion_dossiers.manppi,
+        name='updppi'
+    ),
+    url(
+        r'^modules/gestion-dossiers/consulter-ppi/([0-9]+)/$',
+        gestion_dossiers.getppi,
+        name='getppi'
+    ),
 
     # Module Réalisation d'états
     url(r'^modules/realisation-etats/$', realisation_etats.index, name = 'real_etats'),

@@ -157,6 +157,7 @@ def filtr_doss(request, _d_excl = None) :
 		v_ann_delib_moa_doss = cleaned_data.get('zl_ann_delib_moa_doss')
 		v_doss_sold = cleaned_data.get('rb_doss_sold')
 		v_doss_term = cleaned_data.get('rb_doss_term')
+		v_doss_archi = cleaned_data.get('rb_doss_archi')
 		v_doss_aband = cleaned_data.get('rb_doss_aband')
 
 		# J'initialise les conditions de la requête.
@@ -190,9 +191,12 @@ def filtr_doss(request, _d_excl = None) :
 			# Retrait ou non des dossiers soldés
 			if v_doss_sold == 'non_solde':
 				selected.add(Q(id_av__int_av__icontains='Soldé'), Q.OR)
-			# Retrait ou non des dossiers terminé
+			# Retrait ou non des dossiers terminés
 			if v_doss_term == 'non_termine':
 				selected.add(Q(id_av__int_av__icontains='Terminé'), Q.OR)
+			# Retrait ou non des dossiers archivés
+			if v_doss_archi == 'non_archive':
+				selected.add(Q(id_av__int_av__icontains='Archivé'), Q.OR)
 			# Retrait ou non des dossiers abandonnés
 			if v_doss_aband == 'non_abandonne':
 				selected.add(Q(id_av__int_av__icontains='Abandonné'), Q.OR)
@@ -312,9 +316,6 @@ def gen_t_ch_doss(request, _d_excl = None) :
 		qs_doss = TDossier.objects.all()
 	if _d_excl :
 		qs_doss = qs_doss.exclude(pk = _d_excl)
-	qs_doss = TDossier.objects.custom_filter(
-		remove_completed = True, pk__in = qs_doss.values_list('pk', flat = True)
-	) # Retrait des dossiers soldés
 
 	# J'empile le tableau des lignes du tableau HTML.
 	t_lg = []
