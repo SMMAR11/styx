@@ -619,7 +619,6 @@ class TDossier(models.Model) :
 
     # Imports
     from app.classes.MFEuroField import Class as MFEuroField
-    from app.classes.MFPercentField import Class as MFPercentField
     from app.managers.TDossierManager import Class as TDossierManager
     from app.validators import val_fich_pdf
 
@@ -670,13 +669,8 @@ class TDossier(models.Model) :
     est_ttc_doss = models.BooleanField()
     lib_1_doss = models.CharField(max_length = 255, verbose_name = 'Caractéristique')
     lib_2_doss = models.CharField(max_length = 255, verbose_name = 'Territoire et lieu-dit')
-    mont_doss = MFEuroField(
-        verbose_name='Montant[ht_ou_ttc] du dossier présenté au CD GEMAPI'
-    )
-    mont_suppl_doss = MFEuroField(
-        default=0,
-        verbose_name='Dépassement[ht_ou_ttc] du dossier'
-    )
+    mont_doss = MFEuroField(verbose_name = 'Montant du dossier présenté au CD GEMAPI')
+    mont_suppl_doss = MFEuroField(default = 0, verbose_name = 'Dépassement du dossier')
     num_act = models.CharField(blank = True, max_length = 255)
     num_axe = models.CharField(blank = True, max_length = 255)
     num_doss = models.CharField(
@@ -690,7 +684,7 @@ class TDossier(models.Model) :
     num_ss_axe = models.CharField(blank = True, max_length = 255)
     priorite_doss = models.CharField(
         blank=True,
-        choices=[(i, i) for i in ['P1', 'P2', 'P3', 'P4']],
+        choices=[(i, i) for i in ['P1', 'P2', 'P3']],
         max_length=2,
         verbose_name='Priorité du dossier'
     )
@@ -710,15 +704,6 @@ class TDossier(models.Model) :
     id_sage = models.ForeignKey(TSage, blank = True, null = True, on_delete = models.SET_NULL, verbose_name = 'SAGE')
     id_techn = models.ForeignKey(TTechnicien, on_delete = models.CASCADE, verbose_name = 'Agent responsable')
     id_type_doss = models.ForeignKey(TTypeDossier, on_delete = models.CASCADE, verbose_name = 'Type de dossier')
-
-    duree_amor_ppi_doss = models.IntegerField(
-        blank=True,
-        null=True,
-        verbose_name='Durée d\'amortissement (en années)'
-    )
-    tx_tva_doss = MFPercentField(
-        default=20, verbose_name='Taux de TVA du dossier (en %)'
-    )
 
     # Managers
     objects = TDossierManager()
@@ -794,6 +779,10 @@ class TDossier(models.Model) :
                 'label' : 'Dépassement {0} du dossier (en €)'.format(ht_ou_ttc),
                 'value' : obt_mont(self.mont_suppl_doss)
             },
+            'mont_tot_doss' : {
+                'label' : 'Montant {0} total du dossier (en €)'.format(ht_ou_ttc),
+                'value' : obt_mont(self.get_view_object().mont_tot_doss)
+            },
             'id_av' : { 'label' : 'État d\'avancement', 'value' : self.id_av },
             'id_av_cp': {
                 'label': 'Etat de programmation du dossier',
@@ -816,27 +805,7 @@ class TDossier(models.Model) :
                 'pdf' : True
             },
             'comm_doss' : { 'label' : 'Commentaire', 'value' : self.comm_doss },
-            'num_oper_budg_doss' : { 'label' : 'Numéro d\'opération budgétaire', 'value' : self.num_oper_budg_doss },
-            'mont_ht_tot_doss': {
-                'label': 'Montant HT total du dossier (en €)',
-                'value': obt_mont(self.get_view_object().mont_ht_tot_doss)
-            },
-            'mont_tva_tot_doss': {
-                'label': 'Montant TVA total du dossier (en €)',
-                'value': obt_mont(self.get_view_object().mont_tva_tot_doss)
-            },
-            'mont_ttc_tot_doss': {
-                'label': 'Montant TTC total du dossier (en €)',
-                'value': obt_mont(self.get_view_object().mont_ttc_tot_doss)
-            },
-            'tx_tva_doss': {
-                'label': 'Taux de TVA du dossier (en %)',
-                'value': self.tx_tva_doss
-            },
-            'duree_amor_ppi_doss': {
-                'label': 'Durée d\'amortissement (en années)',
-                'value': self.duree_amor_ppi_doss
-            }
+            'num_oper_budg_doss' : { 'label' : 'Numéro d\'opération budgétaire', 'value' : self.num_oper_budg_doss }
         }
 
     def get_axe_doss(self) :
@@ -1030,24 +999,6 @@ class TDossier(models.Model) :
             if i != 1 : sums[i] = obt_mont(sums[i])
 
         return { 'tbl' : prss, 'mnts' : sums }
-
-    def get_recap_ppis(self):
-
-        """
-        Tableau récapitulatif des éléments composant un PPI
-        """
-
-        # Imports
-        from app.functions import obt_mont
-
-        return [{
-            'pk': iPpi.pk,
-            'pap_dps_eli_fctva_sum': obt_mont(iPpi.vppi.pap_dps_eli_fctva_sum),
-            'ppi_an': iPpi.ppi_an,
-            'ppi_dps_ttc_sum': obt_mont(iPpi.vppi.ppi_dps_ttc_sum),
-            'ppi_vsm_previ_sum': obt_mont(iPpi.vppi.ppi_vsm_previ_sum),
-            'ppi_tx_eli_fctva_moyen': iPpi.vppi.ppi_tx_eli_fctva_moyen if iPpi.vppi.ppi_tx_eli_fctva_moyen is not None else ''
-        } for iPpi in self.tplanpluriannuelinvestissementppi_set.all()]
 
     # Méthodes système
 
@@ -2262,174 +2213,3 @@ class FinDds(TDossier):
         proxy = True
         verbose_name = 'Plan de financement'
         verbose_name_plural = 'Plans de financement'
-
-class TPlanPluriannuelInvestissementPpi(models.Model):
-
-    """
-    Ensemble des plans pluriannuels d'investissements
-    """
-
-    # Imports
-    from app.classes.MFEuroField import Class as MFEuroField
-
-    # Colonnes
-
-    ppi_id = models.AutoField(primary_key=True)
-
-    ppi_an = models.IntegerField(verbose_name='Année du PPI')
-
-    ppi_budget_an_dps_ttc = MFEuroField(verbose_name='Dépenses TTC (en €)')
-
-    ppi_budget_an_vsm_previ \
-        = MFEuroField(verbose_name='Versements prévisionnels (en €)')
-
-    ppi_ntr_dps \
-        = models.TextField(blank=True, verbose_name='Nature de la dépense')
-
-    ppi_real_an_pcdt_dps_ttc = MFEuroField(verbose_name='Dépenses TTC (en €)')
-
-    ppi_real_an_pcdt_vsm_previ \
-        = MFEuroField(verbose_name='Versements prévisionnels (en €)')
-
-    dds_id = models.ForeignKey(
-        'TDossier', db_column='dds_id', on_delete=models.CASCADE
-    )
-
-    class Meta:
-        db_table = 't_plan_pluriannuel_investissement_ppi'
-        ordering = ['ppi_an', 'dds_id']
-        unique_together = ['ppi_an', 'dds_id']
-
-    # Méthodes privées
-
-    def __get_attrs(self):
-
-        """
-        Attributs
-        """
-
-        # Imports
-        from app.functions import init_pg_cons
-        from app.functions import obt_mont
-
-        # Instance VSuiviDossier
-        ivDds = self.dds_id.get_view_object()
-
-        return init_pg_cons({
-
-            'dds_id__num_doss': {
-                'label': 'Numéro du dossier',
-                'value': self.dds_id.num_doss
-            },
-
-            'dds_id__vsuividossier__mont_ttc_tot_doss': {
-                'label': 'Montant TTC total du dossier (en €)',
-                'value': obt_mont(ivDds.mont_ttc_tot_doss)
-            },
-
-            'dds_id__vsuividossier__mont_part_fin_sum': {
-                'label': '''
-                Montant {} total des subventions du dossier (en €)
-                '''.format(ivDds.type_mont_doss),
-                'value': obt_mont(ivDds.mont_part_fin_sum)
-            },
-
-            'ppi_an': {
-                'label': 'Année du PPI',
-                'value': self.ppi_an
-            },
-
-            'ppi_an': {
-                'label': 'Année du PPI',
-                'value': self.ppi_an
-            },
-
-            'ppi_real_an_pcdt_dps_ttc': {
-                'label': 'Dépenses TTC (en €)',
-                'value': obt_mont(self.ppi_real_an_pcdt_dps_ttc)
-            },
-
-            'ppi_real_an_pcdt_vsm_previ': {
-                'label': 'Versements prévisionnels (en €)',
-                'value': obt_mont(self.ppi_real_an_pcdt_vsm_previ)
-            },
-
-            'ppi_budget_an_dps_ttc': {
-                'label': 'Dépenses TTC (en €)',
-                'value': obt_mont(self.ppi_budget_an_dps_ttc)
-            },
-
-            'ppi_budget_an_vsm_previ': {
-                'label': 'Versements prévisionnels (en €)',
-                'value': obt_mont(self.ppi_budget_an_vsm_previ)
-            },
-
-            'vppi__ppi_dps_ttc_sum': {
-                'label': 'Bilan des dépenses TTC (en €)',
-                'value': obt_mont(self.vppi.ppi_dps_ttc_sum)
-            },
-
-            'vppi__ppi_vsm_previ_sum': {
-                'label': 'Bilan des subventions (en €)',
-                'value': obt_mont(self.vppi.ppi_vsm_previ_sum)
-            },
-
-            'vppi__pap_dps_eli_fctva_sum': {
-                'label': 'Bilan des dépenses éligibles FCTVA (en €)',
-                'value': obt_mont(self.vppi.pap_dps_eli_fctva_sum)
-            },
-
-            'vppi__ppi_tx_eli_fctva_moyen': {
-                'label': 'Taux d\'éligibilité FCTVA moyen (en %)',
-                'value': self.vppi.ppi_tx_eli_fctva_moyen
-            },
-
-            'ppi_ntr_dps': {
-                'label': 'Nature de la dépense',
-                'value': self.ppi_ntr_dps
-            }
-
-        })
-
-    # Méthodes publiques
-
-    def get_attrs(self):
-        """
-        Attributs
-        """
-        return self.__get_attrs()
-
-class TProspectiveAnnuellePpiPap(models.Model):
-
-    """
-    Ensemble des prospectives annuelles d'un PPI
-    """
-
-    # Imports
-    from app.classes.MFEuroField import Class as MFEuroField
-
-    # Colonnes
-
-    pap_id = models.AutoField(primary_key=True)
-
-    pap_an = models.IntegerField(verbose_name='Année')
-
-    pap_dps_eli_fctva \
-        = MFEuroField(verbose_name='Dépenses éligibles FCTVA (en €)')
-
-    pap_dps_ttc_rp \
-        = MFEuroField(verbose_name='Dépenses TTC réelles projetées (en €)')
-
-    pap_vsm_previ_rp = MFEuroField(
-        verbose_name='Versements prévisionnels réels projetés (en €)'
-    )
-
-    ppi_id = models.ForeignKey(
-        'TPlanPluriannuelInvestissementPpi',
-        db_column='ppi_id',
-        on_delete=models.CASCADE
-    )
-
-    class Meta:
-        db_table = 't_prospective_annuelle_ppi_pap'
-        ordering = ['pap_an']

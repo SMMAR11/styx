@@ -133,13 +133,6 @@ $(document).ready(function() {
 		'autofit' : ['FIRST:1'], 'unsorting' : ['FIRST:1']
 	});
 
-	// Tableau des PPI (cf. vue Consulter un dossier (onglet PPI))
-	new MyDataTable('cons_ppi').set_datatable({
-		'autofit' : ['FIRST:1'],
-		'number' : ['LAST:5'],
-		'unsorting' : ['FIRST:1']
-	});
-	
 });
 
 /**

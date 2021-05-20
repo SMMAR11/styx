@@ -272,8 +272,8 @@ def modif_doss(request, _d) :
 				'd' : o_doss,
 				'f_modif_doss' : init_f(f_modif_doss),
 				't_fm' : t_fm,
-				't_fin_length' : TFinancement.objects.filter(id_doss=o_doss).count(),
-				't_prest_doss_length' : TPrestationsDossier.objects.filter(id_doss=o_doss).count(),
+				't_fin_length' : len(TFinancement.objects.filter(id_doss = o_doss)),
+				't_prest_doss_length' : len(TPrestationsDossier.objects.filter(id_doss = o_doss)),
 				'title' : 'Modifier un dossier'
 			}
 		)
@@ -570,7 +570,6 @@ def ch_doss(request) :
 		selected = Q()
 		selected.add(Q(id_av__int_av__icontains='Soldé'), Q.OR)
 		selected.add(Q(id_av__int_av__icontains='Terminé'), Q.OR)
-		selected.add(Q(id_av__int_av__icontains='Archivé'), Q.OR)
 		selected.add(Q(id_av__int_av__icontains='Abandonné'), Q.OR)
 		qs_doss = qs_doss.exclude(selected)
 
@@ -653,7 +652,6 @@ def cons_doss(request, _d) :
 	from app.forms.gestion_dossiers import GererOrdreService
 	from app.forms.gestion_dossiers import GererPrestation
 	from app.forms.gestion_dossiers import GererPhoto
-	from app.forms.gestion_dossiers import ManagePpi
 	from app.forms.gestion_dossiers import RedistribuerPrestation
 	from app.forms.gestion_dossiers import PrintDoss
 	from app.functions import dt_fr
@@ -720,7 +718,6 @@ def cons_doss(request, _d) :
 		facs = o_doss.get_recap_facs()
 		ddvs = o_doss.get_recap_ddvs()
 		arrs = o_doss.get_recap_arrs()
-		ppis = o_doss.get_recap_ppis()
 
 		# Je stocke le jeu de données des prestations du maître d'ouvrage du dossier.
 		qs_prest_moa_doss = TPrestation.objects.filter(
@@ -830,7 +827,6 @@ def cons_doss(request, _d) :
 		f_ajout_ph = GererPhoto(prefix = 'GererPhoto', k_doss = o_doss)
 		f_ajout_org_prest = AjouterPrestataire(prefix = 'AjouterPrestataire')
 		f_ajout_fdv = GererFicheVie(k_doss = o_doss)
-		f_manppi = ManagePpi(kwarg_dds=o_doss, kwarg_rq=request)
 
 		# J'initialise le gabarit de chaque champ de chaque formulaire.
 		t_ajout_fin = init_f(f_ajout_fin)
@@ -1216,9 +1212,7 @@ def cons_doss(request, _d) :
 				Dé-présenter un dossier d'un comité de programmation - CD
 				GEMAPI
 				'''
-			),
-			# Fenêtre modale d'ajout d'un PPI
-			init_fm('manppi', 'Ajouter un PPI', f_manppi.get_form())
+			)
 		]
 
 		# Je complète le tableau de fenêtres modales dans le cas où le dossier n'est pas en projet.
@@ -1274,8 +1268,7 @@ def cons_doss(request, _d) :
 				't_prest_length' : len(prss['tbl']),
 				't_prest_sum' : prss['mnts'],
 				't_types_geom_doss' : t_types_geom_doss,
-				'title' : 'Consulter un dossier',
-				't_ppis': ppis
+				'title' : 'Consulter un dossier'
 			}
 		)
 
@@ -5342,200 +5335,3 @@ def ajout_ddscdg(rq, dds) :
 			}), content_type='application/json')
 
 	return output
-
-@verif_acc
-def manppi(rq, pk=None):
-
-	"""
-	Gestion d'un PPI
-	"""
-
-	# Imports
-	from app.forms.gestion_dossiers import ManagePpi
-	from app.models import TDossier
-	from app.models import TPlanPluriannuelInvestissementPpi
-
-	# Initialisation de la sortie
-	view_output = None
-
-	# Instance ou non TPlanPluriannuelInvestissementPpi selon le mode
-	# de gestion (ajout ou mise à jour)
-	if pk:
-		iPpi = get_object_or_404(TPlanPluriannuelInvestissementPpi, pk=pk)
-	else:
-		iPpi = None
-
-	# Détermination de l'instance TDossier
-	if iPpi:
-		iDds = iPpi.dds_id
-	else:
-		iDds = TDossier.objects.filter(pk=rq.GET.get('dds')).first()
-
-	# Vérification du droit d'écriture
-	ger_droits(rq.user, iDds, False)
-
-	# Initialisation des options selon le mode de gestion
-	if not iPpi:
-		options = {
-			'db_action': 'C',
-			'message': 'Le PPI {} du dossier {} a été ajouté avec succès.',
-			'title': 'Ajouter un PPI'
-		}
-	else:
-		options = {
-			'db_action': 'U',
-			'message': '''
-			Le PPI {} du dossier {} a été mis à jour avec succès.
-			''',
-			'title': 'Mettre à jour un PPI'
-		}
-
-	# Si type de requête HTTP "GET", alors...
-	if rq.method == 'GET':
-
-		# Instanciation d'un objet formulaire
-		form = ManagePpi(instance=iPpi, kwarg_dds=iDds, kwarg_rq=rq)
-
-		# Initialisation des fenêtres modales
-		modals = [init_fm('manppi', options['title'])]
-
-		# Affichage du gabarit
-		view_output = render(rq, './gestion_dossiers/manppi.html', {
-			'form': form.get_form(has_fieldset=True),
-			'iPpi': iPpi,
-			't_fm': modals,
-			'title': options['title']
-		})
-
-	# Sinon (type de requête HTTP "POST")...
-	else:
-
-		# Soumission du formulaire
-		form = ManagePpi(rq.POST, instance=iPpi, kwarg_dds=iDds, kwarg_rq=rq)
-
-		# Si formulaire valide, alors...
-		if form.is_valid():
-
-			# Ajout/mise à jour d'une instance
-			# TPlanPluriannuelInvestissementPpi
-			iPpi_new = form.save()
-
-			# Affichage du message de succès et redirection
-			view_output = HttpResponse(
-				json.dumps({'success': {
-					'message': options['message'].format(
-						iPpi_new.ppi_an, iPpi_new.dds_id
-					),
-					'redirect': reverse(
-						'cons_doss', args=[iPpi_new.dds_id.pk]
-					) if not iPpi else reverse('getppi', args=[iPpi_new.pk])
-				}}),
-				content_type='application/json'
-			)
-
-			# Définition de l'onglet actif après rechargement de la page
-			rq.session['tab_doss'] = '#ong_ppi'
-
-			# Remplissage du fichier log
-			rempl_fich_log([
-				rq.user.pk,
-				rq.user,
-				iPpi_new.dds_id.pk,
-				iPpi_new.dds_id,
-				options['db_action'],
-				'PPI',
-				iPpi_new.pk
-			])
-
-		# Sinon, envoi des erreurs
-		else:
-			view_output = HttpResponse(
-				json.dumps(form.errors), content_type='application/json'
-			)
-
-	return view_output
-
-@verif_acc
-@csrf_exempt
-def getppi(rq, pk):
-
-	"""
-	Consultation d'un PPI
-	"""
-
-	# Imports
-	from app.functions import suppr
-	from app.models import TPlanPluriannuelInvestissementPpi
-
-	# Initialisation de la sortie
-	view_output = None
-
-	# Instance TPlanPluriannuelInvestissementPpi
-	iPpi = get_object_or_404(TPlanPluriannuelInvestissementPpi, pk=pk)
-
-	# Si type de requête HTTP "GET", alors...
-	if rq.method == 'GET':
-
-		# Vérification du droit de lecture
-		ger_droits(rq.user, iPpi.dds_id)
-
-		# Initialisation des fenêtres modales
-		modals = [init_fm(
-			'delppi', 'Supprimer un PPI', suppr('?action=supprimer-ppi')
-		)]
-
-		# Affichage du gabarit
-		view_output = render(rq, './gestion_dossiers/getppi.html', {
-			'forbidden' : ger_droits(rq.user, iPpi.dds_id, False, False),
-			'iPpi': iPpi,
-			'iPpi_attrs': iPpi.get_attrs(),
-			't_fm': modals,
-			'title': 'Consulter un PPI'
-		})
-
-	# Sinon (type de requête HTTP "POST")...
-	else:
-
-		# Récupération du paramètre GET "action"
-		action = rq.GET.get('action')
-
-		# CAS DE FIGURE : suppression du PPI
-		if action == 'supprimer-ppi':
-
-			# Vérification du droit de lecture
-			ger_droits(rq.user, iPpi.dds_id, False)
-
-			# Récupération du PPI obsolète
-			iPpi_old = iPpi
-
-			# Suppression du PPI
-			iPpi.delete()
-
-			# Affichage du message de succès et redirection
-			view_output = HttpResponse(
-				json.dumps({'success': {
-					'message': '''
-					Le PPI {} du dossier {} a été supprimé avec succès.
-					'''.format(iPpi_old.ppi_an, iPpi_old.dds_id),
-					'redirect': reverse(
-						'cons_doss', args=[iPpi_old.dds_id.pk]
-					)
-				}}),
-				content_type='application/json'
-			)
-
-			# Définition de l'onglet actif après rechargement de la page
-			rq.session['tab_doss'] = '#ong_ppi'
-
-			# Remplissage du fichier log
-			rempl_fich_log([
-				rq.user.pk,
-				rq.user,
-				iPpi_old.dds_id.pk,
-				iPpi_old.dds_id,
-				'D',
-				'PPI',
-				iPpi_old.pk
-			])
-
-	return view_output

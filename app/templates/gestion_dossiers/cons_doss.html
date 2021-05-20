@@ -14,14 +14,13 @@
 		<ul class="my-nav-tabs nav nav-justified nav-tabs" id="tab_doss">
 			<li><a href="#ong_doss" data-toggle="tab">Caractéristiques</a></li>
 			<li><a href="#ong_fdv" data-toggle="tab">Fiche de vie</a></li>
-			<li><a href="#ong_ppi" data-toggle="tab">PPI</a></li>
 			<li><a href="#ong_fin" data-toggle="tab">Plan de financement</a></li>
 			{% if d.id_av.int_av != AV_EP %}
 			<li><a href="#ong_prest" data-toggle="tab">Prestations</a></li>
 			<li><a href="#ong_fact" data-toggle="tab">Factures</a></li>
-			<li><a href="#ong_ddv" data-toggle="tab">Demandes de versement</a></li>
+			<li><a href="#ong_ddv" data-toggle="tab">Demandes de versements</a></li>
 			{% endif %}
-			<li><a href="#ong_arr" data-toggle="tab">Réglementation</a></li>
+			<li><a href="#ong_arr" data-toggle="tab">Réglementations</a></li>
 			<li><a href="#ong_ph" data-toggle="tab">Photos</a></li>
 			<li><a href="#ong_carto" data-toggle="tab">Cartographie</a></li>
 		</ul>
@@ -84,20 +83,14 @@
 							<div class="col-md-6">{{ t_attrs_doss.mont_doss }}</div>
 							<div class="col-md-6">{{ t_attrs_doss.mont_suppl_doss }}</div>
 						</div>
-						<div class="row">
-							<div class="col-md-6">{{ t_attrs_doss.mont_ht_tot_doss }}</div>
-							<div class="col-md-6">{{ t_attrs_doss.mont_ttc_tot_doss }}</div>
-						</div>
-						<div class="row">
-							<div class="col-md-6">{{ t_attrs_doss.mont_tva_tot_doss }}</div>
-							<div class="col-md-6">{{ t_attrs_doss.tx_tva_doss }}</div>
-						</div>
+						{{ t_attrs_doss.mont_tot_doss }}
 						<div class="row">
 							<div class="col-md-6">{{ t_attrs_doss.id_av }}</div>
 							<div class="col-md-6">{{ t_attrs_doss.dt_delib_moa_doss }}</div>
 						</div>
 						{{ t_attrs_doss.annee_prev_doss }}
 						{{ t_attrs_doss.dt_depot_doss }}
+						{{ t_attrs_doss.priorite_doss }}
 						<div class="attribute-wrapper">
 							<span class="attribute-label">Comité de programmation - CD GEMAPI</span>
 							<div class="right">
@@ -127,12 +120,9 @@
 							</div>
 						</div>
 						{{ t_attrs_doss.id_av_cp }}
-						<div class="title-1">Plan Pluriannuel d'Investissement (PPI)</div>
-						{{ t_attrs_doss.num_oper_budg_doss }}
-						{{ t_attrs_doss.duree_amor_ppi_doss }}
-						{{ t_attrs_doss.priorite_doss }}
 						<div class="title-1">Autres</div>
 						{{ t_attrs_doss.chem_pj_doss }}
+						{{ t_attrs_doss.num_oper_budg_doss }}
 						{{ t_attrs_doss.comm_doss }}
 					</div>
 					<div class="col-sm-3">
@@ -170,37 +160,6 @@
 								<td>{{ fdv.comm_fdv|linebreaks }}</td>
 								<td><a href="{% url 'modif_fdv' fdv.pk %}" class="forbidden modify-icon pull-right" title="Mettre à jour l'événement"></a></td>
 								<td><span action="?action=supprimer-fdv&fdv={{ fdv.pk }}" class="delete-icon forbidden pointer pull-right" onclick="html_ds_fm(event, 'suppr_fdv');" title="Supprimer l'événement"></span></td>
-							</tr>
-							{% endfor %}
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<div id="ong_ppi" class="fade tab-pane">
-				<div class="right">
-					<span data-target="#fm_manppi" data-toggle="modal" class="add-icon forbidden icon-link">Ajouter un PPI</span>
-				</div>
-				<div class="my-table" id="t_cons_ppi">
-					<table>
-						<thead>
-							<tr>
-								<th></th>
-								<th>Année</th>
-								<th>Bilan des dépenses TTC (en €)</th>
-								<th>Bilan des subventions (en €)</th>
-								<th>Bilan des dépenses éligibles FCTVA (en €)</th>
-								<th>Taux d'éligibilité FCTVA moyen (en %)</th>
-							</tr>
-						</thead>
-						<tbody>
-							{% for ppi in t_ppis %}
-							<tr>
-								<td><a href="{% url 'getppi' ppi.pk %}" class="consult-icon pull-right" title="Consulter le PPI"></a></td>
-								<td>{{ ppi.ppi_an }}</td>
-								<td>{{ ppi.ppi_dps_ttc_sum }}</td>
-								<td>{{ ppi.ppi_vsm_previ_sum }}</td>
-								<td>{{ ppi.pap_dps_eli_fctva_sum }}</td>
-								<td>{{ ppi.ppi_tx_eli_fctva_moyen }}</td>
 							</tr>
 							{% endfor %}
 						</tbody>

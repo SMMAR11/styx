@@ -104,10 +104,8 @@ class GererDossier(forms.ModelForm) :
 		# Imports
 		from app.models import TAction
 		from app.models import TAxe
-		from app.models import TFinancement
 		from app.models import TMoa
 		from app.models import TNatureDossier
-		from app.models import TPrestationsDossier
 		from app.models import TProgramme
 		from app.models import TSousAxe
 		from app.models import TTechnicien
@@ -153,20 +151,6 @@ class GererDossier(forms.ModelForm) :
 		self.fields['zl_techn'].choices = t_techn
 
 		i = self.instance
-
-		# Intégration du type de taxe du dossier dans les divers champs
-		# montant
-		if (
-			i.pk
-		) and (
-			TFinancement.objects.filter(id_doss=i.pk).exists() or \
-			TPrestationsDossier.objects.filter(id_doss=i.pk).exists()
-		):
-			ht_ttc = ' ' + VSuiviDossier.objects.get(pk=i.pk).type_mont_doss
-		else:
-			ht_ttc = ''
-		self.fields['mont_doss'].label = self.fields['mont_doss'].label.replace('[ht_ou_ttc]', ht_ttc)
-		self.fields['mont_suppl_doss'].label = self.fields['mont_suppl_doss'].label.replace('[ht_ou_ttc]', ht_ttc)
 
 		# J'exclus le champ relatif aux dépenses supplémentaires lorsque je veux créer un dossier.
 		if not i.pk :
@@ -478,32 +462,25 @@ class ChoisirDossier(forms.ModelForm) :
 		label = 'Année de délibération au maître d\'ouvrage', required = False, widget = forms.Select()
 	)
 	rb_doss_sold = forms.ChoiceField(
-		choices=[('solde', 'Oui'), ('non_solde', 'Non')],
-		initial='non_solde',
-		label='Afficher les dossiers soldés ?',
-		required=False,
-		widget=forms.RadioSelect()
+		choices = [('solde', 'Oui'), ('non_solde', 'Non')],
+		initial = 'non_solde',
+		label = '- soldés ?',
+		required = False,
+		widget = forms.RadioSelect()
 	)
 	rb_doss_term = forms.ChoiceField(
-		choices=[('termine', 'Oui'), ('non_termine', 'Non')],
-		initial='non_termine',
-		label='Afficher les dossiers terminés ?',
-		required=False,
-		widget=forms.RadioSelect()
-	)
-	rb_doss_archi = forms.ChoiceField(
-		choices=[('archive', 'Oui'), ('non_archive', 'Non')],
-		initial='non_archive',
-		label='Afficher les dossiers archivés ?',
-		required=False,
-		widget=forms.RadioSelect()
+		choices = [('termine', 'Oui'), ('non_termine', 'Non')],
+		initial = 'non_termine',
+		label = '- terminés ?',
+		required = False,
+		widget = forms.RadioSelect()
 	)
 	rb_doss_aband = forms.ChoiceField(
-		choices=[('abandonne', 'Oui'), ('non_abandonne', 'Non')],
-		initial='non_abandonne',
-		label='Afficher les dossiers abandonnés ?',
-		required=False,
-		widget=forms.RadioSelect()
+		choices = [('abandonne', 'Oui'), ('non_abandonne', 'Non')],
+		initial = 'non_abandonne',
+		label = '- abandonnés ?',
+		required = False,
+		widget = forms.RadioSelect()
 	)
 
 	class Meta :
@@ -2333,195 +2310,3 @@ class GererDdsCdg(forms.ModelForm) :
 		if commit:
 			ddscdg.save()
 		return ddscdg
-
-class ManagePpi(forms.ModelForm):
-
-	# Imports
-	from app.classes.FFEuroField import Class as FFEuroField
-
-	# Champs
-
-	za_num_doss = forms.CharField(
-		label='Numéro du dossier',
-		required=False,
-		widget=forms.TextInput(attrs={'readonly': True})
-	)
-
-	za_mont_ttc_tot_doss = forms.CharField(
-		label='Montant TTC total du dossier (en €)',
-		required=False,
-		widget=forms.TextInput(attrs={'readonly': True})
-	)
-
-	za_mont_part_fin_sum = forms.CharField(
-		label='Montant [ht_ou_ttc] total des subventions du dossier (en €)',
-		required=False,
-		widget=forms.TextInput(attrs={'readonly': True})
-	)
-
-	class Meta:
-
-		# Imports
-		from app.models import TPlanPluriannuelInvestissementPpi
-
-		exclude = ['dds_id']
-		model = TPlanPluriannuelInvestissementPpi
-		widgets = {
-			'ppi_budget_an_dps_ttc': forms.NumberInput(attrs={'input-group-addon': 'euro'}),
-			'ppi_budget_an_vsm_previ': forms.NumberInput(attrs={'input-group-addon': 'euro'}),
-			'ppi_real_an_pcdt_dps_ttc': forms.NumberInput(attrs={'input-group-addon': 'euro'}),
-			'ppi_real_an_pcdt_vsm_previ': forms.NumberInput(attrs={'input-group-addon': 'euro'})
-		}
-
-	# Méthodes Django
-
-	def __init__(self, *args, **kwargs):
-
-		# Imports
-		from app.functions import obt_mont
-
-		# Variables globales
-		self.iDds = kwargs.pop('kwarg_dds', None)
-		self.rq = kwargs.pop('kwarg_rq', None)
-
-		super().__init__(*args, **kwargs)
-
-		# Définition des messages d'erreurs personnalisés
-		init_mess_err(self)
-
-		# Définition de la valeur initiale des champs non-issus du
-		# modèle
-		self.fields['za_num_doss'].initial = self.iDds.num_doss
-		self.fields['za_mont_ttc_tot_doss'].initial \
-			= obt_mont(self.iDds.get_view_object().mont_ttc_tot_doss)
-		self.fields['za_mont_part_fin_sum'].initial \
-			= obt_mont(self.iDds.get_view_object().mont_part_fin_sum)
-
-		self.fields['za_mont_part_fin_sum'].label \
-			= self.fields['za_mont_part_fin_sum'].label.replace(
-				'[ht_ou_ttc]', self.iDds.get_view_object().type_mont_doss
-			)
-
-	def clean_ppi_an(self):
-
-		# Imports
-		from django.core.exceptions import ValidationError
-
-		# Récupération de l'année renseignée
-		ppi_an = self.cleaned_data['ppi_an']
-
-		# CAS DE FIGURE : ajout d'un PPI
-		if not self.instance.pk:
-			# Renvoi d'une erreur si un PPI a déjà été renseigné pour
-			# l'année renseignée
-			if self.iDds \
-				.tplanpluriannuelinvestissementppi_set \
-				.filter(ppi_an=ppi_an) \
-				.exists():
-				raise ValidationError(
-					'''
-					Un PPI a déjà été renseigné pour l'année {}.
-					'''.format(ppi_an)
-				)
-
-		return ppi_an
-
-	def save(self, commit=True):
-
-		# Pré-enregistrement
-		iPpi = super().save(commit=False)
-
-		# Définition du dossier
-		iPpi.dds_id = self.iDds
-
-		# Enregistrement
-		if commit:
-			iPpi.save()
-
-		return iPpi
-
-	# Méthodes privées
-
-	def __get_form(self, rq, has_fieldset):
-
-		"""
-		Mise en forme du formulaire
-		"""
-
-		# Imports
-		from app.functions import init_f
-		from django.core.urlresolvers import reverse
-		from django.template.context_processors import csrf
-
-		# Initialisation des contrôles
-		form = init_f(self)
-
-		# Mise en forme du contenu du formulaire
-		inner_form = '''
-		{}
-		<div class="row">
-			<div class="col-sm-6">{}</div>
-			<div class="col-sm-6">{}</div>
-		</div>
-		{}
-		<div class="title-1">Réalisé au 31/12 de l'année précédente du PPI hors RAR</div>
-		<div class="row">
-			<div class="col-sm-6">{}</div>
-			<div class="col-sm-6">{}</div>
-		</div>
-		<div class="title-1">Budget de l'année du PPI (RAR + nouvelles propositions)</div>
-		<div class="row">
-			<div class="col-sm-6">{}</div>
-			<div class="col-sm-6">{}</div>
-		</div>
-		<div class="title-1">Prospective annuelle</div>
-		<div class="title-1">Autres</div>
-		{}
-		<button
-			class="center-block green-btn my-btn"
-			type="submit"
-		>Valider</button>
-		'''.format(
-			form['za_num_doss'],
-			form['za_mont_ttc_tot_doss'],
-			form['za_mont_part_fin_sum'],
-			form['ppi_an'],
-			form['ppi_real_an_pcdt_dps_ttc'],
-			form['ppi_real_an_pcdt_vsm_previ'],
-			form['ppi_budget_an_dps_ttc'],
-			form['ppi_budget_an_vsm_previ'],
-			form['ppi_ntr_dps']
-		)
-
-		# Intégration d'une balise <fieldset/> si besoin
-		if has_fieldset:
-			inner_form = '''
-			<fieldset class="my-fieldset">
-				<legend>Mettre à jour un PPI</legend>
-				<div>{}</div>
-			</fieldset>
-			'''.format(inner_form)
-
-		return '''
-		<form
-			action="{}"
-			method="post"
-			name="f_manppi"
-			onsubmit="soum_f(event)"
-		>
-			<input name="csrfmiddlewaretoken" type="hidden" value="{}">
-			{}
-		</form>
-		'''.format(
-			(reverse('insppi') + '?dds=' + str(self.iDds.pk)) if not self.instance.pk else '',
-			csrf(self.rq)['csrf_token'],
-			inner_form
-		)
-
-	# Méthodes publiques
-
-	def get_form(self, has_fieldset=False):
-		"""
-		Mise en forme du formulaire
-		"""
-		return self.__get_form(self, has_fieldset)
