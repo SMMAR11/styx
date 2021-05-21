@@ -5413,8 +5413,11 @@ def manppi(rq, pk=None):
 		# Soumission du formulaire
 		form = ManagePpi(rq.POST, instance=iPpi, kwarg_dds=iDds, kwarg_rq=rq)
 
+		# Récupération des erreurs de formulaire
+		errors = form.get_errors()
+
 		# Si formulaire valide, alors...
-		if form.is_valid():
+		if not errors:
 
 			# Ajout/mise à jour d'une instance
 			# TPlanPluriannuelInvestissementPpi
@@ -5426,9 +5429,7 @@ def manppi(rq, pk=None):
 					'message': options['message'].format(
 						iPpi_new.ppi_an, iPpi_new.dds_id
 					),
-					'redirect': reverse(
-						'cons_doss', args=[iPpi_new.dds_id.pk]
-					) if not iPpi else reverse('getppi', args=[iPpi_new.pk])
+					'redirect': reverse('getppi', args=[iPpi_new.pk])
 				}}),
 				content_type='application/json'
 			)
@@ -5450,7 +5451,7 @@ def manppi(rq, pk=None):
 		# Sinon, envoi des erreurs
 		else:
 			view_output = HttpResponse(
-				json.dumps(form.errors), content_type='application/json'
+				json.dumps(errors), content_type='application/json'
 			)
 
 	return view_output
@@ -5464,6 +5465,7 @@ def getppi(rq, pk):
 	"""
 
 	# Imports
+	from app.functions import obt_mont
 	from app.functions import suppr
 	from app.models import TPlanPluriannuelInvestissementPpi
 
@@ -5484,11 +5486,45 @@ def getppi(rq, pk):
 			'delppi', 'Supprimer un PPI', suppr('?action=supprimer-ppi')
 		)]
 
+		# Mise en forme du tableau des prospectives annuelles
+		pap = '''
+		<div class="attribute-wrapper">
+			<div class="my-table" id="t_getppi_pap">
+				<table>
+					<thead>
+						<tr>
+							<th>Année</th>
+							<th>Dépenses TTC réelles projetées (en €)</th>
+							<th>Versements prévisionnels réels projetés (en €)</th>
+							<th>Dépenses éligibles FCTVA (en €)</th>
+						</tr>
+					</thead>
+					<tbody>{}</tbody>
+				</table>
+			</div>
+		</div>
+		'''.format(''.join([
+			'''
+			<tr>
+				<td>{}</td>
+				<td>{}</td>
+				<td>{}</td>
+				<td>{}</td>
+			</tr>
+			'''.format(
+				iPap.pap_an,
+				obt_mont(iPap.pap_dps_ttc_rp),
+				obt_mont(iPap.pap_vsm_previ_rp),
+				obt_mont(iPap.pap_dps_eli_fctva)
+			) for iPap in iPpi.tprospectiveannuelleppipap_set.all()
+		]))
+
 		# Affichage du gabarit
 		view_output = render(rq, './gestion_dossiers/getppi.html', {
 			'forbidden' : ger_droits(rq.user, iPpi.dds_id, False, False),
 			'iPpi': iPpi,
 			'iPpi_attrs': iPpi.get_attrs(),
+			'pap': pap,
 			't_fm': modals,
 			'title': 'Consulter un PPI'
 		})

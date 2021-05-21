@@ -138,9 +138,21 @@ $(document).ready(function() {
 
 	// Tableau des PPI (cf. vue Consulter un dossier (onglet PPI))
 	new MyDataTable('cons_ppi').set_datatable({
-		'autofit' : ['FIRST:1'],
-		'number' : ['LAST:5'],
-		'unsorting' : ['FIRST:1']
+		'autofit': ['FIRST:1'],
+		'number': ['LAST:5'],
+		'unsorting': ['FIRST:1']
+	});
+
+	// Tableau des prospectives annuelles d'un PPI (cf. vue Consulter
+	// un PPI)
+	new MyDataTable('getppi_pap').set_datatable({'number': ['LAST:4']});
+
+	// Tableau des prospectives annuelles d'un PPI (cf. vue de gestion
+	// d'un PPI)
+	new MyDataTable('pap').set_datatable({
+		'autofit' : ['LAST:1'],
+		'exports': false,
+		'unsorting' : ['LAST:5']
 	});
 	
 });

@@ -5,6 +5,7 @@
 from app.constants import *
 from app.functions import init_mess_err
 from django import forms
+from django.forms import BaseFormSet
 
 class GererDossier(forms.ModelForm) :
 
@@ -2386,6 +2387,53 @@ class ManagePpi(forms.ModelForm):
 
 		super().__init__(*args, **kwargs)
 
+		# -------------------------------------------------------------
+		# Méthodes locales
+		# -------------------------------------------------------------
+
+		def get_papFormset(self):
+
+			"""
+			Instanciation/soumission d'un objet formulaire groupé
+			ManagePapFormSet
+			"""
+
+			# Imports
+			from app.classes import FormSet
+
+			# Gestion de l'attribut "initial"
+			if self.instance.pk:
+				initial = [{
+					'pap_an': iPap.pap_an,
+					'pap_dps_eli_fctva': iPap.pap_dps_eli_fctva,
+					'pap_dps_ttc_rp': iPap.pap_dps_ttc_rp,
+					'pap_vsm_previ_rp': iPap.pap_vsm_previ_rp
+				} for iPap in self.instance \
+					.tprospectiveannuelleppipap_set \
+					.all()]
+			else:
+				initial = []
+
+			return FormSet(
+				columns=[
+					'pap_an',
+					'pap_dps_ttc_rp',
+					'pap_vsm_previ_rp',
+					'pap_dps_eli_fctva'
+				],
+				form=ManagePap,
+				formset=ManagePapFormSet,
+				label='',
+				name='pap',
+				rq=self.rq,
+				formset_kwargs={'initial': initial}
+			)
+
+		# -------------------------------------------------------------
+
+		# Variables globales
+		self.papFormset = get_papFormset(self=self)
+
 		# Définition des messages d'erreurs personnalisés
 		init_mess_err(self)
 
@@ -2437,10 +2485,29 @@ class ManagePpi(forms.ModelForm):
 		# Enregistrement
 		if commit:
 			iPpi.save()
+			self.papFormset.save(iPpi=iPpi)
 
 		return iPpi
 
 	# Méthodes privées
+
+	def __get_errors(self):
+
+		"""
+		Récupération des erreurs de formulaire
+		"""
+
+		# Initialisation des erreurs
+		errors = {}
+
+		# Si le formulaire est invalide, alors empilement des erreurs
+		if not self.is_valid():
+			errors.update(self.errors)
+
+		# Empilement des erreurs (formulaire groupé)
+		errors.update(self.papFormset.get_errors())
+
+		return errors
 
 	def __get_form(self, rq, has_fieldset):
 
@@ -2455,6 +2522,9 @@ class ManagePpi(forms.ModelForm):
 
 		# Initialisation des contrôles
 		form = init_f(self)
+
+		# Récupération du couple formulaire groupé/formulaire vierge
+		formset, empty_form = self.papFormset.display_formset()
 
 		# Mise en forme du contenu du formulaire
 		inner_form = '''
@@ -2475,6 +2545,7 @@ class ManagePpi(forms.ModelForm):
 			<div class="col-sm-6">{}</div>
 		</div>
 		<div class="title-1">Prospective annuelle</div>
+		{}
 		<div class="title-1">Autres</div>
 		{}
 		<button
@@ -2490,6 +2561,7 @@ class ManagePpi(forms.ModelForm):
 			form['ppi_real_an_pcdt_vsm_previ'],
 			form['ppi_budget_an_dps_ttc'],
 			form['ppi_budget_an_vsm_previ'],
+			formset,
 			form['ppi_ntr_dps']
 		)
 
@@ -2512,16 +2584,100 @@ class ManagePpi(forms.ModelForm):
 			<input name="csrfmiddlewaretoken" type="hidden" value="{}">
 			{}
 		</form>
+		{}
 		'''.format(
 			(reverse('insppi') + '?dds=' + str(self.iDds.pk)) if not self.instance.pk else '',
 			csrf(self.rq)['csrf_token'],
-			inner_form
+			inner_form,
+			empty_form
 		)
 
 	# Méthodes publiques
+
+	def get_errors(self):
+		"""
+		Récupération des erreurs de formulaire
+		"""
+		return self.__get_errors()
 
 	def get_form(self, has_fieldset=False):
 		"""
 		Mise en forme du formulaire
 		"""
 		return self.__get_form(self, has_fieldset)
+
+class ManagePapFormSet(BaseFormSet):
+
+	"""
+	Formulaire groupé de gestion des instances TProspectiveAnnuellePpiPap
+	"""
+
+	# Méthodes Django
+
+	def save(self, iPpi):
+
+		# Initialisation des ids
+		pks = []
+
+		# Pour chaque formulaire...
+		for form in self.forms:
+
+			# Enregistrement
+			iPap = form.save(iPpi=iPpi)
+
+			# Empilement desids
+			pks.append(iPap.pk)
+
+		# Suppression des instances obsolètes
+		iPpi.tprospectiveannuelleppipap_set.exclude(pk__in=pks).delete()
+
+		return True
+
+class ManagePap(forms.ModelForm):
+
+	"""
+	Formulaire de gestion des instances TProspectiveAnnuellePpiPap
+	"""
+
+	class Meta:
+
+		# Imports
+		from app.models import TProspectiveAnnuellePpiPap
+
+		exclude = ['ppi_id']
+		model = TProspectiveAnnuellePpiPap
+		'''
+		widgets = {
+			'pap_dps_eli_fctva': forms.NumberInput(attrs={'input-group-addon': 'euro'}),
+			'pap_dps_ttc_rp': forms.NumberInput(attrs={'input-group-addon': 'euro'}),
+			'pap_vsm_previ_rp': forms.NumberInput(attrs={'input-group-addon': 'euro'})
+		}
+		'''
+
+	# Constructeur
+
+	def __init__(self, *args, **kwargs):
+
+		super().__init__(*args, **kwargs)
+
+		# Définition des messages d'erreurs personnalisés
+		init_mess_err(self)
+
+		self.empty_permitted = False
+
+	# Méthodes Django
+
+	def save(self, iPpi):
+
+		# Enregistrement de l'instance
+		iPap, created = self._meta.model.objects.update_or_create(
+			ppi_id=iPpi,
+			pap_an=self.cleaned_data.get('pap_an'),
+			defaults={
+				'pap_dps_eli_fctva': self.cleaned_data.get('pap_dps_eli_fctva'),
+				'pap_dps_ttc_rp': self.cleaned_data.get('pap_dps_ttc_rp'),
+				'pap_vsm_previ_rp': self.cleaned_data.get('pap_vsm_previ_rp')
+			}
+		)
+
+		return iPap
