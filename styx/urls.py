@@ -5,6 +5,7 @@ from app.views import pgre
 from app.views import realisation_etats
 from app.views.avancement_programme import AvancementProgrammeView
 from app.views.real_etats.EtatAvancementProgramme import EtatAvancementProgramme
+from app.views.real_etats.EtatPpi import EtatPpi
 from app.views.real_etats.EtatCDGemapi import EtatCDGemapi
 from app.views.real_etats.EtatDossiers import EtatDossiers
 from app.views.real_etats.EtatPrestations import EtatPrestations
@@ -157,6 +158,11 @@ urlpatterns = [
         r'^modules/realisation-etats/decisions-cd-gemapi/$',
         EtatCDGemapi.as_view(),
         name='EtatCDGemapi'
+    ),
+    url(
+        r'^modules/realisation-etats/bilan-ppi/$',
+        EtatPpi.as_view(),
+        name='EtatPpi'
     ),
 
     # Module PGRE

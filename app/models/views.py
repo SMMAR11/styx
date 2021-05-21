@@ -193,6 +193,7 @@ class VSuiviDossier(view.View) :
 	mont_aven_sum = MFEuroField()
 	mont_doss = MFEuroField()
 	mont_fact_sum = MFEuroField()
+	pourc_glob_fin_sum = MFPercentField()
 	mont_part_fin_sum = MFEuroField()
 	mont_prest_doss_sum = MFEuroField()
 	mont_rae = MFEuroField()
@@ -243,6 +244,7 @@ class VSuiviDossier(view.View) :
 				COALESCE(
 					CASE WHEN D.est_ttc_doss = false THEN F2.mont_ht_fact_sum ELSE F2.mont_ttc_fact_sum END, 0
 				)::NUMERIC(26, 2) AS mont_fact_sum,
+				COALESCE(F.pourc_glob_fin_sum, 0):: NUMERIC(6, 3) AS pourc_glob_fin_sum,
 				COALESCE(F.mont_part_fin_sum, 0)::NUMERIC(26, 2) AS mont_part_fin_sum,
 				COALESCE(P.mont_prest_doss_sum, 0)::NUMERIC(26, 2) AS mont_prest_doss_sum,
 				(
@@ -291,10 +293,12 @@ class VSuiviDossier(view.View) :
 			INNER JOIN public.t_avancement AS AVN ON AVN.id_av = D.id_av_id
 			LEFT OUTER JOIN (
 				SELECT
-					F.id_doss_id AS dos_id_tmp,
-					SUM(F.mont_part_fin) AS mont_part_fin_sum
-				FROM public.t_financement AS F
-				GROUP BY F.id_doss_id
+					T.id_doss_id AS dos_id_tmp,
+					SUM(V.pourc_glob_fin) AS pourc_glob_fin_sum,
+					SUM(T.mont_part_fin) AS mont_part_fin_sum
+				FROM public.t_financement AS T
+				INNER JOIN public.v_financement AS V ON V.id_fin = T.id_fin
+				GROUP BY T.id_doss_id
 			) AS F ON F.dos_id_tmp = D.id_doss
 			LEFT OUTER JOIN (
 				SELECT

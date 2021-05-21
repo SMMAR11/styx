@@ -485,6 +485,10 @@ def get_menu() :
 				'item_name': 'Décisions du comité de programmation - CD GEMAPI',
 				'item_img': 'pics/thumbnails/realisation_etats/main.png',
 				'item_href': reverse('EtatCDGemapi')
+			}, {
+				'item_name': 'Bilan d\'un Plan Pluriannuel d\'Investissement (PPI)',
+				'item_img': 'pics/thumbnails/realisation_etats/main.png',
+				'item_href': reverse('EtatPpi')
 			}],
 			'mod_rank': 3
 		},

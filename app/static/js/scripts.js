@@ -132,6 +132,9 @@ $(document).ready(function() {
 	new MyDataTable('EtatCDGemapi').set_datatable({
 		'autofit' : ['FIRST:1'], 'unsorting' : ['FIRST:1']
 	});
+	new MyDataTable('EtatPpi').set_datatable({
+		'autofit' : ['FIRST:1'], 'unsorting' : ['FIRST:1']
+	});
 
 	// Tableau des PPI (cf. vue Consulter un dossier (onglet PPI))
 	new MyDataTable('cons_ppi').set_datatable({
@@ -1111,6 +1114,22 @@ $('#id_EtatDossiers-zl_id_progr, #id_EtatDossiers-zl_axe, #id_EtatDossiers-zl_ss
 				['id_EtatDossiers-zl_axe'],
 				'id_EtatDossiers-zl_ss_axe',
 				'id_EtatDossiers-zl_act'
+			]
+		);
+	}
+);
+
+// Gestion d'affichage des listes déroulantes des axes, sous-axes et
+// actions du bilan d'un PPI
+$('#id_EtatPpi-zl_id_progr, #id_EtatPpi-zl_axe, #id_EtatPpi-zl_ss_axe').on(
+	'change', function(_e) {
+		alim_ld(
+			_e,
+			[
+				'id_EtatPpi-zl_id_progr',
+				['id_EtatPpi-zl_axe'],
+				'id_EtatPpi-zl_ss_axe',
+				'id_EtatPpi-zl_act'
 			]
 		);
 	}
