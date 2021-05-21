@@ -329,30 +329,6 @@ def autocompl(request) :
 	return output
 
 '''
-Cette vue permet d'afficher la page d'assistance technique.
-request : Objet requête
-'''
-@verif_acc
-def assist(request) :
-
-	# Imports
-	from django.http import HttpResponse
-	from django.shortcuts import render
-
-	output = HttpResponse()
-
-	if request.method == 'GET' :
-
-		# J'affiche le template.
-		output = render(
-			request,
-			'./main/assist.html',
-			{ 'title' : 'Assistance' }
-		)
-
-	return output
-
-'''
 Affichage des alertes
 _req : Objet requête
 '''

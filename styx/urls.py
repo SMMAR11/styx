@@ -25,7 +25,6 @@ urlpatterns = [
     url(r'^deconnecter.html$', main.deconnect, name = 'deconnect'),
     url(r'^modifier-compte.html$', main.modif_util, name = 'modif_util'),
     url(r'^consulter-compte.html$', main.cons_util, name = 'cons_util'),
-    url(r'^assistance.html$', main.assist, name = 'assist'),
     url(r'^autocompleter.html$', main.autocompl, name = 'autocompl'),
     url(r'^alertes.html$', main.alert, name = 'alert'),
     # Module Gestion des dossiers

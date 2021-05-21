@@ -1,6 +1,6 @@
 /* Aide à la saisie d'un mot de passe */
 .showable-password {
-	color: #DDD;
+	color: #DDD1CA;
 	position: absolute;
 	right: 5px;
 	top: 25px;
@@ -27,13 +27,13 @@
 
 /* Blocs d'informations */
 fieldset.my-div-fieldset {
-	color: #3770B1;
+	color: #2171B0;
 	border: solid 1px;
 	padding: 20px 15px 0px 7.5px;
 }
 
 fieldset.my-div-fieldset > legend {
-	color: #3770B1;
+	color: #2171B0;
 	border: none;
 	padding: 0 7.5px;
 	margin-bottom: 0;
@@ -48,7 +48,7 @@ fieldset.my-div-fieldset > div {
 /* Boutons */
 .my-btn,
 .my-btn-sm {
-	background-color: #555;
+	background-color: #988578;
 	border: none;
 	border-radius: 5px;
 	color: #FFF;
@@ -71,7 +71,7 @@ fieldset.my-div-fieldset > div {
 .my-btn-sm:focus,
 .my-btn:hover,
 .my-btn-sm:hover {
-	background-color: #444;
+	background-color: #7A6B60;
 	color: #FFF;
 	text-decoration: none;
 }
@@ -101,19 +101,19 @@ fieldset.my-div-fieldset > div {
 }
 
 .green-btn {
-	background-color: #94C054;
+	background-color: #80C5A3;
 }
 
 .green-btn:hover {
-	background-color: #779A44;
+	background-color: #31B088;
 }
 
 .orange-btn {
-	background-color: #F8B862;
+	background-color: #FAC56D;
 }
 
 .orange-btn:hover {
-	background-color: #C7944F;
+	background-color: #F4982D;
 }
 
 /* Calendriers */
@@ -155,7 +155,7 @@ fieldset.my-div-fieldset > div {
 .datepicker table tr td.new,
 .datepicker table tr td span.old,
 .datepicker table tr td span.new {
-	color: #DDD;
+	color: #DDD1CA;
 }
 
 .datepicker .datepicker-switch:hover,
@@ -181,7 +181,7 @@ fieldset.my-div-fieldset > div {
 .datepicker table tr td.active:hover.active,
 .datepicker table tr td span.active.active,
 .datepicker table tr td span.active:hover.active {
-	background-color: #3770B1;
+	background-color: #2171B0;
 }
 
 /* Carousels */
@@ -229,11 +229,11 @@ fieldset.my-div-fieldset > div {
 	height: 10px;
 	margin: 0;
 	text-indent: initial;
-	border-color: #DDD;
+	border-color: #DDD1CA;
 }
 
 .my-carousel .carousel-indicators .active {
-	background-color: #DDD;
+	background-color: #DDD1CA;
 }
 
 /* Cartographie */
@@ -251,7 +251,7 @@ fieldset.my-div-fieldset > div {
 .attribute-wrapper .attribute-label,
 .attribute-wrapper-com .attribute-label,
 .field-wrapper .field-label {
-	color: #3770B1;
+	color: #2171B0;
 }
 
 .attribute-wrapper .attribute-control {
@@ -259,9 +259,9 @@ fieldset.my-div-fieldset > div {
 	width: 100%;
 	min-height: 25px;
 	background-color: #F6F6F6;
-	color: #555;
+	color: #988578;
 	padding: 0 5px;
-	border: 1px solid #DDD;
+	border: 1px solid #DDD1CA;
 	cursor: text;
 }
 
@@ -270,9 +270,9 @@ fieldset.my-div-fieldset > div {
 	width: 100%;
 	min-height: 100px;
 	background-color: #F6F6F6;
-	color: #555;
+	color: #988578;
 	padding: 0 5px;
-	border: 1px solid #DDD;
+	border: 1px solid #DDD1CA;
 	cursor: text;
 }
 
@@ -288,9 +288,9 @@ fieldset.my-div-fieldset > div {
 	width: 100%;
 	height: 25px;
 	background-color: #FFF;
-	color: #555;
+	color: #988578;
 	padding: 0 5px;
-	border: 1px solid #DDD;
+	border: 1px solid #DDD1CA;
 	border-radius: 0;
 }
 
@@ -311,7 +311,7 @@ fieldset.my-div-fieldset > div {
 
 .field-wrapper .field-control ul > li > label {
 	font-weight: normal;
-	color: #555;
+	color: #988578;
 	margin: 0;
 }
 
@@ -323,7 +323,7 @@ fieldset.my-div-fieldset > div {
 .attribute-wrapper > .attribute-help-text {
 	font-size: 12px;
 	font-style: italic;
-	color: #555;
+	color: #988578;
 }
 
 .form-group {
@@ -335,7 +335,7 @@ fieldset.my-div-fieldset > div {
 	font-size: 12px;
 	line-height: 1.3;
 	background-color: #F6F6F6;
-	border: solid 1px #DDD;
+	border: solid 1px #DDD1CA;
 	border-radius: 0;
 }
 
@@ -361,27 +361,27 @@ fieldset.my-div-fieldset > div {
 .field-wrapper .typeahead__list {
 	padding: 0;
 	margin-top: 2px;
-	border: solid 1px #DDD;
+	border: solid 1px #DDD1CA;
 	border-radius: 0;
 }
 
 .field-wrapper .typeahead__list > li {
-	border-color: #DDD;
+	border-color: #DDD1CA;
 }
 
 .field-wrapper .typeahead__list > li > a {
 	padding: 0 5px;
-	color: #555;
+	color: #988578;
 }
 
 .field-wrapper .typeahead__list > li > a:hover {
 	background-color: #F6F6F6;
-	color: #555;
+	color: #988578;
 }
 
 .field-wrapper .typeahead__list > li > a:focus {
 	background-color: transparent;
-	color: #555;
+	color: #988578;
 }
 
 .field-wrapper .typeahead__container.loading .typeahead__query:before,
@@ -391,7 +391,7 @@ fieldset.my-div-fieldset > div {
 }
 
 .field-wrapper .typeahead__container.loading .typeahead__query:before {
-	border-color: #DDD;
+	border-color: #DDD1CA;
 }
 
 /* Couleurs */
@@ -425,25 +425,25 @@ fieldset.my-div-fieldset > div {
 }
 
 .my-modal .modal-header {
-	color: #3770B1;
+	color: #2171B0;
 	padding: 5px 15px;
-	border-color: #DDD;
+	border-color: #DDD1CA;
 	text-align: center;
 }
 
 .my-modal .modal-header > .close {
 	font-size: 24px;
-	color: #555;
+	color: #988578;
 }
 
 .my-modal .modal-header > .close:hover,
 .my-modal .modal-header > .close:focus {
-	color: #555;
+	color: #988578;
 	filter: alpha(opacity = 100);
 }
 
 .my-modal .modal-body {
-	background-color: #EBF0F7;
+	background-color: #C7DBEB;
 	padding: 20px 15px 0 15px;
 	max-height: calc(100vh - 75px);
 	overflow-y: auto;
@@ -455,13 +455,13 @@ fieldset.my-div-fieldset > div {
 
 /* Formulaires */
 form > fieldset.my-fieldset {
-	color: #3770B1;
+	color: #2171B0;
 	border: solid 2px;
 	padding: 10px 15px 10px 7.5px;
 }
 
 form > fieldset.my-fieldset > legend {
-	color: #3770B1;
+	color: #2171B0;
 	border: none;
 	padding: 0 7.5px;
 	margin-bottom: 0;
@@ -519,7 +519,7 @@ form > fieldset.my-fieldset > div {
 }
 
 .form-remark {
-	color: #555;
+	color: #988578;
 	font-size: 12px;
 	font-weight: bold;
 	margin-top: 15px;
@@ -570,7 +570,7 @@ form > fieldset.my-fieldset > div {
 
 .graph-tooltip > div {
 	display: inline-block;
-	border: solid 1px #DDD;
+	border: solid 1px #DDD1CA;
 	background-color: #F6F6F6;
 	padding: 2.5px 5px;
 	margin-top: 5px;
@@ -613,11 +613,11 @@ form > fieldset.my-fieldset > div {
 }
 
 .main-title {
-	background-color: #94C054;
+	background-color: #80C5A3;
 }
 
 .title-1 {
-	background-color: #3770B1;
+	background-color: #2171B0;
 }
 
 .align-icon-link-xs {
@@ -632,7 +632,7 @@ form > fieldset.my-fieldset > div {
 }
 
 .my-label {
-	color: #3770B1;
+	color: #2171B0;
 }
 
 ul {
@@ -653,7 +653,7 @@ ul.my-list-style > li:before {
 	width: 15px;
 	height: 15px;
 	vertical-align: middle;
-	background-color: #F8B862;
+	background-color: #FAC56D;
 	border-radius: 100%;
 }
 
@@ -663,7 +663,7 @@ ul.my-list-style > li:before {
 
 /* Onglets */
 .my-nav-tabs {
-	border-color: #DDD;
+	border-color: #DDD1CA;
 }
 
 .my-nav-tabs > li > a {
@@ -675,7 +675,7 @@ ul.my-list-style > li:before {
 }
 
 .my-nav-tabs.nav-justified {
-	border-bottom: solid 1px #DDD;
+	border-bottom: solid 1px #DDD1CA;
 }
 
 .my-nav-tabs.nav-justified > li > a {
@@ -699,7 +699,7 @@ ul.my-list-style > li:before {
 .my-nav-tabs.nav-justified > li.active > a:hover,
 .my-nav-tabs.nav-justified > li.active > a:focus {
 	color: #FFF;
-	background-color: #3770B1;
+	background-color: #2171B0;
 	border-color: transparent;
 }
 
@@ -890,14 +890,14 @@ ul.my-list-style > li:before {
 
 .icon-link {
 	padding-left: 25px;
-	color: #555;
+	color: #988578;
 }
 
 .icon-link:hover,
 .icon-link:focus {
 	cursor: pointer;
 	text-decoration: underline;
-	color: #555;
+	color: #988578;
 }
 
 .no-link:hover,
@@ -944,12 +944,12 @@ ul.my-list-style > li:before {
 }
 
 .my-table thead {
-	background-color: #3770B1;
+	background-color: #2171B0;
 	color: #FFF;
 }
 
 .my-table thead > tr > th {
-	border: solid 1px #DDD;
+	border: solid 1px #DDD1CA;
 	font-style: italic;
 	font-weight: normal;
 	padding: 2.5px 7.5px;
@@ -970,18 +970,18 @@ ul.my-list-style > li:before {
 .my-table thead .sorting:hover,
 .my-table thead .sorting_asc,
 .my-table thead .sorting_desc {
-	background-color: #2A5485;
+	background-color: #0B568A;
 }
 
 .my-table thead > tr > th.unbordered,
 .my-table tbody > tr > td.unbordered {
 	border: none;
-	border-bottom: solid 1px #DDD;
+	border-bottom: solid 1px #DDD1CA;
 }
 
 .my-table tbody > tr > td {
-	border: solid 1px #DDD;
-	color: #555;
+	border: solid 1px #DDD1CA;
+	color: #988578;
 	padding: 2.5px 7.5px;
 	text-align: justify;
 }
@@ -995,7 +995,7 @@ ul.my-list-style > li:before {
 }
 
 .my-table .dataTables_length {
-	color: #555;
+	color: #988578;
 	text-align: left;
 }
 
@@ -1025,7 +1025,7 @@ ul.my-list-style > li:before {
 
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-	background: #2A5485;
+	background: #0B568A;
 	border: solid 1px transparent;
 	color: #FFF !important;
 }
@@ -1035,11 +1035,11 @@ ul.my-list-style > li:before {
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:active {
 	background-color: transparent;
 	border: solid 1px transparent;
-	color: #555 !important;
+	color: #988578 !important;
 }
 
 .my-table .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-	background: #3770B1;
+	background: #2171B0;
 	border: solid 1px transparent;
 	color: #FFF !important;
 }
@@ -1054,9 +1054,9 @@ ul.my-list-style > li:before {
 
 .my-table tfoot > tr > td {
 	padding: 2.5px 7.5px;
-	background-color: #3770B1;
+	background-color: #2171B0;
 	color: #FFF;
-	border: solid 1px #DDD;
+	border: solid 1px #DDD1CA;
 	white-space: nowrap;
 }
 
@@ -1066,14 +1066,14 @@ ul.my-list-style > li:before {
 }
 
 .my-table .dataTables_info {
-	color: #555;
+	color: #988578;
 	padding: 0;
 	text-align: left;
 	width: 100%;
 }
 
 .my-table .toolbar {
-	color: #555;
+	color: #988578;
 	width: 100%;
 }
 
@@ -1081,13 +1081,13 @@ ul.my-list-style > li:before {
 .custom-thumbnail {
 	display: block;
 	background-color: #FFF;
-	border: 1px solid #DDD;
+	border: 1px solid #DDD1CA;
 	padding: 10px 15px;
 	text-align: center;
 }
 
 .custom-thumbnail:hover {
-	border-color: #2A5485;
+	border-color: #0B568A;
 	-webkit-transition: border .2s ease-in-out;
 	-o-transition: border .2s ease-in-out;
 	transition: border .2s ease-in-out;
@@ -1096,7 +1096,7 @@ ul.my-list-style > li:before {
 .custom-thumbnail,
 .custom-thumbnail:hover,
 .custom-thumbnail:focus {
-	color: #555;
+	color: #988578;
 	text-decoration: none;
 }
 
@@ -1128,7 +1128,7 @@ ul.my-list-style > li:before {
 .profile-widget {
 	display: block;
 	background-color: #FFF;
-	border: 1px solid #DDD;
+	border: 1px solid #DDD1CA;
 	padding: 10px 15px;
 	text-align: center;
 	margin-bottom: 20px;
@@ -1158,22 +1158,22 @@ ul.my-list-style > li:before {
 	border: none;
 	border-radius: 5px;
 	color: #FFF;
-	background-color: #F8B862;
+	background-color: #FAC56D;
 }
 
 .input-file-container > .field-control:hover + .input-file-trigger {
-	background-color: #C7944F;
+	background-color: #F4982D;
 }
 
 .input-file-return {
-	color: #555;
+	color: #988578;
 	display: inline-block;
 }
 
 .input-file-return > .file-infos {
 	display: inline-block;
 	margin-right: 5px;
-	color: #555;
+	color: #988578;
 	font-weight: bold;
 }
 
