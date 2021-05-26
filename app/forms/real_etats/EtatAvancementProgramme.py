@@ -339,6 +339,23 @@ class EtatAvancementProgramme(forms.Form):
 				# Récupération des données nettoyées du formulaire
 				cleaned_data = self.__cleaned_data()
 
+				# Filtrage des droits d'accès (un utilisateur ne peut
+				# accéder aux programmes dont il n'a aucune permission
+				# en lecture a minima)
+				ors = []
+				permissions = TUtilisateur.objects.get(pk=self.rq.user.pk) \
+					.get_permissions(read_or_write='R')
+				for i in permissions:
+					ors.append(
+						'("_moaId" = \'' \
+						+ str(i[0]) \
+						+ '\' AND "_typId" = \'' \
+						+ str(i[1]) \
+						+ '\')'
+					)
+				if len(ors) > 0:
+					ands.append('(' + ' OR '.join(ors) + ')')
+
 				# Filtre programme d'actions
 				id_progr = cleaned_data['zl_id_progr']
 				if id_progr:
@@ -371,23 +388,6 @@ class EtatAvancementProgramme(forms.Form):
 					ands.append(
 						'"_moaId" = \'' + str(moa.pk) + '\''
 					)
-
-				# Filtrage des droits d'accès (un utilisateur ne peut
-				# accéder aux programmes dont il n'a aucune permission
-				# en lecture a minima)
-				ors = []
-				permissions = TUtilisateur.objects.get(pk=self.rq.user.pk) \
-					.get_permissions(read_or_write='R')
-				for i in permissions:
-					ors.append(
-						'("_moaId" = \'' \
-						+ str(i[0]) \
-						+ '\' AND "_typId" = \'' \
-						+ str(i[1]) \
-						+ '\')'
-					)
-				if len(ors) > 0:
-					ands.append(' OR '.join(ors))
 
 			# Application des filtres
 			if ands:

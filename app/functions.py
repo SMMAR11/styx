@@ -549,14 +549,15 @@ def get_menu(rq) :
 
 	# Affichage du module PGRE si une permission minimale est effective
 	# au niveau de l'utilisateur connecté
-	display_pgre_module = False
-	permissions = TUtilisateur.objects.get(pk=rq.user.pk) \
-		.get_permissions(read_or_write='R')
-	for i in permissions:
-		if i[1] == T_DONN_BDD_INT['PGRE_PK']:
-			display_pgre_module = True
-	if not display_pgre_module:
-		del output['pgre']
+	if rq.user.is_authenticated():
+		display_pgre_module = False
+		permissions = TUtilisateur.objects.get(pk=rq.user.pk) \
+			.get_permissions(read_or_write='R')
+		for i in permissions:
+			if i[1] == T_DONN_BDD_INT['PGRE_PK']:
+				display_pgre_module = True
+		if not display_pgre_module:
+			del output['pgre']
 
 	return OrderedDict(sorted(output.items(), key = lambda x : x[1]['mod_rank']))
 
