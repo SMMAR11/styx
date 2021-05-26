@@ -574,7 +574,9 @@ class FiltrerActionsPgre(forms.ModelForm) :
 		# Imports
 		from app.functions import dt_fr
 		from app.models import TDossierPgre
+		from app.models import TUtilisateur
 		from django.core.urlresolvers import reverse
+		from styx.settings import T_DONN_BDD_INT
 
 		# Stockage des données du formulaire
 		if _req.method == 'GET' :
@@ -638,7 +640,20 @@ class FiltrerActionsPgre(forms.ModelForm) :
 		if val_av_pgre : ands['id_av_pgre'] = val_av_pgre
 
 		# Préparation du jeu de données des actions PGRE
-		qs_doss_pgre = TDossierPgre.objects.filter(**ands)
+		_qs_doss_pgre = TDossierPgre.objects.filter(**ands)
+
+		# Filtrage des droits d'accès (un utilisateur ne peut accéder
+		# aux actions PGRE dont il n'a aucune permission en lecture a
+		# minima)
+		qs_doss_pgre = TDossierPgre.objects.none()
+		permissions = TUtilisateur.objects.get(pk=_req.user.pk) \
+			.get_permissions(read_or_write='R')
+		for iGre in _qs_doss_pgre:
+			for iMoaGre in iGre.tmoadossierpgre_set.all():
+				if (
+					iMoaGre.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']
+				) in permissions:
+					qs_doss_pgre |= TDossierPgre.objects.filter(pk=iGre.pk)
 
 		# Réinitialisation de la variable "historique" si l'option "Ajouter à la sélection existante" n'est pas cochée
 		if not val_ajout_select_exist : _req.session['filtr_act_pgre'] = []
@@ -663,7 +678,7 @@ class FiltrerActionsPgre(forms.ModelForm) :
 				dpgre.id_doss or '-',
 				', '.join([str(m) for m in dpgre.moa.all()]),
 				dpgre.id_pr_pgre,
-				'{0:g}'.format(dpgre.obj_econ_ress_doss_pgre),
+				dpgre.obj_econ_ress_doss_pgre,
 				dpgre.ann_prev_deb_doss_pgre,
 				dt_fr(dpgre.dt_deb_doss_pgre) or '-',
 				dt_fr(dpgre.dt_fin_doss_pgre) or '-',

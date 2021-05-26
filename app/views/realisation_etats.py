@@ -25,7 +25,7 @@ def index(request) :
 
 		# J'affiche le template.
 		output = render(request, './realisation_etats/main.html', {
-			'menu' : get_thumbnails_menu('real_etats', 2), 'title' : 'Réalisation d\'états' }
+			'menu' : get_thumbnails_menu('real_etats', 2, request), 'title' : 'Réalisation d\'états' }
 		)
 
 	return output

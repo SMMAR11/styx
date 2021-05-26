@@ -126,6 +126,7 @@ def filtr_doss(request, _d_excl = None) :
 	from app.models import TAxe
 	from app.models import TDossier
 	from app.models import TSousAxe
+	from app.models import TUtilisateur
 	import ast
 
 	# Je soumets le formulaire.
@@ -180,11 +181,24 @@ def filtr_doss(request, _d_excl = None) :
 
 			# J'initialise la requête.
 			if v_org_moa :
-				qs_doss = obt_doss_regr(v_org_moa).filter(**t_sql['and'])
+				_qs_doss = obt_doss_regr(v_org_moa).filter(**t_sql['and'])
 			else :
-				qs_doss = TDossier.objects.filter(**t_sql['and'])
+				_qs_doss = TDossier.objects.filter(**t_sql['and'])
 			# if _d_excl :
 			# 	qs_doss = qs_doss.exclude(pk = _d_excl)
+
+			# Filtrage des droits d'accès (un utilisateur ne peut
+			# accéder aux dossiers dont il n'a aucune permission en
+			# lecture a minima)
+			qs_doss = TDossier.objects.none()
+			permissions = TUtilisateur.objects.get(pk=request.user.pk) \
+				.get_permissions(read_or_write='R')
+			for iDds in _qs_doss:
+				if (
+					iDds.id_org_moa.pk,
+					iDds.id_progr.id_type_progr.pk
+				) in permissions:
+					qs_doss |= TDossier.objects.filter(pk=iDds.pk)
 
 			from django.db.models import Q
 			selected = Q()
@@ -311,11 +325,24 @@ def gen_t_ch_doss(request, _d_excl = None) :
 
 	# J'initialise la requête.
 	if v_org_moa :
-		qs_doss = obt_doss_regr(v_org_moa)
+		_qs_doss = obt_doss_regr(v_org_moa)
 	else :
-		qs_doss = TDossier.objects.all()
+		_qs_doss = TDossier.objects.all()
 	if _d_excl :
-		qs_doss = qs_doss.exclude(pk = _d_excl)
+		_qs_doss = _qs_doss.exclude(pk = _d_excl)
+
+	# Filtrage des droits d'accès (un utilisateur ne peut accéder
+	# aux dossiers dont il n'a aucune permission en lecture a
+	# minima)
+	qs_doss = TDossier.objects.none()
+	permissions = TUtilisateur.objects.get(pk=request.user.pk) \
+		.get_permissions(read_or_write='R')
+	for iDds in _qs_doss:
+		if (
+			iDds.id_org_moa.pk,
+			iDds.id_progr.id_type_progr.pk
+		) in permissions:
+			qs_doss |= TDossier.objects.filter(pk=iDds.pk)
 
 	# J'empile le tableau des lignes du tableau HTML.
 	t_lg = []
@@ -426,11 +453,13 @@ def ger_droits(_u, _d, _g = True, _h = True) :
 Obtention du menu
 Retourne un tableau associatif
 '''
-def get_menu() :
+def get_menu(rq) :
 
 	# Imports
+	from app.models import TUtilisateur
 	from collections import OrderedDict
 	from django.core.urlresolvers import reverse
+	from styx.settings import T_DONN_BDD_INT
 
 	output = {
 		'port_cart' : {
@@ -518,6 +547,17 @@ def get_menu() :
 		}
 	}
 
+	# Affichage du module PGRE si une permission minimale est effective
+	# au niveau de l'utilisateur connecté
+	display_pgre_module = False
+	permissions = TUtilisateur.objects.get(pk=rq.user.pk) \
+		.get_permissions(read_or_write='R')
+	for i in permissions:
+		if i[1] == T_DONN_BDD_INT['PGRE_PK']:
+			display_pgre_module = True
+	if not display_pgre_module:
+		del output['pgre']
+
 	return OrderedDict(sorted(output.items(), key = lambda x : x[1]['mod_rank']))
 
 '''
@@ -526,7 +566,7 @@ _module : Module source (ou __ALL__)
 _lim : Limite de vignettes
 Retourne une chaîne de caractères
 '''
-def get_thumbnails_menu(_module, _lim) :
+def get_thumbnails_menu(_module, _lim, _rq) :
 
 	# Imports
 	from app.functions import get_menu
@@ -542,7 +582,7 @@ def get_thumbnails_menu(_module, _lim) :
 		raise ValueError('La valeur du paramètre _lim doit être un nombre entier.')
 
 	# Stockage du menu
-	menu = get_menu()
+	menu = get_menu(_rq)
 
 	# Mise en forme d'une vignette
 	thumbnail = '''

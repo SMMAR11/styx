@@ -45,7 +45,7 @@ def index(request) :
 		output = render(
 			request,
 			'./main/main.html',
-			{ 'f_id' : init_f(f_id), 'menu' : get_thumbnails_menu('__ALL__', 3), 't_fm' : t_fm, 'title' : title }
+			{ 'f_id' : init_f(f_id), 'menu' : get_thumbnails_menu('__ALL__', 3, request), 't_fm' : t_fm, 'title' : title }
 		)
 
 	else :

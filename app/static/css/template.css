@@ -23,8 +23,8 @@ body {
 }
 
 #header > .navbar .navbar-header > a > img {
-	height: 30px;
-	margin-top: 15px;
+	height: 40px;
+	margin-top: 10px;
 }
 
 #header > .navbar .navbar-nav > li > a,
@@ -201,13 +201,13 @@ div#footer {
 }
 
 div#footer > div.footer-col > img {
-	height: 30px;
+	height: 40px;
 	margin-right: 2.5px;
 }
 
 div#footer > div.footer-col {
 	height: 60px;
-	padding-top: 15px;
+	padding-top: 10px;
 }
 
 @media (max-width: 991px) {

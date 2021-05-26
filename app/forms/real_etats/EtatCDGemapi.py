@@ -146,8 +146,10 @@ class EtatCDGemapi(forms.Form):
 		from app.models import TDdsCdg
 		from app.models import TFinanceur
 		from app.models import TRegroupementsMoa
+		from app.models import TUtilisateur
 		from app.models import VFinancement
 		from app.models import VSuiviDossier
+		from django.core.urlresolvers import reverse
 
 		# Initialisation des données
 		data = []
@@ -209,7 +211,20 @@ class EtatCDGemapi(forms.Form):
 				ands['dds_id__id_org_moa__in'] = moaids
 				
 			# Définition du jeu de données
-			qsDdsCdgs = TDdsCdg.objects.filter(**ands)
+			_qsDdsCdgs = TDdsCdg.objects.filter(**ands)
+
+			# Filtrage des droits d'accès (un utilisateur ne peut
+			# accéder aux dossiers dont il n'a aucune permission en
+			# lecture a minima)
+			qsDdsCdgs = TDdsCdg.objects.none()
+			permissions = TUtilisateur.objects.get(pk=self.rq.user.pk) \
+				.get_permissions(read_or_write='R')
+			for iDdsCdg in _qsDdsCdgs:
+				if (
+					iDdsCdg.dds_id.id_org_moa.pk,
+					iDdsCdg.dds_id.id_progr.id_type_progr.pk
+				) in permissions:
+					qsDdsCdgs |= TDdsCdg.objects.filter(pk=iDdsCdg.pk)
 
 		# Pour chaque enregistrement...
 		for oDdsCdg in qsDdsCdgs:
@@ -219,6 +234,14 @@ class EtatCDGemapi(forms.Form):
 
 			# Définition des données de la ligne Programmation
 			_data = {
+				'_link': '''
+				<a
+					href="{}"
+					class="consult-icon pull-right"
+					target="_blank"
+					title="Consulter le dossier"
+				></a>
+				'''.format(reverse('cons_doss', args=[oDdsCdg.dds_id.pk])),
 				'num_doss': oDdsCdg.dds_id.num_doss,
 				'int_doss': voDds.int_doss,
 				'id_org_moa': oDdsCdg.dds_id.id_org_moa,
@@ -292,6 +315,7 @@ class EtatCDGemapi(forms.Form):
 
 			# Définition des valeurs de la ligne Programmation
 			_tds = [
+				element['_link'],
 				element['num_doss'],
 				element['int_doss'],
 				element['id_org_moa'],
@@ -337,7 +361,7 @@ class EtatCDGemapi(forms.Form):
 		# Mise en forme de la balise </tfoot>
 		tfoot = '''
 		<tr>
-			<td colspan="10">Total</td>
+			<td colspan="11">Total</td>
 			<td colspan="{}">{}</td>
 			{}
 			<td>{}</td>
@@ -356,6 +380,7 @@ class EtatCDGemapi(forms.Form):
 			<table>
 				<thead>
 					<tr>
+						<th rowspan="2"></th>
 						<th colspan="15">Programmation</th>
 						<th colspan="{}">Avis des financeurs</th>
 						<th colspan="{}">Plan de financement en vigueur</th>

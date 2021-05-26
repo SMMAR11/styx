@@ -150,6 +150,7 @@ class EtatSubventions(forms.Form):
 		# Imports
 		from app.models import TFinancement
 		from app.models import TRegroupementsMoa
+		from app.models import TUtilisateur
 		from app.models import VFinancement
 		from app.models import VSuiviDossier
 		from django.core.urlresolvers import reverse
@@ -221,7 +222,20 @@ class EtatSubventions(forms.Form):
 				ands['id_doss__id_av'] = id_av
 
 			# Définition du jeu de données
-			qsFins = TFinancement.objects.filter(**ands)
+			_qsFins = TFinancement.objects.filter(**ands)
+
+			# Filtrage des droits d'accès (un utilisateur ne peut
+			# accéder aux financements dont il n'a aucune permission en
+			# lecture a minima)
+			qsFins = TFinancement.objects.none()
+			permissions = TUtilisateur.objects.get(pk=self.rq.user.pk) \
+				.get_permissions(read_or_write='R')
+			for iFin in _qsFins:
+				if (
+					iFin.id_doss.id_org_moa.pk,
+					iFin.id_doss.id_progr.id_type_progr.pk
+				) in permissions:
+					qsFins |= TFinancement.objects.filter(pk=iFin.pk)
 
 		# Pour chaque enregistrement...
 		for oFin in qsFins:

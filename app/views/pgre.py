@@ -23,7 +23,7 @@ def index(request) :
 
 		# J'affiche le template.
 		output = render(request, './pgre/main.html', {
-			'menu' : get_thumbnails_menu('pgre', 3), 'title' : 'Gestion des actions PGRE'
+			'menu' : get_thumbnails_menu('pgre', 3, request), 'title' : 'Gestion des actions PGRE'
 		})
 
 	return output
@@ -488,6 +488,7 @@ def ch_act_pgre(request) :
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import render
+	from styx.settings import T_DONN_BDD_INT
 	import json
 
 	output = HttpResponse()
@@ -509,9 +510,23 @@ def ch_act_pgre(request) :
 
 		# Je prépare le tableau des actions PGRE.
 		if v_org_moa :
-			qs_act_pgre = obt_act_pgre_regr(v_org_moa)
+			_qs_act_pgre = obt_act_pgre_regr(v_org_moa)
 		else :
-			qs_act_pgre = TDossierPgre.objects.all()
+			_qs_act_pgre = TDossierPgre.objects.all()
+
+		# Filtrage des droits d'accès (un utilisateur ne peut accéder
+		# aux actions PGRE dont il n'a aucune permission en lecture a
+		# minima)
+		qs_act_pgre = TDossierPgre.objects.none()
+		permissions = TUtilisateur.objects.get(pk=request.user.pk) \
+			.get_permissions(read_or_write='R')
+		for iGre in _qs_act_pgre:
+			for iMoaGre in iGre.tmoadossierpgre_set.all():
+				if (
+					iMoaGre.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']
+				) in permissions:
+					qs_act_pgre |= TDossierPgre.objects.filter(pk=iGre.pk)
+
 		t_act_pgre = [{
 			'pk' : a.pk,
 			'num_doss_pgre' : a,
@@ -556,9 +571,22 @@ def ch_act_pgre(request) :
 
 			# J'initialise la requête.
 			if v_org_moa :
-				qs_act_pgre = obt_act_pgre_regr(v_org_moa).filter(**t_sql['and'])
+				_qs_act_pgre = obt_act_pgre_regr(v_org_moa).filter(**t_sql['and'])
 			else :
-				qs_act_pgre = TDossierPgre.objects.filter(**t_sql['and'])
+				_qs_act_pgre = TDossierPgre.objects.filter(**t_sql['and'])
+
+			# Filtrage des droits d'accès (un utilisateur ne peut accéder
+			# aux actions PGRE dont il n'a aucune permission en lecture a
+			# minima)
+			qs_act_pgre = TDossierPgre.objects.none()
+			permissions = TUtilisateur.objects.get(pk=request.user.pk) \
+				.get_permissions(read_or_write='R')
+			for iGre in _qs_act_pgre:
+				for iMoaGre in iGre.tmoadossierpgre_set.all():
+					if (
+						iMoaGre.id_org_moa.pk, T_DONN_BDD_INT['PGRE_PK']
+					) in permissions:
+						qs_act_pgre |= TDossierPgre.objects.filter(pk=iGre.pk)
 
 			# J'initialise le tableau des actions PGRE filtrées.
 			t_act_pgre = [(
@@ -1435,105 +1463,26 @@ def filtr_act_pgre(_req) :
 	# Imports
 	from app.forms.pgre import FiltrerActionsPgre
 	from app.functions import datatable_reset
-	from app.functions import dt_fr
-	from app.functions import gen_cdc
-	from app.models import TDossierPgre
 	from django.http import HttpResponse
 	from django.shortcuts import render
-	import csv
 	import json
 
 	output = None
 
 	if _req.method == 'GET' :
-		if 'action' in _req.GET :
-			if _req.GET['action'] == 'exporter-csv' :
 
-				# Génération d'un fichier au format CSV
-				output = HttpResponse(content_type = 'text/csv', charset = 'cp1252')
-				output['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(gen_cdc())
+		# Initialisation de la variable "historique"
+		_req.session['filtr_act_pgre'] = []
 
-				# Accès en écriture
-				writer = csv.writer(output, delimiter = ';')
+		# Initialisation du formulaire et de ses attributs
+		form_filtr_act_pgre = FiltrerActionsPgre()
 
-				# Initialisation des données "historique"
-				donnees = _req.session.get('filtr_act_pgre') if 'filtr_act_pgre' in _req.session else []
-
-				# Définition de l'en-tête
-				writer.writerow([
-					'Numéro de l\'action PGRE',
-					'Intitulé de l\'action PGRE',
-					'Instance de concertation',
-					'Atelier(s) concerné(s)',
-					'Dossier de correspondance',
-					'Maître(s) d\'ouvrage(s)',
-					'Priorité',
-					'Montant',
-					'Objectifs d\'économie de la ressource en eau (en m3)',
-					'Année prévisionnelle du début de l\'action PGRE',
-					'Date de début de l\'action PGRE',
-					'Date de fin de l\'action PGRE',
-					'Nature de l\'action PGRE',
-					'État d\'avancement',
-					'Commentaire',
-					'Action parente',
-				])
-
-				for dpgre in TDossierPgre.objects.filter(pk__in = donnees) :
-					# Ajout d'une nouvelle ligne
-					writer.writerow([
-						dpgre.num_doss_pgre,
-						dpgre.int_doss_pgre,
-						dpgre.id_ic_pgre,
-						', '.join([str(apgre) for apgre in dpgre.atel_pgre.all()]),
-						dpgre.id_doss,
-						', '.join([str(m) for m in dpgre.moa.all()]),
-						dpgre.id_pr_pgre,
-						dpgre.mont_doss_pgre_ppt,
-						dpgre.obj_econ_ress_doss_pgre_ppt,
-						dpgre.ann_prev_deb_doss_pgre,
-						dt_fr(dpgre.dt_deb_doss_pgre),
-						dt_fr(dpgre.dt_fin_doss_pgre),
-						dpgre.id_nat_doss,
-						dpgre.id_av_pgre,
-						dpgre.comm_doss_pgre,
-						'',  # Action parente
-					])
-					for ssa in dpgre.ss_action_pgre.all():
-						# Ajout d'une nouvelle ligne pour les sous-action
-						writer.writerow([
-							'',  # Numéro de l'action PGRE
-							ssa.lib_ss_act,
-							'',  # Instance de concertation
-							'',  # Ateliers concernés
-							'',  # Dossier de correspondance
-							', '.join([str(m) for m in ssa.moa.all()]),
-							'',  # Priorité
-							ssa.mont_ss_action_pgre,
-							ssa.obj_econ_ress_ss_action_pgre,
-							ssa.dt_prevision_ss_action_pgre.year,
-							dt_fr(ssa.dt_deb_ss_action_pgre),
-							dt_fr(ssa.dt_fin_ss_action_pgre),
-							ssa.t_nature_dossier,
-							ssa.id_av_pgre,
-							ssa.comm_ss_act,
-							dpgre.num_doss_pgre,
-						])
-
-		else :
-
-			# Initialisation de la variable "historique"
-			_req.session['filtr_act_pgre'] = []
-
-			# Initialisation du formulaire et de ses attributs
-			form_filtr_act_pgre = FiltrerActionsPgre()
-
-			# Affichage du template
-			output = render(_req, './pgre/filtr_act_pgre.html', {
-				'dtab_filtr_act_pgre' : form_filtr_act_pgre.get_datatable(_req),
-				'form_filtr_act_pgre' : form_filtr_act_pgre.get_form(_req),
-				'title' : 'Réalisation d\'états PGRE en sélectionnant des actions PGRE'
-			})
+		# Affichage du template
+		output = render(_req, './pgre/filtr_act_pgre.html', {
+			'dtab_filtr_act_pgre' : form_filtr_act_pgre.get_datatable(_req),
+			'form_filtr_act_pgre' : form_filtr_act_pgre.get_form(_req),
+			'title' : 'Réalisation d\'états PGRE en sélectionnant des actions PGRE'
+		})
 
 	else :
 

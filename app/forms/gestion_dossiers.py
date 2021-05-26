@@ -480,28 +480,28 @@ class ChoisirDossier(forms.ModelForm) :
 	)
 	rb_doss_sold = forms.ChoiceField(
 		choices=[('solde', 'Oui'), ('non_solde', 'Non')],
-		initial='non_solde',
+		initial='solde',
 		label='Afficher les dossiers soldés ?',
 		required=False,
 		widget=forms.RadioSelect()
 	)
 	rb_doss_term = forms.ChoiceField(
 		choices=[('termine', 'Oui'), ('non_termine', 'Non')],
-		initial='non_termine',
+		initial='termine',
 		label='Afficher les dossiers terminés ?',
 		required=False,
 		widget=forms.RadioSelect()
 	)
 	rb_doss_archi = forms.ChoiceField(
 		choices=[('archive', 'Oui'), ('non_archive', 'Non')],
-		initial='non_archive',
+		initial='archive',
 		label='Afficher les dossiers archivés ?',
 		required=False,
 		widget=forms.RadioSelect()
 	)
 	rb_doss_aband = forms.ChoiceField(
 		choices=[('abandonne', 'Oui'), ('non_abandonne', 'Non')],
-		initial='non_abandonne',
+		initial='abandonne',
 		label='Afficher les dossiers abandonnés ?',
 		required=False,
 		widget=forms.RadioSelect()

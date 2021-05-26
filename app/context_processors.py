@@ -27,7 +27,7 @@ def set_menus(_req) :
 	from app.functions import get_menu
 
 	# Initialisation du menu
-	menu = get_menu() if _req.user.is_authenticated() else {}
+	menu = get_menu(_req) if _req.user.is_authenticated() else {}
 
 	# Préparation du menu principal
 	elems = []

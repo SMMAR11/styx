@@ -151,7 +151,7 @@ class EtatAvancementProgramme(forms.Form):
 			raise Exception('PB !')
 
 		# Définition des colonnes à ne pas afficher
-		undisplayed_ndxs = [0, 1, 2, 3, 4]
+		undisplayed_ndxs = [0, 1, 2, 3, 4, 5]
 
 		# Définition des labels
 		lbls = {
@@ -241,23 +241,23 @@ class EtatAvancementProgramme(forms.Form):
 			<td>{}</td>
 		</tr>
 		'''.format(
-			sum([element[12] or 0 for element in data[1]]),
-			sum([element[13] for element in data[1]]),
+			sum([element[13] or 0 for element in data[1]]),
 			sum([element[14] for element in data[1]]),
-			sum([element[15] or 0 for element in data[1]]),
-			sum([element[17] for element in data[1]]),
+			sum([element[15] for element in data[1]]),
+			sum([element[16] or 0 for element in data[1]]),
 			sum([element[18] for element in data[1]]),
 			sum([element[19] for element in data[1]]),
 			sum([element[20] for element in data[1]]),
 			sum([element[21] for element in data[1]]),
-			round(mean([
-				element[22] for element in data[1]
-			]) if data[1] else 0, 3),
+			sum([element[22] for element in data[1]]),
 			round(mean([
 				element[23] for element in data[1]
 			]) if data[1] else 0, 3),
 			round(mean([
 				element[24] for element in data[1]
+			]) if data[1] else 0, 3),
+			round(mean([
+				element[25] for element in data[1]
 			]) if data[1] else 0, 3)
 		) if data[1] else ''
 
@@ -311,6 +311,9 @@ class EtatAvancementProgramme(forms.Form):
 	def __get_sql(self, code):
 
 		"""Mise en forme de la requête SQL"""
+
+		# Imports
+		from app.models import TUtilisateur
 
 		# Requête de sélection des programmes dont les montants
 		# contractualisés ont été renseignés dans la base de données
@@ -368,6 +371,23 @@ class EtatAvancementProgramme(forms.Form):
 					ands.append(
 						'"_moaId" = \'' + str(moa.pk) + '\''
 					)
+
+				# Filtrage des droits d'accès (un utilisateur ne peut
+				# accéder aux programmes dont il n'a aucune permission
+				# en lecture a minima)
+				ors = []
+				permissions = TUtilisateur.objects.get(pk=self.rq.user.pk) \
+					.get_permissions(read_or_write='R')
+				for i in permissions:
+					ors.append(
+						'("_moaId" = \'' \
+						+ str(i[0]) \
+						+ '\' AND "_typId" = \'' \
+						+ str(i[1]) \
+						+ '\')'
+					)
+				if len(ors) > 0:
+					ands.append(' OR '.join(ors))
 
 			# Application des filtres
 			if ands:

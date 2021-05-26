@@ -200,6 +200,7 @@ class EtatDossiers(forms.Form):
 		from app.models import TDossier
 		from app.models import TFinanceur
 		from app.models import TRegroupementsMoa
+		from app.models import TUtilisateur
 		from app.models import VFinancement
 		from app.models import VSuiviDossier
 		from django.core.urlresolvers import reverse
@@ -299,7 +300,20 @@ class EtatDossiers(forms.Form):
 				ands['pk__in'] = set(pks[0]).intersection(*pks)
 				
 			# Définition du jeu de données
-			qsDdss = TDossier.objects.filter(**ands)
+			_qsDdss = TDossier.objects.filter(**ands)
+
+			# Filtrage des droits d'accès (un utilisateur ne peut
+			# accéder aux dossiers dont il n'a aucune permission en
+			# lecture a minima)
+			qsDdss = TDossier.objects.none()
+			permissions = TUtilisateur.objects.get(pk=self.rq.user.pk) \
+				.get_permissions(read_or_write='R')
+			for iDds in _qsDdss:
+				if (
+					iDds.id_org_moa.pk,
+					iDds.id_progr.id_type_progr.pk
+				) in permissions:
+					qsDdss |= TDossier.objects.filter(pk=iDds.pk)
 
 		# Pour chaque enregistrement...
 		for oDds in qsDdss:

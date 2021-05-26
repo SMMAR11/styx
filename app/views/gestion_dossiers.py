@@ -35,7 +35,7 @@ def index(request) :
 
 		# J'affiche le template.
 		output = render(request, './gestion_dossiers/main.html', {
-			'menu' : get_thumbnails_menu('gest_doss', 2), 'title' : 'Gestion des dossiers'
+			'menu' : get_thumbnails_menu('gest_doss', 2, request), 'title' : 'Gestion des dossiers'
 		})
 
 	return output
@@ -556,9 +556,22 @@ def ch_doss(request) :
 
 		# Je prépare le tableau des dossiers.
 		if v_org_moa :
-			qs_doss = obt_doss_regr(v_org_moa)
+			_qs_doss = obt_doss_regr(v_org_moa)
 		else :
-			qs_doss = TDossier.objects.all()
+			_qs_doss = TDossier.objects.all()
+
+		# Filtrage des droits d'accès (un utilisateur ne peut accéder
+		# aux dossiers dont il n'a aucune permission en lecture a
+		# minima)
+		qs_doss = TDossier.objects.none()
+		permissions = TUtilisateur.objects.get(pk=request.user.pk) \
+			.get_permissions(read_or_write='R')
+		for iDds in _qs_doss:
+			if (
+				iDds.id_org_moa.pk,
+				iDds.id_progr.id_type_progr.pk
+			) in permissions:
+				qs_doss |= TDossier.objects.filter(pk=iDds.pk)
 
 		# 6880
 		# qs_doss = TDossier.objects.custom_filter(
@@ -566,6 +579,7 @@ def ch_doss(request) :
 		# ) # Retrait des dossiers soldés
 		# 6880: dans le cas ou on change d'avis...:
 		# ces filtres sont a mis en regard des valeurs initiales de ChoisirDossier
+		'''
 		from django.db.models import Q
 		selected = Q()
 		selected.add(Q(id_av__int_av__icontains='Soldé'), Q.OR)
@@ -573,8 +587,7 @@ def ch_doss(request) :
 		selected.add(Q(id_av__int_av__icontains='Archivé'), Q.OR)
 		selected.add(Q(id_av__int_av__icontains='Abandonné'), Q.OR)
 		qs_doss = qs_doss.exclude(selected)
-
-
+		'''
 
 		t_doss = [{
 			'pk' : d.pk,

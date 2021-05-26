@@ -149,14 +149,10 @@ class EtatPpi(forms.Form):
 
 		# Imports
 		from app.models import TPlanPluriannuelInvestissementPpi
+		from app.models import TRegroupementsMoa
+		from app.models import TUtilisateur
 		from app.models import VFinancement
 		from django.core.urlresolvers import reverse
-
-
-		
-		from app.models import TRegroupementsMoa
-		
-		
 
 		# Initialisation des données
 		data = []
@@ -213,7 +209,22 @@ class EtatPpi(forms.Form):
 				ands['dds_id__num_act'] = act.split('_')[-1]
 				
 			# Définition du jeu de données
-			qsPpis = TPlanPluriannuelInvestissementPpi.objects.filter(**ands)
+			_qsPpis = TPlanPluriannuelInvestissementPpi.objects.filter(**ands)
+
+			# Filtrage des droits d'accès (un utilisateur ne peut
+			# accéder aux plans pluriannuels d'investissement dont il
+			# n'a aucune permission en lecture a minima)
+			qsPpis = TPlanPluriannuelInvestissementPpi.objects.none()
+			permissions = TUtilisateur.objects.get(pk=self.rq.user.pk) \
+				.get_permissions(read_or_write='R')
+			for iPpi in _qsPpis:
+				if (
+					iPpi.dds_id.id_org_moa.pk,
+					iPpi.dds_id.id_progr.id_type_progr.pk
+				) in permissions:
+					qsPpis |= TPlanPluriannuelInvestissementPpi \
+						.objects \
+						.filter(pk=iPpi.pk)
 
 		# Pour chaque enregistrement...
 		for oPpi in qsPpis:

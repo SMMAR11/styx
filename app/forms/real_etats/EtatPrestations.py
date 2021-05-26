@@ -166,6 +166,7 @@ class EtatPrestations(forms.Form):
 		from app.models import TPrestationsDossier
 		from app.models import TRegroupementsMoa
 		from app.models import TOrdreService
+		from app.models import TUtilisateur
 		from app.models import VSuiviDossier
 		from app.models import VSuiviPrestationsDossier
 		from django.core.urlresolvers import reverse
@@ -240,7 +241,22 @@ class EtatPrestations(forms.Form):
 				ands['id_prest__id_org_prest'] = id_org_prest
 				
 			# Définition du jeu de données
-			qsPrsDdss = TPrestationsDossier.objects.filter(**ands)
+			_qsPrsDdss = TPrestationsDossier.objects.filter(**ands)
+
+			# Filtrage des droits d'accès (un utilisateur ne peut
+			# accéder aux prestations dont il n'a aucune permission en
+			# lecture a minima)
+			qsPrsDdss = TPrestationsDossier.objects.none()
+			permissions = TUtilisateur.objects.get(pk=self.rq.user.pk) \
+				.get_permissions(read_or_write='R')
+			for iPrsDds in _qsPrsDdss:
+				if (
+					iPrsDds.id_doss.id_org_moa.pk,
+					iPrsDds.id_doss.id_progr.id_type_progr.pk
+				) in permissions:
+					qsPrsDdss |= TPrestationsDossier.objects.filter(
+						pk=iPrsDds.pk
+					)
 
 		# Pour chaque enregistrement...
 		for oPrsDds in qsPrsDdss:
