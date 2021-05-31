@@ -975,13 +975,25 @@ def init_mess_err(_form, _sv = True) :
 	from app.constants import ERROR_MESSAGES
 
 	for elem in _form.fields.keys() :
+
+		# Surchargement des messages d'erreur
 		for cle, val in ERROR_MESSAGES.items() :
 			_form.fields[elem].error_messages[cle] = val
 
-		# Ajout d'un style visuel si le champ est requis
-		if _sv == True and _form.fields[elem].required == True :
+		if _sv:
 			spl = _form.fields[elem].label.split('|')
-			spl[0] = spl[0] + '<span class="required-field"></span>'
+			# Ajout d'un style visuel si le champ est requis
+			if _form.fields[elem].required:
+				spl[0] += '<span class="required-field"></span>'
+			# Ajout d'une aide si définie
+			if _form.fields[elem].help_text:
+				spl[0] += '''
+				<span class="help-icon" style="
+					cursor: help;
+					display: inline-block;
+					vertical-align: middle;
+				" title="{}"></span>
+				'''.format(_form.fields[elem].help_text)
 			_form.fields[elem].label = '|'.join(spl)
 
 '''

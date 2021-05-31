@@ -798,6 +798,15 @@ ul.my-list-style > li:before {
 	height: 20px;
 }
 
+.help-icon {
+	background-image: url('../pics/icons/help.png');
+	background-size: 20px;
+	-webkit-background-size: 19px;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 20px;
+}
+
 .mail-icon {
 	background-image: url('../pics/icons/mail.png');
 	background-size: 20px;

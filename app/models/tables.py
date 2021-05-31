@@ -691,6 +691,7 @@ class TDossier(models.Model) :
     priorite_doss = models.CharField(
         blank=True,
         choices=[(i, i) for i in ['P1', 'P2', 'P3', 'P4']],
+        help_text='P1 = ne peut être décalé/reporté - P2 = peut être décalé de 2/3 ans - P3 = peut être décalé de 4/5 ans - P4 = peut être abandonné',
         max_length=2,
         verbose_name='Priorité du dossier'
     )
@@ -713,6 +714,7 @@ class TDossier(models.Model) :
 
     duree_amor_ppi_doss = models.IntegerField(
         blank=True,
+        help_text='Si les études/travaux/biens acquis sont amortissables sur votre syndicat',
         null=True,
         verbose_name='Durée d\'amortissement (en années)'
     )
@@ -2278,18 +2280,31 @@ class TPlanPluriannuelInvestissementPpi(models.Model):
 
     ppi_an = models.IntegerField(verbose_name='Année du PPI')
 
-    ppi_budget_an_dps_ttc = MFEuroField(verbose_name='Dépenses TTC (en €)')
+    ppi_budget_an_dps_ttc = MFEuroField(
+        help_text='Dépenses inscrites sur le BP de l\'année du PPI, soit en RAR, soit en nouvelles propositions',
+        verbose_name='Dépenses TTC (en €)'
+    )
 
-    ppi_budget_an_vsm_previ \
-        = MFEuroField(verbose_name='Versements prévisionnels (en €)')
+    ppi_budget_an_vsm_previ = MFEuroField(
+        help_text='Subventions inscrites sur le BP de l\'année du PPI, soit en RAR, soit en nouvelles propositions',
+        verbose_name='Versements prévisionnels (en €)'
+    )
 
-    ppi_ntr_dps \
-        = models.TextField(blank=True, verbose_name='Nature de la dépense')
+    ppi_ntr_dps = models.TextField(
+        blank=True,
+        help_text='Peut servir à votre remplissage si vous souhaitez dissocier les dépenses éligibles/non éligibles au FCTVA ou à indiquer des travaux en régie (définition comptable)',
+        verbose_name='Nature de la dépense'
+    )
 
-    ppi_real_an_pcdt_dps_ttc = MFEuroField(verbose_name='Dépenses TTC (en €)')
+    ppi_real_an_pcdt_dps_ttc = MFEuroField(
+        help_text='Dépenses réalisées à la clôture du CA de l\'année précédente du PPI (hors RAR)',
+        verbose_name='Dépenses TTC (en €)'
+    )
 
-    ppi_real_an_pcdt_vsm_previ \
-        = MFEuroField(verbose_name='Versements prévisionnels (en €)')
+    ppi_real_an_pcdt_vsm_previ = MFEuroField(
+        help_text='Subventions comptabilisées réalisées à la clôture du CA de l\'année précédente du PPI (hors RAR)',
+        verbose_name='Versements prévisionnels (en €)'
+    )
 
     dds_id = models.ForeignKey(
         'TDossier', db_column='dds_id', on_delete=models.CASCADE
@@ -2414,13 +2429,18 @@ class TProspectiveAnnuellePpiPap(models.Model):
 
     pap_an = models.IntegerField(verbose_name='Année')
 
-    pap_dps_eli_fctva \
-        = MFEuroField(verbose_name='Dépenses éligibles FCTVA (en €)')
+    pap_dps_eli_fctva = MFEuroField(
+        help_text='Remettre les dépenses hors celles non éligibles au FCTVA (déduire notamment les acquisitions foncières estimées)',
+        verbose_name='Dépenses éligibles FCTVA (en €)'
+    )
 
-    pap_dps_ttc_rp \
-        = MFEuroField(verbose_name='Dépenses TTC réelles projetées (en €)')
+    pap_dps_ttc_rp = MFEuroField(
+        help_text='Rythme prévisionnel de réalisation des dépenses qui restent à faire sur l\'opération (réaliste au regard des conditions techniques de réalisation)',
+        verbose_name='Dépenses TTC réelles projetées (en €)'
+    )
 
     pap_vsm_previ_rp = MFEuroField(
+        help_text='Rythme prévisionnel de perception des subventions qui restent à faire sur l\'opération (avances/soldes)',
         verbose_name='Versements prévisionnels réels projetés (en €)'
     )
 
