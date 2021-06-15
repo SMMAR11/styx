@@ -1263,8 +1263,10 @@ def cons_doss(request, _d) :
 				'f_modif_doss_regl' : init_f(f_modif_doss_regl),
 				'forbidden' : ger_droits(request.user, o_doss, False, False),
 				'ht_ou_ttc' : ht_ou_ttc,
-				'mont_ddv_sum' : ddvs['mnt'],
-				'mont_ddv_sum_str' : obt_mont(ddvs['mnt']),
+				'mont_ddv_sum' : ddvs['mont_ddv_sum'],
+				'mont_ddv_sum_str': obt_mont(ddvs['mont_ddv_sum']),
+				'mont_verse_ddv_sum_str': obt_mont(ddvs['mont_verse_ddv_sum']),
+				'map_ddv_sum': obt_mont(ddvs['map_ddv_sum']),
 				'mont_doss' : obt_mont(o_doss.mont_doss),
 				'mont_fact_sum' : facs['mnt'],
 				'mont_ht_fact_sum' : facs['mnt_ht'],
@@ -3905,8 +3907,24 @@ def cons_ddv(request, _d) :
 			'mont_ttc_verse_ddv' : {
 				'label' : 'Montant TTC versé (en €)', 'value' : obt_mont(o_ddv.mont_ttc_verse_ddv) or ''
 			},
-			'map_ht_ddv' : { 'label' : 'Manque à percevoir HT (en €)', 'value' : obt_mont(o_suivi_ddv.map_ht_ddv) or '' },
-			'map_ttc_ddv' : { 'label' : 'Manque à percevoir TTC (en €)', 'value' : obt_mont(o_suivi_ddv.map_ttc_ddv) or '' },
+			'map_ht_ddv' : {
+				'help-text' : '''
+				= montant HT de la demande de versement - montant HT
+				versé (- montant HT versé de l'avance forfaitaire s'il
+				s'agit d'un solde)
+				''',
+				'label': 'Manque à percevoir HT (en €)',
+				'value': obt_mont(o_suivi_ddv.map_ht_ddv) or ''
+			},
+			'map_ttc_ddv' : {
+				'help-text' : '''
+				= montant TTC de la demande de versement - montant TTC
+				versé (- montant TTC versé de l'avance forfaitaire s'il
+				s'agit d'un solde)
+				''',
+				'label': 'Manque à percevoir TTC (en €)',
+				'value': obt_mont(o_suivi_ddv.map_ttc_ddv) or ''
+			},
 			'chem_pj_ddv' : {
 				'label' : 'Consulter le courrier scanné de la demande de versement',
 				'value' : o_ddv.chem_pj_ddv,
@@ -4561,7 +4579,9 @@ def impr_doss(request, _d) :
 		'd' : o_doss,
 		'ddscdg': TDdsCdg.objects.filter(dds_id=o_doss.pk),
 		'ht_ou_ttc' : ht_ou_ttc,
-		'mont_ddv_sum_str' : obt_mont(ddvs['mnt']),
+		'mont_ddv_sum_str': obt_mont(ddvs['mont_ddv_sum']),
+		'mont_verse_ddv_sum_str': obt_mont(ddvs['mont_verse_ddv_sum']),
+		'map_ddv_sum': obt_mont(ddvs['map_ddv_sum']),
 		'mont_doss' : obt_mont(o_doss.mont_doss),
 		'mont_fact_sum' : facs['mnt'],
 		'mont_ht_fact_sum' : facs['mnt_ht'],

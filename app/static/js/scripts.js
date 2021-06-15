@@ -49,7 +49,10 @@ $(document).ready(function() {
 		'autofit' : [5], 'date' : [2], 'number' : [0, 3, 4], 'unsorting' : [5]
 	});
 	new MyDataTable('cons_ddv').set_datatable({
-		'autofit' : [6], 'date' : [2, 3], 'number' : [1, 4], 'unsorting' : [6]
+		'autofit': ['LAST:1'],
+		'date': [2, 3],
+		'number': [1, 4, 5],
+		'unsorting': ['LAST:1']
 	});
 	new MyDataTable('cons_doss_fam').set_datatable({ 'autofit' : [4], 'unsorting' : [4] });
 	new MyDataTable('cons_doss_prest').set_datatable({ 'autofit' : [3], 'number' : [1, 2], 'unsorting' : [3] });

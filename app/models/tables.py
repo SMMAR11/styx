@@ -881,32 +881,47 @@ class TDossier(models.Model) :
         from app.models.views import VDemandeVersement
 
         # Initialisation de variables
-        ddvs = []; mont_ddv_sum = 0
+        ddvs = []
+        mont_ddv_sum = 0
+        mont_verse_ddv_sum = 0
+        map_ddv_sum = 0
 
         for d in VDemandeVersement.objects.filter(id_doss = self) :
 
+            oD = d.get_instance()
+
             if self.get_view_object().type_mont_doss == 'TTC' :
-                mont_ddv = d.get_instance().mont_ttc_ddv
+                mont_ddv = oD.mont_ttc_ddv
+                mont_verse_ddv = oD.mont_ttc_verse_ddv
                 map_ddv = d.map_ttc_ddv
             else :
-                mont_ddv = d.get_instance().mont_ht_ddv
+                mont_ddv = oD.mont_ht_ddv
+                mont_verse_ddv = oD.mont_ht_verse_ddv
                 map_ddv = d.map_ht_ddv
 
             # Empilement des demandes de versements
             ddvs.append({
                 'id_org_fin' : d.id_org_fin,
                 'mont_ddv' : obt_mont(mont_ddv),
-                'dt_ddv' : dt_fr(d.get_instance().dt_ddv),
-                'dt_vers_ddv' : dt_fr(d.get_instance().dt_vers_ddv) or '-',
+                'dt_ddv' : dt_fr(oD.dt_ddv),
+                'dt_vers_ddv' : dt_fr(oD.dt_vers_ddv) or '-',
+                'mont_verse_ddv': obt_mont(mont_verse_ddv) or '-',
                 'map_ddv' : obt_mont(map_ddv) or '-',
-                'id_type_vers' : d.get_instance().id_type_vers,
+                'id_type_vers' : oD.id_type_vers,
                 'pk' : d.pk
             })
 
             # Addition de la somme
-            mont_ddv_sum += mont_ddv
+            mont_ddv_sum += mont_ddv or 0
+            mont_verse_ddv_sum += mont_verse_ddv or 0
+            map_ddv_sum += map_ddv or 0
 
-        return { 'tbl' : ddvs, 'mnt' : mont_ddv_sum }
+        return {
+            'tbl': ddvs,
+            'mont_ddv_sum': mont_ddv_sum,
+            'mont_verse_ddv_sum': mont_verse_ddv_sum,
+            'map_ddv_sum': map_ddv_sum
+        }
 
     def get_recap_facs(self) :
 

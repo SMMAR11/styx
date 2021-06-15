@@ -390,6 +390,7 @@
 								<th>Montant {{ ht_ou_ttc }} demandé (en €)</th>
 								<th>Date de demande de versement</th>
 								<th>Date de versement</th>
+								<th>Montant {{ ht_ou_ttc }} versé (en €)</th>
 								<th>Manque à percevoir {{ ht_ou_ttc }} (en €)</th>
 								<th>Type de versement</th>
 								<th></th>
@@ -402,6 +403,7 @@
 								<td>{{ ddv.mont_ddv }}</td>
 								<td>{{ ddv.dt_ddv }}</td>
 								<td>{{ ddv.dt_vers_ddv }}</td>
+								<td>{{ ddv.mont_verse_ddv }}</td>
 								<td>{{ ddv.map_ddv }}</td>
 								<td>{{ ddv.id_type_vers }}</td>
 								<td>
@@ -414,7 +416,9 @@
 						<tfoot>
 							<tr>
 								<td>Total {{ ht_ou_ttc }} demandé (en €)</td>
-								<td colspan="6">{{ mont_ddv_sum_str }}</td>
+								<td colspan="3">{{ mont_ddv_sum_str }}</td>
+								<td>{{ mont_verse_ddv_sum_str }}</td>
+								<td colspan="3">{{ map_ddv_sum }}</td>
 							</tr>
 						</tfoot>
 						{% endif %}

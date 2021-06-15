@@ -21,17 +21,54 @@ class VDemandeVersement(view.View) :
 
     # Requête
 	sql = '''
+	WITH dev AS (
+		SELECT
+			dev.*,
+			fnc.id_doss_id,
+			fnc.id_org_fin_id,
+			tyv.int_type_vers
+		FROM public.t_demande_versement AS dev
+		INNER JOIN public.t_financement AS fnc ON fnc.id_fin = dev.id_fin_id
+		INNER JOIN public.t_type_versement AS tyv
+			ON tyv.id_type_vers = dev.id_type_vers_id
+	), devaf AS (
+		SELECT
+			id_doss_id,
+			id_fin_id,
+			sum(mont_ht_verse_ddv) AS mont_ht_verse_ddv,
+			sum(mont_ttc_verse_ddv) AS mont_ttc_verse_ddv
+		FROM dev
+		WHERE int_type_vers = 'Avance forfaitaire'
+		GROUP BY
+			id_doss_id,
+			id_fin_id
+	)
 	SELECT
-		V.id_ddv,
-		V.mont_ht_ddv - V.mont_ht_verse_ddv AS map_ht_ddv,
-		V.mont_ttc_ddv - V.mont_ttc_verse_ddv AS map_ttc_ddv,
-		F.id_doss_id,
-		V.id_fin_id,
-		F.id_org_fin_id
-	FROM
-		t_demande_versement AS V,
-		t_financement AS F
-	WHERE F.id_fin = V.id_fin_id
+		dev.id_ddv,
+		dev.id_doss_id,
+		CASE
+			WHEN dev.int_type_vers = 'Solde'
+				THEN dev.mont_ht_ddv - dev.mont_ht_verse_ddv - (
+					SELECT coalesce(devaf.mont_ht_verse_ddv, 0)
+					FROM devaf
+					WHERE devaf.id_doss_id = dev.id_doss_id
+					AND devaf.id_fin_id = dev.id_fin_id
+				)
+			ELSE dev.mont_ht_ddv - dev.mont_ht_verse_ddv
+		END AS map_ht_ddv,
+		CASE
+			WHEN dev.int_type_vers = 'Solde'
+				THEN dev.mont_ttc_ddv - dev.mont_ttc_verse_ddv - (
+					SELECT coalesce(devaf.mont_ttc_verse_ddv, 0)
+					FROM devaf
+					WHERE devaf.id_doss_id = dev.id_doss_id
+					AND devaf.id_fin_id = dev.id_fin_id
+				)
+			ELSE dev.mont_ht_ddv - dev.mont_ht_verse_ddv
+		END AS map_ttc_ddv,
+		dev.id_fin_id,
+		dev.id_org_fin_id
+	FROM dev
 	'''
 
 	class Meta :
