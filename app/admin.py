@@ -1000,3 +1000,108 @@ class FinDdsAdmin(admin.ModelAdmin):
 		return super().save_model(rq, obj, form, change)
 
 admin.site.register(FinDds, FinDdsAdmin)
+
+# ---------------------------------------------------------------------
+# Administration du modèle TProgrammeDetaillePrg
+# ---------------------------------------------------------------------
+
+# Filtrage personnalisé par programme d'actions
+class PrgProListFilter(admin.SimpleListFilter):
+
+	# Options
+	parameter_name = 'pro'
+	title = 'Programme d\'actions'
+
+	# Méthodes Django
+
+	def lookups(self, rq, mdl_admin):
+
+		# Imports
+		from app.models import TProgramme
+
+		# Définition des programmes d'actions
+		qsPros = TProgramme.objects.none()
+		for iPrg in mdl_admin.get_queryset(rq):
+			qsPros |= TProgramme.objects.filter(pk=iPrg.get_pro().pk)
+
+		return ((iPrg.pk, iPrg) for iPrg in qsPros)
+
+	def queryset(self, rq, qs):
+		if self.value():
+			return qs.filter(act_id__startswith=(self.value() + '_'))
+		return qs
+
+# Administration du modèle TProgrammeDetaillePrg
+class ProgrammeDetaillePrg(admin.ModelAdmin):
+
+	"""Administration du modèle FinDds"""
+
+	# Options
+	fieldsets = (
+		('Informations générales', {
+			'fields': (
+				('prg_id'),
+				('act_id'),
+				('moa_id')
+			)
+		}),
+		('Programme d\'actions', {
+			'fields': (
+				('prg_mnt1'),
+				('prg_mnt_est_ttc'),
+				('prg_nbre_dos')
+			)
+		}),
+		('Autres', {
+			'fields': (
+				('pro_mnt_contrac_autres'),
+				('pro_mnt_comman_autres'),
+				('pro_mnt_factu_autres')
+			)
+		})
+	)
+	list_display = (
+		'prg_id',
+		'pro',
+		'act_id_str',
+		'moa_id',
+		'prg_mnt1',
+		'prg_mnt_est_ttc',
+		'prg_nbre_dos',
+		'pro_mnt_contrac_autres',
+		'pro_mnt_comman_autres',
+		'pro_mnt_factu_autres'
+	)
+	list_filter = (PrgProListFilter,)
+	ordering = ('act_id',)
+
+	# Méthodes Django
+
+	def get_readonly_fields(self, rq, obj=None):
+		if obj:
+			return self.readonly_fields + ('prg_id', 'act_id', 'moa_id')
+		return self.readonly_fields
+
+	def has_add_permission(self, rq):
+		return False
+
+	def has_delete_permission(self, rq, obj=None):
+		return False
+
+	# Méthodes
+
+	def act_id_str(self, obj):
+		"""
+		Colonne act_id
+		"""
+		return obj.get_brn()
+	act_id_str.short_description = 'Axe/Action'
+
+	def pro(self, obj):
+		"""
+		Programme d'actions
+		"""
+		return obj.get_pro()
+	pro.short_description = 'Programme d\'actions'
+	
+admin.site.register(TProgrammeDetaillePrg, ProgrammeDetaillePrg)

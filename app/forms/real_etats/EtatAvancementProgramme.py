@@ -153,62 +153,6 @@ class EtatAvancementProgramme(forms.Form):
 		# Définition des colonnes à ne pas afficher
 		undisplayed_ndxs = [0, 1, 2, 3, 4, 5]
 
-		# Définition des labels
-		lbls = {
-			'PRO': 'Programme d\'actions',
-			'AXE': 'Axe',
-			'SS-AXE': 'Sous-axe',
-			'ACTION': 'Action',
-			'LIB-AXE': 'Libellé (axe)',
-			'LIB-ACTION': 'Libellé (action)',
-			'MOA': 'Maître d\'ouvrage',
-			'PRO-NBRE-DDS': 'Programme - Nombre de dossiers',
-			'STYX-NBRE-DDS': 'STYX - Nombre de dossiers créés',
-			'STYX-NBRE-DDS-PRO': '''
-			STYX - Nombre de dossiers programmés au CD GEMAPI
-			''',
-			'PRO-MNT-CONTRAC': '''
-			Programme - Montant contractualisé (en €) <span
-			class="field-complement">(A)</span>
-			''',
-			'PRO-HT-TTC': 'Programme - HT/TTC',
-			'STYX-MNT-PRO-CDG': '''
-			STYX- Montant des dossiers programmés au CD GEMAPI
-			''',
-			'STYX-MNT-PRO-AUTRES': '''
-			STYX - Montant des dossiers programmés en autofinancement
-			''',
-			'STYX-MNT-PRO': '''
-			Montant programmé (en €) <span class="field-complement">(B)</span>
-			''',
-			'STYX-MNT-COM': '''
-			Montant commandé (en €) <span class="field-complement">(C)</span>
-			''',
-			'STYX-MNT-FAC': '''
-			Montant facturé (en €) <span class="field-complement">(D)</span>
-			''',
-			'TX-PRO': '''
-			Taux de programmation (en %) <span
-			class="field-complement">(B/A)</span>
-			''',
-			'TX-ENGAGE': '''
-			Taux d'engagement (en %) <span
-			class="field-complement">(C/B)</span>
-			''',
-			'TX-REA': '''
-			Taux de réalisation (en %) <span
-			class="field-complement">(D/C)</span>
-			'''
-		}
-
-		# Mise en forme de la balise </thead>
-		ths = []
-		for ndx, element in enumerate(data[0]):
-			if ndx not in undisplayed_ndxs:
-				th = '<th>{}</th>'.format(lbls.get(element[0], element[0]))
-				ths.append(th)
-		thead = ''.join(ths)
-
 		# Mise en forme de la balise </tbody>
 		trs = []
 		for element in data[1]:
@@ -247,17 +191,22 @@ class EtatAvancementProgramme(forms.Form):
 			sum([element[16] or 0 for element in data[1]]),
 			sum([element[18] for element in data[1]]),
 			sum([element[19] for element in data[1]]),
-			sum([element[20] for element in data[1]]),
-			sum([element[21] for element in data[1]]),
+			sum([element[20] or 0 for element in data[1]]),
+			sum([element[21] or 0 for element in data[1]]),
 			sum([element[22] for element in data[1]]),
+			sum([element[23] or 0 for element in data[1]]),
+			sum([element[24] or 0 for element in data[1]]),
+			sum([element[25] for element in data[1]]),
+			sum([element[26] or 0 for element in data[1]]),
+			sum([element[27] or 0 for element in data[1]]),
 			round(mean([
-				element[23] for element in data[1]
+				element[28] for element in data[1]
 			]) if data[1] else 0, 3),
 			round(mean([
-				element[24] for element in data[1]
+				element[29] for element in data[1]
 			]) if data[1] else 0, 3),
 			round(mean([
-				element[25] for element in data[1]
+				element[30] for element in data[1]
 			]) if data[1] else 0, 3)
 		) if data[1] else ''
 
@@ -265,13 +214,44 @@ class EtatAvancementProgramme(forms.Form):
 		<div class="my-table" id="t_EtatAvancementProgramme">
 			<table>
 				<thead>
-					<tr>{}</tr>
+					<tr>
+						<th rowspan="2">Programme d'actions</th>
+						<th rowspan="2">Axe</th>
+						<th rowspan="2">Sous-axe</th>
+						<th rowspan="2">Action</th>
+						<th rowspan="2">Libellé (axe)</th>
+						<th rowspan="2">Libellé (action)</th>
+						<th rowspan="2">Maître d\'ouvrage</th>
+						<th rowspan="2">Programme - Nombre de dossiers</th>
+						<th rowspan="2">STYX - Nombre de dossiers créés</th>
+						<th rowspan="2">STYX - Nombre de dossiers programmés au CD GEMAPI</th>
+						<th rowspan="2">Programme - Montant contractualisé (en €) <span class="field-complement">(A)</span></th>
+						<th rowspan="2">Programme - HT/TTC</th>
+						<th colspan="4"> Montant programmé (en €)</th>
+						<th colspan="3"> Montant commandé (en €)</th>
+						<th colspan="3"> Montant facturé (en €)</th>
+						<th rowspan="2">Taux de programmation (en %) <span class="field-complement">(B/A)</span></th>
+						<th rowspan="2">Taux d'engagement (en %) <span class="field-complement">(C/B)</span></th>
+						<th rowspan="2">Taux de réalisation (en %) <span class="field-complement">(D/C)</span></th>
+					</tr>
+					<tr>
+						<th>SMMAR et syndicats (CD GEMAPI)</th>
+						<th>SMMAR et syndicats (autofinancement)</th>
+						<th>Autres</th>
+						<th>Total <span class="field-complement">(B)</span></th>
+						<th>SMMAR et syndicats</th>
+						<th>Autres</th>
+						<th>Total <span class="field-complement">(C)</span></th>
+						<th>SMMAR et syndicats</th>
+						<th>Autres</th>
+						<th>Total <span class="field-complement">(D)</span></th>
+					</tr>
 				</thead>
 				<tbody>{}</tbody>
 				<tfoot id="za_tfoot_EtatAvancementProgramme">{}</tfoot>
 			</table>
 		</div>
-		'''.format(thead, tbody, tfoot)
+		'''.format(tbody, tfoot)
 
 	def __get_form(self):
 
