@@ -183,20 +183,25 @@ class EtatAvancementProgramme(forms.Form):
 			<td>{}</td>
 			<td>{}</td>
 			<td>{}</td>
+			<td>{}</td>
+			<td>{}</td>
+			<td>{}</td>
+			<td>{}</td>
+			<td>{}</td>
 		</tr>
 		'''.format(
 			sum([element[13] or 0 for element in data[1]]),
 			sum([element[14] for element in data[1]]),
 			sum([element[15] for element in data[1]]),
 			sum([element[16] or 0 for element in data[1]]),
-			sum([element[18] for element in data[1]]),
-			sum([element[19] for element in data[1]]),
+			sum([element[18] or 0 for element in data[1]]),
+			sum([element[19] or 0 for element in data[1]]),
 			sum([element[20] or 0 for element in data[1]]),
 			sum([element[21] or 0 for element in data[1]]),
-			sum([element[22] for element in data[1]]),
+			sum([element[22] or 0 for element in data[1]]),
 			sum([element[23] or 0 for element in data[1]]),
 			sum([element[24] or 0 for element in data[1]]),
-			sum([element[25] for element in data[1]]),
+			sum([element[25] or 0 for element in data[1]]),
 			sum([element[26] or 0 for element in data[1]]),
 			sum([element[27] or 0 for element in data[1]]),
 			round(mean([
