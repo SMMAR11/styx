@@ -193,26 +193,26 @@ class EtatAvancementProgramme(forms.Form):
 			sum([element[13] or 0 for element in data[1]]),
 			sum([element[14] for element in data[1]]),
 			sum([element[15] for element in data[1]]),
-			sum([element[16] or 0 for element in data[1]]),
-			sum([element[18] or 0 for element in data[1]]),
-			sum([element[19] or 0 for element in data[1]]),
-			sum([element[20] or 0 for element in data[1]]),
-			sum([element[21] or 0 for element in data[1]]),
-			sum([element[22] or 0 for element in data[1]]),
-			sum([element[23] or 0 for element in data[1]]),
-			sum([element[24] or 0 for element in data[1]]),
-			sum([element[25] or 0 for element in data[1]]),
-			sum([element[26] or 0 for element in data[1]]),
-			sum([element[27] or 0 for element in data[1]]),
+			round(sum([element[16] or 0 for element in data[1]]), 2),
+			round(sum([element[18] or 0 for element in data[1]]), 2),
+			round(sum([element[19] or 0 for element in data[1]]), 2),
+			round(sum([element[20] or 0 for element in data[1]]), 2),
+			round(sum([element[21] or 0 for element in data[1]]), 2),
+			round(sum([element[22] or 0 for element in data[1]]), 2),
+			round(sum([element[23] or 0 for element in data[1]]), 2),
+			round(sum([element[24] or 0 for element in data[1]]), 2),
+			round(sum([element[25] or 0 for element in data[1]]), 2),
+			round(sum([element[26] or 0 for element in data[1]]), 2),
+			round(sum([element[27] or 0 for element in data[1]]), 2),
 			round(mean([
 				element[28] for element in data[1]
-			]) if data[1] else 0, 3),
+			]) if data[1] else 0, 2),
 			round(mean([
 				element[29] for element in data[1]
-			]) if data[1] else 0, 3),
+			]) if data[1] else 0, 2),
 			round(mean([
 				element[30] for element in data[1]
-			]) if data[1] else 0, 3)
+			]) if data[1] else 0, 2)
 		) if data[1] else ''
 
 		return '''
@@ -332,9 +332,10 @@ class EtatAvancementProgramme(forms.Form):
 					.get_permissions(read_or_write='R')
 				for i in permissions:
 					ors.append(
-						'("_moaId" = \'' \
+						'( \'' \
 						+ str(i[0]) \
-						+ '\' AND "_typId" = \'' \
+						+ '\' = any(string_to_array("_moaId", \';\')) ' \
+						+ 'AND "_typId" = \'' \
 						+ str(i[1]) \
 						+ '\')'
 					)

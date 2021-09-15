@@ -1054,9 +1054,9 @@ class ProgrammeDetaillePrg(admin.ModelAdmin):
 		}),
 		('Autres', {
 			'fields': (
-				('pro_mnt_contrac_autres'),
-				('pro_mnt_comman_autres'),
-				('pro_mnt_factu_autres')
+				('prg_mnt_contrac_autres'),
+				('prg_mnt_comman_autres'),
+				('prg_mnt_factu_autres')
 			)
 		})
 	)
@@ -1068,9 +1068,9 @@ class ProgrammeDetaillePrg(admin.ModelAdmin):
 		'prg_mnt1',
 		'prg_mnt_est_ttc',
 		'prg_nbre_dos',
-		'pro_mnt_contrac_autres',
-		'pro_mnt_comman_autres',
-		'pro_mnt_factu_autres'
+		'prg_mnt_contrac_autres',
+		'prg_mnt_comman_autres',
+		'prg_mnt_factu_autres'
 	)
 	list_filter = (PrgProListFilter,)
 	ordering = ('act_id',)

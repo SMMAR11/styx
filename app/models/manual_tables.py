@@ -43,19 +43,19 @@ class TProgrammeDetaillePrg(models.Model):
 		verbose_name='Maître d\'ouvrage'
 	)
 
-	pro_mnt_contrac_autres = MFEuroField(
+	prg_mnt_contrac_autres = MFEuroField(
 		blank=True,
 		null=True,
 		verbose_name='Autres - Montant contractualisé (en €)'
 	)
 
-	pro_mnt_comman_autres = MFEuroField(
+	prg_mnt_comman_autres = MFEuroField(
 		blank=True,
 		null=True,
 		verbose_name='Autres - Montant commandé (en €)'
 	)
 
-	pro_mnt_factu_autres = MFEuroField(
+	prg_mnt_factu_autres = MFEuroField(
 		blank=True,
 		null=True,
 		verbose_name='Autres - Montant facturé (en €)'
