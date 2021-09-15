@@ -46,7 +46,7 @@ class TProgrammeDetaillePrg(models.Model):
 	prg_mnt_contrac_autres = MFEuroField(
 		blank=True,
 		null=True,
-		verbose_name='Autres - Montant contractualisé (en €)'
+		verbose_name='Autres - Montant programmé (en €)'
 	)
 
 	prg_mnt_comman_autres = MFEuroField(
