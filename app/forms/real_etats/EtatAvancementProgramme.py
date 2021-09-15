@@ -331,11 +331,20 @@ class EtatAvancementProgramme(forms.Form):
 				permissions = TUtilisateur.objects.get(pk=self.rq.user.pk) \
 					.get_permissions(read_or_write='R')
 				for i in permissions:
+					# Filtrage sur le couple maître d'ouvrage/type de
+					# programme d'actions
 					ors.append(
 						'( \'' \
 						+ str(i[0]) \
 						+ '\' = any(string_to_array("_moaId", \';\')) ' \
 						+ 'AND "_typId" = \'' \
+						+ str(i[1]) \
+						+ '\')'
+					)
+					# Affichage des lignes sans maître d'ouvrage
+					# affecté
+					ors.append(
+						'("_moaId" = \'\' AND "_typId" = \'' \
 						+ str(i[1]) \
 						+ '\')'
 					)
