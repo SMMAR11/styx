@@ -131,7 +131,7 @@ class VFinancement(view.View) :
 				COALESCE(
 					CASE WHEN D.est_ttc_doss = false THEN D2.mont_ht_verse_ddv_sum ELSE D2.mont_ttc_verse_ddv_sum END, 0
 				)::NUMERIC(26, 2) AS mont_verse_ddv_sum,
-				((F.mont_part_fin / D.mont_doss) * 100)::NUMERIC(6, 3) AS pourc_glob_fin,
+				COALESCE((F.mont_part_fin / NULLIF(D.mont_doss, 0)) * 100, 0)::NUMERIC(6, 3) AS pourc_glob_fin,
 				F.id_doss_id,
 				F.id_org_fin_id,
 				O.n_org AS n_org_fin
@@ -166,7 +166,7 @@ class VFinancement(view.View) :
 				SELECT
 					F.id_doss_id AS dos_id_tmp,
 					SUM(F.mont_part_fin) AS mont_part_fin_sum,
-					SUM((F.mont_part_fin / D.mont_doss) * 100) AS pourc_glob_fin
+					SUM(COALESCE((F.mont_part_fin / NULLIF(D.mont_doss, 0)) * 100, 0)) AS pourc_glob_fin
 				FROM public.t_financement AS F
 				INNER JOIN public.t_dossier AS D ON D.id_doss = F.id_doss_id
 				GROUP BY F.id_doss_id
@@ -292,18 +292,18 @@ class VSuiviDossier(view.View) :
 				(D.mont_doss + D.mont_suppl_doss)::NUMERIC(26, 2) AS mont_tot_doss,
 				(COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0))::NUMERIC(26, 2) AS mont_tot_prest_doss,
 				CONCAT_WS('.', NULLIF(D.num_axe, ''), NULLIF(D.num_ss_axe, ''), NULLIF(D.num_act, '')) AS num_axe_compl,
-				(((
+				COALESCE((((
 					COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0)
-				) / (D.mont_doss + D.mont_suppl_doss)) * 100)::NUMERIC(6, 3) AS pourc_comm,
-				((COALESCE(
+				) / NULLIF((D.mont_doss + D.mont_suppl_doss), 0)) * 100), 0)::NUMERIC(6, 3) AS pourc_comm,
+				COALESCE(((COALESCE(
 					CASE WHEN D.est_ttc_doss = false THEN F2.mont_ht_fact_sum ELSE F2.mont_ttc_fact_sum END, 0
-				) / (D.mont_doss + D.mont_suppl_doss)) * 100)::NUMERIC(6, 3) AS pourc_paye,
-				(
-					((COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0)) / D.mont_doss) * 100
-				)::NUMERIC(6, 3) AS tx_engag_doss,
-				((COALESCE(
+				) / NULLIF((D.mont_doss + D.mont_suppl_doss), 0)) * 100), 0)::NUMERIC(6, 3) AS pourc_paye,
+				COALESCE((
+					((COALESCE(P.mont_prest_doss_sum, 0) + COALESCE(A.mont_aven_sum, 0)) / NULLIF(D.mont_doss, 0)) * 100
+				), 0)::NUMERIC(6, 3) AS tx_engag_doss,
+				COALESCE(((COALESCE(
 					CASE WHEN D.est_ttc_doss = false THEN F2.mont_ht_fact_sum ELSE F2.mont_ttc_fact_sum END, 0
-				) / D.mont_doss) * 100)::NUMERIC(6, 3) AS tx_real_doss,
+				) / NULLIF(D.mont_doss, 0)) * 100), 0)::NUMERIC(6, 3) AS tx_real_doss,
 				CASE WHEN D.est_ttc_doss = false THEN 'HT' ELSE 'TTC' END AS type_mont_doss,
 				CASE
 					WHEN AVN.int_av = 'Abandonné' THEN (
