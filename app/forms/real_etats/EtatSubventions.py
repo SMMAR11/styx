@@ -237,6 +237,9 @@ class EtatSubventions(forms.Form):
 				) in permissions:
 					qsFins |= TFinancement.objects.filter(pk=iFin.pk)
 
+			# Tri par numéro de dossier et par financeur
+			qsFins = qsFins.order_by('id_doss', 'id_org_fin')
+
 		# Pour chaque enregistrement...
 		for oFin in qsFins:
 

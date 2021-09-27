@@ -1292,6 +1292,7 @@ class GererDemandeVersement(forms.ModelForm) :
 		# Imports
 		from app.functions import dt_fr
 		from app.functions import obt_mont
+		from app.models import TDemandeVersement
 		from app.models import TFacture
 		from app.models import TFacturesDemandeVersement
 		from app.models import TFinancement
@@ -1385,16 +1386,32 @@ class GererDemandeVersement(forms.ModelForm) :
 					est_zcc = True
 					tab_fact_ddv_checked.append(f.pk)
 
+				# Stockage des avances
+				qsDev = TDemandeVersement.objects.filter(
+					id_fin=k_fin.pk,
+					id_type_vers__int_type_vers='Avance forfaitaire'
+				)
+				if qsDev.count() > 0:
+					avances = sum([
+						oDev.mont_ttc_ddv \
+						if k_fin.id_doss.est_ttc_doss == True \
+						else oDev.mont_ht_ddv\
+						for oDev in qsDev
+					])
+				else:
+					avances = 0
+
 				# Préparation du tableau des factures
 				tab_fact_ddv.append([f.pk, '|'.join([
 					str(f.id_prest),
 					obt_mont(f.mont_ttc_fact) if k_fin.id_doss.est_ttc_doss == True else obt_mont(f.mont_ht_fact),
 					f.num_fact,
 					dt_fr(f.dt_mand_moa_fact) or '-',
-					'__zcc__$montant:{}$pourcentage:{}$taxe:{}'.format(
+					'__zcc__$montant:{}$pourcentage:{}$taxe:{}$avances:{}'.format(
 						f.mont_ttc_fact or '' if k_fin.id_doss.est_ttc_doss == True else f.mont_ht_fact or '',
 						k_fin.pourc_elig_fin or '',
-						'TTC' if k_fin.id_doss.est_ttc_doss == True else 'HT'
+						'TTC' if k_fin.id_doss.est_ttc_doss == True else 'HT',
+						avances
 					) if est_zcc == True else ''
 				])])
 

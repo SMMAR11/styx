@@ -991,8 +991,9 @@ $(document).on(
 	'input[name="GererDemandeVersement-cbsm_fact"], #id_GererDemandeVersement-cbsm_fact__all',
 	function() {
 
-		// J'initialise le montant de la demande de versement.
+		// J'initialise le montant de la demande de versement et le montant des avances.
 		var mont_ddv = 0;
+		var avances = 0;
 
 		// J'initialise certaines variables "compteurs".
 		var cpt = 0;
@@ -1017,6 +1018,12 @@ $(document).on(
 					v_pourc_elig_fin = 1;
 				}
 
+				// Mise en forme des avances
+				var v_avances = $(this).attr('avances');
+				if (!isNaN(v_avances)) {
+					avances = v_avances;
+				}
+
 				// Je calcule le montant de la demande de versement.
 				mont_ddv += v_mont_fact * v_pourc_elig_fin;
 			}
@@ -1030,6 +1037,9 @@ $(document).on(
 				cpt_ttc += 1;
 			}
 		});
+
+		// Déduction des avances
+		mont_ddv = mont_ddv - avances;
 
 		// Je mets en forme le montant de la demande de versement.
 		if (mont_ddv == 0) {

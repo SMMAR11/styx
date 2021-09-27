@@ -155,6 +155,7 @@ formats.DATETIME_FORMAT = 'd/m/Y H:i:s'
 # Je déclare mes options personnelles.
 T_DONN_BDD_STR = {
     'AV_ABAND' : 'Abandonné',
+    'AV_ARCHI': 'Archivé',
     'AV_EP' : 'En projet',
     'AV_SOLDE' : 'Soldé',
     'AV_CP_ACC' : 'Accordé',
