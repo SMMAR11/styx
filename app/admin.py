@@ -889,7 +889,7 @@ class DdsCdg(admin.ModelAdmin):
 
 	# Options
 	actions = (admin.actions.delete_selected,)
-	fields = ('dds_id', 'int_doss', 'cdg_id', 'acp_id')
+	fields = ('dds_id', 'int_doss', 'cdg_id', 'acp_id', 'ddscdg_com')
 	form = UpdateDdsCdgAdmin
 	inlines = (AcpFinDdsCdgInline,)
 	list_display = (

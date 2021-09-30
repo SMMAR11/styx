@@ -1797,6 +1797,7 @@ def cons_doss(request, _d) :
 					<div class="col-md-6">{}</div>
 				</div>
 				{}
+				{}
 				<div class="attribute-wrapper">
 					<span class="attribute-label">Avis des partenaires</span>
 					<div class="my-table" id="t_cons_acpfinddscdg">
@@ -1815,6 +1816,7 @@ def cons_doss(request, _d) :
 				'''.format(
 					attrs['cdg_date'],
 					attrs['acp_id'],
+					attrs['ddscdg_com'],
 					attrs['ddscdg_pdf_modifie'],
 					''.join(trs)
 				)

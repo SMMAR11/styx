@@ -85,6 +85,38 @@ class EtatDossiers(forms.Form):
 		required=False
 	)
 
+	rb_doss_sold = forms.ChoiceField(
+		choices=[('solde', 'Oui'), ('non_solde', 'Non')],
+		initial='solde',
+		label='Afficher les dossiers soldés ?',
+		required=False,
+		widget=forms.RadioSelect()
+	)
+
+	rb_doss_term = forms.ChoiceField(
+		choices=[('termine', 'Oui'), ('non_termine', 'Non')],
+		initial='termine',
+		label='Afficher les dossiers terminés ?',
+		required=False,
+		widget=forms.RadioSelect()
+	)
+
+	rb_doss_archi = forms.ChoiceField(
+		choices=[('archive', 'Oui'), ('non_archive', 'Non')],
+		initial='archive',
+		label='Afficher les dossiers archivés ?',
+		required=False,
+		widget=forms.RadioSelect()
+	)
+
+	rb_doss_aband = forms.ChoiceField(
+		choices=[('abandonne', 'Oui'), ('non_abandonne', 'Non')],
+		initial='abandonne',
+		label='Afficher les dossiers abandonnés ?',
+		required=False,
+		widget=forms.RadioSelect()
+	)
+
 	# Méthodes Django
 
 	def __init__(self, *args, **kwargs):
@@ -182,7 +214,11 @@ class EtatDossiers(forms.Form):
 			'zl_id_type_doss',
 			'zl_id_techn',
 			'zl_id_nat_doss',
-			'zl_annee_prev_doss'
+			'zl_annee_prev_doss',
+			'rb_doss_sold',
+			'rb_doss_term',
+			'rb_doss_archi',
+			'rb_doss_aband'
 		]
 
 		if not self.data:
@@ -204,6 +240,7 @@ class EtatDossiers(forms.Form):
 		from app.models import VFinancement
 		from app.models import VSuiviDossier
 		from django.core.urlresolvers import reverse
+		from django.db.models import Q
 
 		# Initialisation des données
 		data = []
@@ -298,9 +335,23 @@ class EtatDossiers(forms.Form):
 			# Filtre "pk__in"
 			if pks:
 				ands['pk__in'] = set(pks[0]).intersection(*pks)
-				
+
+			selected = Q()
+			# Retrait ou non des dossiers soldés
+			if cleaned_data['rb_doss_sold'] == 'non_solde':
+				selected.add(Q(id_av__int_av__icontains='Soldé'), Q.OR)
+			# Retrait ou non des dossiers terminés
+			if cleaned_data['rb_doss_term'] == 'non_termine':
+				selected.add(Q(id_av__int_av__icontains='Terminé'), Q.OR)
+			# Retrait ou non des dossiers archivés
+			if cleaned_data['rb_doss_archi'] == 'non_archive':
+				selected.add(Q(id_av__int_av__icontains='Archivé'), Q.OR)
+			# Retrait ou non des dossiers abandonnés
+			if cleaned_data['rb_doss_aband'] == 'non_abandonne':
+				selected.add(Q(id_av__int_av__icontains='Abandonné'), Q.OR)
+
 			# Définition du jeu de données
-			_qsDdss = TDossier.objects.filter(**ands)
+			_qsDdss = TDossier.objects.filter(**ands).exclude(selected)
 
 			# Filtrage des droits d'accès (un utilisateur ne peut
 			# accéder aux dossiers dont il n'a aucune permission en
@@ -572,6 +623,10 @@ class EtatDossiers(forms.Form):
 					{}
 					{}
 					{}
+					{}
+					{}
+					{}
+					{}
 					<button class="center-block green-btn my-btn" type="submit">Valider</button>
 				</div>
 			</fieldset>
@@ -589,7 +644,11 @@ class EtatDossiers(forms.Form):
 			form['zl_id_type_doss'],
 			form['zl_id_techn'],
 			form['zl_id_nat_doss'],
-			form['zl_annee_prev_doss']
+			form['zl_annee_prev_doss'],
+			form['rb_doss_sold'],
+			form['rb_doss_term'],
+			form['rb_doss_archi'],
+			form['rb_doss_aband']
 		)
 
 	# Méthodes publiques

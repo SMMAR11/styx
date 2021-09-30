@@ -2153,6 +2153,7 @@ class TDdsCdg(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Avis du comité de programmation - CD GEMAPI'
     )
+    ddscdg_com = models.TextField(blank=True, null=True, verbose_name='Commentaire')
 
     class Meta:
         db_table = 't_ddscdg'
@@ -2200,6 +2201,7 @@ class TDdsCdg(models.Model):
         from django.template.defaultfilters import yesno
 
         return {
+            'ddscdg_com': {'label': 'Commentaire', 'value': self.ddscdg_com},
             'ddscdg_pdf_modifie': {
                 'label': '''
                 Le plan de financement a-t-il été modifié pendant le CD
