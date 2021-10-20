@@ -899,6 +899,7 @@ def cons_doss(request, _d) :
 				<input name="csrfmiddlewaretoken" type="hidden" value="{1}">
 				{2}
 				{3}
+				<div class="title-1">Demande de versement</div>
 				{4}
 				{5}
 				{6}
@@ -920,11 +921,20 @@ def cons_doss(request, _d) :
 				</div>
 				{15}
 				{16}
+				<div class="title-1">Financement</div>
+				{17}
+				{18}
 				<button class="center-block green-btn my-btn" type="submit">Valider</button>
 				<div class="form-remark">
 					<ul class="my-list-style">
 						<li>Il est impossible de renseigner un numéro de bordereau et un numéro de titre de recette
 						tant qu'une date de versement n'a pas été renseignée.</li>
+						<li>Si la date limite du début de l'opération
+						est renseignée, alors seules les options "Oui"
+						et "Non" de la liste déroulante suivant le
+						champ en question seront valides. Dans le cas
+						contraire, seule l'option "Sans objet" sera
+						valide.</li>
 					</ul>
 				</div>
 			</form>
@@ -946,6 +956,8 @@ def cons_doss(request, _d) :
 				t_ajout_ddv['mont_ttc_verse_ddv'],
 				t_ajout_ddv['chem_pj_ddv'],
 				t_ajout_ddv['comm_ddv'],
+				t_ajout_ddv['dt_lim_deb_oper_fin'],
+				t_ajout_ddv['a_inf_fin']
 			),
 			'ajout_fact' : '''
 			<form action="{}" enctype="multipart/form-data" name="f_ajout_fact" method="post" onsubmit="soum_f(event)">
@@ -3518,6 +3530,7 @@ def ajout_ddv(request) :
 	from app.models import TFacture
 	from app.models import TFacturesDemandeVersement
 	from app.models import TFinancement
+	from datetime import datetime
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	import json
@@ -3545,6 +3558,31 @@ def ajout_ddv(request) :
 					k_fin = o_fin
 				))
 				output = HttpResponse(f_ajout_ddv['cbsm_fact'])
+
+			# Récupération des données du bloc Financement
+			if get_action == 'get-tfinancement-data':
+
+				# Instance TFinancement
+				try:
+					oFin = TFinancement.objects.get(
+						pk=request.POST.get('GererDemandeVersement-zl_fin')
+					)
+				except:
+					oFin = None
+
+				# Définition des données JSON
+				if oFin:
+					dt_lim_deb_oper_fin = oFin.dt_lim_deb_oper_fin
+					if dt_lim_deb_oper_fin:
+						dt_lim_deb_oper_fin = dt_lim_deb_oper_fin.strftime('%d/%m/%Y')
+					j = {
+						'dt_lim_deb_oper_fin': dt_lim_deb_oper_fin,
+						'a_inf_fin': oFin.a_inf_fin
+					}
+				else:
+					j = {}
+
+				output = HttpResponse(json.dumps(j), content_type='application/json')
 
 		else :
 
@@ -3656,6 +3694,7 @@ def modif_ddv(request, _d) :
 	from app.models import TFacture
 	from app.models import TFacturesDemandeVersement
 	from app.models import TFinancement
+	from datetime import datetime
 	from django.core.urlresolvers import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -3720,6 +3759,31 @@ def modif_ddv(request, _d) :
 					)
 				)
 				output = HttpResponse(f_modif_ddv['cbsm_fact'])
+
+			# Récupération des données du bloc Financement
+			if get_action == 'get-tfinancement-data':
+
+				# Instance TFinancement
+				try:
+					oFin = TFinancement.objects.get(
+						pk=request.POST.get('GererDemandeVersement-zl_fin')
+					)
+				except:
+					oFin = None
+
+				# Définition des données JSON
+				if oFin:
+					dt_lim_deb_oper_fin = oFin.dt_lim_deb_oper_fin
+					if dt_lim_deb_oper_fin:
+						dt_lim_deb_oper_fin = dt_lim_deb_oper_fin.strftime('%d/%m/%Y')
+					j = {
+						'dt_lim_deb_oper_fin': dt_lim_deb_oper_fin,
+						'a_inf_fin': oFin.a_inf_fin
+					}
+				else:
+					j = {}
+
+				output = HttpResponse(json.dumps(j), content_type='application/json')
 
 		else :
 

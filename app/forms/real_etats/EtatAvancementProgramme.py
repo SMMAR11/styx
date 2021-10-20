@@ -141,7 +141,6 @@ class EtatAvancementProgramme(forms.Form):
 		# Imports
 		from app.functions import dt_fr
 		from app.functions import obt_mont
-		from statistics import mean
 
 		# Récupération des données filtrées
 		data = self.__get_data()
@@ -166,6 +165,13 @@ class EtatAvancementProgramme(forms.Form):
 			tr = '<tr>{}</tr>'.format(''.join(tds))
 			trs.append(tr)
 		tbody = ''.join(trs)
+
+		# Récupération des différents montants globaux (contractualisé,
+		# programmé, commandé et facturé)
+		col_a = sum([element[16] or 0 for element in data[1]])
+		col_b = sum([element[21] or 0 for element in data[1]])
+		col_c = sum([element[24] or 0 for element in data[1]])
+		col_d = sum([element[27] or 0 for element in data[1]])
 
 		# Mise en forme de la balise </tfoot>
 		tfoot = '''
@@ -193,26 +199,20 @@ class EtatAvancementProgramme(forms.Form):
 			sum([element[13] or 0 for element in data[1]]),
 			sum([element[14] for element in data[1]]),
 			sum([element[15] for element in data[1]]),
-			round(sum([element[16] or 0 for element in data[1]]), 2),
+			round(col_a, 2),
 			round(sum([element[18] or 0 for element in data[1]]), 2),
 			round(sum([element[19] or 0 for element in data[1]]), 2),
 			round(sum([element[20] or 0 for element in data[1]]), 2),
-			round(sum([element[21] or 0 for element in data[1]]), 2),
+			round(col_b, 2),
 			round(sum([element[22] or 0 for element in data[1]]), 2),
 			round(sum([element[23] or 0 for element in data[1]]), 2),
-			round(sum([element[24] or 0 for element in data[1]]), 2),
+			round(col_c, 2),
 			round(sum([element[25] or 0 for element in data[1]]), 2),
 			round(sum([element[26] or 0 for element in data[1]]), 2),
-			round(sum([element[27] or 0 for element in data[1]]), 2),
-			round(mean([
-				element[28] for element in data[1]
-			]) if data[1] else 0, 2),
-			round(mean([
-				element[29] for element in data[1]
-			]) if data[1] else 0, 2),
-			round(mean([
-				element[30] for element in data[1]
-			]) if data[1] else 0, 2)
+			round(col_d, 2),
+			round(((col_b / col_a) if col_a > 0 else 0) * 100, 2),
+			round(((col_c / col_b) if col_b > 0 else 0) * 100, 2),
+			round(((col_d / col_c) if col_c > 0 else 0) * 100, 2)
 		) if data[1] else ''
 
 		return '''

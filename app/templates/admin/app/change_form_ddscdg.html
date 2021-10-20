@@ -1,4 +1,4 @@
 {% extends 'admin/change_form.html' %}
 {% block form_top %} 
-{% if fins %}<p>{{ fins | safe }}</p>{% endif %}
+<p>Le plan de financement peut être modifié en utilisant <a class="related-widget-wrapper-link change-related" href="../../../findds/{{ original.dds_id.pk }}/change/?_popup=1&ddscdg={{ original.pk }}" id="change_findds">ce formulaire</a></p>
 {% endblock %}

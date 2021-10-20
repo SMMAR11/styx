@@ -1269,6 +1269,15 @@ class GererDemandeVersement(forms.ModelForm) :
 		required = False,
 		widget = forms.SelectMultiple()
 	)
+	dt_lim_deb_oper_fin = forms.DateField(
+		label='Date limite du début de l\'opération <span class="field-complement">(JJ/MM/AAAA)</span>',
+		required=False
+	)
+	a_inf_fin = forms.ChoiceField(
+        choices=[('Oui', 'Oui'), ('Non', 'Non'), ('Sans objet', 'Sans objet')],
+        initial='Sans objet',
+        label='Avez-vous informé le partenaire financier du début de l\'opération ?'
+    )
 
 	class Meta :
 
@@ -1356,6 +1365,8 @@ class GererDemandeVersement(forms.ModelForm) :
 		# Je prépare les valeurs initiales des champs personalisés.
 		if i.pk :
 			self.fields['zl_fin'].initial = i.id_fin.pk
+			self.fields['dt_lim_deb_oper_fin'].initial = i.id_fin.dt_lim_deb_oper_fin
+			self.fields['a_inf_fin'].initial = i.id_fin.a_inf_fin
 
 		# Je gère l'état des champs suivants : numéro de bordereau et numéro de titre de recette.
 		ro = False
@@ -1438,6 +1449,8 @@ class GererDemandeVersement(forms.ModelForm) :
 		v_num_doss = cleaned_data.get('za_num_doss')
 		v_fin = cleaned_data.get('zl_fin')
 		v_type_vers = cleaned_data.get('id_type_vers')
+		v_dt_lim_deb_oper_fin = cleaned_data.get('dt_lim_deb_oper_fin')
+		v_a_inf_fin = cleaned_data.get('a_inf_fin')
 
 		i = self.instance
 
@@ -1502,6 +1515,14 @@ class GererDemandeVersement(forms.ModelForm) :
 						'id_type_vers', 'Vous avez déjà émis une demande de versement soldée pour ce financeur.'
 					)
 
+		# Je gère la contrainte liée à la date limite du début de l'opération.
+		if v_dt_lim_deb_oper_fin :
+			if v_a_inf_fin == 'Sans objet' :
+				self.add_error('a_inf_fin', ERROR_MESSAGES['invalid'])
+		else :
+			if v_a_inf_fin != 'Sans objet' :
+				self.add_error('a_inf_fin', ERROR_MESSAGES['invalid'])
+
 	def save(self, commit = True) :
 
 		# Imports
@@ -1510,7 +1531,15 @@ class GererDemandeVersement(forms.ModelForm) :
 		o = super(GererDemandeVersement, self).save(commit = False)
 		i = self.instance
 
-		o.id_fin = TFinancement.objects.get(pk = self.cleaned_data.get('zl_fin'))
+		# Instance TFinancement
+		oFin = TFinancement.objects.get(pk = self.cleaned_data.get('zl_fin'))
+
+		# Mise à jour d'une instance TFinancement
+		oFin.dt_lim_deb_oper_fin = self.cleaned_data.get('dt_lim_deb_oper_fin')
+		oFin.a_inf_fin = self.cleaned_data.get('a_inf_fin')
+		oFin.save()
+
+		o.id_fin = oFin
 		if commit :
 			o.save()
 

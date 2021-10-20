@@ -742,6 +742,47 @@ $('#id_GererDemandeVersement-zl_fin, #id_GererDemandeVersement-id_type_vers').on
 });
 
 /**
+ * Gestion des champs du bloc Financement relatif à une demande de versement 
+ */
+$('#id_GererDemandeVersement-zl_fin').on('change', function() {
+
+	// Récupération du financeur
+	var zl_fin = $(this).val();
+
+	// Si financeur renseigné, alors...
+	if (zl_fin != '' && isNaN(zl_fin) == false) {
+
+		// Mise en mémoire du formulaire
+		var form = $('form[name="f_ger_ddv"]');
+
+		// Je lance une requête AJAX.
+		$.ajax({
+			type: 'post',
+			url: form.attr('action') + '?action=get-tfinancement-data',
+			data: new FormData(form.get(0)),
+			dataType: 'json',
+			processData: false,
+			contentType: false,
+			beforeSend: function() {
+				aff_load_ajax(true);
+			},
+			success: function(data) {
+				$('#id_GererDemandeVersement-dt_lim_deb_oper_fin').val(data['dt_lim_deb_oper_fin']);
+				$('#id_GererDemandeVersement-a_inf_fin').val(data['a_inf_fin']);
+			},
+			error: function(xhr) {
+				alert('Erreur ' + xhr.status);
+			},
+			complete: function() {
+				aff_load_ajax(false);
+			}
+		});
+
+	}
+
+});
+
+/**
  * Ce script permet de gérer l'état de certains champs relatif à une demande de versement.
  */
 $('#id_GererDemandeVersement-dt_vers_ddv').on('input', function() {

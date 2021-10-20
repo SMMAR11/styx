@@ -2282,6 +2282,17 @@ class FinDds(TDossier):
         verbose_name = 'Plan de financement'
         verbose_name_plural = 'Plans de financement'
 
+class TDdsCdgRestricted(TDdsCdg):
+
+    """
+    Ensemble des dossiers programmés à un CD GEMAPI
+    """
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Dossier présente à un CD GEMAPI (accès restreint)'
+        verbose_name_plural = 'Dossiers présentés à un CD GEMAPI (accès restreint)'
+
 class TPlanPluriannuelInvestissementPpi(models.Model):
 
     """

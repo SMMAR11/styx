@@ -889,6 +889,7 @@ class DdsCdg(admin.ModelAdmin):
 
 	# Options
 	actions = (admin.actions.delete_selected,)
+	change_form_template = 'admin/app/change_form_ddscdg.html'
 	fields = ('dds_id', 'int_doss', 'cdg_id', 'acp_id', 'ddscdg_com')
 	form = UpdateDdsCdgAdmin
 	inlines = (AcpFinDdsCdgInline,)
@@ -913,19 +914,6 @@ class DdsCdg(admin.ModelAdmin):
 
 	def has_delete_permission(self, rq, obj=None):
 		return False
-
-	def render_change_form(self, rq, cntxt, *args, **kwargs):
-		self.change_form_template = 'admin/app/change_form_ddscdg.html'
-		extra = {
-			'fins': '''
-	        Le plan de financement peut être modifié en utilisant <a
-	        class="related-widget-wrapper-link change-related"
-	        href="../../../findds/{}/change/?_popup=1&ddscdg={}" id="change_findds"
-	        >ce formulaire</a>.
-	        '''.format(cntxt['original'].dds_id.pk, cntxt['original'].pk)
-		}
-		cntxt.update(extra)
-		return super().render_change_form(rq, cntxt, *args, **kwargs)
 
 	# Méthodes colonnes
 
@@ -1105,3 +1093,42 @@ class ProgrammeDetaillePrg(admin.ModelAdmin):
 	pro.short_description = 'Programme d\'actions'
 	
 admin.site.register(TProgrammeDetaillePrg, ProgrammeDetaillePrg)
+
+# ---------------------------------------------------------------------
+# Administration du modèle TDdsCdgRestricted
+# ---------------------------------------------------------------------
+
+# Administration du modèle TDdsCdgRestricted
+class DdsCdgRestricted(DdsCdg):
+
+	# Options
+	change_form_template = 'admin/change_form.html'
+
+	# Méthodes Django
+
+	def get_queryset(self, rq):
+
+		# Imports
+		from app.models import TDossier
+		from app.models import TUtilisateur
+
+		# Récupération du jeu de données source
+		qs = super().get_queryset(rq)
+
+		# Filtrage des dossiers (un utilisateur ne peut accéder aux
+		# dossiers dont il n'a aucune permission en écriture) afin de
+		# pouvoir générer un jeu de données cible
+		doss = []
+		permissions = TUtilisateur.objects \
+			.get(pk=rq.user.pk) \
+			.get_permissions(read_or_write='W')
+		for iDdsCdg in qs:
+			if (
+				iDdsCdg.dds_id.id_org_moa.pk,
+				iDdsCdg.dds_id.id_progr.id_type_progr.pk
+			) in permissions:
+				doss.append(iDdsCdg.dds_id.pk)
+
+		return qs.filter(dds_id__in=doss)
+
+admin.site.register(TDdsCdgRestricted, DdsCdgRestricted)

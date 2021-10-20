@@ -270,6 +270,15 @@ class EtatCDGemapi(forms.Form):
 				_data['acp_id_' + str(oFin.pk)] \
 					= oAcpFinDdsCdg.acp_id if oAcpFinDdsCdg else ''
 
+			# Définition des données de la ligne Commentaires des
+			# financeurs
+			for oFin in qsFins:
+				oAcpFinDdsCdg = TAcpFinDdsCdg.objects.filter(
+					ddscdg_id=oDdsCdg.pk, fin_id=oFin.pk
+				).first()
+				_data['acpfinddscdg_com_' + str(oFin.pk)] \
+					= oAcpFinDdsCdg.acpfinddscdg_com if oAcpFinDdsCdg else ''
+
 			# Définition des données de la ligne Plan de financement en
 			# vigueur
 			for oFin in qsFins:
@@ -337,6 +346,11 @@ class EtatCDGemapi(forms.Form):
 			for oFin in qsFins:
 				_tds.append(element['acp_id_' + str(oFin.pk)])
 
+			# Définition des valeurs de la ligne Commentaires des
+			# financeurs
+			for oFin in qsFins:
+				_tds.append(element['acpfinddscdg_com_' + str(oFin.pk)])	
+
 			# Définition des valeurs de la ligne Plan de financement en
 			# vigueur
 			for oFin in qsFins:
@@ -367,7 +381,7 @@ class EtatCDGemapi(forms.Form):
 			<td>{}</td>
 		</tr>
 		'''.format(
-			5 + qsFins_count,
+			5 + (qsFins_count * 2),
 			obt_mont(sum([element['mont_doss'] for element in data])),
 			tfoot_fins,
 			obt_mont(sum([
@@ -383,6 +397,7 @@ class EtatCDGemapi(forms.Form):
 						<th rowspan="2"></th>
 						<th colspan="15">Programmation</th>
 						<th colspan="{}">Avis des financeurs</th>
+						<th colspan="{}">Commentaires des financeurs</th>
 						<th colspan="{}">Plan de financement en vigueur</th>
 					</tr>
 					<tr>
@@ -403,6 +418,7 @@ class EtatCDGemapi(forms.Form):
 						<th>Avis global du comité de programmation - CD GEMAPI</th>
 						{}
 						{}
+						{}
 						<th>Autofinancement</th>
 					</tr>
 				</thead>
@@ -412,7 +428,9 @@ class EtatCDGemapi(forms.Form):
 		</div>
 		'''.format(
 			qsFins_count,
+			qsFins_count,
 			qsFins_count + 1,
+			thead_fins,
 			thead_fins,
 			thead_fins,
 			tbody,
