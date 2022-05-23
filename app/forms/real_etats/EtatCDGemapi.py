@@ -260,7 +260,7 @@ class EtatCDGemapi(forms.Form):
 			}
 
 			# Récupération des financeurs
-			qsFins = TFinanceur.objects.all()
+			qsFins = TFinanceur.objects.filter(est_princi=True)
 
 			# Définition des données de la ligne Avis des financeurs
 			for oFin in qsFins:
@@ -279,7 +279,8 @@ class EtatCDGemapi(forms.Form):
 				_data['acpfinddscdg_com_' + str(oFin.pk)] \
 					= oAcpFinDdsCdg.acpfinddscdg_com if oAcpFinDdsCdg else ''
 
-			# Définition des données de la ligne Plan de financement en
+			# Définition des données des lignes Montants de
+			# participation en vigueur et Pourcentages globaux en
 			# vigueur
 			for oFin in qsFins:
 				voFnn = VFinancement.objects.filter(
@@ -287,9 +288,13 @@ class EtatCDGemapi(forms.Form):
 				).first()
 				_data['mont_part_fin_' + str(oFin.pk)] \
 					= voFnn.mont_part_fin if voFnn else 0
-			_data['mont_part_fin_autofin'] = VFinancement.objects.get(
+				_data['pourc_glob_fin_' + str(oFin.pk)] \
+					= voFnn.pourc_glob_fin if voFnn else 0
+			voFnn = VFinancement.objects.get(
 				id_doss=oDdsCdg.dds_id.pk, id_org_fin=None
-			).mont_part_fin
+			)
+			_data['mont_part_fin_autofin'] = voFnn.mont_part_fin
+			_data['pourc_glob_fin_autofin'] = voFnn.pourc_glob_fin
 
 			# Empilement des données
 			data.append(_data)
@@ -307,7 +312,7 @@ class EtatCDGemapi(forms.Form):
 		from app.models import VFinancement
 
 		# Récupération des financeurs
-		qsFins = TFinanceur.objects.all()
+		qsFins = TFinanceur.objects.filter(est_princi=True)
 		# Récupération du nombre de financeurs
 		qsFins_count = qsFins.count()
 
@@ -316,7 +321,7 @@ class EtatCDGemapi(forms.Form):
 
 		# Mise en forme de la partie de la balise </thead> consacrée
 		# aux financeurs
-		thead_fins = ''.join(['<th>{}</th>'.format(fin) for fin in qsFins])
+		thead_fins = ''.join(['<th>{}</th>'.format(fin.abre_org_fin or fin) for fin in qsFins])
 
 		# Mise en forme de la balise </tbody>
 		trs = []
@@ -351,13 +356,21 @@ class EtatCDGemapi(forms.Form):
 			for oFin in qsFins:
 				_tds.append(element['acpfinddscdg_com_' + str(oFin.pk)])	
 
-			# Définition des valeurs de la ligne Plan de financement en
-			# vigueur
+			# Définition des valeurs de la ligne Montants de participation
+			# en vigueur
 			for oFin in qsFins:
 				_tds.append(obt_mont(
 					element['mont_part_fin_' + str(oFin.pk)]
 				))
 			_tds.append(obt_mont(element['mont_part_fin_autofin']))
+
+			# Définition des valeurs de la ligne Pourcentages globaux
+			# en vigueur
+			for oFin in qsFins:
+				_tds.append(obt_mont(
+					element['pourc_glob_fin_' + str(oFin.pk)]
+				))
+			_tds.append(obt_mont(element['pourc_glob_fin_autofin']))
 
 			tds = ''.join(['<td>{}</td>'.format(element2) for element2 in _tds])
 			tr = '<tr>{}</tr>'.format(tds)
@@ -378,12 +391,13 @@ class EtatCDGemapi(forms.Form):
 			<td colspan="11">Total</td>
 			<td colspan="{}">{}</td>
 			{}
-			<td>{}</td>
+			<td colspan="{}">{}</td>
 		</tr>
 		'''.format(
 			5 + (qsFins_count * 2),
 			obt_mont(sum([element['mont_doss'] for element in data])),
 			tfoot_fins,
+			qsFins_count + 2,
 			obt_mont(sum([
 				element['mont_part_fin_autofin'] for element in data
 			]))
@@ -398,7 +412,8 @@ class EtatCDGemapi(forms.Form):
 						<th colspan="15">Programmation</th>
 						<th colspan="{}">Avis des financeurs</th>
 						<th colspan="{}">Commentaires des financeurs</th>
-						<th colspan="{}">Plan de financement en vigueur</th>
+						<th colspan="{}">Montants de participation en vigueur</th>
+						<th colspan="{}">Pourcentages globaux en vigueur</th>
 					</tr>
 					<tr>
 						<th>N° du dossier</th>
@@ -420,6 +435,8 @@ class EtatCDGemapi(forms.Form):
 						{}
 						{}
 						<th>Autofinancement</th>
+						{}
+						<th>Autofinancement</th>
 					</tr>
 				</thead>
 				<tbody>{}</tbody>
@@ -430,6 +447,8 @@ class EtatCDGemapi(forms.Form):
 			qsFins_count,
 			qsFins_count,
 			qsFins_count + 1,
+			qsFins_count + 1,
+			thead_fins,
 			thead_fins,
 			thead_fins,
 			thead_fins,

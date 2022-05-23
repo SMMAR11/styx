@@ -1036,6 +1036,9 @@ $(document).on(
 		var mont_ddv = 0;
 		var avances = 0;
 
+		// Initialisation du nombre d'acomptes
+		var nb_acomptes = 0;
+
 		// J'initialise certaines variables "compteurs".
 		var cpt = 0;
 		var cpt_ht = 0;
@@ -1065,6 +1068,12 @@ $(document).on(
 					avances = v_avances;
 				}
 
+				// Mise en forme du nombre d'acomptes
+				var v_nb_acomptes = $(this).attr('nb_acomptes');
+				if (!isNaN(v_nb_acomptes)) {
+					nb_acomptes = v_nb_acomptes;
+				}
+
 				// Je calcule le montant de la demande de versement.
 				mont_ddv += v_mont_fact * v_pourc_elig_fin;
 			}
@@ -1080,7 +1089,9 @@ $(document).on(
 		});
 
 		// Déduction des avances
-		mont_ddv = mont_ddv - avances;
+		if (nb_acomptes < 1) {
+			mont_ddv = mont_ddv - avances;
+		}
 
 		// Je mets en forme le montant de la demande de versement.
 		if (mont_ddv == 0) {

@@ -132,7 +132,7 @@ class MyDataTable {
 
 	// Export vers un document Excel
 	excel() {
-		this.create_blob(this.get_html_table(), 'application/vnd.ms-excel');
+		this.create_blob(this.get_html_table(), 'application/vnd.ms-excel', '.xls');
 	}
 
 	// Obtention d'une datatable

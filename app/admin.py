@@ -649,10 +649,10 @@ class AFinanceur(admin.ModelAdmin) :
 
 	# J'initialise les paramètres.
 	actions = [admin.actions.delete_selected]
-	list_display = ['n_org']
+	list_display = ['n_org', 'abre_org_fin', 'est_princi']
 
 	# Je mets en forme le formulaire.
-	fields = ['n_org']
+	fields = ['n_org', 'abre_org_fin', 'est_princi']
 
 # Je peux désormais gérer les financeurs.
 admin.site.register(TFinanceur, AFinanceur)

@@ -127,6 +127,7 @@ def filtr_doss(request, _d_excl = None) :
 	from app.models import TDossier
 	from app.models import TSousAxe
 	from app.models import TUtilisateur
+	from app.models import VSuiviDossier
 	import ast
 
 	# Je soumets le formulaire.
@@ -149,6 +150,7 @@ def filtr_doss(request, _d_excl = None) :
 		# Je récupère les données du formulaire valide.
 		cleaned_data = f_chois_doss.cleaned_data
 		v_num_doss = cleaned_data.get('zs_num_doss')
+		v_inti_dos = cleaned_data.get('zs_inti_dos')
 		v_org_moa = cleaned_data.get('zl_org_moa')
 		v_progr = cleaned_data.get('zl_progr')
 		v_axe = cleaned_data.get('zl_axe')
@@ -166,6 +168,11 @@ def filtr_doss(request, _d_excl = None) :
 		if v_num_doss:
 			qs_doss = TDossier.objects.filter(num_doss=v_num_doss)
 		else:
+			if v_inti_dos:
+				t_sql['and']['pk__in'] \
+					= VSuiviDossier.objects.filter(
+						int_doss__icontains=v_inti_dos
+					).values_list('pk', flat=True)
 			if v_progr :
 				t_sql['and']['id_progr'] = v_progr
 				if v_axe :

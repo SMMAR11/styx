@@ -1232,6 +1232,14 @@ class TFinanceur(TOrganisme) :
 
     # Colonnes
     id_org_fin = models.OneToOneField(TOrganisme)
+    abre_org_fin = models.CharField(blank=True, max_length=63, verbose_name='Abréviation')
+    est_princi = models.BooleanField(
+        default=True,
+        help_text='''
+        Si non, alors désaffichage du financeur dans le bilan "Décisions du comité de programmation - CD GEMAPI".
+        ''',
+        verbose_name='Est-ce un financeur principal ?'
+    )
 
     class Meta :
         db_table = 't_financeur'

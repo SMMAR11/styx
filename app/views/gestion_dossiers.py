@@ -579,7 +579,6 @@ def ch_doss(request) :
 		# ) # Retrait des dossiers soldés
 		# 6880: dans le cas ou on change d'avis...:
 		# ces filtres sont a mis en regard des valeurs initiales de ChoisirDossier
-		'''
 		from django.db.models import Q
 		selected = Q()
 		selected.add(Q(id_av__int_av__icontains='Soldé'), Q.OR)
@@ -587,7 +586,6 @@ def ch_doss(request) :
 		selected.add(Q(id_av__int_av__icontains='Archivé'), Q.OR)
 		selected.add(Q(id_av__int_av__icontains='Abandonné'), Q.OR)
 		qs_doss = qs_doss.exclude(selected)
-		'''
 
 		t_doss = [{
 			'pk' : d.pk,

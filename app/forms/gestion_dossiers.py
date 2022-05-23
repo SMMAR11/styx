@@ -454,6 +454,9 @@ class GererDossier(forms.ModelForm) :
 class ChoisirDossier(forms.ModelForm) :
 
 	zs_num_doss = forms.CharField(label='N° du dossier', required=False)
+	zs_inti_dos = forms.CharField(
+		label='Intitulé du dossier (contient)', required=False
+	)
 	zl_org_moa = forms.ChoiceField(label = 'Maître d\'ouvrage', required = False, widget = forms.Select())
 	zl_progr = forms.ChoiceField(label = 'Programme', required = False, widget = forms.Select())
 	zl_axe = forms.ChoiceField(
@@ -480,28 +483,28 @@ class ChoisirDossier(forms.ModelForm) :
 	)
 	rb_doss_sold = forms.ChoiceField(
 		choices=[('solde', 'Oui'), ('non_solde', 'Non')],
-		initial='solde',
+		initial='non_solde',
 		label='Afficher les dossiers soldés ?',
 		required=False,
 		widget=forms.RadioSelect()
 	)
 	rb_doss_term = forms.ChoiceField(
 		choices=[('termine', 'Oui'), ('non_termine', 'Non')],
-		initial='termine',
+		initial='non_termine',
 		label='Afficher les dossiers terminés ?',
 		required=False,
 		widget=forms.RadioSelect()
 	)
 	rb_doss_archi = forms.ChoiceField(
 		choices=[('archive', 'Oui'), ('non_archive', 'Non')],
-		initial='archive',
+		initial='non_archive',
 		label='Afficher les dossiers archivés ?',
 		required=False,
 		widget=forms.RadioSelect()
 	)
 	rb_doss_aband = forms.ChoiceField(
 		choices=[('abandonne', 'Oui'), ('non_abandonne', 'Non')],
-		initial='abandonne',
+		initial='non_abandonne',
 		label='Afficher les dossiers abandonnés ?',
 		required=False,
 		widget=forms.RadioSelect()
@@ -1418,11 +1421,15 @@ class GererDemandeVersement(forms.ModelForm) :
 					obt_mont(f.mont_ttc_fact) if k_fin.id_doss.est_ttc_doss == True else obt_mont(f.mont_ht_fact),
 					f.num_fact,
 					dt_fr(f.dt_mand_moa_fact) or '-',
-					'__zcc__$montant:{}$pourcentage:{}$taxe:{}$avances:{}'.format(
+					'__zcc__$montant:{}$pourcentage:{}$taxe:{}$avances:{}$nb_acomptes:{}'.format(
 						f.mont_ttc_fact or '' if k_fin.id_doss.est_ttc_doss == True else f.mont_ht_fact or '',
 						k_fin.pourc_elig_fin or '',
 						'TTC' if k_fin.id_doss.est_ttc_doss == True else 'HT',
-						avances
+						avances,
+						TDemandeVersement.objects.filter(
+							id_fin=k_fin.pk,
+							id_type_vers__int_type_vers='Acompte'
+						).count()
 					) if est_zcc == True else ''
 				])])
 
