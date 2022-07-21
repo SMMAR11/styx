@@ -785,18 +785,30 @@ $('#id_GererDemandeVersement-zl_fin').on('change', function() {
 /**
  * Ce script permet de gérer l'état de certains champs relatif à une demande de versement.
  */
-$('#id_GererDemandeVersement-dt_vers_ddv').on('input', function() {
+
+function handle_dt_vers_ddv() {
 	if ($(this).val() != '') {
-		$('#id_GererDemandeVersement-num_bord_ddv').removeAttr('readonly');
-		$('#id_GererDemandeVersement-num_titre_rec_ddv').removeAttr('readonly');
+		$('#id_GererDemandeVersement-num_bord_ddv')
+			.removeAttr('readonly');
+		$('#id_GererDemandeVersement-num_titre_rec_ddv')
+			.removeAttr('readonly');
 	}
 	else {
-		$('#id_GererDemandeVersement-num_bord_ddv').attr('readonly', true);
-		$('#id_GererDemandeVersement-num_titre_rec_ddv').attr('readonly', true);
+		$('#id_GererDemandeVersement-num_bord_ddv')
+			.attr('readonly', true);
+		$('#id_GererDemandeVersement-num_titre_rec_ddv')
+			.attr('readonly', true);
 		$('#id_GererDemandeVersement-num_bord_ddv').val('');
 		$('#id_GererDemandeVersement-num_titre_rec_ddv').val('');
 	}
-});
+	return true;
+}
+
+$('#id_GererDemandeVersement-dt_vers_ddv')
+	.on('input', handle_dt_vers_ddv);
+
+$('input[name="GererDemandeVersement-dt_vers_ddv__datepicker"]')
+	.on('change', handle_dt_vers_ddv);
 
 /**
  * Ces deux scripts permettent la gestion d'affichage des fenêtres modales d'ajout d'une prestation et d'un

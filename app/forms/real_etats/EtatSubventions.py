@@ -343,12 +343,7 @@ class EtatSubventions(forms.Form):
 		# Mise en forme de la balise </tfoot>
 		tfoot = '''
 		<tr>
-			<td colspan="11">Total</td>
-			<td colspan="6">{}</td>
-			<td>{}</td>
-			<td colspan="2">{}</td>
-			<td>{}</td>
-			<td>{}</td>
+			<td colspan="22">Total</td>
 			<td>{}</td>
 			<td>{}</td>
 			<td>{}</td>
@@ -356,17 +351,6 @@ class EtatSubventions(forms.Form):
 			<td colspan="5">{}</td>
 		</tr>
 		'''.format(
-			obt_mont(sum([element['mont_doss'] for element in data])),
-			obt_mont(sum([
-				element['mont_tot_prest_doss'] for element in data
-			])),
-			obt_mont(sum([element['mont_fact_sum'] for element in data])),
-			obt_mont(sum([
-				element['mont_elig_fin'] or 0 for element in data
-			])),
-			round(mean([
-				element['pourc_elig_fin'] or 0 for element in data
-			]) if data else 0, 3),
 			obt_mont(sum([
 				element['mont_part_fin'] or 0 for element in data
 			])),
