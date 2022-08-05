@@ -730,6 +730,7 @@ def cons_doss(request, _d) :
 		prss = o_doss.get_recap_prss()
 		facs = o_doss.get_recap_facs()
 		ddvs = o_doss.get_recap_ddvs()
+		dvss_synthese = o_doss.get_recap_dvs_synthesedossierfinanceur()
 		arrs = o_doss.get_recap_arrs()
 		ppis = o_doss.get_recap_ppis()
 
@@ -1287,6 +1288,7 @@ def cons_doss(request, _d) :
 				't_arr' : arrs,
 				't_attrs_doss' : init_pg_cons(o_doss.get_attrs()),
 				't_ddv' : ddvs['tbl'],
+				'dvss_synthese': dvss_synthese,
 				't_doss_fam' : doss_fam,
 				't_fact' : facs['tbl'],
 				't_fdvs' : fdvs,
@@ -4638,6 +4640,7 @@ def impr_doss(request, _d) :
 	prss = o_doss.get_recap_prss()
 	facs = o_doss.get_recap_facs()
 	ddvs = o_doss.get_recap_ddvs()
+	dvss_synthese = o_doss.get_recap_dvs_synthesedossierfinanceur()
 	form = PrintDoss()
 	context = {
 		'd' : o_doss,
@@ -4660,6 +4663,7 @@ def impr_doss(request, _d) :
 		't_attrs_doss' : init_pg_cons(o_doss.get_attrs(), True),
 		't_ddv' : ddvs['tbl'],
 		't_ddv_length' : len(ddvs['tbl']),
+		'dvss_synthese': dvss_synthese,
 		't_doss_fam' : doss_fam,
 		't_doss_fam_length' : len(doss_fam),
 		't_fact' : facs['tbl'],

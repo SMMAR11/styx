@@ -391,7 +391,7 @@
 								<th>Date de demande de versement</th>
 								<th>Date de versement</th>
 								<th>Montant {{ ht_ou_ttc }} versé (en €)</th>
-								<th>Manque à percevoir {{ ht_ou_ttc }} (en €)</th>
+								<th>Différence {{ ht_ou_ttc }} entre demandé et versé (en €)</th>
 								<th>Type de versement</th>
 								<th></th>
 							</tr>
@@ -415,13 +415,47 @@
 						{% if mont_ddv_sum > 0 %}
 						<tfoot>
 							<tr>
-								<td>Total {{ ht_ou_ttc }} demandé (en €)</td>
+								<td>Total {{ ht_ou_ttc }} (en €)</td>
 								<td colspan="3">{{ mont_ddv_sum_str }}</td>
 								<td>{{ mont_verse_ddv_sum_str }}</td>
 								<td colspan="3">{{ map_ddv_sum }}</td>
 							</tr>
 						</tfoot>
 						{% endif %}
+					</table>
+				</div>
+				<br>
+				<div class="title-1">Synthèse par partenaire financier</div>
+				<div class="my-table" id="t_dvs_synthesedossierfinanceur">
+					<table>
+						<thead>
+							<tr>
+								<th>Partenaire financier</th>
+								<th>Nombre de demandes</th>
+								<th>Montant {{ ht_ou_ttc }} demandé (en €)</th>
+								<th>Montant {{ ht_ou_ttc }} versé (en €)</th>
+								<th>Manque à percevoir {{ ht_ou_ttc }} (en €)</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for dvs in dvss_synthese.tbl %}
+							<tr>
+								<td>{{ dvs.FNC_ID }}</td>
+								<td>{{ dvs.DVS_NB }}</td>
+								<td>{{ dvs.DVS_MT_TOTAL }}</td>
+								<td>{{ dvs.VSM_MT_TOTAL }}</td>
+								<td>{{ dvs.DVS_MT_MAP }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+						<tfoot>
+							<tr>
+								<td colspan="2">Total {{ ht_ou_ttc }} (en €)</td>
+								<td>{{ dvss_synthese.dvs_mt_total_sum }}</td>
+								<td>{{ dvss_synthese.vsm_mt_total_sum }}</td>
+								<td>{{ dvss_synthese.dvs_mt_map_sum }}</td>
+							</tr>
+						</tfoot>
 					</table>
 				</div>
 			</div>

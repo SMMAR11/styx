@@ -21,54 +21,24 @@ class VDemandeVersement(view.View) :
 
     # Requête
 	sql = '''
-	WITH dev AS (
-		SELECT
-			dev.*,
-			fnc.id_doss_id,
-			fnc.id_org_fin_id,
-			tyv.int_type_vers
-		FROM public.t_demande_versement AS dev
-		INNER JOIN public.t_financement AS fnc ON fnc.id_fin = dev.id_fin_id
-		INNER JOIN public.t_type_versement AS tyv
-			ON tyv.id_type_vers = dev.id_type_vers_id
-	), devaf AS (
-		SELECT
-			id_doss_id,
-			id_fin_id,
-			sum(mont_ht_verse_ddv) AS mont_ht_verse_ddv,
-			sum(mont_ttc_verse_ddv) AS mont_ttc_verse_ddv
-		FROM dev
-		WHERE int_type_vers = 'Avance forfaitaire'
-		GROUP BY
-			id_doss_id,
-			id_fin_id
-	)
 	SELECT
-		dev.id_ddv,
-		dev.id_doss_id,
-		CASE
-			WHEN dev.int_type_vers = 'Solde'
-				THEN dev.mont_ht_ddv - dev.mont_ht_verse_ddv - (
-					SELECT coalesce(devaf.mont_ht_verse_ddv, 0)
-					FROM devaf
-					WHERE devaf.id_doss_id = dev.id_doss_id
-					AND devaf.id_fin_id = dev.id_fin_id
-				)
-			ELSE dev.mont_ht_ddv - dev.mont_ht_verse_ddv
-		END AS map_ht_ddv,
-		CASE
-			WHEN dev.int_type_vers = 'Solde'
-				THEN dev.mont_ttc_ddv - dev.mont_ttc_verse_ddv - (
-					SELECT coalesce(devaf.mont_ttc_verse_ddv, 0)
-					FROM devaf
-					WHERE devaf.id_doss_id = dev.id_doss_id
-					AND devaf.id_fin_id = dev.id_fin_id
-				)
-			ELSE dev.mont_ht_ddv - dev.mont_ht_verse_ddv
-		END AS map_ttc_ddv,
-		dev.id_fin_id,
-		dev.id_org_fin_id
-	FROM dev
+		dvs.id_ddv,
+		COALESCE(
+			dvs.mont_ht_ddv, 0
+		) - COALESCE(
+			dvs.mont_ht_verse_ddv, 0
+		) AS map_ht_ddv,
+		COALESCE(
+			dvs.mont_ttc_ddv, 0
+		) - COALESCE(
+			dvs.mont_ttc_verse_ddv, 0
+		) AS map_ttc_ddv,
+		fnc.id_doss_id,
+		dvs.id_fin_id,
+		fnc.id_org_fin_id
+	FROM public.t_demande_versement AS dvs
+		INNER JOIN public.t_financement AS fnc
+			ON fnc.id_fin = dvs.id_fin_id
 	'''
 
 	class Meta :
@@ -586,3 +556,82 @@ class VPpi(view.View):
 	class Meta:
 		db_table = 'v_ppi'
 		managed = False
+
+class V_DemandeVersement_SyntheseDossierFinanceur(view.View):
+
+	"""
+    Vue synthétique des demandes de versement groupées par dossier et
+    financeur
+    """
+
+    # Imports
+	from app.classes.MFEuroField import Class as MFEuroField
+
+    # Colonnes
+
+	QRY_ID = models.IntegerField(primary_key=True)
+    
+	DVS_MT_MAP_HT = MFEuroField()
+
+	DVS_MT_MAP_TTC = MFEuroField()
+
+	DVS_MT_TOTAL_HT = MFEuroField()
+
+	DVS_MT_TOTAL_TTC = MFEuroField()
+
+	DVS_NB = models.IntegerField()
+
+	VSM_MT_TOTAL_HT = MFEuroField()
+
+	VSM_MT_TOTAL_TTC = MFEuroField()
+
+	DOS_ID = models.ForeignKey(
+		TDossier, db_column='DOS_ID', on_delete=models.DO_NOTHING
+	)
+
+	FNC_ID = models.ForeignKey(
+		TFinanceur,
+		db_column='FNC_ID',
+		on_delete=models.DO_NOTHING
+	)
+
+    # Requête
+	sql = '''
+    SELECT
+    	ROW_NUMBER() OVER() AS "QRY_ID",
+		(QRY."DVS_MT_TOTAL_HT" - QRY."VSM_MT_TOTAL_HT")::NUMERIC(26, 2)
+			AS "DVS_MT_MAP_HT",
+		(
+			QRY."DVS_MT_TOTAL_TTC" - QRY."VSM_MT_TOTAL_TTC"
+		)::NUMERIC(26, 2) AS "DVS_MT_MAP_TTC",
+		QRY."DVS_MT_TOTAL_HT"::NUMERIC(26, 2),
+		QRY."DVS_MT_TOTAL_TTC"::NUMERIC(26, 2),
+		QRY."DVS_NB",
+		QRY."VSM_MT_TOTAL_HT"::NUMERIC(26, 2),
+		QRY."VSM_MT_TOTAL_TTC"::NUMERIC(26, 2),
+		QRY."DOS_ID",
+		QRY."FNC_ID"
+	FROM (
+		SELECT
+			COALESCE(sum(dvs.mont_ht_ddv), 0) AS "DVS_MT_TOTAL_HT",
+			COALESCE(sum(dvs.mont_ttc_ddv), 0) AS "DVS_MT_TOTAL_TTC",
+			count(*) AS "DVS_NB",
+			COALESCE(sum(dvs.mont_ht_verse_ddv), 0)
+				AS "VSM_MT_TOTAL_HT",
+			COALESCE(sum(dvs.mont_ttc_verse_ddv), 0)
+				AS "VSM_MT_TOTAL_TTC",
+			fnm.id_doss_id AS "DOS_ID",
+			fnm.id_org_fin_id AS "FNC_ID"
+		FROM public.t_demande_versement AS dvs
+			INNER JOIN public.t_financement AS fnm
+				ON fnm.id_fin = dvs.id_fin_id
+		GROUP BY
+			fnm.id_doss_id,
+			fnm.id_org_fin_id
+	) AS QRY
+	'''
+
+	class Meta:
+		db_table = 'v_demandeversement_synthesedossierfinanceur'
+		managed = False
+		ordering = ['FNC_ID__n_org']

@@ -923,6 +923,59 @@ class TDossier(models.Model) :
             'map_ddv_sum': map_ddv_sum
         }
 
+    def get_recap_dvs_synthesedossierfinanceur(self) :
+
+        """
+        Tableau synthétique récapitulatif des demandes de versement
+        regroupées par dossier et financeur
+        """
+
+        # Imports
+        from app.functions import obt_mont
+        from app.models import V_DemandeVersement_SyntheseDossierFinanceur as V_DVS
+
+        # Variables
+        dvss = []
+        dvs_mt_map_sum = 0
+        dvs_mt_total_sum = 0
+        vsm_mt_total_sum = 0
+
+        # Pour chaque financeur faisant l'objet d'une demande de
+        # versement sur le dossier...
+        for dvs in V_DVS.objects.filter(DOS_ID=self):
+
+            # Récupération des montants à afficher dans le tableau de
+            # synthèse
+            if self.get_view_object().type_mont_doss == 'TTC':
+                dvs_mt_map = dvs.DVS_MT_MAP_TTC
+                dvs_mt_total = dvs.DVS_MT_TOTAL_TTC
+                vsm_mt_total = dvs.VSM_MT_TOTAL_TTC
+            else :
+                dvs_mt_map = dvs.DVS_MT_MAP_HT
+                dvs_mt_total = dvs.DVS_MT_TOTAL_HT
+                vsm_mt_total = dvs.VSM_MT_TOTAL_HT
+
+            # Empilement des lignes du tableau de synthèse
+            dvss.append({
+                'FNC_ID': dvs.FNC_ID,
+                'DVS_NB': dvs.DVS_NB,
+                'DVS_MT_TOTAL': obt_mont(dvs_mt_total),
+                'VSM_MT_TOTAL': obt_mont(vsm_mt_total),
+                'DVS_MT_MAP': obt_mont(dvs_mt_map)
+            })
+
+            # Calcul des sommes
+            dvs_mt_map_sum += dvs_mt_map
+            dvs_mt_total_sum += dvs_mt_total
+            vsm_mt_total_sum += vsm_mt_total
+
+        return {
+            'tbl': dvss,
+            'dvs_mt_map_sum': obt_mont(dvs_mt_map_sum),
+            'dvs_mt_total_sum': obt_mont(dvs_mt_total_sum),
+            'vsm_mt_total_sum': obt_mont(vsm_mt_total_sum)
+        }
+
     def get_recap_facs(self) :
 
         '''Tableau récapitulatif des factures'''

@@ -146,6 +146,8 @@
 		<div class="br"></div>
 		{% endif %}
 		{% if features.fiche_vie %}
+		{% if t_fdvs|length > 0 %}
+		<span class="pdf-break-page"></span>
 		<div class="pdf-title-2">Fiche de vie</div>
 		<table class="pdf-table">
 			<thead>
@@ -167,7 +169,9 @@
 		</table>
 		<div class="br"></div>
 		{% endif %}
+		{% endif %}
 		{% if features.plan_fnc %}
+		<span class="pdf-break-page"></span>
 		<div class="pdf-title-2">Plan de financement</div>
 		<table class="pdf-table">
 			<thead>
@@ -209,8 +213,9 @@
 		<div class="br"></div>
 		{% endif %}
 		{% if features.prestation %}
+		{% if t_prest|length > 0 %}
+		<span class="pdf-break-page"></span>
 		<div class="pdf-title-2">Prestations</div>
-		{% if t_prest_length > 0 %}
 		<table class="pdf-table">
 			<thead>
 				<tr>
@@ -262,8 +267,9 @@
 		{% endif %}
 		{% endif %}
 		{% if features.facture %}
+		{% if t_fact|length > 0 %}
+		<span class="pdf-break-page"></span>
 		<div class="pdf-title-2">Factures</div>
-		{% if t_fact_length > 0 %}
 		<table class="pdf-table">
 			<thead>
 				<tr>
@@ -309,8 +315,9 @@
 		{% endif %}
 		{% endif %}
 		{%if features.versement %}
+		{% if t_ddv|length > 0 %}
+		<span class="pdf-break-page"></span>
 		<div class="pdf-title-2">Demandes de versements</div>
-		{% if t_ddv_length > 0 %}
 		<table class="pdf-table">
 			<thead>
 				<tr>
@@ -319,7 +326,7 @@
 					<th>Date de demande de versement</th>
 					<th>Date de versement</th>
 					<th>Montant {{ ht_ou_ttc }} versé (en €)</th>
-					<th>Manque à percevoir {{ ht_ou_ttc }} (en €)</th>
+					<th>Différence {{ ht_ou_ttc }} entre demandé et versé (en €)</th>
 					<th>Type de versement</th>
 				</tr>
 			</thead>
@@ -338,10 +345,42 @@
 			</tbody>
 			<tfoot>
 				<tr>
-					<td>Total {{ ht_ou_ttc }} demandé (en €)</td>
+					<td>Total {{ ht_ou_ttc }} (en €)</td>
 					<td colspan="3">{{ mont_ddv_sum_str }}</td>
 					<td>{{ mont_verse_ddv_sum_str }}</td>
 					<td colspan="2">{{ map_ddv_sum }}</td>
+				</tr>
+			</tfoot>
+		</table>
+		<br>
+		<div class="pdf-title-3">Synthèse par partenaire financier</div>
+		<table class="pdf-table">
+			<thead>
+				<tr>
+					<th>Partenaire financier</th>
+					<th>Nombre de demandes</th>
+					<th>Montant {{ ht_ou_ttc }} demandé (en €)</th>
+					<th>Montant {{ ht_ou_ttc }} versé (en €)</th>
+					<th>Manque à percevoir {{ ht_ou_ttc }} (en €)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for dvs in dvss_synthese.tbl %}
+				<tr>
+					<td>{{ dvs.FNC_ID }}</td>
+					<td>{{ dvs.DVS_NB }}</td>
+					<td>{{ dvs.DVS_MT_TOTAL }}</td>
+					<td>{{ dvs.VSM_MT_TOTAL }}</td>
+					<td>{{ dvs.DVS_MT_MAP }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="2">Total {{ ht_ou_ttc }} (en €)</td>
+					<td>{{ dvss_synthese.dvs_mt_total_sum }}</td>
+					<td>{{ dvss_synthese.vsm_mt_total_sum }}</td>
+					<td>{{ dvss_synthese.dvs_mt_map_sum }}</td>
 				</tr>
 			</tfoot>
 		</table>

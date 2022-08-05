@@ -5,7 +5,7 @@ body {
 	text-align: justify;
 	line-height: 1.3;
 	margin: 0 auto 0 auto;
-	width: 794px;
+	width: 210mm;
 }
 
 /* Contrôles */
@@ -45,6 +45,11 @@ div[class^="pdf-title-"] {
 	background-color: #008E4D;
 }
 
+.pdf-break-page {
+	display: block;
+	page-break-after: always;
+}
+
 /* Tableaux HTML */
 .pdf-table {
 	width: 100%;
@@ -79,4 +84,19 @@ div[class^="pdf-title-"] {
 
 .pdf-table.vertical-table th {
 	width: 160px;
+}
+
+/* Impression */
+
+@media print {
+
+	body {
+		-webkit-print-color-adjust: exact; 
+	}
+
+}
+
+@page {
+	margin: 6mm;
+	size: a4;
 }
