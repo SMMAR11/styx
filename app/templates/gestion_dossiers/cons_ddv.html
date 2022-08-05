@@ -46,8 +46,20 @@
 								</tr>
 								{% endfor %}
 							</tbody>
+							{% if t_fact_ddv|length > 0 %}
+							<tfoot>
+								<tr>
+									<td>Total {{ ht_ou_ttc }} (en €)</td>
+									<td colspan="4">{{ mont_fact_sum }}</td>
+								</tr>
+							</tfoot>
+							{% endif %}
 						</table>
 					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-6">{{ t_attrs_ddv.pourc_elig_fin }}</div>
+					<div class="col-md-6">{{ t_attrs_ddv.mont_theori_ddv }}</div>
 				</div>
 				<div class="row">
 					<div class="col-md-6">{{ t_attrs_ddv.mont_ht_ddv }}</div>

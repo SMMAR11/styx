@@ -1274,10 +1274,6 @@ def cons_doss(request, _d) :
 				'f_modif_doss_regl' : init_f(f_modif_doss_regl),
 				'forbidden' : ger_droits(request.user, o_doss, False, False),
 				'ht_ou_ttc' : ht_ou_ttc,
-				'mont_ddv_sum' : ddvs['mont_ddv_sum'],
-				'mont_ddv_sum_str': obt_mont(ddvs['mont_ddv_sum']),
-				'mont_verse_ddv_sum_str': obt_mont(ddvs['mont_verse_ddv_sum']),
-				'map_ddv_sum': obt_mont(ddvs['map_ddv_sum']),
 				'mont_doss' : obt_mont(o_doss.mont_doss),
 				'mont_fact_sum' : facs['mnt'],
 				'mont_ht_fact_sum' : facs['mnt_ht'],
@@ -1287,7 +1283,7 @@ def cons_doss(request, _d) :
 				'mont_suppl_doss' : obt_mont(o_doss.mont_suppl_doss),
 				't_arr' : arrs,
 				't_attrs_doss' : init_pg_cons(o_doss.get_attrs()),
-				't_ddv' : ddvs['tbl'],
+				'ddvs': ddvs,
 				'dvss_synthese': dvss_synthese,
 				't_doss_fam' : doss_fam,
 				't_fact' : facs['tbl'],
@@ -3930,6 +3926,7 @@ def cons_ddv(request, _d) :
 	from app.functions import init_fm
 	from app.functions import init_pg_cons
 	from app.functions import obt_mont
+	from app.functions import obt_pourc
 	from app.functions import suppr
 	from app.models import TDemandeVersement
 	from app.models import TFacturesDemandeVersement
@@ -3950,6 +3947,12 @@ def cons_ddv(request, _d) :
 		ger_droits(request.user, o_ddv.id_fin.id_doss)
 
 		o_suivi_ddv = VDemandeVersement.objects.get(pk = o_ddv.pk)
+
+		# Dossier HT ou TTC ?
+		if o_ddv.id_fin.id_doss.est_ttc_doss:
+			ht_ou_ttc = 'TTC'
+		else:
+			ht_ou_ttc = 'HT'
 
 		# Je prépare le volet de consultation de la demande de versement.
 		t_attrs_ddv = {
@@ -3996,11 +3999,31 @@ def cons_ddv(request, _d) :
 				'value' : o_ddv.chem_pj_ddv,
 				'pdf' : True
 			},
-			'comm_ddv' : { 'label' : 'Commentaire', 'value' : o_ddv.comm_ddv or '' }
+			'comm_ddv' : { 'label' : 'Commentaire', 'value' : o_ddv.comm_ddv or '' },
+			'mont_theori_ddv': {
+				'label': '''
+				Montant {} théorique subventionnable (en €)
+				'''.format(ht_ou_ttc),
+				'value': obt_mont(getattr(
+					o_suivi_ddv,
+					'mont_{}_theori_ddv'.format(ht_ou_ttc.lower())
+				)),
+				'help-text': '''
+				= somme {} des factures reliées à la demande X
+				pourcentage de l'assiette éligible du financement
+				'''.format(ht_ou_ttc)
+			},
+			'pourc_elig_fin': {
+				'label': '''
+				Pourcentage de l'assiette éligible du financement
+				''',
+				'value': obt_pourc(o_ddv.id_fin.pourc_elig_fin)
+			}
 		}
 
 		# J'initialise le tableau des factures reliées à la demande de versement.
 		t_fact_ddv = []
+		mont_fact_sum = 0
 		for fd in TFacturesDemandeVersement.objects.filter(id_ddv = o_ddv) :
 
 			mont_fact = fd.id_fact.mont_ht_fact
@@ -4014,6 +4037,9 @@ def cons_ddv(request, _d) :
 				'mont_fact' : obt_mont(mont_fact),
 				'id_fact__pk' : fd.id_fact.pk
 			})
+
+			# Calcul de la somme des factures
+			mont_fact_sum += mont_fact
 
 		# Je définis si le montant du dossier est en HT ou en TTC.
 		ht_ou_ttc = 'HT'
@@ -4036,7 +4062,8 @@ def cons_ddv(request, _d) :
 				't_attrs_ddv' : init_pg_cons(t_attrs_ddv),
 				't_fact_ddv' : t_fact_ddv,
 				't_fm' : t_fm,
-				'title' : 'Consulter une demande de versement'
+				'title' : 'Consulter une demande de versement',
+				'mont_fact_sum': obt_mont(mont_fact_sum)
 			}
 		)
 
@@ -4646,9 +4673,6 @@ def impr_doss(request, _d) :
 		'd' : o_doss,
 		'ddscdg': TDdsCdg.objects.filter(dds_id=o_doss.pk),
 		'ht_ou_ttc' : ht_ou_ttc,
-		'mont_ddv_sum_str': obt_mont(ddvs['mont_ddv_sum']),
-		'mont_verse_ddv_sum_str': obt_mont(ddvs['mont_verse_ddv_sum']),
-		'map_ddv_sum': obt_mont(ddvs['map_ddv_sum']),
 		'mont_doss' : obt_mont(o_doss.mont_doss),
 		'mont_fact_sum' : facs['mnt'],
 		'mont_ht_fact_sum' : facs['mnt_ht'],
@@ -4661,8 +4685,7 @@ def impr_doss(request, _d) :
 		'pourc_comm' : obt_pourc(o_suivi_doss.pourc_comm),
 		'pourc_paye' : obt_pourc(o_suivi_doss.pourc_paye),
 		't_attrs_doss' : init_pg_cons(o_doss.get_attrs(), True),
-		't_ddv' : ddvs['tbl'],
-		't_ddv_length' : len(ddvs['tbl']),
+		'ddvs': ddvs,
 		'dvss_synthese': dvss_synthese,
 		't_doss_fam' : doss_fam,
 		't_doss_fam_length' : len(doss_fam),

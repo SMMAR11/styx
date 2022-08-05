@@ -15,30 +15,97 @@ class VDemandeVersement(view.View) :
 	id_ddv = models.IntegerField(primary_key = True)
 	map_ht_ddv = MFEuroField()
 	map_ttc_ddv = MFEuroField()
+	mont_ht_theori_ddv = MFEuroField()
+	mont_ttc_theori_ddv = MFEuroField()
 	id_doss = models.ForeignKey(TDossier, db_column = 'id_doss_id', on_delete = models.DO_NOTHING)
 	id_fin = models.ForeignKey(TFinancement, db_column = 'id_fin_id', on_delete = models.DO_NOTHING)
 	id_org_fin = models.ForeignKey(TFinanceur, db_column = 'id_org_fin_id', on_delete = models.DO_NOTHING)
 
     # Requête
 	sql = '''
+	WITH dvs AS (
+		SELECT
+			dvs.id_ddv,
+			dvs.id_fin_id,
+			COALESCE(dvs.mont_ht_ddv, 0) AS mont_ht_ddv,
+			COALESCE(dvs.mont_ttc_ddv, 0) AS mont_ttc_ddv,
+			COALESCE(dvs.mont_ht_verse_ddv, 0) AS mont_ht_verse_ddv,
+			COALESCE(dvs.mont_ttc_verse_ddv, 0) AS mont_ttc_verse_ddv,
+			fnc.id_doss_id,
+			fnc.id_org_fin_id,
+			tyv.int_type_vers
+		FROM public.t_demande_versement AS dvs
+			INNER JOIN public.t_financement AS fnc
+				ON fnc.id_fin = dvs.id_fin_id
+			INNER JOIN public.t_type_versement AS tyv
+				ON tyv.id_type_vers = dvs.id_type_vers_id
+	), dvsaf AS (
+		SELECT
+			id_doss_id,
+			id_fin_id,
+			sum(mont_ht_verse_ddv) AS mont_ht_verse_ddv,
+			sum(mont_ttc_verse_ddv) AS mont_ttc_verse_ddv
+		FROM dvs
+		WHERE int_type_vers = 'Avance forfaitaire'
+		GROUP BY
+			id_doss_id,
+			id_fin_id
+	), dvs_theori AS (
+		SELECT
+			QRY.id_ddv_id,
+			(
+				QRY.mont_ht_fact_sum * (fnm.pourc_elig_fin / 100)
+			)::NUMERIC(26, 2)
+				AS mont_ht_theori_ddv,
+			(
+				QRY.mont_ttc_fact_sum * (fnm.pourc_elig_fin / 100)
+			)::NUMERIC(26, 2) AS mont_ttc_theori_ddv
+		FROM (
+			SELECT
+				ftrdvs.id_ddv_id,
+				COALESCE(sum(ftr.mont_ht_fact), 0) AS mont_ht_fact_sum,
+				COALESCE(sum(ftr.mont_ttc_fact), 0)
+					AS mont_ttc_fact_sum
+			FROM public.t_factures_demande_versement AS ftrdvs
+				INNER JOIN public.t_facture AS ftr
+					ON ftr.id_fact = ftrdvs.id_fact_id
+			GROUP BY
+				ftrdvs.id_ddv_id
+		) AS QRY
+			INNER JOIN public.t_demande_versement AS dvs
+				ON dvs.id_ddv = QRY.id_ddv_id
+			INNER JOIN public.t_financement AS fnm
+				ON fnm.id_fin = dvs.id_fin_id
+	)
 	SELECT
 		dvs.id_ddv,
-		COALESCE(
-			dvs.mont_ht_ddv, 0
-		) - COALESCE(
-			dvs.mont_ht_verse_ddv, 0
-		) AS map_ht_ddv,
-		COALESCE(
-			dvs.mont_ttc_ddv, 0
-		) - COALESCE(
-			dvs.mont_ttc_verse_ddv, 0
-		) AS map_ttc_ddv,
-		fnc.id_doss_id,
+		CASE
+			WHEN dvs.int_type_vers = 'Solde'
+				THEN dvs.mont_ht_ddv - dvs.mont_ht_verse_ddv - COALESCE((
+					SELECT dvsaf.mont_ht_verse_ddv
+					FROM dvsaf
+					WHERE dvsaf.id_doss_id = dvs.id_doss_id
+					AND dvsaf.id_fin_id = dvs.id_fin_id
+				), 0)
+			ELSE dvs.mont_ht_ddv - dvs.mont_ht_verse_ddv
+		END::NUMERIC(26, 2) AS map_ht_ddv,
+		CASE
+			WHEN dvs.int_type_vers = 'Solde'
+				THEN dvs.mont_ttc_ddv - dvs.mont_ttc_verse_ddv - COALESCE((
+					SELECT dvsaf.mont_ttc_verse_ddv
+					FROM dvsaf
+					WHERE dvsaf.id_doss_id = dvs.id_doss_id
+					AND dvsaf.id_fin_id = dvs.id_fin_id
+				), 0)
+			ELSE dvs.mont_ttc_ddv - dvs.mont_ttc_verse_ddv
+		END::NUMERIC(26, 2) AS map_ttc_ddv,
+		dvs_theori.mont_ht_theori_ddv,
+		dvs_theori.mont_ttc_theori_ddv,
+		dvs.id_doss_id,
 		dvs.id_fin_id,
-		fnc.id_org_fin_id
-	FROM public.t_demande_versement AS dvs
-		INNER JOIN public.t_financement AS fnc
-			ON fnc.id_fin = dvs.id_fin_id
+		dvs.id_org_fin_id
+	FROM dvs
+		LEFT OUTER JOIN dvs_theori ON dvs_theori.id_ddv_id = dvs.id_ddv
 	'''
 
 	class Meta :

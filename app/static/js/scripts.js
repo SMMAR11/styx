@@ -50,8 +50,8 @@ $(document).ready(function() {
 	});
 	new MyDataTable('cons_ddv').set_datatable({
 		'autofit': ['LAST:1'],
-		'date': [2, 3],
-		'number': [1, 4, 5],
+		'date': [3, 4],
+		'number': [1, 2, 5, 6],
 		'unsorting': ['LAST:1']
 	});
 	new MyDataTable('dvs_synthesedossierfinanceur').set_datatable({'number': ['LAST:4']});

@@ -315,25 +315,27 @@
 		{% endif %}
 		{% endif %}
 		{%if features.versement %}
-		{% if t_ddv|length > 0 %}
+		{% if ddvs|length > 0 %}
 		<span class="pdf-break-page"></span>
-		<div class="pdf-title-2">Demandes de versements</div>
+		<div class="pdf-title-2">Demandes de versement</div>
 		<table class="pdf-table">
 			<thead>
 				<tr>
 					<th>Partenaire financier</th>
+					<th>Montant {{ ht_ou_ttc }} théorique subventionnable (en €) (= somme des factures reliées à la demande X pourcentage éligible du financement)</th>
 					<th>Montant {{ ht_ou_ttc }} demandé (en €)</th>
 					<th>Date de demande de versement</th>
 					<th>Date de versement</th>
 					<th>Montant {{ ht_ou_ttc }} versé (en €)</th>
-					<th>Différence {{ ht_ou_ttc }} entre demandé et versé (en €)</th>
+					<th>Manque à percevoir {{ ht_ou_ttc }} (en €)</th>
 					<th>Type de versement</th>
 				</tr>
 			</thead>
 			<tbody>
-				{% for ddv in t_ddv %}
+				{% for ddv in ddvs.tbl %}
 				<tr>
 					<td>{{ ddv.id_org_fin }}</td>
+					<td>{{ ddv.mont_theori_ddv }}</td>
 					<td>{{ ddv.mont_ddv }}</td>
 					<td>{{ ddv.dt_ddv }}</td>
 					<td>{{ ddv.dt_vers_ddv }}</td>
@@ -346,9 +348,10 @@
 			<tfoot>
 				<tr>
 					<td>Total {{ ht_ou_ttc }} (en €)</td>
-					<td colspan="3">{{ mont_ddv_sum_str }}</td>
-					<td>{{ mont_verse_ddv_sum_str }}</td>
-					<td colspan="2">{{ map_ddv_sum }}</td>
+					<td>{{ ddvs.mont_theori_ddv_sum }}</td>
+					<td colspan="3">{{ ddvs.mont_ddv_sum }}</td>
+					<td>{{ ddvs.mont_verse_ddv_sum }}</td>
+					<td colspan="2">{{ ddvs.map_ddv_sum }}</td>
 				</tr>
 			</tfoot>
 		</table>

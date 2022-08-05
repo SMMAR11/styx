@@ -885,6 +885,7 @@ class TDossier(models.Model) :
         mont_ddv_sum = 0
         mont_verse_ddv_sum = 0
         map_ddv_sum = 0
+        mont_theori_ddv_sum = 0
 
         for d in VDemandeVersement.objects.filter(id_doss = self) :
 
@@ -894,14 +895,17 @@ class TDossier(models.Model) :
                 mont_ddv = oD.mont_ttc_ddv
                 mont_verse_ddv = oD.mont_ttc_verse_ddv
                 map_ddv = d.map_ttc_ddv
+                mont_theori_ddv = d.mont_ttc_theori_ddv
             else :
                 mont_ddv = oD.mont_ht_ddv
                 mont_verse_ddv = oD.mont_ht_verse_ddv
                 map_ddv = d.map_ht_ddv
+                mont_theori_ddv = d.mont_ht_theori_ddv
 
             # Empilement des demandes de versements
             ddvs.append({
                 'id_org_fin' : d.id_org_fin,
+                'mont_theori_ddv': obt_mont(mont_theori_ddv) or '-',
                 'mont_ddv' : obt_mont(mont_ddv),
                 'dt_ddv' : dt_fr(oD.dt_ddv),
                 'dt_vers_ddv' : dt_fr(oD.dt_vers_ddv) or '-',
@@ -915,12 +919,14 @@ class TDossier(models.Model) :
             mont_ddv_sum += mont_ddv or 0
             mont_verse_ddv_sum += mont_verse_ddv or 0
             map_ddv_sum += map_ddv or 0
+            mont_theori_ddv_sum += mont_theori_ddv or 0
 
         return {
             'tbl': ddvs,
-            'mont_ddv_sum': mont_ddv_sum,
-            'mont_verse_ddv_sum': mont_verse_ddv_sum,
-            'map_ddv_sum': map_ddv_sum
+            'mont_ddv_sum': obt_mont(mont_ddv_sum),
+            'mont_verse_ddv_sum': obt_mont(mont_verse_ddv_sum),
+            'map_ddv_sum': obt_mont(map_ddv_sum),
+            'mont_theori_ddv_sum': obt_mont(mont_theori_ddv_sum)
         }
 
     def get_recap_dvs_synthesedossierfinanceur(self) :
