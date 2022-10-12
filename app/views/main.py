@@ -233,13 +233,14 @@ request : Objet requête
 def h_403(request, exception) :
 
 	# Imports
-	from django.shortcuts import render_to_response
+	from django.shortcuts import render
 	from django.template import RequestContext
 
 	# J'affiche le template.
-	output = render_to_response(
+	output = render(
+		request,
 		'./handlers/template.html',
-		RequestContext(request, { 'message' : 'L\'accès à cette page est interdit.', 'title' : 'Erreur 403' })
+		{ 'message' : 'L\'accès à cette page est interdit.', 'title' : 'Erreur 403' }
 	)
 	output.status_code = 403
 
@@ -252,15 +253,14 @@ request : Objet requête
 def h_404(request, exception) :
 
 	# Imports
-	from django.shortcuts import render_to_response
+	from django.shortcuts import render
 	from django.template import RequestContext
 
 	# J'affiche le template.
-	output = render_to_response(
+	output = render(
+		request,
 		'./handlers/template.html',
-		RequestContext(request, {
-			'message' : 'La page que vous recherchez n\'existe pas ou a été déplacée.', 'title' : 'Erreur 404'
-		})
+		{ 'message' : 'La page que vous recherchez n\'existe pas ou a été déplacée.', 'title' : 'Erreur 404' }
 	)
 	output.status_code = 404
 
@@ -273,15 +273,14 @@ request : Objet requête
 def h_500(request) :
 
 	# Imports
-	from django.shortcuts import render_to_response
+	from django.shortcuts import render
 	from django.template import RequestContext
 
 	# J'affiche le template.
-	output = render_to_response(
+	output = render(
+		request,
 		'./handlers/template.html',
-		RequestContext(request, {
-			'message' : 'Erreur interne du serveur.', 'title' : 'Erreur 500'
-		})
+		{ 'message' : 'Erreur interne du serveur.', 'title' : 'Erreur 500' }
 	)
 	output.status_code = 500
 
