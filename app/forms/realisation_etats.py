@@ -285,7 +285,7 @@ class FiltrerDossiers(forms.ModelForm) :
 		from app.models import VSuiviDossier
 		from bs4 import BeautifulSoup
 		from django.conf import settings
-		from django.core.urlresolvers import reverse
+		from django.urls import reverse
 
 		# Stockage des données du formulaire
 		if _req.method == 'GET' :
@@ -995,7 +995,7 @@ class FiltrerPrestations(forms.Form) :
 		from app.models import TRegroupementsMoa
 		from app.models import VSuiviPrestationsDossier
 		from bs4 import BeautifulSoup
-		from django.core.urlresolvers import reverse
+		from django.urls import reverse
 
 		# Stockage des données du formulaire
 		if _req.method == 'GET' :

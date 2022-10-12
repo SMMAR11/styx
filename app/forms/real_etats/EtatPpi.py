@@ -152,7 +152,7 @@ class EtatPpi(forms.Form):
 		from app.models import TRegroupementsMoa
 		from app.models import TUtilisateur
 		from app.models import VFinancement
-		from django.core.urlresolvers import reverse
+		from django.urls import reverse
 
 		# Initialisation des données
 		data = []

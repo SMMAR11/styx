@@ -399,7 +399,7 @@ class TMoa(TOrganisme) :
         return 'logos/{0}'.format(new_fn)
 
     # Colonnes
-    id_org_moa = models.OneToOneField(TOrganisme)
+    id_org_moa = models.OneToOneField(TOrganisme, on_delete=models.CASCADE, parent_link=True)
     dim_org_moa = models.CharField(
         blank = True,
         help_text = 'Utilisé pour la création d\'un numéro de dossier',
@@ -473,7 +473,7 @@ class TUtilisateur(User) :
     from app.managers.TUtilisateurManager import Class as TUtilisateurManager
 
     # Colonnes
-    id_util = models.OneToOneField(User)
+    id_util = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, parent_link=True)
     port_util = MFPhoneNumberField(blank = True, verbose_name = 'Numéro de téléphone portable')
     tel_util = MFPhoneNumberField(blank = True, verbose_name = 'Numéro de téléphone')
     id_org = models.ForeignKey(
@@ -1138,7 +1138,7 @@ class TDossierGeom(gismodels.Model) :
     geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 4326)
     geom_pct = gismodels.PointField(blank = True, null = True, srid = 4326)
     geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 4326)
-    objects = gismodels.GeoManager()
+    #objects = gismodels.GeoManager()
     id_doss = models.ForeignKey(TDossier, on_delete = models.CASCADE)
 
     class Meta :
@@ -1275,7 +1275,7 @@ class TPrestataire(TOrganisme) :
     '''Ensemble des prestataires'''
 
     # Colonnes
-    id_org_prest = models.OneToOneField(TOrganisme)
+    id_org_prest = models.OneToOneField(TOrganisme, on_delete=models.CASCADE, primary_key=True, parent_link=True)
     siret_org_prest = models.CharField(max_length = 14, unique = True, verbose_name = 'Numéro SIRET')
     num_dep = models.ForeignKey(
         TDepartement, blank = True, null = True, on_delete = models.SET_NULL, verbose_name = 'Département'
@@ -1290,7 +1290,7 @@ class TFinanceur(TOrganisme) :
     '''Ensemble des financeurs'''
 
     # Colonnes
-    id_org_fin = models.OneToOneField(TOrganisme)
+    id_org_fin = models.OneToOneField(TOrganisme, on_delete=models.CASCADE, primary_key=True, parent_link=True)
     abre_org_fin = models.CharField(blank=True, max_length=63, verbose_name='Abréviation')
     est_princi = models.BooleanField(
         default=True,
@@ -1978,7 +1978,7 @@ class TDossierPgreGeom(gismodels.Model) :
     geom_lin = gismodels.LineStringField(blank = True, null = True, srid = 4326)
     geom_pct = gismodels.PointField(blank = True, null = True, srid = 4326)
     geom_pol = gismodels.PolygonField(blank = True, null = True, srid = 4326)
-    objects = gismodels.GeoManager()
+    #objects = gismodels.GeoManager()
     id_doss_pgre = models.ForeignKey(TDossierPgre, on_delete = models.CASCADE)
 
     class Meta :

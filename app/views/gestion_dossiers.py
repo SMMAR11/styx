@@ -10,7 +10,7 @@ from app.functions import rempl_fich_log
 from app.models import TFicheVie
 
 from django.views.decorators.csrf import csrf_exempt
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
@@ -64,7 +64,7 @@ def cr_doss(request) :
 	from app.models import TProgramme
 	from app.models import TSousAxe
 	from app.models import TTypesProgrammesTypeDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import render
 	import json
@@ -234,7 +234,7 @@ def modif_doss(request, _d) :
 	from app.models import TPrestationsDossier
 	from app.models import TSousAxe
 	from django.contrib.gis import geos
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -432,7 +432,7 @@ def suppr_doss(request, _d) :
 	from app.models import TFinancement
 	from app.models import TPhoto
 	from app.models import TPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -532,7 +532,7 @@ def ch_doss(request) :
 	from app.models import TDossier
 	from app.models import TMoa
 	from app.models import TUtilisateur
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import render
 	import json
@@ -692,7 +692,7 @@ def cons_doss(request, _d) :
 	from app.models import VSuiviDossier
 	from app.models import VSuiviPrestationsDossier
 	from django.contrib.gis import geos
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -1852,7 +1852,7 @@ def ajout_fin(request) :
 	from app.functions import ger_droits
 	from app.functions import rempl_fich_log
 	from app.models import TDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	import json
 
@@ -1922,7 +1922,7 @@ def modif_fin(request, _f) :
 	from app.functions import init_fm
 	from app.functions import rempl_fich_log
 	from app.models import TFinancement
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -2010,7 +2010,7 @@ def suppr_fin(request, _f) :
 	from app.functions import rempl_fich_log
 	from app.models import TDemandeVersement
 	from app.models import TFinancement
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -2101,7 +2101,7 @@ def cons_fin(request, _f) :
 	from app.functions import suppr
 	from app.models import TFinancement
 	from app.models import VFinancement
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -2222,7 +2222,7 @@ def ajout_prest(request) :
 	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from app.models import TPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	import json
 
@@ -2316,7 +2316,7 @@ def modif_prest(request, _pd) :
 	from app.models import TPrestationsDossier
 	from app.models import VSuiviDossier
 	from app.models import VSuiviPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -2488,7 +2488,7 @@ def suppr_prest(request, _pd) :
 	from app.models import TAvenant
 	from app.models import TFacture
 	from app.models import TPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -2600,7 +2600,7 @@ def cons_prest(request, _pd) :
 	from app.models import TPrestationsDossier
 	from app.models import VPrestation
 	from app.models import VSuiviPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -2814,7 +2814,7 @@ def ajout_aven(request, _r) :
 	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from app.models import TPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	import json
 
@@ -2919,7 +2919,7 @@ def modif_aven(request, _a) :
 	from app.functions import init_fm
 	from app.functions import rempl_fich_log
 	from app.models import TAvenant
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -3006,7 +3006,7 @@ def suppr_aven(request, _a) :
 	from app.models import TAvenant
 	from app.models import TPrestationsDossier
 	from app.models import VSuiviPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.db.models import F
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -3079,7 +3079,7 @@ def cons_aven(request, _a) :
 	from app.models import TPrestationsDossier
 	from app.models import VSuiviPrestationsDossier
 	from django.http import HttpResponse
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
 
@@ -3181,7 +3181,7 @@ def ajout_fact(request) :
 	from app.functions import rempl_fich_log
 	from app.models import TDossier
 	from app.models import TPrestation
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	import json
 
@@ -3262,7 +3262,7 @@ def modif_fact(request, _f) :
 	from app.functions import init_fm
 	from app.functions import rempl_fich_log
 	from app.models import TFacture
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -3348,7 +3348,7 @@ def suppr_fact(request, _f) :
 	from app.functions import rempl_fich_log
 	from app.models import TFacture
 	from app.models import TFacturesDemandeVersement
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -3435,7 +3435,7 @@ def cons_fact(request, _f) :
 	from app.functions import suppr
 	from app.models import TFacture
 	from app.models import VFacture
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -3527,7 +3527,7 @@ def ajout_ddv(request) :
 	from app.models import TFacturesDemandeVersement
 	from app.models import TFinancement
 	from datetime import datetime
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	import json
 
@@ -3691,7 +3691,7 @@ def modif_ddv(request, _d) :
 	from app.models import TFacturesDemandeVersement
 	from app.models import TFinancement
 	from datetime import datetime
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -3859,7 +3859,7 @@ def suppr_ddv(request, _d) :
 	from app.functions import rempl_fich_log
 	from app.models import TDemandeVersement
 	from app.models import TFacturesDemandeVersement
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -3931,7 +3931,7 @@ def cons_ddv(request, _d) :
 	from app.models import TDemandeVersement
 	from app.models import TFacturesDemandeVersement
 	from app.models import VDemandeVersement
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -4088,7 +4088,7 @@ def ajout_arr(request) :
 	from app.functions import ger_droits
 	from app.functions import rempl_fich_log
 	from app.models import TDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	import json
 
@@ -4157,7 +4157,7 @@ def modif_arr(request, _a) :
 	from app.functions import init_fm
 	from app.functions import rempl_fich_log
 	from app.models import TArretesDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -4244,7 +4244,7 @@ def suppr_arr(request, _a) :
 	from app.functions import ger_droits
 	from app.functions import rempl_fich_log
 	from app.models import TArretesDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -4304,7 +4304,7 @@ def cons_arr(request, _a) :
 	from app.functions import init_pg_cons
 	from app.functions import suppr
 	from app.models import TArretesDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -4375,7 +4375,7 @@ def ajout_ph(request) :
 	from app.functions import ger_droits
 	from app.functions import rempl_fich_log
 	from app.models import TDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	import json
 
@@ -4448,7 +4448,7 @@ def modif_ph(request, _p) :
 	from app.functions import init_f
 	from app.functions import init_fm
 	from app.functions import rempl_fich_log
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from app.models import TPhoto
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -4531,7 +4531,7 @@ def suppr_ph(request, _p) :
 	from app.functions import ger_droits
 	from app.functions import rempl_fich_log
 	from app.models import TPhoto
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -5030,7 +5030,7 @@ def suppr_fdv(rq, _fdv) :
 	from app.functions import ger_droits
 	from app.functions import rempl_fich_log
 	from app.models import TFicheVie
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -5154,7 +5154,7 @@ def ajout_os(request, pd_id, p_redirect) :
 	from app.functions import ger_droits
 	from app.functions import rempl_fich_log
 	from app.models import TPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -5230,7 +5230,7 @@ def suppr_os(rq, os_id) :
 	from app.functions import rempl_fich_log
 	from app.models import TOrdreService
 	from app.models import TPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -5286,7 +5286,7 @@ def modif_os(request, os_id) :
 	from app.functions import rempl_fich_log
 	from app.models import TOrdreService
 	from app.models import TPrestationsDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -5370,7 +5370,7 @@ def suppr_ddscdg(rq, ddscdg_id):
 	from app.functions import dt_fr
 	from app.functions import ger_droits
 	from app.models import TDdsCdg
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json
@@ -5423,7 +5423,7 @@ def ajout_ddscdg(rq, dds) :
 	from app.functions import dt_fr
 	from app.functions import ger_droits
 	from app.models import TDossier
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	import json

@@ -239,7 +239,7 @@ class EtatDossiers(forms.Form):
 		from app.models import TUtilisateur
 		from app.models import VFinancement
 		from app.models import VSuiviDossier
-		from django.core.urlresolvers import reverse
+		from django.urls import reverse
 		from django.db.models import Q
 
 		# Initialisation des données

@@ -69,7 +69,7 @@ class EtatSubventions(View):
 			# datatable
 			if form.is_valid():
 				datatable = form.get_datatable()
-				bs = BeautifulSoup(datatable)
+				bs = BeautifulSoup(datatable, features='lxml')
 				return datatable_reset(datatable, {
 					'elements': [
 						['#za_tfoot_EtatSubventions', str(bs.find(

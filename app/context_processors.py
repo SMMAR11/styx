@@ -27,7 +27,7 @@ def set_menus(_req) :
 	from app.functions import get_menu
 
 	# Initialisation du menu
-	menu = get_menu(_req) if _req.user.is_authenticated() else {}
+	menu = get_menu(_req) if _req.user.is_authenticated else {}
 
 	# Préparation du menu principal
 	elems = []
@@ -69,7 +69,7 @@ def set_alerts(request) :
 	from app.models import TTypeProgramme
 	from app.models import TUtilisateur
 	from app.models import VFinancement
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.shortcuts import render
 	from styx.settings import T_DONN_BDD_STR
 	import datetime

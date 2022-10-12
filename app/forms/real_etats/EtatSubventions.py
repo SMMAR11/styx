@@ -153,7 +153,7 @@ class EtatSubventions(forms.Form):
 		from app.models import TUtilisateur
 		from app.models import VFinancement
 		from app.models import VSuiviDossier
-		from django.core.urlresolvers import reverse
+		from django.urls import reverse
 
 		# Initialisation des données
 		data = []

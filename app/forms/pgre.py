@@ -575,7 +575,7 @@ class FiltrerActionsPgre(forms.ModelForm) :
 		from app.functions import dt_fr
 		from app.models import TDossierPgre
 		from app.models import TUtilisateur
-		from django.core.urlresolvers import reverse
+		from django.urls import reverse
 		from styx.settings import T_DONN_BDD_INT
 
 		# Stockage des données du formulaire

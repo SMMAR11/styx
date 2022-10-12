@@ -83,7 +83,7 @@ def datatable_reset(_html, _datas = {}) :
 	import json
 
 	# Possibilité de manier le code HTML
-	html = BeautifulSoup(_html)
+	html = BeautifulSoup(_html, features='lxml')
 
 	# Initialisation des données de sortie
 	success = { cle : val for cle, val in _datas.items() }
@@ -465,7 +465,7 @@ def get_menu(rq) :
 	# Imports
 	from app.models import TUtilisateur
 	from collections import OrderedDict
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from styx.settings import T_DONN_BDD_INT
 
 	output = {
@@ -556,7 +556,7 @@ def get_menu(rq) :
 
 	# Affichage du module PGRE si une permission minimale est effective
 	# au niveau de l'utilisateur connecté
-	if rq.user.is_authenticated():
+	if rq.user.is_authenticated:
 		display_pgre_module = False
 		permissions = TUtilisateur.objects.get(pk=rq.user.pk) \
 			.get_permissions(read_or_write='R')
@@ -579,7 +579,7 @@ def get_thumbnails_menu(_module, _lim, _rq) :
 	# Imports
 	from app.functions import get_menu
 	from django.conf import settings
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.template.defaultfilters import safe
 
 	# Gestion des erreurs
@@ -844,7 +844,7 @@ def init_f(_form) :
 
 		# Mise en forme d'une zone de liste
 		if balise_init == 'select' :
-			if 'multiple="multiple"' in champ_html :
+			if 'multiple' in champ_html:
 				if 'm2m="on"' in champ_html :
 
 					# Initialisation des colonnes de la balise <thead/>

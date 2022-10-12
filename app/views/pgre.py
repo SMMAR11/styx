@@ -45,7 +45,7 @@ def cr_act_pgre(request) :
 	from app.functions import init_f
 	from app.functions import init_fm
 	from app.models import TInstancesConcertationPgreAtelierPgre
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import render
 	import json
@@ -193,7 +193,7 @@ def modif_act_pgre(request, _a) :
 	from app.models import TInstancesConcertationPgreAtelierPgre
 	from app.models import TMoaDossierPgre
 	from django.contrib.gis import geos
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -391,7 +391,7 @@ def suppr_act_pgre(request, _a) :
 	from app.models import TDossierPgreGeom
 	from app.models import TMoaDossierPgre
 	from app.models import TPhotoPgre
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from styx.settings import T_DONN_BDD_INT
@@ -485,7 +485,7 @@ def ch_act_pgre(request) :
 	from app.models import TMoa
 	from app.models import TMoaDossierPgre
 	from app.models import TUtilisateur
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import render
 	from styx.settings import T_DONN_BDD_INT
@@ -642,7 +642,7 @@ def cons_act_pgre(request, _a) :
 	from datetime import date
 	from django.conf import settings
 	from django.contrib.gis import geos
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from django.shortcuts import render
@@ -1101,7 +1101,7 @@ def ajout_ph_pgre(request) :
 	from app.functions import ger_droits
 	from app.models import TDossierPgre
 	from app.models import TMoaDossierPgre
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from styx.settings import T_DONN_BDD_INT
 	import json
@@ -1174,7 +1174,7 @@ def modif_ph_pgre(request, _p) :
 	from app.functions import init_f
 	from app.functions import init_fm
 	from app.models import TMoaDossierPgre
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from app.models import TPhotoPgre
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -1264,7 +1264,7 @@ def suppr_ph_pgre(request, _p) :
 	from app.functions import ger_droits
 	from app.models import TMoaDossierPgre
 	from app.models import TPhotoPgre
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from styx.settings import T_DONN_BDD_INT
@@ -1321,7 +1321,7 @@ def modif_pdc(request, _p) :
 	from app.functions import init_f
 	from app.functions import init_fm
 	from app.models import TMoaDossierPgre
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from app.models import TControleDossierPgre
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
@@ -1412,7 +1412,7 @@ def suppr_pdc(request, _p) :
 	from app.functions import ger_droits
 	from app.models import TControleDossierPgre
 	from app.models import TMoaDossierPgre
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from styx.settings import T_DONN_BDD_INT
@@ -1509,7 +1509,7 @@ def ajout_ss_act_pgre(request) :
 	from app.functions import ger_droits
 	from app.models import TDossierPgre
 	from app.models import TMoaDossierPgre
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from styx.settings import T_DONN_BDD_INT
 	import json
@@ -1587,7 +1587,7 @@ def modif_ss_act_pgre(request, _ssa) :
 	from app.models import TDossierPgre
 	from app.models import TMoaDossierPgre
 	from app.models import TDossierSsAction
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from styx.settings import T_DONN_BDD_INT
 	from django.shortcuts import get_object_or_404
@@ -1680,7 +1680,7 @@ def suppr_ss_act_pgre(request, _ssa) :
 	from app.functions import ger_droits
 	from app.models import TMoaDossierPgre
 	from app.models import TDossierSsAction
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import get_object_or_404
 	from styx.settings import T_DONN_BDD_INT

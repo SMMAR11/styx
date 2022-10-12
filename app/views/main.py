@@ -16,7 +16,7 @@ def index(request) :
 	from app.functions import init_fm
 	from app.functions import get_thumbnails_menu
 	from django.contrib.auth import authenticate, login
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import render
 	import json
@@ -29,14 +29,14 @@ def index(request) :
 		f_id = Identifier()
 
 		# Je déclare un tableau de fenêtres modales, dont le contenu diffère selon l'état de la session.
-		if request.user.is_authenticated() :
+		if request.user.is_authenticated :
 			t_fm = []
 		else :
 			t_fm = [
 				init_fm('id', 'Identification')
 			]
 
-		if request.user.is_authenticated() :
+		if request.user.is_authenticated :
 			title = 'Accueil'
 		else :
 			title = 'Identification'
@@ -125,7 +125,7 @@ def modif_util(request) :
 	from app.functions import init_f
 	from app.functions import init_fm
 	from app.models import TUtilisateur
-	from django.core.urlresolvers import reverse
+	from django.urls import reverse
 	from django.http import HttpResponse
 	from django.shortcuts import render
 	import json
@@ -230,7 +230,7 @@ def cons_util(request) :
 Cette vue permet d'afficher la page relative à une erreur 403.
 request : Objet requête
 '''
-def h_403(request) :
+def h_403(request, exception) :
 
 	# Imports
 	from django.shortcuts import render_to_response
@@ -249,7 +249,7 @@ def h_403(request) :
 Cette vue permet d'afficher la page relative à une erreur 404.
 request : Objet requête
 '''
-def h_404(request) :
+def h_404(request, exception) :
 
 	# Imports
 	from django.shortcuts import render_to_response

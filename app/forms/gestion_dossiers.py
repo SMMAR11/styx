@@ -2139,7 +2139,7 @@ class GererOrdreService(forms.ModelForm) :
 
 		# Imports
 		from app.functions import init_f
-		from django.core.urlresolvers import reverse
+		from django.urls import reverse
 		from django.template.context_processors import csrf
 
 		form = init_f(self) # Initialisation des contrôles
@@ -2277,7 +2277,7 @@ class GererDdsCdg(forms.ModelForm) :
 
 		# Imports
 		from app.functions import init_f
-		from django.core.urlresolvers import reverse
+		from django.urls import reverse
 		from django.template.context_processors import csrf
 
 		# Initialisation des contrôles
@@ -2570,7 +2570,7 @@ class ManagePpi(forms.ModelForm):
 
 		# Imports
 		from app.functions import init_f
-		from django.core.urlresolvers import reverse
+		from django.urls import reverse
 		from django.template.context_processors import csrf
 
 		# Initialisation des contrôles

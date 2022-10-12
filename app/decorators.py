@@ -14,7 +14,7 @@ def verif_acc(_vf) :
 		# Imports
 		from django.core.exceptions import PermissionDenied
 
-		if request.user.is_authenticated() :
+		if request.user.is_authenticated :
 			return _vf(request, *args, **kwargs)
 		else :
 			raise PermissionDenied
