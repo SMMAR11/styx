@@ -3,3 +3,4 @@
 mail_dumps/
 media/
 app/migrations/*
+!app/migrations/__init__.py
