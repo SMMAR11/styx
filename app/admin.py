@@ -890,7 +890,14 @@ class DdsCdg(admin.ModelAdmin):
 	# Options
 	actions = (admin.actions.delete_selected,)
 	change_form_template = 'admin/app/change_form_ddscdg.html'
-	fields = ('dds_id', 'int_doss', 'cdg_id', 'acp_id', 'ddscdg_com')
+	fields = (
+		'dds_id',
+		'int_doss',
+		'cdg_id',
+		'acp_id',
+		'cdg_id_ajourne',
+		'ddscdg_com'
+	)
 	form = UpdateDdsCdgAdmin
 	inlines = (AcpFinDdsCdgInline,)
 	list_display = (

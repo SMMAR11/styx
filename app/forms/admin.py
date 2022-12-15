@@ -168,12 +168,21 @@ class MUtilisateurUpdate(forms.ModelForm) :
 
 class UpdateDdsCdgAdmin(forms.ModelForm):
 
+    # Imports
+    from app.constants import DEFAULT_OPTION
+
     # Champs
 
     int_doss = forms.CharField(
         label='Intitulé du dossier',
         required=False,
         widget = forms.Textarea(attrs={'readonly': True})
+    )
+
+    cdg_id_ajourne = forms.ChoiceField(
+        choices=[DEFAULT_OPTION],
+        label='Date de représentation du dossier ajourné à un CD GEMAPI',
+        required=False
     )
 
     class Meta:
@@ -185,11 +194,44 @@ class UpdateDdsCdgAdmin(forms.ModelForm):
     def __init__(self, *args, **kwargs) :
 
         # Imports
+        from app.models import TCDGemapiCdg
         from app.models import VSuiviDossier
 
         super().__init__(*args, **kwargs)
 
+        qsCdgs = TCDGemapiCdg.objects.filter(
+            cdg_date__gt=self.instance.cdg_id.cdg_date
+        ).reverse()
+        self.fields['cdg_id_ajourne'].choices += [(cdg.pk, cdg) for cdg in qsCdgs]
+        nextCdg = qsCdgs.first()
+        self.fields['cdg_id_ajourne'].initial = nextCdg.pk if nextCdg else None
+
         self.fields['int_doss'].initial = VSuiviDossier.objects.get(pk=self.instance.dds_id.pk).int_doss
+
+    def save(self, commit=True) :
+
+        # Imports
+        from app.models import TCDGemapiCdg
+        from app.models import TDdsCdg
+
+        oDdsCdg = super().save(commit=False)
+
+        cleanedData = self.cleaned_data
+        acpId = oDdsCdg.acp_id
+        cdgIdAjourne = cleanedData.get('cdg_id_ajourne')
+
+        # Représentation automatique à un CD GEMAPI ultérieur si
+        # déterminé par l'utilisateur
+        if (acpId.int_av_cp == 'Ajourné') and (cdgIdAjourne):
+            TDdsCdg.objects.create(
+                cdg_id=TCDGemapiCdg.objects.get(pk=cdgIdAjourne),
+                dds_id=oDdsCdg.dds_id
+            )
+
+        if commit:
+            oDdsCdg.save()
+            
+        return oDdsCdg
 
 class UpdateFinAdmin(forms.ModelForm):
 

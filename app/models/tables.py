@@ -223,6 +223,12 @@ class TAxe(models.Model) :
 
     # Méthodes publiques
 
+    def get_str_form(self):
+        s = [self.num_axe]
+        if self.int_axe:
+            s.append(self.int_axe)
+        return ' - '.join(s)
+
     def get_str_with_prg(self) :
         '''Instance précédée par le programme lié'''
         return '[{}] {}'.format(self.id_progr, self)
@@ -251,6 +257,12 @@ class TSousAxe(models.Model) :
         verbose_name = verbose_name_plural = 'T_SOUS_AXE'
 
     # Extra-getters
+
+    def get_str_form(self):
+        s = [self.num_ss_axe]
+        if self.int_ss_axe:
+            s.append(self.int_ss_axe)
+        return ' - '.join(s)
 
     def get_str_with_prg(self) :
         '''Instance précédée par le programme lié'''
@@ -281,6 +293,14 @@ class TAction(models.Model) :
         ]
         unique_together = ['num_act', 'id_ss_axe']
         verbose_name = verbose_name_plural = 'T_ACTION'
+
+    # Extra-getters
+
+    def get_str_form(self):
+        s = [self.num_act]
+        if self.int_act:
+            s.append(self.int_act)
+        return ' - '.join(s)
 
     # Méthodes système
 

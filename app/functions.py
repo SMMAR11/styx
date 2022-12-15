@@ -43,7 +43,7 @@ def alim_ld(request) :
 	if v_progr :
 		qs_axes = TAxe.objects.filter(id_progr = v_progr)
 		for a in qs_axes :
-			t_axes.append([a.pk, a.num_axe])
+			t_axes.append([a.pk, a.get_str_form()])
 		try :
 			v_type_progr = TProgramme.objects.get(pk = v_progr).id_type_progr
 		except :
@@ -56,11 +56,11 @@ def alim_ld(request) :
 		if v_axe :
 			qs_ss_axes = TSousAxe.objects.filter(id_axe = v_axe)
 			for sa in qs_ss_axes :
-				t_ss_axes.append([sa.pk, sa.num_ss_axe])
+				t_ss_axes.append([sa.pk, sa.get_str_form()])
 			if v_ss_axe :
 				qs_act = TAction.objects.filter(id_ss_axe = v_ss_axe)
 				for a in qs_act :
-					t_act.append([a.pk, a.num_act])
+					t_act.append([a.pk, a.get_str_form()])
 
 	return {
 		'axe' : t_axes,
@@ -380,11 +380,9 @@ def gen_t_ch_doss(request, _d_excl = None) :
 					<div class="col-xs-6">{1}</div>
 					<div class="col-xs-6">{2}</div>
 				</div>
-				<div class="row">
-					<div class="col-xs-6">{3}</div>
-					<div class="col-xs-3">{4}</div>
-					<div class="col-xs-3">{5}</div>
-				</div>
+				{3}
+				{4}
+				{5}
 				<div class="row">
 					<div class="col-xs-6">{6}</div>
 					<div class="col-xs-6">{7}</div>

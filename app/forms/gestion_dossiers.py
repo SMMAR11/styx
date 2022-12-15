@@ -193,7 +193,7 @@ class GererDossier(forms.ModelForm) :
 			self.fields['rb_est_ttc_doss'].initial = i.est_ttc_doss
 
 			# Stockage des axes du programme
-			axes = [(a.pk, a.num_axe) for a in TAxe.objects.filter(id_progr = i.id_progr)]
+			axes = [(a.pk, a.get_str_form()) for a in TAxe.objects.filter(id_progr = i.id_progr)]
 
 			if len(axes) > 0 :
 
@@ -213,7 +213,7 @@ class GererDossier(forms.ModelForm) :
 					self.fields['zl_axe'].initial = obj_axe.pk
 
 					# Stockage des sous-axes de l'axe
-					ss_axes = [(sa.pk, sa.num_ss_axe) for sa in TSousAxe.objects.filter(id_axe = obj_axe)]
+					ss_axes = [(sa.pk, sa.get_str_form()) for sa in TSousAxe.objects.filter(id_axe = obj_axe)]
 
 					if len(ss_axes) > 0 :
 
@@ -233,7 +233,7 @@ class GererDossier(forms.ModelForm) :
 							self.fields['zl_ss_axe'].initial = obj_ss_axe.pk
 
 							# Stockage des actions du sous-axe
-							acts = [(a.pk, a.num_act) for a in TAction.objects.filter(id_ss_axe = obj_ss_axe)]
+							acts = [(a.pk, a.get_str_form()) for a in TAction.objects.filter(id_ss_axe = obj_ss_axe)]
 
 							if len(acts) > 0 :
 
