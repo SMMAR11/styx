@@ -1,6 +1,6 @@
 .env
+*.pyc
 app/migrations/*
 !app/migrations/__init__.py
 mail_dumps/
 media/
-*.pyc
