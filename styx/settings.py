@@ -121,25 +121,11 @@ USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
-
-reverseProxyRoot = config('REVERSEPROXY_ROOT', default=None)
-
-
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-staticUrl = '/'
-if reverseProxyRoot:
-    staticUrl += reverseProxyRoot + '/'
-staticUrl += 'static/'
-STATIC_URL = staticUrl
+STATIC_URL = '/static/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-mediaUrl = '/'
-if reverseProxyRoot:
-    mediaUrl += reverseProxyRoot + '/'
-mediaUrl += 'media/'
-MEDIA_URL = mediaUrl
+MEDIA_URL = '/media/'
 
 LEAFLET_CONFIG = {
     'DEFAULT_CENTER' : (43.20, 2.32),
