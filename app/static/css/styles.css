@@ -898,6 +898,15 @@ ul.my-list-style > li:before {
 	height: 20px;
 }
 
+.zip-icon {
+	background-image: url('../pics/icons/zip.png');
+	background-size: 20px;
+	-webkit-background-size: 19px;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 20px;
+}
+
 .icon-link {
 	padding-left: 25px;
 	color: #8A8B8D;

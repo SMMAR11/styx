@@ -34,14 +34,14 @@ window.addEventListener('map:init', function(e) {
 
     // Initialisation des fonds
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    var ign = L.geoportalLayer.WMTS({ layer: "GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" });
-    var ortho = L.geoportalLayer.WMTS({ layer: "ORTHOIMAGERY.ORTHOPHOTOS" });
+    //var ign = L.geoportalLayer.WMTS({ layer: "GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" });
+    //var ortho = L.geoportalLayer.WMTS({ layer: "ORTHOIMAGERY.ORTHOPHOTOS" });
 
     // Pré-intégration des fonds
     var tiles = {
       'OpenStreetMap': osm,
-      'IGN': ign,
-      'ORTHO': ortho
+      //'IGN': ign,
+      //'ORTHO': ortho
     };
 
     // Intégration des fonds

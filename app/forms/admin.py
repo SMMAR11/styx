@@ -223,10 +223,15 @@ class UpdateDdsCdgAdmin(forms.ModelForm):
         # Représentation automatique à un CD GEMAPI ultérieur si
         # déterminé par l'utilisateur
         if (acpId.int_av_cp == 'Ajourné') and (cdgIdAjourne):
-            TDdsCdg.objects.create(
+            oDdsCdgNext = TDdsCdg.objects.filter(
                 cdg_id=TCDGemapiCdg.objects.get(pk=cdgIdAjourne),
                 dds_id=oDdsCdg.dds_id
             )
+            if not oDdsCdgNext.exists():
+                TDdsCdg.objects.create(
+                    cdg_id=TCDGemapiCdg.objects.get(pk=cdgIdAjourne),
+                    dds_id=oDdsCdg.dds_id
+                )
 
         if commit:
             oDdsCdg.save()
