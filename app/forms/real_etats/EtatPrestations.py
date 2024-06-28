@@ -288,6 +288,7 @@ class EtatPrestations(forms.Form):
 				'id_av': oPrsDds.id_doss.id_av,
 				'id_techn': oPrsDds.id_doss.id_techn,
 				'id_nat_prest': oPrsDds.id_prest.id_nat_prest,
+				'int_prest': oPrsDds.id_prest.int_prest,
 				'id_org_prest': oPrsDds.id_prest.id_org_prest,
 				'nb_aven': voPrsDds.nb_aven,
 				'mont_prest_doss': oPrsDds.mont_prest_doss,
@@ -330,6 +331,7 @@ class EtatPrestations(forms.Form):
 				element['id_av'],
 				element['id_techn'],
 				element['id_nat_prest'],
+				element['int_prest'],
 				element['id_org_prest'],
 				element['nb_aven'],
 				obt_mont(element['mont_prest_doss']),
@@ -351,7 +353,7 @@ class EtatPrestations(forms.Form):
 		# Mise en forme de la balise </tfoot>
 		tfoot = '''
 		<tr>
-			<td colspan="11">Total</td>
+			<td colspan="12">Total</td>
 			<td>{}</td>
 			<td>{}</td>
 			<td>{}</td>
@@ -379,7 +381,7 @@ class EtatPrestations(forms.Form):
 					<tr>
 						<th rowspan="2"></th>
 						<th colspan="7">Les dossiers</th>
-						<th colspan="3">Caractéristiques des prestations</th>
+						<th colspan="4">Caractéristiques des prestations</th>
 						<th colspan="6">Gestion financière</th>
 						<th colspan="7">Gestion des délais (en jours ouvrés)</th>
 					</tr>
@@ -392,6 +394,7 @@ class EtatPrestations(forms.Form):
 						<th>Avancement du dossier</th>
 						<th>Agent responsable</th>
 						<th>Nature de prestations</th>
+						<th>Intitulé</th>
 						<th>Titulaire</th>
 						<th>Nombre d'avenants</th>
 						<th>Montant initial de commande (1)</th>
